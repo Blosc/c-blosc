@@ -27,7 +27,7 @@
 //#define CL (32*1024) /* 32K */
 
 // Datatype size
-#define ELSIZE 4
+#define ELSIZE 16
 
 // Chunksize
 //#define SIZE 8*1024  // 8 KB
@@ -61,6 +61,14 @@ void printxmm(__m128i xmm0) {
           buf[8], buf[9], buf[10], buf[11],
           buf[12], buf[13], buf[14], buf[15]);
 }
+
+
+// Routine optimized for shuffling a buffer for a type size of 2 bytes.
+// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// NOTE: There is not such a routine yet because:
+// * The size == 2 is not a very common case
+// * The code is quite envolved, and perhaps the speed-up is not worth the effort
+// F. Alted 2009-05-20
 
 
 // Routine optimized for shuffling a buffer for a type size of 4 bytes.
@@ -144,6 +152,52 @@ shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 }
 
 
+// Routine optimized for shuffling a buffer for a type size of 16 bytes.
+// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// F. Alted 2009-05-20
+static void
+shuffle16(unsigned char* dest, unsigned char* src, size_t size)
+{
+  size_t i, j, k, l;
+  size_t numof16belem;
+  __m128i xmm0[16], xmm1[16];
+
+  numof16belem = size / (16*16);
+  for (i = 0, j = 0; i < numof16belem; i++, j += 16*16) {
+    // Fetch elements in groups of 256
+    for (k = 0; k < 16; k++) {
+      xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
+    }
+    // Transpose bytes
+    for (k = 0, l = 0; k < 8; k++, l +=2) {
+      xmm1[k*2] = _mm_unpacklo_epi8(xmm0[l], xmm0[l+1]);
+      xmm1[k*2+1] = _mm_unpackhi_epi8(xmm0[l], xmm0[l+1]);
+    }
+    // Transpose words
+    for (k = 0, l = -2; k < 8; k++, l++) {
+      if ((k%2) == 0) l += 2;
+      xmm0[k*2] = _mm_unpacklo_epi16(xmm1[l], xmm1[l+2]);
+      xmm0[k*2+1] = _mm_unpackhi_epi16(xmm1[l], xmm1[l+2]);
+    }
+    // Transpose double words
+    for (k = 0, l = -4; k < 8; k++, l++) {
+      if ((k%4) == 0) l += 4;
+      xmm1[k*2] = _mm_unpacklo_epi32(xmm0[l], xmm0[l+4]);
+      xmm1[k*2+1] = _mm_unpackhi_epi32(xmm0[l], xmm0[l+4]);
+    }
+    // Transpose quad words
+    for (k = 0; k < 8; k++) {
+      xmm0[k*2] = _mm_unpacklo_epi64(xmm1[k], xmm1[k+8]);
+      xmm0[k*2+1] = _mm_unpackhi_epi64(xmm1[k], xmm1[k+8]);
+    }
+    // Store the result vectors
+    for (k = 0; k < 16; k++) {
+      ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
+    }
+  }
+}
+
+
 unsigned int
 blosc_compress(size_t bytesoftype, size_t nbytes, void *orig, void *dest)
 {
@@ -217,6 +271,9 @@ blosc_compress(size_t bytesoftype, size_t nbytes, void *orig, void *dest)
       }
       else if (bytesoftype == 8) {
         shuffle8(tmp, _src, CL);
+      }
+      else if (bytesoftype == 16) {
+        shuffle16(tmp, _src, CL);
       }
       else {
         for (j = 0; j < bytesoftype; j++) {
