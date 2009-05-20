@@ -62,6 +62,10 @@ void printxmm(__m128i xmm0) {
           buf[12], buf[13], buf[14], buf[15]);
 }
 
+
+// Routine optimized for shuffling a buffer for a type size of 4 bytes.
+// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// F. Alted 2009-05-20
 static void
 shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 {
@@ -71,7 +75,7 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
   __m128i xmm[4];
 
   numof16belem = size / (16*4);
-  for (i = 0, j = 0; i < numof16belem; i++, j += 64) {
+  for (i = 0, j = 0; i < numof16belem; i++, j += 16*4) {
     for (k = 0; k < 4; k++) {
       xmm0 = _mm_loadu_si128((__m128i*)(src+j+k*16));         // Fecth 16-bytes
       // The next could be much simplified by using PSHUFB (Suppl. SSE3).
@@ -101,6 +105,48 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
     // Store the result vectors
     ((__m128i *)dest)[2*numof16belem+i] = xmm2;
     ((__m128i *)dest)[3*numof16belem+i] = xmm3;
+  }
+}
+
+
+// Routine optimized for shuffling a buffer for a type size of 8 bytes.
+// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// F. Alted 2009-05-20
+static void
+shuffle8(unsigned char* dest, unsigned char* src, size_t size)
+{
+  size_t i, j, k, l;
+  size_t numof16belem;
+  __m128i xmm0[8], xmm1[8];
+
+  numof16belem = size / (16*8);
+  for (i = 0, j = 0; i < numof16belem; i++, j += 16*8) {
+    // Fetch and transpose bytes in groups of 128
+    for (k = 0; k < 8; k++) {
+      xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
+      xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x4e);
+      xmm1[k] = _mm_unpacklo_epi8(xmm0[k], xmm1[k]);
+    }
+    // Transpose words
+    for (k = 0, l = 0; k < 4; k++, l +=2) {
+      xmm0[k*2] = _mm_unpacklo_epi16(xmm1[l], xmm1[l+1]);
+      xmm0[k*2+1] = _mm_unpackhi_epi16(xmm1[l], xmm1[l+1]);
+    }
+    // Transpose double words
+    for (k = 0, l = 0; k < 4; k++, l++) {
+      if (k == 2) l += 2;
+      xmm1[k*2] = _mm_unpacklo_epi32(xmm0[l], xmm0[l+2]);
+      xmm1[k*2+1] = _mm_unpackhi_epi32(xmm0[l], xmm0[l+2]);
+    }
+    // Transpose quad words
+    for (k = 0; k < 4; k++) {
+      xmm0[k*2] = _mm_unpacklo_epi64(xmm1[k], xmm1[k+4]);
+      xmm0[k*2+1] = _mm_unpackhi_epi64(xmm1[k], xmm1[k+4]);
+    }
+    // Store the result vectors
+    for (k = 0; k < 8; k++) {
+      ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
+    }
   }
 }
 
@@ -175,6 +221,9 @@ blosc_compress(size_t bytesoftype, size_t nbytes, void *orig, void *dest)
       // tmp <-- _src
       if (bytesoftype == 4) {
         shuffle4(tmp, _src, CL);
+      }
+      if (bytesoftype == 8) {
+        shuffle8(tmp, _src, CL);
       }
       else {
         for (j = 0; j < bytesoftype; j++) {
@@ -253,34 +302,34 @@ unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
 {
   size_t i, j, k;
   size_t numofelementsCL, numof16belem;
-  __m128i xmm1[4], xmm2[4];
+  __m128i xmm0[4], xmm1[4];
 
   numofelementsCL = size / 4;
   numof16belem = numofelementsCL / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 4) {
     // Load the first 64 bytes in 4 XMM registrers
     for (j = 0; j < 4; j++) {
-      xmm1[j] = ((__m128i *)orig)[j*numof16belem+i];
+      xmm0[j] = ((__m128i *)orig)[j*numof16belem+i];
     }
     // Shuffle bytes
     for (j = 0; j < 2; j++) {
       // Compute the low 32 bytes
-      xmm2[j] = _mm_unpacklo_epi8(xmm1[j*2], xmm1[j*2+1]);
+      xmm1[j] = _mm_unpacklo_epi8(xmm0[j*2], xmm0[j*2+1]);
       // Compute the hi 32 bytes
-      xmm2[2+j] = _mm_unpackhi_epi8(xmm1[j*2], xmm1[j*2+1]);
+      xmm1[2+j] = _mm_unpackhi_epi8(xmm0[j*2], xmm0[j*2+1]);
     }
     // Shuffle 2-byte words
     for (j = 0; j < 2; j++) {
       // Compute the low 32 bytes
-      xmm1[j] = _mm_unpacklo_epi16(xmm2[j*2], xmm2[j*2+1]);
+      xmm0[j] = _mm_unpacklo_epi16(xmm1[j*2], xmm1[j*2+1]);
       // Compute the hi 32 bytes
-      xmm1[2+j] = _mm_unpackhi_epi16(xmm2[j*2], xmm2[j*2+1]);
+      xmm0[2+j] = _mm_unpackhi_epi16(xmm1[j*2], xmm1[j*2+1]);
     }
     // Store the result vectors in proper order
-    ((__m128i *)dest)[k+0] = xmm1[0];
-    ((__m128i *)dest)[k+1] = xmm1[2];
-    ((__m128i *)dest)[k+2] = xmm1[1];
-    ((__m128i *)dest)[k+3] = xmm1[3];
+    ((__m128i *)dest)[k+0] = xmm0[0];
+    ((__m128i *)dest)[k+1] = xmm0[2];
+    ((__m128i *)dest)[k+2] = xmm0[1];
+    ((__m128i *)dest)[k+3] = xmm0[3];
   }
 }
 
@@ -293,45 +342,45 @@ unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
 {
   size_t i, j, k;
   size_t numofelementsCL, numof16belem;
-  __m128i xmm1[8], xmm2[8];
+  __m128i xmm0[8], xmm1[8];
 
   numofelementsCL = size / 8;
   numof16belem = numofelementsCL / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 8) {
     // Load the first 64 bytes in 8 XMM registrers
     for (j = 0; j < 8; j++) {
-      xmm1[j] = ((__m128i *)orig)[j*numof16belem+i];
+      xmm0[j] = ((__m128i *)orig)[j*numof16belem+i];
     }
     // Shuffle bytes
     for (j = 0; j < 4; j++) {
       // Compute the low 32 bytes
-      xmm2[j] = _mm_unpacklo_epi8(xmm1[j*2], xmm1[j*2+1]);
+      xmm1[j] = _mm_unpacklo_epi8(xmm0[j*2], xmm0[j*2+1]);
       // Compute the hi 32 bytes
-      xmm2[4+j] = _mm_unpackhi_epi8(xmm1[j*2], xmm1[j*2+1]);
+      xmm1[4+j] = _mm_unpackhi_epi8(xmm0[j*2], xmm0[j*2+1]);
     }
     // Shuffle 2-byte words
     for (j = 0; j < 4; j++) {
       // Compute the low 32 bytes
-      xmm1[j] = _mm_unpacklo_epi16(xmm2[j*2], xmm2[j*2+1]);
+      xmm0[j] = _mm_unpacklo_epi16(xmm1[j*2], xmm1[j*2+1]);
       // Compute the hi 32 bytes
-      xmm1[4+j] = _mm_unpackhi_epi16(xmm2[j*2], xmm2[j*2+1]);
+      xmm0[4+j] = _mm_unpackhi_epi16(xmm1[j*2], xmm1[j*2+1]);
     }
     // Shuffle 4-byte dwords
     for (j = 0; j < 4; j++) {
       // Compute the low 32 bytes
-      xmm2[j] = _mm_unpacklo_epi32(xmm1[j*2], xmm1[j*2+1]);
+      xmm1[j] = _mm_unpacklo_epi32(xmm0[j*2], xmm0[j*2+1]);
       // Compute the hi 32 bytes
-      xmm2[4+j] = _mm_unpackhi_epi32(xmm1[j*2], xmm1[j*2+1]);
+      xmm1[4+j] = _mm_unpackhi_epi32(xmm0[j*2], xmm0[j*2+1]);
     }
     // Store the result vectors in proper order
-    ((__m128i *)dest)[k+0] = xmm2[0];
-    ((__m128i *)dest)[k+1] = xmm2[4];
-    ((__m128i *)dest)[k+2] = xmm2[2];
-    ((__m128i *)dest)[k+3] = xmm2[6];
-    ((__m128i *)dest)[k+4] = xmm2[1];
-    ((__m128i *)dest)[k+5] = xmm2[5];
-    ((__m128i *)dest)[k+6] = xmm2[3];
-    ((__m128i *)dest)[k+7] = xmm2[7];
+    ((__m128i *)dest)[k+0] = xmm1[0];
+    ((__m128i *)dest)[k+1] = xmm1[4];
+    ((__m128i *)dest)[k+2] = xmm1[2];
+    ((__m128i *)dest)[k+3] = xmm1[6];
+    ((__m128i *)dest)[k+4] = xmm1[1];
+    ((__m128i *)dest)[k+5] = xmm1[5];
+    ((__m128i *)dest)[k+6] = xmm1[3];
+    ((__m128i *)dest)[k+7] = xmm1[7];
   }
 }
 
