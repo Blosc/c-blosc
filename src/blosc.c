@@ -71,40 +71,33 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 {
   size_t i, j, k;
   size_t numof16belem;
-  __m128i xmm0, xmm1, xmm2, xmm3;
-  __m128i xmm[4];
+  __m128i xmm0[4], xmm1[4];
 
   numof16belem = size / (16*4);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*4) {
+    // Fetch and transpose bytes and words in groups of 64
     for (k = 0; k < 4; k++) {
-      xmm0 = _mm_loadu_si128((__m128i*)(src+j+k*16));         // Fecth 16-bytes
-      // The next could be much simplified by using PSHUFB (Suppl. SSE3).
-      // However, neither compilers nor AMD CPU's seems to be ready for this yet.
-      xmm1 = _mm_shuffle_epi32(xmm0, 0xd8);  // 32-bit shuffle
-      xmm0 = _mm_shuffle_epi32(xmm1, 0x4e);  // Move high double word to low pos
-      xmm0 = _mm_unpacklo_epi8(xmm1, xmm0);
-      xmm1 = _mm_shuffle_epi32(xmm0, 0x04e);  // Move high double word to low pos
-      xmm0 = _mm_unpacklo_epi16(xmm0, xmm1);  // First intermediate result done
-      // Save the register in stack
-      xmm[k] = xmm0;
+      xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
+      xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
+      xmm0[k] = _mm_shuffle_epi32(xmm0[k], 0x8d);
+      xmm0[k] = _mm_unpacklo_epi8(xmm1[k], xmm0[k]);
+      xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x04e);
+      xmm0[k] = _mm_unpacklo_epi16(xmm0[k], xmm1[k]);
     }
-
-    // Compute the low 32 bytes
-    xmm0 = _mm_unpacklo_epi32(xmm[0], xmm[1]);
-    xmm1 = _mm_unpacklo_epi32(xmm[2], xmm[3]);
-    xmm2 = _mm_unpacklo_epi64(xmm0, xmm1);
-    xmm3 = _mm_unpackhi_epi64(xmm0, xmm1);
+    // Transpose double words
+    for (k = 0; k < 2; k++) {
+      xmm1[k*2] = _mm_unpacklo_epi32(xmm0[k*2], xmm0[k*2+1]);
+      xmm1[k*2+1] = _mm_unpackhi_epi32(xmm0[k*2], xmm0[k*2+1]);
+    }
+    // Transpose quad words
+    for (k = 0; k < 2; k++) {
+      xmm0[k*2] = _mm_unpacklo_epi64(xmm1[k], xmm1[k+2]);
+      xmm0[k*2+1] = _mm_unpackhi_epi64(xmm1[k], xmm1[k+2]);
+    }
     // Store the result vectors
-    ((__m128i *)dest)[0*numof16belem+i] = xmm2;
-    ((__m128i *)dest)[1*numof16belem+i] = xmm3;
-    // Compute the high 32 bytes
-    xmm0 = _mm_unpackhi_epi32(xmm[0], xmm[1]);
-    xmm1 = _mm_unpackhi_epi32(xmm[2], xmm[3]);
-    xmm2 = _mm_unpacklo_epi64(xmm0, xmm1);
-    xmm3 = _mm_unpackhi_epi64(xmm0, xmm1);
-    // Store the result vectors
-    ((__m128i *)dest)[2*numof16belem+i] = xmm2;
-    ((__m128i *)dest)[3*numof16belem+i] = xmm3;
+    for (k = 0; k < 4; k++) {
+      ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
+    }
   }
 }
 
@@ -222,7 +215,7 @@ blosc_compress(size_t bytesoftype, size_t nbytes, void *orig, void *dest)
       if (bytesoftype == 4) {
         shuffle4(tmp, _src, CL);
       }
-      if (bytesoftype == 8) {
+      else if (bytesoftype == 8) {
         shuffle8(tmp, _src, CL);
       }
       else {
@@ -626,14 +619,8 @@ int main() {
       //_orig[i] = rand() >> 9;
       //_orig[i] = rand() >> 6;
       //_orig[i] = rand() >> 30;
-      _origcpy[i] = _orig[i];
     }
-/*    __orig = (unsigned char *)orig;
-    __origcpy = (unsigned char *)origcpy;
-    for(i = 0; i < SIZE; ++i) {
-      __orig[i] = i & 0xff;
-      __origcpy[i] = __orig[i];
-    }*/
+
     memcpy(origcpy, orig, SIZE);
 
     last = clock();
@@ -656,12 +643,11 @@ int main() {
     for (i = 0; i < NITER; i++)
       nbytes = blosc_decompress(ELSIZE, cbytes, dest, orig);
     current = clock();
-
     tunshuf = (current-last)/((float)CLK_NITER);
     printf("blosc_d:\t %fs, %.1f MB/s\t", tunshuf, nbytes/(tunshuf*MB));
     printf("Orig bytes: %d  Final bytes: %d\n", cbytes, nbytes);
 
-    // Check that the data has done a good roundtrip
+    // Check that data has done a good roundtrip
     _orig = (int *)orig;
     _origcpy = (int *)origcpy;
     for(i = 0; i < SIZE/sizeof(int); ++i){
