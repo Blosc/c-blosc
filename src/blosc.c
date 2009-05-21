@@ -27,7 +27,7 @@
 //#define CL (32*1024) /* 32K */
 
 // Datatype size
-#define ELSIZE 16
+#define ELSIZE 2
 
 // Chunksize
 //#define SIZE 8*1024  // 8 KB
@@ -65,10 +65,40 @@ void printxmm(__m128i xmm0) {
 
 // Routine optimized for shuffling a buffer for a type size of 2 bytes.
 // The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
-// NOTE: There is not such a routine yet because:
-// * The size == 2 is not a very common case
-// * The code is quite envolved, and perhaps the speed-up is not worth the effort
 // F. Alted 2009-05-20
+static void
+shuffle2(unsigned char* dest, unsigned char* src, size_t size)
+{
+  size_t i, j, k;
+  size_t numof16belem;
+  __m128i xmm0[2], xmm1[2];
+
+  numof16belem = size / (16*2);
+  for (i = 0, j = 0; i < numof16belem; i++, j += 16*2) {
+    // Fetch and transpose bytes, words and double words in groups of 32 bytes
+    for (k = 0; k < 2; k++) {
+      xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
+      xmm0[k] = _mm_shufflelo_epi16(xmm0[k], 0xd8);
+      xmm0[k] = _mm_shufflehi_epi16(xmm0[k], 0xd8);
+      xmm0[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
+      xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x4e);
+      xmm0[k] = _mm_unpacklo_epi8(xmm0[k], xmm1[k]);
+      xmm0[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
+      xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x4e);
+      xmm0[k] = _mm_unpacklo_epi16(xmm0[k], xmm1[k]);
+      xmm0[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
+    }
+    // Transpose quad words
+    for (k = 0; k < 1; k++) {
+      xmm1[k*2] = _mm_unpacklo_epi64(xmm0[k], xmm0[k+1]);
+      xmm1[k*2+1] = _mm_unpackhi_epi64(xmm0[k], xmm0[k+1]);
+    }
+    // Store the result vectors
+    for (k = 0; k < 2; k++) {
+      ((__m128i *)dest)[k*numof16belem+i] = xmm1[k];
+    }
+  }
+}
 
 
 // Routine optimized for shuffling a buffer for a type size of 4 bytes.
@@ -83,7 +113,7 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*4);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*4) {
-    // Fetch and transpose bytes and words in groups of 64
+    // Fetch and transpose bytes and words in groups of 64 bytes
     for (k = 0; k < 4; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
       xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
@@ -122,7 +152,7 @@ shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*8);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*8) {
-    // Fetch and transpose bytes in groups of 128
+    // Fetch and transpose bytes in groups of 128 bytes
     for (k = 0; k < 8; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
       xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x4e);
@@ -164,7 +194,7 @@ shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*16);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*16) {
-    // Fetch elements in groups of 256
+    // Fetch elements in groups of 256 bytes
     for (k = 0; k < 16; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
     }
@@ -274,6 +304,9 @@ blosc_compress(size_t bytesoftype, size_t nbytes, void *orig, void *dest)
       }
       else if (bytesoftype == 16) {
         shuffle16(tmp, _src, CL);
+      }
+      else if (bytesoftype == 2) {
+        shuffle2(tmp, _src, CL);
       }
       else {
         for (j = 0; j < bytesoftype; j++) {
