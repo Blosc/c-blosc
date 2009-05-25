@@ -28,7 +28,7 @@
 //#define BLOCKSIZE (32*1024) /* 32K */
 
 // Datatype size
-#define ELSIZE 8
+#define ELSIZE 4
 
 // Chunksize (for benchmark purposes)
 //#define SIZE 8*1024  // 8 KB
@@ -53,113 +53,131 @@
 #define ToVectorAddress(x) ((__m128i*)&(x))
 
 
-unsigned int
-blosc_compress(size_t bytesoftype, size_t nbytes, void *src, void *dest)
-{
-    unsigned char *_src=NULL;   /* Alias for source buffer */
-    unsigned char *_dest=NULL;  /* Alias for destination buffer */
-    unsigned char *flags;
-    size_t nblocks;             /* Number of complete blocks in buffer */
-    size_t neblock;     /* Number of elements in block */
-    size_t i, j, k, l;          /* Local index variables */
-    size_t leftover;            /* Extra bytes at end of buffer */
-    size_t val, val2, eqval;
-    unsigned int cbytes, cebytes, ctbytes;
-    __m128i value, value2, cmpeq, andreg;
-    const char ones[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-    const char cmpresult[16];
-    // Temporary buffer for data block
-    unsigned char tmp[BLOCKSIZE] __attribute__((aligned(64)));
+// Shuffle & Compress a single block
+static size_t
+_blosc_c(size_t bytesoftype, size_t blocksize,
+         unsigned char* _src, unsigned char* _dest, unsigned char *tmp) {
+  size_t j;
+  size_t neblock = blocksize / bytesoftype;
+  unsigned int cbytes, ctbytes = 0;
 
-    nblocks = nbytes / BLOCKSIZE;
-    neblock = BLOCKSIZE / bytesoftype;
-    leftover = nbytes % BLOCKSIZE;
-    _src = (unsigned char *)(src);
-    _dest = (unsigned char *)(dest);
+  // Shuffle this block
+  shuffle(bytesoftype, blocksize, _src, tmp);
 
-    // Write header for this block
-    *_dest++ = BLOSC_VERSION;                   // The blosc version
-    flags = _dest++;                            // Flags (to be filled later on)
-    ctbytes = 2;
-    ((unsigned int *)(_dest))[0] = nbytes;      // The size of the chunk
+  // Compress each shuffled byte for this block
+  for (j = 0; j < bytesoftype; j++) {
     _dest += sizeof(int);
-    ctbytes += sizeof(int);
-
-    // First, look for a trivial repetition pattern
-    // Note that all the loads and stores have to be unaligned as we cannot
-    // guarantee that the source data is aligned to 16-bytes.
-    value = _mm_loadu_si128(ToVectorAddress(_src[0]));
-    // Initially all values are equal indeed :)
-    andreg = _mm_loadu_si128(ToVectorAddress(ones));
-    for (i = 16; i < nbytes; i += 16) {
-      value2 = _mm_loadu_si128(ToVectorAddress(_src[i]));
-      // Compare with value vector byte-to-byte
-      cmpeq = _mm_cmpeq_epi8(value, value2);
-      // Do an and with the previous comparison
-      andreg = _mm_and_si128(andreg, cmpeq);
+    cbytes = blosclz_compress(tmp+j*neblock, neblock, _dest);
+    if (cbytes == -1) {
+      // The compressor has been unable to compress data significantly
+      memcpy(_dest, tmp+j*neblock, neblock);
+      cbytes = neblock;
     }
-    // Store the cummulative 'and' register in memory
-    _mm_storeu_si128(ToVectorAddress(cmpresult), andreg);
-    // Are all values equal?
-    eqval = strncmp(cmpresult, ones, 16);
-    if (eqval == 0) {
-      // Trivial repetition pattern found
-      *flags = 1;           // bit 0 set to one, all the rest to 0
-      *_dest++ = 16;        // 16 repeating byte
-      _mm_storeu_si128(ToVectorAddress(_dest[0]), value);    // The repeated bytes
-      ctbytes += 1 + 16;
-      return ctbytes;
-    }
+    ((unsigned int *)(_dest))[-1] = cbytes;
+    _dest += cbytes;
+    ctbytes += cbytes + sizeof(int);
+  }  // Close j < bytesoftype
 
-    // Start the shuffle way
-    *flags = 2;           // bit 1 set to one, all the rest to 0
-    // First, write the shuffle header
-    ((unsigned int *)_dest)[0] = bytesoftype;       // The type size
-    ((unsigned int *)_dest)[1] = BLOCKSIZE;                // The block size
-    _dest += 8;
-    ctbytes += 8;
-    for (k = 0; k < nblocks; k++) {
-      // Shuffle this block
-      shuffle(bytesoftype, BLOCKSIZE, _src, tmp);
-      _src += BLOCKSIZE;
-      // Compress each shuffled byte for this block
-      for (j = 0; j < bytesoftype; j++) {
-        _dest += sizeof(int);
-        cbytes = blosclz_compress(tmp+j*neblock, neblock, _dest);
-        if (cbytes == -1) {
-          // The compressor has been unable to compress data significantly
-          memcpy(_dest, tmp+j*neblock, neblock);
-          cbytes = neblock;
-        }
-        ((unsigned int *)(_dest))[-1] = cbytes;
-        _dest += cbytes;
-        ctbytes += cbytes + sizeof(int);
-        // TODO:  Perform a better check so as to avoid a dest buffer overrun
-        if (ctbytes > nbytes) {
-          return 0;    // Uncompressible data
-        }
-      }  // Close j < bytesoftype
-    }  // Close k < nblocks
-
-    if(leftover > 0) {
-      memcpy((void*)tmp, (void*)_src, leftover);
-      _dest += sizeof(int);
-      cbytes = blosclz_compress(tmp, leftover, _dest);
-      ((unsigned int *)(_dest))[-1] = cbytes;
-      _dest += cbytes;
-      ctbytes += cbytes + sizeof(int);
-    }
-
-    return ctbytes;
+  return ctbytes;
 }
 
 
-static void *
+unsigned int
+blosc_compress(size_t bytesoftype, size_t nbytes, void *src, void *dest)
+{
+  unsigned char *_src=NULL;   /* Alias for source buffer */
+  unsigned char *_dest=NULL;  /* Alias for destination buffer */
+  unsigned char *flags;
+  size_t nblocks;             /* Number of complete blocks in buffer */
+  size_t neblock;     /* Number of elements in block */
+  size_t i, j, k, l;          /* Local index variables */
+  size_t leftover;            /* Extra bytes at end of buffer */
+  size_t val, val2, eqval;
+  unsigned int cbytes, ctbytes;
+  __m128i value, value2, cmpeq, andreg;
+  const char ones[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+  const char cmpresult[16];
+  // Temporary buffer for data block
+  unsigned char tmp[BLOCKSIZE] __attribute__((aligned(64)));
+
+  nblocks = nbytes / BLOCKSIZE;
+  neblock = BLOCKSIZE / bytesoftype;
+  leftover = nbytes % BLOCKSIZE;
+  _src = (unsigned char *)(src);
+  _dest = (unsigned char *)(dest);
+
+  // Write header for this block
+  *_dest++ = BLOSC_VERSION;                   // The blosc version
+  flags = _dest++;                            // Flags (to be filled later on)
+  ctbytes = 2;
+  ((unsigned int *)(_dest))[0] = nbytes;      // The size of the chunk
+  _dest += sizeof(int);
+  ctbytes += sizeof(int);
+
+  // First, look for a trivial repetition pattern
+  // Note that all the loads and stores have to be unaligned as we cannot
+  // guarantee that the source data is aligned to 16-bytes.
+  value = _mm_loadu_si128(ToVectorAddress(_src[0]));
+  // Initially all values are equal indeed :)
+  andreg = _mm_loadu_si128(ToVectorAddress(ones));
+  for (i = 16; i < nbytes; i += 16) {
+    value2 = _mm_loadu_si128(ToVectorAddress(_src[i]));
+    // Compare with value vector byte-to-byte
+    cmpeq = _mm_cmpeq_epi8(value, value2);
+    // Do an and with the previous comparison
+    andreg = _mm_and_si128(andreg, cmpeq);
+  }
+  // Store the cummulative 'and' register in memory
+  _mm_storeu_si128(ToVectorAddress(cmpresult), andreg);
+  // Are all values equal?
+  eqval = strncmp(cmpresult, ones, 16);
+  if (eqval == 0) {
+    // Trivial repetition pattern found
+    *flags = 1;           // bit 0 set to one, all the rest to 0
+    *_dest++ = 16;        // 16 repeating byte
+    _mm_storeu_si128(ToVectorAddress(_dest[0]), value);    // The repeated bytes
+    ctbytes += 1 + 16;
+    return ctbytes;
+  }
+
+  // Start the shuffle way
+  *flags = 2;           // bit 1 set to one, all the rest to 0
+  // First, write the shuffle header
+  ((unsigned int *)_dest)[0] = bytesoftype;       // The type size
+  ((unsigned int *)_dest)[1] = BLOCKSIZE;         // The block size
+  _dest += 8;
+  ctbytes += 8;
+  for (k = 0; k < nblocks; k++) {
+    cbytes = _blosc_c(bytesoftype, BLOCKSIZE, _src, _dest, tmp);
+    _dest += cbytes;
+    _src += BLOCKSIZE;
+    ctbytes += cbytes;
+    // TODO:  Perform a better check so as to avoid a dest buffer overrun
+    if (ctbytes > nbytes) {
+      return 0;    // Uncompressible data
+    }
+  }  // Close k < nblocks
+
+  if(leftover > 0) {
+    memcpy((void*)tmp, (void*)_src, leftover);
+    _dest += sizeof(int);
+    cbytes = blosclz_compress(tmp, leftover, _dest);
+    ((unsigned int *)(_dest))[-1] = cbytes;
+    _dest += cbytes;
+    ctbytes += cbytes + sizeof(int);
+  }
+
+  return ctbytes;
+}
+
+
+// Decompress & unshuffle a single block
+static size_t
 _blosc_d(size_t bytesoftype, size_t blocksize,
          unsigned char* _src, unsigned char* _dest, unsigned char *tmp)
 {
   size_t j;
-  size_t nbytes, cbytes;
+  size_t nbytes, cbytes, ctbytes = 0;
   size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
   unsigned char* _tmp;
 
@@ -179,11 +197,12 @@ _blosc_d(size_t bytesoftype, size_t blocksize,
       assert (nbytes == neblock);
     }
     _src += cbytes;
+    ctbytes += cbytes + sizeof(int);
     _tmp += neblock;
   }
 
   unshuffle(bytesoftype, blocksize, tmp, _dest);
-  return(_src);
+  return ctbytes;
 }
 
 
@@ -251,7 +270,8 @@ blosc_decompress(size_t bytesoftype, size_t cbbytes, void *src, void *dest)
   posix_memalign((void **)&tmp, 64, blocksize);
 
   for (k = 0; k < nblocks; k++) {
-    _src = _blosc_d(bytesoftype, blocksize, _src, _dest, tmp);
+    cbytes = _blosc_d(bytesoftype, blocksize, _src, _dest, tmp);
+    _src += cbytes;
     _dest += blocksize;
     ntbytes += blocksize;
   }
