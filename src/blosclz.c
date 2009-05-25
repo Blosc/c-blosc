@@ -4,6 +4,7 @@
   See LICENSE.txt for details about copyright and rights to use.
 */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "blosclz.h"

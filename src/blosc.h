@@ -17,6 +17,6 @@ blosc_compress(size_t bytesoftype, size_t nbytes, void *orig, void *dest);
 //                   void             *out_data, unsigned int out_len);
 
 unsigned int
-blosc_decompress(size_t bytesoftype, size_t cbbytes, void *orig, void *dest);
+blosc_decompress(void *src, void *dest, size_t dest_size);
 
 #endif
