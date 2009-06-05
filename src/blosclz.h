@@ -33,7 +33,7 @@ extern "C" {
   The input buffer and the output buffer can not overlap.
 */
 
-int blosclz_compress(const void* input, int length, void* output);
+int blosclz_compress(const int opt_level, const void* input, int length, void* output);
 
 /**
   Decompress a block of compressed data and returns the size of the 

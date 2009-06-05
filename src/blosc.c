@@ -52,6 +52,17 @@
 // Macro to type-cast an array address to a vector address:
 #define ToVectorAddress(x) ((__m128i*)&(x))
 
+// Defaults for compressing/shuffling actions
+int opt_level = 6;   // Medium optimization level
+void set_opt_level(int optlevel) {
+  opt_level = optlevel;
+}
+
+int do_shuffle = 1;  // Shuffle is active by default
+void set_shuffle(int doit) {
+  do_shuffle = doit;
+}
+
 
 // Shuffle & Compress a single block
 static size_t
@@ -61,13 +72,15 @@ _blosc_c(size_t typesize, size_t blocksize,
   size_t neblock = blocksize / typesize;
   unsigned int cbytes, ctbytes = 0;
 
-  // Shuffle this block
-  shuffle(typesize, blocksize, _src, tmp);
+  if (do_shuffle) {
+    // Shuffle this block
+    shuffle(typesize, blocksize, _src, tmp);
+  }
 
   // Compress each shuffled byte for this block
   for (j = 0; j < typesize; j++) {
     _dest += sizeof(int);
-    cbytes = blosclz_compress(tmp+j*neblock, neblock, _dest);
+    cbytes = blosclz_compress(opt_level, tmp+j*neblock, neblock, _dest);
     if (cbytes == -1) {
       // The compressor has been unable to compress data significantly
       memcpy(_dest, tmp+j*neblock, neblock);
@@ -114,6 +127,14 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   _dest += sizeof(int);
   ctbytes += sizeof(int);
 
+  if (opt_level == 0) {
+    // No compression wanted.  Just do a memcpy a return.
+    *flags = 4;                               // bit 2 set to 1 means no compression
+    memcpy(_dest, _src, nbytes);
+    ctbytes += nbytes;
+    return ctbytes;
+  }
+
   // First, look for a trivial repetition pattern
   // Note that all the loads and stores have to be unaligned as we cannot
   // guarantee that the source data is aligned to 16-bytes.
@@ -140,8 +161,10 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
     return ctbytes;
   }
 
-  // Start the shuffle way
-  *flags = 2;           // bit 1 set to one, all the rest to 0
+  if (do_shuffle) {
+    // Signal that shuffle is active
+    *flags = 2;           // bit 1 set to one, all the rest to 0
+  }
   // First, write the shuffle header
   ((unsigned int *)_dest)[0] = typesize;          // The type size
   ((unsigned int *)_dest)[1] = BLOCKSIZE;         // The block size
@@ -161,7 +184,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   if(leftover > 0) {
     memcpy((void*)tmp, (void*)_src, leftover);
     _dest += sizeof(int);
-    cbytes = blosclz_compress(tmp, leftover, _dest);
+    cbytes = blosclz_compress(opt_level, tmp, leftover, _dest);
     ((unsigned int *)(_dest))[-1] = cbytes;
     _dest += cbytes;
     ctbytes += cbytes + sizeof(int);
@@ -173,7 +196,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
 
 // Decompress & unshuffle a single block
 static size_t
-_blosc_d(size_t typesize, size_t blocksize,
+_blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
          unsigned char* _src, unsigned char* _dest, unsigned char *tmp)
 {
   size_t j;
@@ -201,7 +224,9 @@ _blosc_d(size_t typesize, size_t blocksize,
     _tmp += neblock;
   }
 
-  unshuffle(typesize, blocksize, tmp, _dest);
+  if (do_unshuffle) {
+    unshuffle(typesize, blocksize, tmp, _dest);
+  }
   return ctbytes;
 }
 
@@ -217,6 +242,7 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
   size_t j;
   size_t nbytes, dbytes, cbytes, ntbytes = 0;
   unsigned char *tmp;
+  int do_unshuffle = 0;
 
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
@@ -231,6 +257,12 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
     return -1;
   }
   _src += sizeof(int);
+
+  if (flags == 4) {       // No compression
+    // Just do a memcpy and return
+    memcpy(_dest, _src, nbytes);
+    return nbytes;
+  }
 
   // Check for the trivial repeat pattern
   if (flags == 1) {
@@ -259,7 +291,10 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
     return nbytes;
   }
 
-  // Shuffle way
+  if (flags == 2) {
+    // Input is shuffled.  Unshuffle it.
+    do_unshuffle = 1;
+  }
   // Read header info
   unsigned int typesize = ((unsigned int *)_src)[0];
   unsigned int blocksize = ((unsigned int *)_src)[1];
@@ -272,7 +307,7 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
   posix_memalign((void **)&tmp, 64, blocksize);
 
   for (j = 0; j < nblocks; j++) {
-    cbytes = _blosc_d(typesize, blocksize, _src, _dest, tmp);
+    cbytes = _blosc_d(do_unshuffle, typesize, blocksize, _src, _dest, tmp);
     _src += cbytes;
     _dest += blocksize;
     ntbytes += blocksize;
@@ -299,10 +334,10 @@ int main() {
     clock_t last, current;
     float tmemcpy, tshuf, tunshuf;
 
-    src = malloc(SIZE);  srccpy = malloc(SIZE);
-    //posix_memalign((void **)&src, 64, SIZE);
-    //posix_memalign((void **)&srccpy, 64, SIZE);
-    posix_memalign((void **)&dest, 64, SIZE);   // Must be aligned to 16 bytes at least!
+    //src = malloc(SIZE);  srccpy = malloc(SIZE);
+    posix_memalign((void **)&src, 64, SIZE+6);
+    posix_memalign((void **)&srccpy, 64, SIZE+6);
+    posix_memalign((void **)&dest, 64, SIZE+6);   // Must be aligned to 16 bytes at least!
 
     srand(1);
 
@@ -318,16 +353,19 @@ int main() {
     for(i = 0; i < SIZE/sizeof(int); ++i) {
       //_src[i] = 1;
       //_src[i] = 0x01010101;
-      _src[i] = 0x01020304;
+      //_src[i] = 0x01020304;
       //_src[i] = i * 1/.3;
-      //_src[i] = i;
+      _src[i] = i;
       //_src[i] = rand() >> 24;
       //_src[i] = rand() >> 22;
       //_src[i] = rand() >> 13;
-      //_src[i] = rand() >> 9;
+      //_src[i] = rand() >> 16;
       //_src[i] = rand() >> 6;
       //_src[i] = rand() >> 30;
     }
+
+    set_opt_level(1);
+    set_shuffle(1);
 
     memcpy(srccpy, src, SIZE);
 

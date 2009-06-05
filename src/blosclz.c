@@ -85,7 +85,8 @@ typedef unsigned int   flzuint32;
 #define HASH_FUNCTION(v,p) { v = BLOSCLZ_READU16(p); v ^= BLOSCLZ_READU16(p+1)^(v>>(16-HASH_LOG));v &= HASH_MASK; }
 
 
-BLOSCLZ_INLINE int blosclz_compress(const void* input, int length, void* output)
+BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int length,
+                                     void* output)
 {
   flzuint8* ip = (flzuint8*) input;
   flzuint8* ibase = (flzuint8*) input;
@@ -288,11 +289,11 @@ BLOSCLZ_INLINE int blosclz_compress(const void* input, int length, void* output)
         copy = 0;
         *op++ = MAX_COPY-1;
       }
-      //printf("ip, op--> %d, %d\n", ip - ibase, op - (flzuint8*)output);
       size_t l = ip - ibase;
       size_t lo = op - (flzuint8*)output;
       // TODO: Make the compression rate to depend on the compression level
-      if (l > (HASH_SIZE+16) && lo > (l>>1)) {
+      if (l*6 > (HASH_SIZE*opt_level+16) && lo > l) {
+        //printf("len inp, len out --> %d, %d, %d\n", l, lo, l>>1);
         // Seems incompressible so far...
         return -1;
       }
