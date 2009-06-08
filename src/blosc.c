@@ -23,8 +23,8 @@
 // Block sizes for optimal use of the first-level cache
 //#define BLOCKSIZE (2*1024)  /* 2K */
 //#define BLOCKSIZE (4*1024)  /* 4K */  /* Page size.  Optimal for P4. */
-#define BLOCKSIZE (8*1024)  /* 8K */  /* Seems optimal for Core2 and P4. */
-//#define BLOCKSIZE (16*1024) /* 16K */  /* Seems optimal for Core2. */
+//#define BLOCKSIZE (8*1024)  /* 8K */  /* Seems optimal for Core2 and P4. */
+#define BLOCKSIZE (16*1024) /* 16K */  /* Seems optimal for Core2. */
 //#define BLOCKSIZE (32*1024) /* 32K */
 
 // Datatype size
@@ -55,6 +55,11 @@
 // Defaults for compressing/shuffling actions
 int opt_level = 6;   // Medium optimization level
 void set_opt_level(int optlevel) {
+  // If opt_level not in 0..9, do nothing
+  if (opt_level < 0 || opt_level > 9) {
+    fprintf(stderr, "Optimization level must be between 0 and 9!\n");
+    return;
+  }
   opt_level = optlevel;
 }
 
@@ -355,8 +360,8 @@ int main() {
       //_src[i] = 0x01010101;
       //_src[i] = 0x01020304;
       //_src[i] = i * 1/.3;
-      _src[i] = i;
-      //_src[i] = rand() >> 24;
+      //_src[i] = i;
+      _src[i] = rand() >> 24;
       //_src[i] = rand() >> 22;
       //_src[i] = rand() >> 13;
       //_src[i] = rand() >> 16;

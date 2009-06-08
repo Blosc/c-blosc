@@ -76,13 +76,16 @@ typedef unsigned int   flzuint32;
   #define BLOSCLZ_READU16(p) *((const flzuint16*)(p))
 #endif
 
-// HASH_LOG cannot be larger than 16
-//#define HASH_LOG  13    // orig setting
-//#define HASH_LOG  11     // somewhat faster and enough compression rate for small binary blocks
-#define HASH_LOG  8     // somewhat faster and enough compression rate for small binary blocks
-#define HASH_SIZE (1<< HASH_LOG)
-#define HASH_MASK  (HASH_SIZE-1)
-#define HASH_FUNCTION(v,p) { v = BLOSCLZ_READU16(p); v ^= BLOSCLZ_READU16(p+1)^(v>>(16-HASH_LOG));v &= HASH_MASK; }
+
+BLOSCLZ_INLINE size_t hash_function(flzuint8* p, flzuint8 hash_log)
+{
+  size_t v;
+
+  v = BLOSCLZ_READU16(p);
+  v ^= BLOSCLZ_READU16(p+1)^(v>>(16-hash_log));
+  v &= (1 << hash_log) - 1;
+  return v;
+}
 
 
 BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int length,
@@ -93,11 +96,18 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
   flzuint8* ip_bound = ip + length - 2;
   flzuint8* ip_limit = ip + length - 12;
   flzuint8* op = (flzuint8*) output;
-  flzuint16 htab[HASH_SIZE] __attribute__((aligned(64)));
+
+  // Hash table depends on the opt level.  Hash_log cannot be larger than 15.
+  flzuint8 hash_log_[10] = {-1, 7, 7, 8, 8, 9, 9, 10, 11, 13};
+  flzuint8 hash_log = hash_log_[opt_level];
+  flzuint16 hash_size = 1 << hash_log;
+  flzuint16 *htab;
 
   size_t hslot;
   size_t hval;
   size_t copy;
+
+  htab = malloc(hash_size*sizeof(flzuint16));
 
   /* sanity check */
   if(BLOSCLZ_UNEXPECT_CONDITIONAL(length < 4)) {
@@ -107,14 +117,16 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
       ip_bound++;
       while(ip <= ip_bound)
         *op++ = *ip++;
+      free(htab);
       return length+1;
     }
     else
+      free(htab);
       return 0;
   }
 
   /* initializes hash table */
-  for (hslot = 0; hslot < HASH_SIZE; hslot++)
+  for (hslot = 0; hslot < hash_size; hslot++)
     htab[hslot] = 0;
 
   /* we start with literal copy */
@@ -139,7 +151,7 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
     }
 
     /* find potential match */
-    HASH_FUNCTION(hval,ip);
+    hval = hash_function(ip, hash_log);
     ref = ibase + htab[hval];
     /* update hash table */
     htab[hval] = anchor - ibase;
@@ -271,9 +283,9 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
     }
 
     /* update the hash at match boundary */
-    HASH_FUNCTION(hval,ip);
+    hval = hash_function(ip, hash_log);
     htab[hval] = ip++ - ibase;
-    HASH_FUNCTION(hval,ip);
+    hval = hash_function(ip, hash_log);
     htab[hval] = ip++ - ibase;
 
     /* assuming literal copy */
@@ -291,10 +303,9 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
       }
       size_t l = ip - ibase;
       size_t lo = op - (flzuint8*)output;
-      // TODO: Make the compression rate to depend on the compression level
-      if (l*6 > (HASH_SIZE*opt_level+16) && lo > l) {
-        //printf("len inp, len out --> %d, %d, %d\n", l, lo, l>>1);
+      if (l*6 > (hash_size*opt_level+16) && lo > l) {
         // Seems incompressible so far...
+        free(htab);
         return -1;
       }
   }
@@ -319,6 +330,7 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
   /* marker for blosclz */
   *(flzuint8*)output |= (1 << 5);
 
+  free(htab);
   return op - (flzuint8*)output;
 }
 
