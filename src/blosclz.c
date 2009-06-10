@@ -180,11 +180,11 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
     distance--;
 
     if(!distance) {
-      /* zero distance means a run */
+      // zero distance means a run
       flzuint8 x = ip[-1];
-      // Broadcast the value for every byte on a 64-bit register
       long long value, value2;
-      value = x * 0x0101010101010101;
+      // Broadcast the value for every byte on a 64-bit register
+      memset(&value2, x, 8);
       while (ip < ip_bound) {
         value2 = ((long long *)ref)[0];
         if (value != value2) {
