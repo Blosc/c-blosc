@@ -115,11 +115,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   size_t neblock;             // Number of elements in block
   size_t j;                   // Local index variables
   size_t leftover;            // Extra bytes at end of buffer
-  size_t eqval;
   unsigned int cbytes, ctbytes;
-  __m128i value, value2, cmpeq, andreg;
-  const char ones[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-  const char cmpresult[16];
   // Temporary buffer for data block
   unsigned char tmp[BLOCKSIZE] __attribute__((aligned(64)));
 
@@ -146,6 +142,10 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   }
 
 #ifdef __SSE2__
+  const char ones[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+  const char cmpresult[16];
+  size_t eqval;
+  __m128i value, value2, cmpeq, andreg;
   // First, look for a trivial repetition pattern
   // Note that all the loads and stores have to be unaligned as we cannot
   // guarantee that the source data is aligned to 16-bytes.
@@ -308,7 +308,7 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
     }
     // Copy the vector of values into destination
     for (j = 0; j < nbytes/16; j++) {
-      memcpy(dest[j*16], xmm0, 16);
+      memcpy(dest+j*16, xmm0, 16);
     }
 #endif   // __SSE2__
 

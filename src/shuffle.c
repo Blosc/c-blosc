@@ -1,7 +1,7 @@
+#include <stdio.h>
 
 #ifdef __SSE2__
 
-#include <stdio.h>
 #include <emmintrin.h>
 
 
