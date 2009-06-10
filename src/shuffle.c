@@ -1,3 +1,6 @@
+
+#ifdef __SSE2__
+
 #include <stdio.h>
 #include <emmintrin.h>
 
@@ -180,7 +183,7 @@ shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 }
 
 
-// Unshuffle the block.  This can never fail.
+// Shuffle a block.  This can never fail.
 void shuffle(size_t bytesoftype, size_t blocksize,
              unsigned char* _src, unsigned char* _dest) {
   size_t i, j;
@@ -395,7 +398,7 @@ unshuffle16(unsigned char* dest, unsigned char* orig, size_t size)
 }
 
 
-// Unshuffle the block.  This can never fail.
+// Unshuffle a block.  This can never fail.
 void unshuffle(size_t bytesoftype, size_t blocksize,
                unsigned char* _src, unsigned char* _dest) {
   size_t i, j;
@@ -423,3 +426,37 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
     }
   }
 }
+
+#else   // no __SSE2__ available
+
+// The non-SSE2 versions of shuffle and unshuffle
+
+// Shuffle a block.  This can never fail.
+void shuffle(size_t bytesoftype, size_t blocksize,
+             unsigned char* _src, unsigned char* _dest) {
+  size_t i, j;
+
+  // Non-optimized shuffle
+  size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
+  for (j = 0; j < bytesoftype; j++) {
+    for (i = 0; i < neblock; i++) {
+      _dest[j*neblock+i] = _src[i*bytesoftype+j];
+    }
+  }
+}
+
+// Unshuffle a block.  This can never fail.
+void unshuffle(size_t bytesoftype, size_t blocksize,
+               unsigned char* _src, unsigned char* _dest) {
+  size_t i, j;
+
+  // Non-optimized unshuffle
+  size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
+  for (i = 0; i < neblock; i++) {
+    for (j = 0; j < bytesoftype; j++) {
+      _dest[i*bytesoftype+j] = _src[j*neblock+i];
+    }
+  }
+}
+
+#endif  // __SSE2__

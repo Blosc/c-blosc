@@ -14,7 +14,11 @@
 #include <assert.h>
 #include "blosclz.h"
 #include "shuffle.h"
+
+// Only include SSE initrinsics if SSE2 or higher is supported
+#ifdef __SSE2__
 #include <emmintrin.h>
+#endif
 
 #define BLOSC_VERSION 1    //  Should be 1-byte long
 
@@ -48,9 +52,10 @@
 
 #define CLK_NITER CLOCKS_PER_SEC*NITER
 
-
+#ifdef __SSE2__
 // Macro to type-cast an array address to a vector address:
 #define ToVectorAddress(x) ((__m128i*)&(x))
+#endif
 
 // Defaults for compressing/shuffling actions
 int opt_level = 6;   // Medium optimization level
@@ -140,6 +145,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
     return ctbytes;
   }
 
+#ifdef __SSE2__
   // First, look for a trivial repetition pattern
   // Note that all the loads and stores have to be unaligned as we cannot
   // guarantee that the source data is aligned to 16-bytes.
@@ -165,12 +171,13 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
     ctbytes += 1 + 16;
     return ctbytes;
   }
+#endif  // __SSE2__
 
   if (do_shuffle) {
     // Signal that shuffle is active
     *flags = 2;           // bit 1 set to one, all the rest to 0
   }
-  // First, write the shuffle header
+  // Write the shuffle header
   ((unsigned int *)_dest)[0] = typesize;          // The type size
   ((unsigned int *)_dest)[1] = BLOCKSIZE;         // The block size
   _dest += 8;
@@ -272,19 +279,38 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
   // Check for the trivial repeat pattern
   if (flags == 1) {
     unsigned char rep = _src[0];            // The number of repeated bytes
+#ifdef __SSE2__
     __m128i xmm0;
     if (rep == 1) {
       // Copy values in blocks of 16 bytes
       xmm0 = _mm_set1_epi8(_src[1]);        // The repeated value
     }
-    else {                                  // rep == 16
+    else {           // rep == 16
       xmm0 = _mm_loadu_si128(ToVectorAddress(_src[1]));
     }
 
-    // Copy value into destination
+    // Copy the vector of values into destination
     for (j = 0; j < nbytes/16; j++) {
       ((__m128i *)dest)[j] = xmm0;
     }
+#else
+    unsigned char xmm0[16];
+    // Copy values in blocks of 16 bytes
+    if (rep == 1) {
+      for (j = 0; j < 16; j++) {
+        xmm0[j] = _src[1];        // The repeated value
+      }
+    }
+    else {       // rep == 16
+      for (j = 0; j < 16; j++) {
+        xmm0[j] = _src[1+j];
+      }
+    }
+    // Copy the vector of values into destination
+    for (j = 0; j < nbytes/16; j++) {
+      memcpy(dest[j*16], xmm0, 16);
+    }
+#endif   // __SSE2__
 
     if (rep == 1) {
       // Copy the remainding values
