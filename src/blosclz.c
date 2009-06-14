@@ -184,7 +184,7 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
       flzuint8 x = ip[-1];
       long long value, value2;
       // Broadcast the value for every byte on a 64-bit register
-      memset(&value2, x, 8);
+      memset(&value, x, 8);
       while (ip < ip_bound) {
         value2 = ((long long *)ref)[0];
         if (value != value2) {

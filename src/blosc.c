@@ -386,8 +386,8 @@ int main() {
       //_src[i] = 0x01010101;
       //_src[i] = 0x01020304;
       //_src[i] = i * 1/.3;
-      //_src[i] = i;
-      _src[i] = rand() >> 24;
+      _src[i] = i;
+      //_src[i] = rand() >> 24;
       //_src[i] = rand() >> 22;
       //_src[i] = rand() >> 13;
       //_src[i] = rand() >> 16;
@@ -395,7 +395,7 @@ int main() {
       //_src[i] = rand() >> 30;
     }
 
-    set_opt_level(1);
+    set_opt_level(6);
     set_shuffle(1);
 
     memcpy(srccpy, src, SIZE);
