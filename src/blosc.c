@@ -93,6 +93,11 @@ _blosc_c(size_t typesize, size_t blocksize,
     cbytes = blosclz_compress(opt_level, tmp+j*neblock, neblock, _dest);
     if (cbytes == -1) {
       // The compressor has been unable to compress data significantly
+      // Before doing the copy, check that we are not running into
+      // a buffer overflow.
+      if ((ctbytes+neblock) > blocksize) {
+        return 0;    // Non-compressible data
+      }
       memcpy(_dest, tmp+j*neblock, neblock);
       cbytes = neblock;
     }
@@ -184,13 +189,12 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   ctbytes += 8;
   for (j = 0; j < nblocks; j++) {
     cbytes = _blosc_c(typesize, BLOCKSIZE, _src, _dest, tmp);
+    if (cbytes == 0) {
+      return 0;    // Uncompressible data
+    }
     _dest += cbytes;
     _src += BLOCKSIZE;
     ctbytes += cbytes;
-    // TODO:  Perform a better check so as to avoid a dest buffer overrun
-    if (ctbytes > nbytes) {
-      return 0;    // Uncompressible data
-    }
   }  // Close k < nblocks
 
   if(leftover > 0) {
