@@ -12,6 +12,7 @@
 #include <time.h>
 #include <errno.h>
 #include <assert.h>
+#include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
 
@@ -19,8 +20,6 @@
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif
-
-#define BLOSC_VERSION 1    //  Should be 1-byte long
 
 #define MB 1024*1024
 
@@ -131,7 +130,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   _dest = (unsigned char *)(dest);
 
   // Write header for this block
-  *_dest++ = BLOSC_VERSION;                   // The blosc version
+  *_dest++ = BLOSC_FORMAT_VERSION;            // The blosc format version
   flags = _dest++;                            // Flags (to be filled later on)
   ctbytes = 2;
   ((unsigned int *)(_dest))[0] = nbytes;      // The size of the chunk

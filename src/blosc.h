@@ -2,7 +2,7 @@
 #define BLOSC_H
 
 
-#define BLOSC_VERSION 1     /* Blosc version, starting at 1 */
+#define BLOSC_FORMAT_VERSION 1     //  Should be 1-byte long
 
 // unsigned int
 // blosc_compress (const void *const in_data,  unsigned int in_len,
