@@ -1,6 +1,46 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+
+// The non-SSE2 versions of shuffle and unshuffle
+
+// Shuffle a block.  This can never fail.
+void _shuffle(size_t bytesoftype, size_t blocksize,
+	      unsigned char* _src, unsigned char* _dest) {
+  size_t i, j;
+
+  // Non-optimized shuffle
+  size_t neblock = blocksize / bytesoftype;  // Number of elements in a block
+  for (j = 0; j < bytesoftype; j++) {
+    for (i = 0; i < neblock; i++) {
+      _dest[j*neblock+i] = _src[i*bytesoftype+j];
+    }
+  }
+  size_t leftover = blocksize % bytesoftype;
+  memcpy(_dest + neblock*bytesoftype, _src + neblock*bytesoftype, leftover);
+}
+
+// Unshuffle a block.  This can never fail.
+void _unshuffle(size_t bytesoftype, size_t blocksize,
+		unsigned char* _src, unsigned char* _dest) {
+  size_t i, j;
+
+  // Non-optimized unshuffle
+  size_t neblock = blocksize / bytesoftype;  // Number of elements in a block
+  for (i = 0; i < neblock; i++) {
+    for (j = 0; j < bytesoftype; j++) {
+      _dest[i*bytesoftype+j] = _src[j*neblock+i];
+    }
+  }
+  size_t leftover = blocksize % bytesoftype;
+  memcpy(_dest+neblock*bytesoftype, _src+neblock*bytesoftype, leftover);
+}
+
 
 #ifdef __SSE2__
+
+// The SSE2 versions of shuffle and unshuffle
 
 #include <emmintrin.h>
 
@@ -19,7 +59,8 @@ void printxmm(__m128i xmm0) {
 
 
 // Routine optimized for shuffling a buffer for a type size of 2 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-20
 static void
 shuffle2(unsigned char* dest, unsigned char* src, size_t size)
@@ -57,7 +98,8 @@ shuffle2(unsigned char* dest, unsigned char* src, size_t size)
 
 
 // Routine optimized for shuffling a buffer for a type size of 4 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and have a power
+// of 2 size.
 // F. Alted 2009-05-20
 static void
 shuffle4(unsigned char* dest, unsigned char* src, size_t size)
@@ -96,7 +138,8 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 
 
 // Routine optimized for shuffling a buffer for a type size of 8 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-20
 static void
 shuffle8(unsigned char* dest, unsigned char* src, size_t size)
@@ -138,7 +181,8 @@ shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 
 
 // Routine optimized for shuffling a buffer for a type size of 16 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-20
 static void
 shuffle16(unsigned char* dest, unsigned char* src, size_t size)
@@ -186,7 +230,13 @@ shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 // Shuffle a block.  This can never fail.
 void shuffle(size_t bytesoftype, size_t blocksize,
              unsigned char* _src, unsigned char* _dest) {
-  size_t i, j;
+  int unaligned_dest = (uintptr_t)_dest % 16;
+
+  if (unaligned_dest) {
+    // _dest buffer is not aligned.  Call the non-sse2 version.
+    _shuffle(bytesoftype, blocksize, _src, _dest);
+    return;
+  }
 
   // Optimized shuffle?
   if (bytesoftype == 4) {
@@ -203,18 +253,14 @@ void shuffle(size_t bytesoftype, size_t blocksize,
   }
   else {
     // Non-optimized shuffle
-    size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
-    for (j = 0; j < bytesoftype; j++) {
-      for (i = 0; i < neblock; i++) {
-        _dest[j*neblock+i] = _src[i*bytesoftype+j];
-      }
-    }
+    _shuffle(bytesoftype, blocksize, _src, _dest);
   }
 }
 
 
 // Routine optimized for unshuffling a buffer for a type size of 2 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-13
 static void
 unshuffle2(unsigned char* dest, unsigned char* orig, size_t size)
@@ -242,7 +288,8 @@ unshuffle2(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 // Routine optimized for unshuffling a buffer for a type size of 4 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-13
 static void
 unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
@@ -282,7 +329,8 @@ unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 // Routine optimized for unshuffling a buffer for a type size of 8 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-13
 static void
 unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
@@ -333,7 +381,8 @@ unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 // Routine optimized for unshuffling a buffer for a type size of 16 bytes.
-// The buffer should be aligned on a 16 bytes boundary and be of a power of 2 size.
+// The buffer should be aligned on a 16 bytes boundary and be of a power
+// of 2 size.
 // F. Alted 2009-05-13
 static void
 unshuffle16(unsigned char* dest, unsigned char* orig, size_t size)
@@ -401,7 +450,14 @@ unshuffle16(unsigned char* dest, unsigned char* orig, size_t size)
 // Unshuffle a block.  This can never fail.
 void unshuffle(size_t bytesoftype, size_t blocksize,
                unsigned char* _src, unsigned char* _dest) {
-  size_t i, j;
+  int unaligned_src = (uintptr_t)_src % 16;
+  int unaligned_dest = (uintptr_t)_dest % 16;
+
+  if (unaligned_src || unaligned_dest) {
+    // _src or _dest buffers are not aligned.  Call the non-sse2 version.
+    _unshuffle(bytesoftype, blocksize, _src, _dest);
+    return;
+  }
 
   // Optimized unshuffle?
   if (bytesoftype == 4) {
@@ -417,46 +473,20 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
     unshuffle2(_dest, _src, blocksize);
   }
   else {
-    // Non-optimized unshuffle
-    size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
-    for (i = 0; i < neblock; i++) {
-      for (j = 0; j < bytesoftype; j++) {
-        _dest[i*bytesoftype+j] = _src[j*neblock+i];
-      }
-    }
+    _unshuffle(bytesoftype, blocksize, _src, _dest);
   }
 }
 
 #else   // no __SSE2__ available
 
-// The non-SSE2 versions of shuffle and unshuffle
-
-// Shuffle a block.  This can never fail.
 void shuffle(size_t bytesoftype, size_t blocksize,
-             unsigned char* _src, unsigned char* _dest) {
-  size_t i, j;
-
-  // Non-optimized shuffle
-  size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
-  for (j = 0; j < bytesoftype; j++) {
-    for (i = 0; i < neblock; i++) {
-      _dest[j*neblock+i] = _src[i*bytesoftype+j];
-    }
-  }
+	      unsigned char* _src, unsigned char* _dest) {
+  _shuffle(bytesoftype, blocksize, _src, _dest);
 }
 
-// Unshuffle a block.  This can never fail.
 void unshuffle(size_t bytesoftype, size_t blocksize,
                unsigned char* _src, unsigned char* _dest) {
-  size_t i, j;
-
-  // Non-optimized unshuffle
-  size_t neblock = blocksize / bytesoftype;  // Number of elements on a block
-  for (i = 0; i < neblock; i++) {
-    for (j = 0; j < bytesoftype; j++) {
-      _dest[i*bytesoftype+j] = _src[j*neblock+i];
-    }
-  }
+  _unshuffle(bytesoftype, blocksize, _src, _dest);
 }
 
 #endif  // __SSE2__

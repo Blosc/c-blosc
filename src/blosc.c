@@ -12,7 +12,6 @@
 #include <time.h>
 #include <errno.h>
 #include <assert.h>
-#include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
 
@@ -21,13 +20,15 @@
 #include <emmintrin.h>
 #endif
 
+#define BLOSC_VERSION 1    //  Should be 1-byte long
+
 #define MB 1024*1024
 
 // Block sizes for optimal use of the first-level cache
 //#define BLOCKSIZE (2*1024)  /* 2K */
-//#define BLOCKSIZE (4*1024)  /* 4K */  /* Page size.  Optimal for P4. */
+#define BLOCKSIZE (4*1024)  /* 4K */  /* Page size.  Optimal for P4. */
 //#define BLOCKSIZE (8*1024)  /* 8K */  /* Seems optimal for Core2 and P4. */
-#define BLOCKSIZE (16*1024) /* 16K */  /* Seems optimal for Core2. */
+//#define BLOCKSIZE (16*1024) /* 16K */  /* Seems optimal for Core2. */
 //#define BLOCKSIZE (32*1024) /* 32K */
 
 // Datatype size
@@ -58,7 +59,7 @@
 
 // Defaults for compressing/shuffling actions
 int opt_level = 6;   // Medium optimization level
-void set_opt_level(int optlevel) {
+void set_optlevel(int optlevel) {
   // If opt_level not in 0..9, do nothing
   if (opt_level < 0 || opt_level > 9) {
     fprintf(stderr, "Optimization level must be between 0 and 9!\n");
@@ -80,16 +81,23 @@ _blosc_c(size_t typesize, size_t blocksize,
   size_t j;
   size_t neblock = blocksize / typesize;
   unsigned int cbytes, ctbytes = 0;
+  unsigned char* _tmp;
 
-  if (do_shuffle) {
-    // Shuffle this block
+  if (do_shuffle && (typesize > 1)) {
+    // Shuffle this block (this has sense only if typesize > 1)
     shuffle(typesize, blocksize, _src, tmp);
+    _tmp = tmp;
+  }
+  else {
+     _tmp = _src;
+    //memcpy(tmp, _src, blocksize);
+    //_tmp = tmp;
   }
 
   // Compress each shuffled byte for this block
   for (j = 0; j < typesize; j++) {
     _dest += sizeof(int);
-    cbytes = blosclz_compress(opt_level, tmp+j*neblock, neblock, _dest);
+    cbytes = blosclz_compress(opt_level, _tmp+j*neblock, neblock, _dest);
     if (cbytes == -1) {
       // The compressor has been unable to compress data significantly
       // Before doing the copy, check that we are not running into
@@ -97,7 +105,7 @@ _blosc_c(size_t typesize, size_t blocksize,
       if ((ctbytes+neblock) > blocksize) {
         return 0;    // Non-compressible data
       }
-      memcpy(_dest, tmp+j*neblock, neblock);
+      memcpy(_dest, _tmp+j*neblock, neblock);
       cbytes = neblock;
     }
     ((unsigned int *)(_dest))[-1] = cbytes;
@@ -119,29 +127,58 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   size_t neblock;             // Number of elements in block
   size_t j;                   // Local index variables
   size_t leftover;            // Extra bytes at end of buffer
+  size_t blocksize;           // Length of the block in bytes
   unsigned int cbytes, ctbytes;
   // Temporary buffer for data block
-  unsigned char tmp[BLOCKSIZE] __attribute__((aligned(64)));
+  unsigned char *tmp;
 
-  nblocks = nbytes / BLOCKSIZE;
-  neblock = BLOCKSIZE / typesize;
-  leftover = nbytes % BLOCKSIZE;
+  switch(opt_level) {
+  case 4:
+    blocksize = BLOCKSIZE * 2;
+    break;
+  case 5:
+    blocksize = BLOCKSIZE * 4;
+    break;
+  case 6:
+    blocksize = BLOCKSIZE * 8;
+    break;
+  case 7:
+    blocksize = BLOCKSIZE * 16;
+    break;
+  case 8:
+    blocksize = BLOCKSIZE * 32;
+    break;
+  case 9:
+    blocksize = BLOCKSIZE * 64;
+    break;
+  default:
+    blocksize = BLOCKSIZE;
+  }
+
+  // Create temporary area
+  posix_memalign((void **)&tmp, 64, blocksize);
+
+  nblocks = nbytes / blocksize;
+  neblock = blocksize / typesize;
+  leftover = nbytes % blocksize;
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
 
   // Write header for this block
-  *_dest++ = BLOSC_FORMAT_VERSION;            // The blosc format version
-  flags = _dest++;                            // Flags (to be filled later on)
+  *_dest++ = BLOSC_VERSION;              // The blosc version
+  flags = _dest++;                       // Flags (to be filled later on)
+  *flags = 0;                            // All bits set to 0 initally
   ctbytes = 2;
-  ((unsigned int *)(_dest))[0] = nbytes;      // The size of the chunk
+  ((unsigned int *)(_dest))[0] = nbytes; // The size of the chunk
   _dest += sizeof(int);
   ctbytes += sizeof(int);
 
   if (opt_level == 0) {
     // No compression wanted.  Just do a memcpy a return.
-    *flags = 4;                               // bit 2 set to 1 means no compression
+    *flags = 4;                          // bit 2 set to 1 means no compression
     memcpy(_dest, _src, nbytes);
     ctbytes += nbytes;
+    free(tmp);
     return ctbytes;
   }
 
@@ -173,6 +210,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
     *_dest++ = 16;        // 16 repeating byte
     _mm_storeu_si128(ToVectorAddress(_dest[0]), value);    // The repeated bytes
     ctbytes += 1 + 16;
+    free(tmp);
     return ctbytes;
   }
 #endif  // __SSE2__
@@ -183,21 +221,27 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
   }
   // Write the shuffle header
   ((unsigned int *)_dest)[0] = typesize;          // The type size
-  ((unsigned int *)_dest)[1] = BLOCKSIZE;         // The block size
+  ((unsigned int *)_dest)[1] = blocksize;         // The block size
   _dest += 8;
   ctbytes += 8;
   for (j = 0; j < nblocks; j++) {
-    cbytes = _blosc_c(typesize, BLOCKSIZE, _src, _dest, tmp);
+    cbytes = _blosc_c(typesize, blocksize, _src, _dest, tmp);
     if (cbytes == 0) {
+      free(tmp);
       return 0;    // Uncompressible data
     }
     _dest += cbytes;
-    _src += BLOCKSIZE;
+    _src += blocksize;
     ctbytes += cbytes;
   }  // Close k < nblocks
 
   if(leftover > 0) {
-    memcpy((void*)tmp, (void*)_src, leftover);
+    if (do_shuffle && (typesize > 1)) {
+      shuffle(typesize, leftover, _src, tmp);
+    }
+    else {
+      memcpy(tmp, _src, leftover);
+    }
     _dest += sizeof(int);
     cbytes = blosclz_compress(opt_level, tmp, leftover, _dest);
     ((unsigned int *)(_dest))[-1] = cbytes;
@@ -205,6 +249,7 @@ blosc_compress(size_t typesize, size_t nbytes, void *src, void *dest)
     ctbytes += cbytes + sizeof(int);
   }
 
+  free(tmp);
   return ctbytes;
 }
 
@@ -219,7 +264,14 @@ _blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
   size_t neblock = blocksize / typesize;        // Number of elements on a block
   unsigned char* _tmp;
 
-  _tmp = tmp;
+  if (do_unshuffle && (typesize > 1)) {
+    _tmp = tmp;
+  }
+  else {
+    _tmp = _dest;
+  }
+  //_tmp = tmp;
+
   for (j = 0; j < typesize; j++) {
     cbytes = ((unsigned int *)(_src))[0];       // The number of compressed bytes
     _src += sizeof(int);
@@ -239,7 +291,7 @@ _blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
     _tmp += neblock;
   }
 
-  if (do_unshuffle) {
+  if (do_unshuffle && (typesize > 1)) {
     unshuffle(typesize, blocksize, tmp, _dest);
   }
   return ctbytes;
@@ -267,6 +319,7 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
   flags = _src[1];                          // The flags for this block
   _src += 2;
   nbytes = ((unsigned int *)_src)[0];       // The size of the chunk
+
   // TODO: Devise a schema for meaningful return codes
   if (nbytes > dest_size) {
     return -1;
@@ -329,10 +382,12 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
     // Input is shuffled.  Unshuffle it.
     do_unshuffle = 1;
   }
+
   // Read header info
   unsigned int typesize = ((unsigned int *)_src)[0];
   unsigned int blocksize = ((unsigned int *)_src)[1];
   _src += 8;
+
   // Compute some params
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
@@ -352,7 +407,12 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
     _src += sizeof(int);
     dbytes = blosclz_decompress(_src, cbytes, tmp, leftover);
     ntbytes += dbytes;
-    memcpy((void*)_dest, (void*)tmp, leftover);
+    if (do_unshuffle && (typesize > 1)) {
+      unshuffle(typesize, leftover, tmp, _dest);
+    }
+    else {
+      memcpy(_dest, tmp, leftover);
+    }
   }
 
   free(tmp);
@@ -360,7 +420,7 @@ blosc_decompress(void *src, void *dest, size_t dest_size)
 }
 
 
-int main() {
+int main(void) {
     unsigned int nbytes, cbytes;
     void *src, *dest, *srccpy;
     //unsigned char src[SIZE], dest[SIZE], srccpy[SIZE] __attribute__((aligned(64)));
@@ -389,8 +449,8 @@ int main() {
       //_src[i] = 0x01010101;
       //_src[i] = 0x01020304;
       //_src[i] = i * 1/.3;
-      _src[i] = i;
-      //_src[i] = rand() >> 24;
+      //_src[i] = i;
+      _src[i] = rand() >> 24;
       //_src[i] = rand() >> 22;
       //_src[i] = rand() >> 13;
       //_src[i] = rand() >> 16;
@@ -398,7 +458,7 @@ int main() {
       //_src[i] = rand() >> 30;
     }
 
-    set_opt_level(6);
+    set_optlevel(1);
     set_shuffle(1);
 
     memcpy(srccpy, src, SIZE);

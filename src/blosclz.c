@@ -88,17 +88,19 @@ BLOSCLZ_INLINE size_t hash_function(flzuint8* p, flzuint8 hash_log)
 }
 
 
-BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int length,
-                                     void* output)
+#define IP_BOUNDARY 2
+
+BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
+				    int length, void* output)
 {
   flzuint8* ip = (flzuint8*) input;
   flzuint8* ibase = (flzuint8*) input;
-  flzuint8* ip_bound = ip + length - 2;
+  flzuint8* ip_bound = ip + length - IP_BOUNDARY;
   flzuint8* ip_limit = ip + length - 12;
   flzuint8* op = (flzuint8*) output;
 
   // Hash table depends on the opt level.  Hash_log cannot be larger than 15.
-  flzuint8 hash_log_[10] = {-1, 7, 7, 8, 8, 9, 9, 10, 11, 13};
+  flzuint8 hash_log_[10] = {-1, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   flzuint8 hash_log = hash_log_[opt_level];
   flzuint16 hash_size = 1 << hash_log;
   flzuint16 *htab;
@@ -183,9 +185,10 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
       // zero distance means a run
       flzuint8 x = ip[-1];
       long long value, value2;
-      // Broadcast the value for every byte on a 64-bit register
+      // Broadcast the value for every byte in a 64-bit register
       memset(&value, x, 8);
-      while (ip < ip_bound) {
+      /* safe because the outer check against ip limit */
+      while (ip < (ip_bound - (sizeof(long long) - IP_BOUNDARY))) {
         value2 = ((long long *)ref)[0];
         if (value != value2) {
           // Find the byte that starts to differ
@@ -203,12 +206,12 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
         long l = ip - ip_bound;
         ip -= l;
         ref -= l;
-      }
+      }   // End of optimization
     }
     else {
       for(;;) {
         /* safe because the outer check against ip limit */
-        while (ip < ip_bound) {
+        while (ip < (ip_bound - (sizeof(long long) - IP_BOUNDARY))) {
           if (*ref++ != *ip++) break;
           if (((long long *)ref)[0] != ((long long *)ip)[0]) {
             // Find the byte that starts to differ
@@ -303,7 +306,7 @@ BLOSCLZ_INLINE int blosclz_compress( const int opt_level, const void* input, int
       }
       size_t l = ip - ibase;
       size_t lo = op - (flzuint8*)output;
-      if (l*6 > (hash_size*opt_level+16) && lo > l) {
+      if ((l*6 > hash_size*opt_level+16) && (lo > l)) {
         // Seems incompressible so far...
         free(htab);
         return -1;
