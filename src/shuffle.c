@@ -1,3 +1,11 @@
+/*********************************************************************
+  Blosc - Blocked Suffling and Compression Library
+
+  Copyright (C) 2009,2010 Francesc Alted (faltet@pytables.org)
+
+  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+**********************************************************************/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -45,7 +53,7 @@ void _unshuffle(size_t bytesoftype, size_t blocksize,
 #include <emmintrin.h>
 
 
-// The next is useful for debugging purposes
+/* The next is useful for debugging purposes */
 void printxmm(__m128i xmm0) {
   unsigned char buf[16];
 
@@ -71,7 +79,8 @@ shuffle2(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*2);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*2) {
-    // Fetch and transpose bytes, words and double words in groups of 32 bytes
+    /* Fetch and transpose bytes, words and double words in groups of
+       32 bytes */
     for (k = 0; k < 2; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
       xmm0[k] = _mm_shufflelo_epi16(xmm0[k], 0xd8);
@@ -84,12 +93,12 @@ shuffle2(unsigned char* dest, unsigned char* src, size_t size)
       xmm0[k] = _mm_unpacklo_epi16(xmm0[k], xmm1[k]);
       xmm0[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
     }
-    // Transpose quad words
+    /* Transpose quad words */
     for (k = 0; k < 1; k++) {
       xmm1[k*2] = _mm_unpacklo_epi64(xmm0[k], xmm0[k+1]);
       xmm1[k*2+1] = _mm_unpackhi_epi64(xmm0[k], xmm0[k+1]);
     }
-    // Store the result vectors
+    /* Store the result vectors */
     for (k = 0; k < 2; k++) {
       ((__m128i *)dest)[k*numof16belem+i] = xmm1[k];
     }
@@ -97,10 +106,10 @@ shuffle2(unsigned char* dest, unsigned char* src, size_t size)
 }
 
 
-// Routine optimized for shuffling a buffer for a type size of 4 bytes.
-// The buffer should be aligned on a 16 bytes boundary and have a power
-// of 2 size.
-// F. Alted 2009-05-20
+/* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
+/* The buffer should be aligned on a 16 bytes boundary and have a power */
+/* of 2 size. */
+/* F. Alted 2009-05-20 */
 static void
 shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 {
@@ -110,7 +119,7 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*4);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*4) {
-    // Fetch and transpose bytes and words in groups of 64 bytes
+    /* Fetch and transpose bytes and words in groups of 64 bytes */
     for (k = 0; k < 4; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
       xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0xd8);
@@ -119,17 +128,17 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
       xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x04e);
       xmm0[k] = _mm_unpacklo_epi16(xmm0[k], xmm1[k]);
     }
-    // Transpose double words
+    /* Transpose double words */
     for (k = 0; k < 2; k++) {
       xmm1[k*2] = _mm_unpacklo_epi32(xmm0[k*2], xmm0[k*2+1]);
       xmm1[k*2+1] = _mm_unpackhi_epi32(xmm0[k*2], xmm0[k*2+1]);
     }
-    // Transpose quad words
+    /* Transpose quad words */
     for (k = 0; k < 2; k++) {
       xmm0[k*2] = _mm_unpacklo_epi64(xmm1[k], xmm1[k+2]);
       xmm0[k*2+1] = _mm_unpackhi_epi64(xmm1[k], xmm1[k+2]);
     }
-    // Store the result vectors
+    /* Store the result vectors */
     for (k = 0; k < 4; k++) {
       ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
     }
@@ -150,29 +159,29 @@ shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*8);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*8) {
-    // Fetch and transpose bytes in groups of 128 bytes
+    /* Fetch and transpose bytes in groups of 128 bytes */
     for (k = 0; k < 8; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
       xmm1[k] = _mm_shuffle_epi32(xmm0[k], 0x4e);
       xmm1[k] = _mm_unpacklo_epi8(xmm0[k], xmm1[k]);
     }
-    // Transpose words
+    /* Transpose words */
     for (k = 0, l = 0; k < 4; k++, l +=2) {
       xmm0[k*2] = _mm_unpacklo_epi16(xmm1[l], xmm1[l+1]);
       xmm0[k*2+1] = _mm_unpackhi_epi16(xmm1[l], xmm1[l+1]);
     }
-    // Transpose double words
+    /* Transpose double words */
     for (k = 0, l = 0; k < 4; k++, l++) {
       if (k == 2) l += 2;
       xmm1[k*2] = _mm_unpacklo_epi32(xmm0[l], xmm0[l+2]);
       xmm1[k*2+1] = _mm_unpackhi_epi32(xmm0[l], xmm0[l+2]);
     }
-    // Transpose quad words
+    /* Transpose quad words */
     for (k = 0; k < 4; k++) {
       xmm0[k*2] = _mm_unpacklo_epi64(xmm1[k], xmm1[k+4]);
       xmm0[k*2+1] = _mm_unpackhi_epi64(xmm1[k], xmm1[k+4]);
     }
-    // Store the result vectors
+    /* Store the result vectors */
     for (k = 0; k < 8; k++) {
       ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
     }
@@ -193,33 +202,33 @@ shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 
   numof16belem = size / (16*16);
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*16) {
-    // Fetch elements in groups of 256 bytes
+    /* Fetch elements in groups of 256 bytes */
     for (k = 0; k < 16; k++) {
       xmm0[k] = _mm_loadu_si128((__m128i*)(src+j+k*16));
     }
-    // Transpose bytes
+    /* Transpose bytes */
     for (k = 0, l = 0; k < 8; k++, l +=2) {
       xmm1[k*2] = _mm_unpacklo_epi8(xmm0[l], xmm0[l+1]);
       xmm1[k*2+1] = _mm_unpackhi_epi8(xmm0[l], xmm0[l+1]);
     }
-    // Transpose words
+    /* Transpose words */
     for (k = 0, l = -2; k < 8; k++, l++) {
       if ((k%2) == 0) l += 2;
       xmm0[k*2] = _mm_unpacklo_epi16(xmm1[l], xmm1[l+2]);
       xmm0[k*2+1] = _mm_unpackhi_epi16(xmm1[l], xmm1[l+2]);
     }
-    // Transpose double words
+    /* Transpose double words */
     for (k = 0, l = -4; k < 8; k++, l++) {
       if ((k%4) == 0) l += 4;
       xmm1[k*2] = _mm_unpacklo_epi32(xmm0[l], xmm0[l+4]);
       xmm1[k*2+1] = _mm_unpackhi_epi32(xmm0[l], xmm0[l+4]);
     }
-    // Transpose quad words
+    /* Transpose quad words */
     for (k = 0; k < 8; k++) {
       xmm0[k*2] = _mm_unpacklo_epi64(xmm1[k], xmm1[k+8]);
       xmm0[k*2+1] = _mm_unpackhi_epi64(xmm1[k], xmm1[k+8]);
     }
-    // Store the result vectors
+    /* Store the result vectors */
     for (k = 0; k < 16; k++) {
       ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
     }
@@ -227,7 +236,7 @@ shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 }
 
 
-// Shuffle a block.  This can never fail.
+/* Shuffle a block.  This can never fail. */
 void shuffle(size_t bytesoftype, size_t blocksize,
              unsigned char* _src, unsigned char* _dest) {
   int unaligned_dest = (uintptr_t)_dest % 16;
@@ -272,15 +281,15 @@ unshuffle2(unsigned char* dest, unsigned char* orig, size_t size)
   neblock = size / 2;
   numof16belem = neblock / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 2) {
-    // Load the first 32 bytes in 2 XMM registrers
+    /* Load the first 32 bytes in 2 XMM registrers */
     xmm1[0] = ((__m128i *)orig)[0*numof16belem+i];
     xmm1[1] = ((__m128i *)orig)[1*numof16belem+i];
-    // Shuffle bytes
-    // Compute the low 32 bytes
+    /* Shuffle bytes */
+    /* Compute the low 32 bytes */
     xmm2[0] = _mm_unpacklo_epi8(xmm1[0], xmm1[1]);
-    // Compute the hi 32 bytes
+    /* Compute the hi 32 bytes */
     xmm2[1] = _mm_unpackhi_epi8(xmm1[0], xmm1[1]);
-    // Store the result vectors in proper order
+    /* Store the result vectors in proper order */
     ((__m128i *)dest)[k+0] = xmm2[0];
     ((__m128i *)dest)[k+1] = xmm2[1];
   }
@@ -301,25 +310,25 @@ unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
   neblock = size / 4;
   numof16belem = neblock / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 4) {
-    // Load the first 64 bytes in 4 XMM registrers
+    /* Load the first 64 bytes in 4 XMM registrers */
     for (j = 0; j < 4; j++) {
       xmm0[j] = ((__m128i *)orig)[j*numof16belem+i];
     }
-    // Shuffle bytes
+    /* Shuffle bytes */
     for (j = 0; j < 2; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm1[j] = _mm_unpacklo_epi8(xmm0[j*2], xmm0[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm1[2+j] = _mm_unpackhi_epi8(xmm0[j*2], xmm0[j*2+1]);
     }
-    // Shuffle 2-byte words
+    /* Shuffle 2-byte words */
     for (j = 0; j < 2; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm0[j] = _mm_unpacklo_epi16(xmm1[j*2], xmm1[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm0[2+j] = _mm_unpackhi_epi16(xmm1[j*2], xmm1[j*2+1]);
     }
-    // Store the result vectors in proper order
+    /* Store the result vectors in proper order */
     ((__m128i *)dest)[k+0] = xmm0[0];
     ((__m128i *)dest)[k+1] = xmm0[2];
     ((__m128i *)dest)[k+2] = xmm0[1];
@@ -342,32 +351,32 @@ unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
   neblock = size / 8;
   numof16belem = neblock / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 8) {
-    // Load the first 64 bytes in 8 XMM registrers
+    /* Load the first 64 bytes in 8 XMM registrers */
     for (j = 0; j < 8; j++) {
       xmm0[j] = ((__m128i *)orig)[j*numof16belem+i];
     }
-    // Shuffle bytes
+    /* Shuffle bytes */
     for (j = 0; j < 4; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm1[j] = _mm_unpacklo_epi8(xmm0[j*2], xmm0[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm1[4+j] = _mm_unpackhi_epi8(xmm0[j*2], xmm0[j*2+1]);
     }
-    // Shuffle 2-byte words
+    /* Shuffle 2-byte words */
     for (j = 0; j < 4; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm0[j] = _mm_unpacklo_epi16(xmm1[j*2], xmm1[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm0[4+j] = _mm_unpackhi_epi16(xmm1[j*2], xmm1[j*2+1]);
     }
-    // Shuffle 4-byte dwords
+    /* Shuffle 4-byte dwords */
     for (j = 0; j < 4; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm1[j] = _mm_unpacklo_epi32(xmm0[j*2], xmm0[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm1[4+j] = _mm_unpackhi_epi32(xmm0[j*2], xmm0[j*2+1]);
     }
-    // Store the result vectors in proper order
+    /* Store the result vectors in proper order */
     ((__m128i *)dest)[k+0] = xmm1[0];
     ((__m128i *)dest)[k+1] = xmm1[4];
     ((__m128i *)dest)[k+2] = xmm1[2];
@@ -394,39 +403,39 @@ unshuffle16(unsigned char* dest, unsigned char* orig, size_t size)
   neblock = size / 16;
   numof16belem = neblock / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 16) {
-    // Load the first 128 bytes in 16 XMM registrers
+    /* Load the first 128 bytes in 16 XMM registrers */
     for (j = 0; j < 16; j++) {
       xmm1[j] = ((__m128i *)orig)[j*numof16belem+i];
     }
-    // Shuffle bytes
+    /* Shuffle bytes */
     for (j = 0; j < 8; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm2[j] = _mm_unpacklo_epi8(xmm1[j*2], xmm1[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm2[8+j] = _mm_unpackhi_epi8(xmm1[j*2], xmm1[j*2+1]);
     }
-    // Shuffle 2-byte words
+    /* Shuffle 2-byte words */
     for (j = 0; j < 8; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm1[j] = _mm_unpacklo_epi16(xmm2[j*2], xmm2[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm1[8+j] = _mm_unpackhi_epi16(xmm2[j*2], xmm2[j*2+1]);
     }
-    // Shuffle 4-byte dwords
+    /* Shuffle 4-byte dwords */
     for (j = 0; j < 8; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm2[j] = _mm_unpacklo_epi32(xmm1[j*2], xmm1[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm2[8+j] = _mm_unpackhi_epi32(xmm1[j*2], xmm1[j*2+1]);
     }
-    // Shuffle 8-byte qwords
+    /* Shuffle 8-byte qwords */
     for (j = 0; j < 8; j++) {
-      // Compute the low 32 bytes
+      /* Compute the low 32 bytes */
       xmm1[j] = _mm_unpacklo_epi64(xmm2[j*2], xmm2[j*2+1]);
-      // Compute the hi 32 bytes
+      /* Compute the hi 32 bytes */
       xmm1[8+j] = _mm_unpackhi_epi64(xmm2[j*2], xmm2[j*2+1]);
     }
-    // Store the result vectors in proper order
+    /* Store the result vectors in proper order */
     ((__m128i *)dest)[k+0] = xmm1[0];
     ((__m128i *)dest)[k+1] = xmm1[8];
     ((__m128i *)dest)[k+2] = xmm1[4];
@@ -447,7 +456,7 @@ unshuffle16(unsigned char* dest, unsigned char* orig, size_t size)
 }
 
 
-// Unshuffle a block.  This can never fail.
+/* Unshuffle a block.  This can never fail. */
 void unshuffle(size_t bytesoftype, size_t blocksize,
                unsigned char* _src, unsigned char* _dest) {
   int unaligned_src = (uintptr_t)_src % 16;
@@ -477,7 +486,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
   }
 }
 
-#else   // no __SSE2__ available
+#else   /* no __SSE2__ available */
 
 void shuffle(size_t bytesoftype, size_t blocksize,
 	      unsigned char* _src, unsigned char* _dest) {
@@ -489,4 +498,4 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
   _unshuffle(bytesoftype, blocksize, _src, _dest);
 }
 
-#endif  // __SSE2__
+#endif  /* __SSE2__ */

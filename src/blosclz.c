@@ -1,8 +1,17 @@
-/*
-  blosc - Blocked Suffling and Compression Library
+/*********************************************************************
+  Blosc - Blocked Suffling and Compression Library
 
-  See LICENSE.txt for details about copyright and rights to use.
-*/
+  Author: Francesc Alted (faltet@pytables.org)
+
+  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+**********************************************************************/
+
+/*********************************************************************
+  The code in this file is heavily based on FastLZ, a lightning-fast
+  lossless compression library.  See LICENSES/FASTLZ.txt for details
+  about copyright and rights to use.
+**********************************************************************/
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,16 +62,17 @@
 #define BLOSCLZ_INLINE inline
 #elif defined(__BORLANDC__) || defined(_MSC_VER) || defined(__LCC__)
 #define BLOSCLZ_INLINE __inline
-#else 
+#else
 #define BLOSCLZ_INLINE
 #endif
 
 /*
  * FIXME: use preprocessor magic to set this on different platforms!
  */
-typedef unsigned char  flzuint8;
-typedef unsigned short flzuint16;
-typedef unsigned int   flzuint32;
+typedef unsigned char  blzuint8;
+typedef unsigned short blzuint16;
+typedef unsigned int   blzuint32;
+typedef long long      blzint64;
 
 
 #define MAX_COPY       32
@@ -73,11 +83,11 @@ typedef unsigned int   flzuint32;
 #ifdef BLOSCLZ_STRICT_ALIGN
   #define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
 #else
-  #define BLOSCLZ_READU16(p) *((const flzuint16*)(p))
+  #define BLOSCLZ_READU16(p) *((const blzuint16*)(p))
 #endif
 
 
-BLOSCLZ_INLINE size_t hash_function(flzuint8* p, flzuint8 hash_log)
+BLOSCLZ_INLINE size_t hash_function(blzuint8* p, blzuint8 hash_log)
 {
   size_t v;
 
@@ -109,7 +119,23 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
   size_t hval;
   size_t copy;
 
-  htab = malloc(hash_size*sizeof(flzuint16));
+  /* Maximum length for output depends on the opt_level.  95% is a maximum. */
+  float maxlength_[10] = {-1, .2, .4, .5, .6, .7, .8, .9, .925, .95};
+  /* The next values are more aggressive, but fine for high performance */
+  //float maxlength_[10] = {-1, .1, .2, .3, .4, .5, .6, .7, .8, .95};
+  size_t maxlength = (size_t) (length * maxlength_[opt_level]);
+  if (maxlength > (size_t) maxout) {
+    maxlength = (size_t) maxout;
+  }
+  blzuint8* op_limit = op + maxlength;
+
+  /* output buffer cannot be less than 66 bytes or we can get into problems.
+     As output is usually the same length than input, we take input length. */
+  if (length < 66) {
+    return 0;                   /* Mark this as uncompressible */
+  }
+
+  htab = malloc(hash_size*sizeof(blzuint16));
 
   /* sanity check */
   if(BLOSCLZ_UNEXPECT_CONDITIONAL(length < 4)) {
@@ -139,10 +165,10 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
 
   /* main loop */
   while(BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit)) {
-    const flzuint8* ref;
+    const blzuint8* ref;
     size_t distance;
-    size_t len = 3;         // minimum match length
-    flzuint8* anchor = ip;  // comparison starting-point
+    size_t len = 3;         /* minimum match length */
+    blzuint8* anchor = ip;  /* comparison starting-point */
 
     /* check for a run */
     if(ip[0] == ip[-1] && BLOSCLZ_READU16(ip-1)==BLOSCLZ_READU16(ip+1)) {
@@ -191,7 +217,7 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
       while (ip < (ip_bound - (sizeof(long long) - IP_BOUNDARY))) {
         value2 = ((long long *)ref)[0];
         if (value != value2) {
-          // Find the byte that starts to differ
+          /* Find the byte that starts to differ */
           while (ip < ip_bound) {
             if (*ref++ != x) break; else ip++;
           }
@@ -213,8 +239,8 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
         /* safe because the outer check against ip limit */
         while (ip < (ip_bound - (sizeof(long long) - IP_BOUNDARY))) {
           if (*ref++ != *ip++) break;
-          if (((long long *)ref)[0] != ((long long *)ip)[0]) {
-            // Find the byte that starts to differ
+          if (((blzint64 *)ref)[0] != ((blzint64 *)ip)[0]) {
+            /* Find the byte that starts to differ */
             while (ip < ip_bound) {
               if (*ref++ != *ip++) break;
             }
@@ -225,12 +251,12 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
             ref += 8;
           }
         }
-        // Last correction before exiting loop
+        /* Last correction before exiting loop */
         if (ip > ip_bound) {
           size_t l = ip - ip_bound;
           ip -= l;
           ref -= l;
-        }   // End of optimization
+        }   /* End of optimization */
         break;
       }
     }
@@ -309,13 +335,17 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
       if ((l*6 > hash_size*opt_level+16) && (lo > l)) {
         // Seems incompressible so far...
         free(htab);
-        return -1;
+        return 0;
       }
   }
 
   /* left-over as literal copy */
   ip_bound++;
   while(ip <= ip_bound) {
+    if (op > op_limit) {
+      free(htab);
+      return 0;
+    }
     *op++ = *ip++;
     copy++;
     if(copy == MAX_COPY) {
@@ -331,29 +361,30 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
     op--;
 
   /* marker for blosclz */
-  *(flzuint8*)output |= (1 << 5);
+  *(blzuint8*)output |= (1 << 5);
 
   free(htab);
-  return op - (flzuint8*)output;
+  return op - (blzuint8*)output;
 }
 
 
-BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length, void* output, int maxout)
+BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length,
+                                      void* output, int maxout)
 {
-  const flzuint8* ip = (const flzuint8*) input;
-  const flzuint8* ip_limit  = ip + length;
-  flzuint8* op = (flzuint8*) output;
-  flzuint8* op_limit = op + maxout;
-  flzuint32 ctrl = (*ip++) & 31;
+  const blzuint8* ip = (const blzuint8*) input;
+  const blzuint8* ip_limit  = ip + length;
+  blzuint8* op = (blzuint8*) output;
+  blzuint8* op_limit = op + maxout;
+  blzuint32 ctrl = (*ip++) & 31;
   size_t loop = 1;
 
   do {
-    const flzuint8* ref = op;
+    const blzuint8* ref = op;
     size_t len = ctrl >> 5;
     size_t ofs = (ctrl & 31) << 8;
 
     if(ctrl >= 32) {
-      flzuint8 code;
+      blzuint8 code;
       len--;
       ref -= ofs;
       if (len == 7-1)
@@ -376,7 +407,7 @@ BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length, void* outpu
       if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + len + 3 > op_limit))
         return 0;
 
-      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ref-1 < (flzuint8 *)output))
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ref-1 < (blzuint8 *)output))
         return 0;
 #endif
 
@@ -387,7 +418,7 @@ BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length, void* outpu
 
       if(ref == op) {
         /* optimize copy for a run */
-        flzuint8 b = ref[-1];
+        blzuint8 b = ref[-1];
         memset(op, b, len+3);
         op += len+3;
       }
@@ -395,16 +426,15 @@ BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length, void* outpu
         /* copy from reference */
         ref--;
         len += 3;
-        if (abs(ref-op) <= len) {
-          //printf("abs(ref-op), len: %d,%d,", abs(ref-op), len);
-          // src and dst do overlap: do a loop
+        if (abs(ref-op) <= (int)len) {
+          /* src and dst do overlap: do a loop */
           for(; len; --len)
             *op++ = *ref++;
-          // The memmove below does not work well (don't know why)
-/*          memmove(op, ref, len);
-          op += len;
-          ref += len;
-          len = 0;*/
+          /* The memmove below does not work well (don't know why) */
+          /* memmove(op, ref, len);
+             op += len;
+             ref += len;
+             len = 0; */
         }
         else {
           memcpy(op, ref, len);
@@ -432,5 +462,5 @@ BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length, void* outpu
     }
   } while(BLOSCLZ_EXPECT_CONDITIONAL(loop));
 
-  return op - (flzuint8*)output;
+  return op - (blzuint8*)output;
 }
