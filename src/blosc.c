@@ -25,12 +25,8 @@
 /* Starting point for the blocksize computation */
 #define BLOCKSIZE (4*1024)     /* 4 KB (page size) */
 
-// Block sizes for optimal use of the first-level cache
-//#define BLOCKSIZE (2*1024)  /* 2K */
-#define BLOCKSIZE (4*1024)  /* 4K */  /* Page size.  Optimal for P4. */
-//#define BLOCKSIZE (8*1024)  /* 8K */  /* Seems optimal for Core2 and P4. */
-//#define BLOCKSIZE (16*1024) /* 16K */  /* Seems optimal for Core2. */
-//#define BLOCKSIZE (32*1024) /* 32K */
+/* The maximum number of splits in a block for compression */
+#define MAXSPLITS 16
 
 
 /* Defaults for compressing/shuffling actions */
@@ -66,9 +62,7 @@ _blosc_c(size_t typesize, size_t blocksize,
     _tmp = tmp;
   }
   else {
-     _tmp = _src;
-    //memcpy(tmp, _src, blocksize);
-    //_tmp = tmp;
+    _tmp = _src;
   }
 
   /* Compress for each shuffled slice split for this block. */
@@ -121,62 +115,51 @@ _blosc_c(size_t typesize, size_t blocksize,
 unsigned int
 blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
 {
-  unsigned char *_src=NULL;   // Alias for source buffer
-  unsigned char *_dest=NULL;  // Alias for destination buffer
-  unsigned char *flags;       // Flags for header
-  size_t nblocks;             // Number of complete blocks in buffer
-  size_t neblock;             // Number of elements in block
-  size_t j;                   // Local index variables
-  size_t leftover;            // Extra bytes at end of buffer
-  size_t blocksize;           // Length of the block in bytes
-  unsigned int cbytes, ctbytes;
-  // Temporary buffer for data block
-  unsigned char *tmp;
+  unsigned char *_src=NULL;   /* Alias for source buffer */
+  unsigned char *_dest=NULL;  /* Alias for destination buffer */
+  unsigned char *flags;       /* Flags for header */
+  size_t nblocks;             /* Number of complete blocks in buffer */
+  size_t j;                   /* Local index variables */
+  size_t leftover;            /* Extra bytes at end of buffer */
+  size_t blocksize;           /* Length of the block in bytes */
+  int cbytes;
+  unsigned int ctbytes;
+  unsigned char *tmp;         /* Temporary buffer for data block */
+  const char *too_long_message = "The impossible happened: buffer overflow!\n";
+  int i;
 
-  switch(opt_level) {
-  case 4:
-    blocksize = BLOCKSIZE * 2;
-    break;
-  case 5:
-    blocksize = BLOCKSIZE * 4;
-    break;
-  case 6:
-    blocksize = BLOCKSIZE * 8;
-    break;
-  case 7:
-    blocksize = BLOCKSIZE * 16;
-    break;
-  case 8:
-    blocksize = BLOCKSIZE * 32;
-    break;
-  case 9:
-    blocksize = BLOCKSIZE * 64;
-    break;
-  default:
-    blocksize = BLOCKSIZE;
+  /* Compute a blocksize depending on the optimization level */
+  blocksize = BLOCKSIZE;
+  /* 3 first optimization levels will not change blocksize */
+  for (i=4; i<=clevel; i++) {
+    /* Escape if blocksize grows more than nbytes */
+    if (blocksize*2 > nbytes) break;
+    blocksize *= 2;
   }
 
-  // Create temporary area
+  /* blocksize must be a multiple of the typesize */
+  blocksize = blocksize / typesize * typesize;
+
+  /* Create temporary area */
   posix_memalign((void **)&tmp, 64, blocksize);
 
   nblocks = nbytes / blocksize;
-  neblock = blocksize / typesize;
   leftover = nbytes % blocksize;
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
 
-  // Write header for this block
-  *_dest++ = BLOSC_VERSION;              // The blosc version
-  flags = _dest++;                       // Flags (to be filled later on)
-  *flags = 0;                            // All bits set to 0 initally
+  /* Write header for this block */
+  *_dest++ = BLOSC_VERSION_FORMAT;       /* The blosc version format */
+  flags = _dest++;                       /* Flags (to be filled later on) */
+  *flags = 0;                            /* All bits set to 0 initally */
   ctbytes = 2;
-  ((unsigned int *)(_dest))[0] = nbytes; // The size of the chunk
+  ((unsigned int *)(_dest))[0] = nbytes; /* The size of the chunk */
   _dest += sizeof(int);
   ctbytes += sizeof(int);
 
-  if (opt_level == 0) {
-    // No compression wanted.  Just do a memcpy a return.
-    *flags = 4;                          // bit 2 set to 1 means no compression
+  if (clevel == 0) {
+    /* No compression wanted.  Just do a memcpy and return. */
+    *flags = 4;                     /* bit 2 set to 1 means no compression */
     memcpy(_dest, _src, nbytes);
     ctbytes += nbytes;
     free(tmp);
@@ -187,35 +170,23 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
     /* Signal that shuffle is active */
     *flags = 2;           /* bit 1 set to one, all the rest to 0 */
   }
-  // Store the cummulative 'and' register in memory
-  _mm_storeu_si128(ToVectorAddress(cmpresult), andreg);
-  // Are all values equal?
-  eqval = strncmp(cmpresult, ones, 16);
-  if (eqval == 0) {
-    // Trivial repetition pattern found
-    *flags = 1;           // bit 0 set to one, all the rest to 0
-    *_dest++ = 16;        // 16 repeating byte
-    _mm_storeu_si128(ToVectorAddress(_dest[0]), value);    // The repeated bytes
-    ctbytes += 1 + 16;
-    free(tmp);
-    return ctbytes;
-  }
-#endif  // __SSE2__
 
-  if (do_shuffle) {
-    // Signal that shuffle is active
-    *flags = 2;           // bit 1 set to one, all the rest to 0
-  }
-  // Write the shuffle header
-  ((unsigned int *)_dest)[0] = typesize;          // The type size
-  ((unsigned int *)_dest)[1] = blocksize;         // The block size
+  /* Write the shuffle header */
+  ((unsigned int *)_dest)[0] = typesize;       /* The type size */
+  ((unsigned int *)_dest)[1] = blocksize;      /* The block size */
   _dest += 8;
   ctbytes += 8;
   for (j = 0; j < nblocks; j++) {
     cbytes = _blosc_c(typesize, blocksize, _src, _dest, tmp);
+    if (cbytes < 0) {
+      fprintf(stderr, too_long_message);
+      fsync(2);
+      free(tmp);
+      return cbytes;
+    }
     if (cbytes == 0) {
       free(tmp);
-      return 0;    // Uncompressible data
+      return 0;    /* Uncompressible data */
     }
     _dest += cbytes;
     _src += blocksize;
@@ -261,6 +232,11 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
   }
 
   free(tmp);
+  if (ctbytes >= nbytes) {
+    fprintf(stderr, too_long_message);
+    fsync(2);
+    return -5;
+  }
   return ctbytes;
 }
 
@@ -280,10 +256,18 @@ _blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
   else {
     _tmp = _dest;
   }
-  //_tmp = tmp;
 
-  for (j = 0; j < typesize; j++) {
-    cbytes = ((unsigned int *)(_src))[0];       // The number of compressed bytes
+  /* Compress for each shuffled slice split for this block. */
+  /* If the number of bytes is too large, do not split all. */
+  if (typesize <= MAXSPLITS) {
+    nsplits = typesize;
+  }
+  else {
+    nsplits = 1;
+  }
+  neblock = blocksize / nsplits;
+  for (j = 0; j < nsplits; j++) {
+    cbytes = ((unsigned int *)(_src))[0];  /* The number of compressed bytes */
     _src += sizeof(int);
     ctbytes += sizeof(int);
     /* Uncompress */
@@ -350,12 +334,12 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
     do_unshuffle = 1;
   }
 
-  // Read header info
-  unsigned int typesize = ((unsigned int *)_src)[0];
-  unsigned int blocksize = ((unsigned int *)_src)[1];
+  /* Read header info */
+  typesize = ((unsigned int *)_src)[0];
+  blocksize = ((unsigned int *)_src)[1];
   _src += 8;
 
-  // Compute some params
+  /* Compute some params */
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
 
@@ -400,6 +384,11 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   return ntbytes;
 }
 
+
+/* Constants for benchmarking purposes */
+#define MB    1024*1024
+#define NITER 4*4000            /* Number of iterations */
+#define CLK_NITER CLOCKS_PER_SEC*NITER
 
 int main(void) {
     unsigned int nbytes, cbytes;

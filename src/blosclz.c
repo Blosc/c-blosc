@@ -100,29 +100,30 @@ BLOSCLZ_INLINE size_t hash_function(blzuint8* p, blzuint8 hash_log)
 
 #define IP_BOUNDARY 2
 
-BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
-				    int length, void* output)
+BLOSCLZ_INLINE int blosclz_compress(int opt_level, const void* input,
+                                    int length, void* output, int maxout)
 {
-  flzuint8* ip = (flzuint8*) input;
-  flzuint8* ibase = (flzuint8*) input;
-  flzuint8* ip_bound = ip + length - IP_BOUNDARY;
-  flzuint8* ip_limit = ip + length - 12;
-  flzuint8* op = (flzuint8*) output;
+  blzuint8* ip = (blzuint8*) input;
+  blzuint8* ibase = (blzuint8*) input;
+  blzuint8* ip_bound = ip + length - IP_BOUNDARY;
+  blzuint8* ip_limit = ip + length - 12;
+  blzuint8* op = (blzuint8*) output;
 
-  // Hash table depends on the opt level.  Hash_log cannot be larger than 15.
-  flzuint8 hash_log_[10] = {-1, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-  flzuint8 hash_log = hash_log_[opt_level];
-  flzuint16 hash_size = 1 << hash_log;
-  flzuint16 *htab;
+  /* Hash table depends on the opt level.  Hash_log cannot be larger than 15. */
+  blzuint8 hash_log_[10] = {-1, 7, 8, 9, 10, 11, 12, 13, 14, 14};
+  blzuint8 hash_log = hash_log_[opt_level];
+  blzuint16 hash_size = 1 << hash_log;
+  blzuint16 *htab;
 
   size_t hslot;
   size_t hval;
   size_t copy;
 
   /* Maximum length for output depends on the opt_level.  95% is a maximum. */
-  float maxlength_[10] = {-1, .2, .4, .5, .6, .7, .8, .9, .925, .95};
-  /* The next values are more aggressive, but fine for high performance */
-  //float maxlength_[10] = {-1, .1, .2, .3, .4, .5, .6, .7, .8, .95};
+  /* float maxlength_[10] = {-1, .2, .4, .5, .6, .7, .8, .9, .925, .95}; */
+  /* The next values are more aggressive, but fine for high performance,
+     specially with 1, 2 and 3 compression levels. */
+  float maxlength_[10] = {-1, .1, .15, .2, .5, .7, .85, .9, .925, .95};
   size_t maxlength = (size_t) (length * maxlength_[opt_level]);
   if (maxlength > (size_t) maxout) {
     maxlength = (size_t) maxout;
@@ -208,14 +209,14 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
     distance--;
 
     if(!distance) {
-      // zero distance means a run
-      flzuint8 x = ip[-1];
-      long long value, value2;
-      // Broadcast the value for every byte in a 64-bit register
+      /* zero distance means a run */
+      blzuint8 x = ip[-1];
+      blzint64 value, value2;
+      /* Broadcast the value for every byte in a 64-bit register */
       memset(&value, x, 8);
       /* safe because the outer check against ip limit */
-      while (ip < (ip_bound - (sizeof(long long) - IP_BOUNDARY))) {
-        value2 = ((long long *)ref)[0];
+      while (ip < (ip_bound - (sizeof(blzint64) - IP_BOUNDARY))) {
+        value2 = ((blzint64 *)ref)[0];
         if (value != value2) {
           /* Find the byte that starts to differ */
           while (ip < ip_bound) {
@@ -232,12 +233,12 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
         long l = ip - ip_bound;
         ip -= l;
         ref -= l;
-      }   // End of optimization
+      }   /* End of optimization */
     }
     else {
       for(;;) {
         /* safe because the outer check against ip limit */
-        while (ip < (ip_bound - (sizeof(long long) - IP_BOUNDARY))) {
+        while (ip < (ip_bound - (sizeof(blzint64) - IP_BOUNDARY))) {
           if (*ref++ != *ip++) break;
           if (((blzint64 *)ref)[0] != ((blzint64 *)ip)[0]) {
             /* Find the byte that starts to differ */
@@ -330,10 +331,7 @@ BLOSCLZ_INLINE int blosclz_compress(const int opt_level, const void* input,
         copy = 0;
         *op++ = MAX_COPY-1;
       }
-      size_t l = ip - ibase;
-      size_t lo = op - (flzuint8*)output;
-      if ((l*6 > hash_size*opt_level+16) && (lo > l)) {
-        // Seems incompressible so far...
+      if (op > op_limit) {
         free(htab);
         return 0;
       }
