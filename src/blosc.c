@@ -432,19 +432,20 @@ int main(void) {
       /* _src[i] = rand() >> 6;    /\* minimum for getting compression *\/ */
     }
 
-    /* /\* For data coming from a file *\/ */
+    /* For data coming from a file */
     /* int fd; */
     /* ssize_t rbytes; */
-    /* fd = open("32KB-block-24B-typesize.data", 0); */
+    /* elsize = 8; */
+    /* fd = open("16KB-block-8B-typesize.data", 0); */
     /* off_t seek = lseek(fd, 0, SEEK_SET); */
-    /* rbytes = read(fd, src, 32*1024); */
+    /* rbytes = read(fd, src, size); */
     /* /\* rbytes = read(fd, src, 8192); *\/ */
+    /* size = rbytes; */
     /* printf("Read %zd bytes with %zd seek\n", rbytes, seek); */
     /* if (rbytes == -1) { */
     /*   perror(NULL); */
     /* } */
     /* close(fd); */
-    /* size = rbytes; */
 
     set_complevel(1);
     set_shuffle(1);
