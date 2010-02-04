@@ -1,16 +1,17 @@
 Blosc: A blocking, shuffling and lossless compression library
+=============================================================
 
-#########################################################
-################### W A R N I N G ! #####################
-#########################################################
-### This is ALPHA software.  Use it at your own risk! ###
-#########################################################
+.. #########################################################
+.. ################### W A R N I N G ! #####################
+.. #########################################################
+.. ### This is ALPHA software.  Use it at your own risk! ###
+.. #########################################################
 
 Author: Francesc Alted
 Official website: http://blosc.pytables.org
 
-Blosc is distributed using the MIT license, see file LICENSE.txt for
-details.
+Blosc is distributed using the MIT license, see file LICENSES
+directory for details.
 
 Blosc consists of the next files:
 blosc.h and blosc.c    -- the main routines
