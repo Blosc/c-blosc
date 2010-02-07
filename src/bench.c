@@ -1,7 +1,16 @@
 /*********************************************************************
-  Small benchmark for testing basic capabilities of Blosc.  Please
-  report your feedback or performance figures (and your machine
-  configuration) to:
+  Small benchmark for testing basic capabilities of Blosc.
+
+  You can select different degrees of 'randomness' in input buffer, as
+  well as external datafiles (uncomment the lines after "For data
+  coming from a file" comment).
+
+  To compile using GCC:
+
+    gcc -O3 -msse2 -o bench bench.c blosc.c blosclz.c shuffle.c
+
+  I'm collecting speeds for different machines, so the output of your
+  benchmarks and your processor specifications are welcome!
 
   Author: Francesc Alted (faltet@pytables.org)
 
@@ -14,6 +23,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <time.h>
+#include "blosc.h"
 
 
 /* Constants for benchmarking purposes */
