@@ -100,8 +100,8 @@ BLOSCLZ_INLINE size_t hash_function(blzuint8* p, blzuint8 hash_log)
 
 #define IP_BOUNDARY 2
 
-BLOSCLZ_INLINE int blosclz_compress(int opt_level, const void* input,
-                                    int length, void* output, int maxout)
+int blosclz_compress(int opt_level, const void* input,
+                     int length, void* output, int maxout)
 {
   blzuint8* ip = (blzuint8*) input;
   blzuint8* ibase = (blzuint8*) input;
@@ -366,8 +366,7 @@ BLOSCLZ_INLINE int blosclz_compress(int opt_level, const void* input,
 }
 
 
-BLOSCLZ_INLINE int blosclz_decompress(const void* input, int length,
-                                      void* output, int maxout)
+int blosclz_decompress(const void* input, int length, void* output, int maxout)
 {
   const blzuint8* ip = (const blzuint8*) input;
   const blzuint8* ip_limit  = ip + length;

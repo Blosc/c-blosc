@@ -8,8 +8,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
 #include "shuffle.h"
+
+#ifndef WIN32
+  #include <stdint.h>
+#endif
 
 
 /* The non-SSE2 versions of shuffle and unshuffle */
@@ -53,7 +56,6 @@ void _unshuffle(size_t bytesoftype, size_t blocksize,
 
 #include <emmintrin.h>
 
-
 /* The next is useful for debugging purposes */
 void printxmm(__m128i xmm0) {
   unsigned char buf[16];
@@ -68,7 +70,7 @@ void printxmm(__m128i xmm0) {
 
 
 /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-20 */
 static void
@@ -108,7 +110,7 @@ shuffle2(unsigned char* dest, unsigned char* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and have a power */
+/* The buffer must be aligned on a 16 bytes boundary and have a power */
 /* of 2 size. */
 /* F. Alted 2009-05-20 */
 static void
@@ -148,7 +150,7 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-20 */
 static void
@@ -191,7 +193,7 @@ shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 16 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-20 */
 static void
@@ -269,7 +271,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-13 */
 static void
@@ -298,7 +300,7 @@ unshuffle2(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-13 */
 static void
@@ -339,7 +341,7 @@ unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-13 */
 static void
@@ -391,7 +393,7 @@ unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 16 bytes. */
-/* The buffer should be aligned on a 16 bytes boundary and be of a power */
+/* The buffer must be aligned on a 16 bytes boundary and be of a power */
 /* of 2 size. */
 /* F. Alted 2009-05-13 */
 static void

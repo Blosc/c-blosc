@@ -13,13 +13,18 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <math.h>
 #include <time.h>
 #include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
 
+#ifdef WIN32
+  #include <windows.h>
+#else
+  #include <stdint.h>
+  #include <unistd.h>
+#endif
 
 
 /* Starting point for the blocksize computation */
@@ -35,7 +40,6 @@ void set_complevel(int complevel) {
   /* If clevel not in 0..9, do nothing */
   if (clevel < 0 || clevel > 9) {
     fprintf(stderr, "Optimization level must be between 0 and 9!\n");
-    fsync(2);
     return;
   }
   clevel = complevel;
@@ -141,7 +145,11 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
   blocksize = blocksize / typesize * typesize;
 
   /* Create temporary area */
-  posix_memalign((void **)&tmp, 64, blocksize);
+#ifdef WIN32
+  tmp = _aligned_malloc(blocksize, 16);
+#else
+  posix_memalign((void **)&tmp, 16, blocksize);
+#endif  /* WIN32 */
 
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
@@ -162,8 +170,7 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
     *flags = 4;                     /* bit 2 set to 1 means no compression */
     memcpy(_dest, _src, nbytes);
     ctbytes += nbytes;
-    free(tmp);
-    return ctbytes;
+    goto out;
   }
 
   if (do_shuffle) {
@@ -180,13 +187,12 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
     cbytes = _blosc_c(typesize, blocksize, _src, _dest, tmp);
     if (cbytes < 0) {
       fprintf(stderr, too_long_message);
-      fsync(2);
-      free(tmp);
-      return cbytes;
+      ctbytes = cbytes;    /* Signal error in _blosc_c */
+      goto out;
     }
     if (cbytes == 0) {
-      free(tmp);
-      return 0;    /* Uncompressible data */
+      ctbytes = 0;    /* Uncompressible data */
+      goto out;
     }
     _dest += cbytes;
     _src += blocksize;
@@ -204,14 +210,13 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
     ctbytes += sizeof(int);
     cbytes = blosclz_compress(clevel, tmp, leftover, _dest, leftover);
     if (cbytes < 0) {
-      free(tmp);
-      return -3;
+      ctbytes = -3;    /* Signal an error in blosclz_compress */
+      goto out;
     }
     if (cbytes > (int) leftover) {
       fprintf(stderr, too_long_message);
-      fsync(2);
-      free(tmp);
-      return -4;
+      ctbytes = -4;    /* Signal too long compression size */
+      goto out;
     }
     if ((cbytes == 0)  || (cbytes == (int) leftover)) {
       /* The compressor has been unable to compress data
@@ -220,8 +225,8 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
          this means incompressible data.  Before doing the copy, check
          that we are not running into a buffer overflow. */
       if ((ctbytes+leftover+sizeof(int)) > nbytes) {
-        free(tmp);
-        return 0;    /* Uncompressible data */
+        ctbytes = 0;    /* Uncompressible data */
+        goto out;
       }
       memcpy(_dest, tmp, leftover);
       cbytes = leftover;
@@ -231,20 +236,28 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
     ctbytes += cbytes;
   }
 
-  free(tmp);
   if (ctbytes >= nbytes) {
     fprintf(stderr, too_long_message);
-    fsync(2);
-    return -5;
+    ctbytes = -5;       /* Signal too large buffer */
+    goto out;
   }
+
+ out:
+#ifdef WIN32
+  _aligned_free(tmp);
+#else
+  free(tmp);
+#endif  /* WIN32 */
   return ctbytes;
+
 }
 
 
 /* Decompress & unshuffle a single block */
 static size_t
 _blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
-         unsigned char* _src, unsigned char* _dest, unsigned char *tmp)
+         unsigned char* _src, unsigned char* _dest,
+         unsigned char *tmp, unsigned char *tmp2)
 {
   size_t j, neblock, nsplits;
   size_t nbytes, cbytes, ctbytes = 0, ntbytes = 0;
@@ -288,7 +301,15 @@ _blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
   }
 
   if (do_unshuffle && (typesize > 1)) {
-    unshuffle(typesize, blocksize, tmp, _dest);
+    if ((uintptr_t)_dest % 16 == 0) {
+      /* 16-bytes aligned _dest.  SSE2 unshuffle will work. */
+      unshuffle(typesize, blocksize, tmp, _dest);
+    }
+    else {
+      /* _dest is not aligned.  Use tmp2, which is aligned, and copy. */
+      unshuffle(typesize, blocksize, tmp, tmp2);
+      memcpy(_dest, tmp2, blocksize);
+    }
   }
   return ctbytes;
 }
@@ -305,7 +326,7 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   size_t j;
   size_t nbytes, dbytes, ntbytes = 0;
   int cbytes;
-  unsigned char *tmp;
+  unsigned char *tmp, *tmp2;
   int do_unshuffle = 0;
   unsigned int typesize, blocksize;
 
@@ -344,13 +365,20 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   leftover = nbytes % blocksize;
 
   /* Create temporary area */
-  posix_memalign((void **)&tmp, 64, blocksize);
+#ifdef WIN32
+  tmp = _aligned_malloc(blocksize, 16);
+  tmp2 = _aligned_malloc(blocksize, 16);
+#else
+  posix_memalign((void **)&tmp, 16, blocksize);
+  posix_memalign((void **)&tmp2, 16, blocksize);
+#endif  /* WIN32 */
 
   for (j = 0; j < nblocks; j++) {
-    cbytes = _blosc_d(do_unshuffle, typesize, blocksize, _src, _dest, tmp);
+    cbytes = _blosc_d(do_unshuffle, typesize, blocksize,
+                      _src, _dest, tmp, tmp2);
     if (cbytes < 0) {
-      free(tmp);
-      return cbytes;
+      ntbytes = cbytes;         /* Signal _blosc_d failure */
+      goto out;
     }
     _src += cbytes;
     _dest += blocksize;
@@ -367,8 +395,8 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
     else {
       dbytes = blosclz_decompress(_src, cbytes, tmp, leftover);
       if (dbytes != leftover) {
-        free(tmp);
-        return -3;
+        ntbytes = -3;           /* Signal too large buffer */
+        goto out;
       }
     }
     ntbytes += dbytes;
@@ -380,7 +408,14 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
     }
   }
 
+ out:
+#ifdef WIN32
+  _aligned_free(tmp);
+  _aligned_free(tmp2);
+#else
   free(tmp);
+  free(tmp2);
+#endif  /* WIN32 */
   return ntbytes;
 }
 
@@ -398,11 +433,12 @@ int main(void) {
     float tmemcpy, tshuf, tunshuf;
     int size = 32*1024;         /* Buffer size */
     unsigned int elsize;                 /* Datatype size */
+    int *_src;
+    int *_srccpy;
 
-    posix_memalign((void **)&src, 64, size+6);
-    posix_memalign((void **)&srccpy, 64, size+6);
-    /* dest buffer must be aligned to 16 bytes at least! */
-    posix_memalign((void **)&dest, 64, size+6);
+    src = malloc(size+6);
+    srccpy = malloc(size+6);
+    dest = malloc(size+6);
 
     srand(1);
 
@@ -414,8 +450,8 @@ int main(void) {
     /*   ((long long *)_src)[l] = l; */
     /*   ((long long *)_src)[l] = rand() >> 24; */
     /*   ((long long *)_src)[l] = 1; */
-    int* _src = (int *)src;
-    int* _srccpy = (int *)srccpy;
+    _src = (int *)src;
+    _srccpy = (int *)srccpy;
     elsize = sizeof(int);
     for(i = 0; i < size/elsize; ++i) {
       /* Choose one below */
