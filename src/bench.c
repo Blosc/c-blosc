@@ -45,8 +45,9 @@ int main(void) {
   int clevel = 1;
   int doshuffle = 1;
 
+  printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   printf("Using random data with left shift of: %d\n", lshift);
-  printf("Shuffle? %d\n", doshuffle);
+  printf("Shuffle active? %s\n", doshuffle ? "yes" : "no");
 
   src = malloc(size);
   srccpy = malloc(size);
@@ -95,47 +96,48 @@ int main(void) {
   tmemcpy = (current-last)/((float)CLK_NITER);
   printf("memcpy:\t\t %fs, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB));
 
-  for (clevel=0; clevel<10; clevel++) {
+  for (clevel=1; clevel<10; clevel++) {
 
-  set_complevel(clevel);
-  printf("Compression level: %d\n", clevel);
+    set_complevel(clevel);
+    printf("Compression level: %d\n", clevel);
 
-  last = clock();
-  for (i = 0; i < NITER; i++) {
-    cbytes = blosc_compress(elsize, size, src, dest);
-  }
-  current = clock();
-  tshuf = (current-last)/((float)CLK_NITER);
-  printf("blosc_compress:\t\t %fs, %.1f MB/s\t", tshuf, size/(tshuf*MB));
-  printf("Orig bytes: %d  Final bytes: %d\n", size, cbytes);
-
-  last = clock();
-  for (i = 0; i < NITER; i++)
-    if (cbytes == 0) {
-      memcpy(dest, src, size);
-      nbytes = size;
+    last = clock();
+    for (i = 0; i < NITER; i++) {
+      cbytes = blosc_compress(elsize, size, src, dest);
     }
-    else {
-      nbytes = blosc_decompress(dest, src, size);
-    }
-  current = clock();
-  tunshuf = (current-last)/((float)CLK_NITER);
-  printf("blosc_decompress:\t %fs, %.1f MB/s\t", tunshuf, nbytes/(tunshuf*MB));
-  printf("Orig bytes: %d  Final bytes: %d\n", cbytes, nbytes);
+    current = clock();
+    tshuf = (current-last)/((float)CLK_NITER);
+    printf("blosc_compress:\t\t %fs, %.1f MB/s\t", tshuf, size/(tshuf*MB));
+    printf("Orig bytes: %d  Final bytes: %d\n", size, cbytes);
 
-  /* Check if data has had a good roundtrip */
-  _src = (int *)src;
-  _srccpy = (int *)srccpy;
-  for(i = 0; i < size/sizeof(int); ++i){
-    if (_src[i] != _srccpy[i]) {
-      printf("Error: original data and round-trip do not match in pos %d\n",
-             (int)i);
-      printf("Orig--> %x, Copy--> %x\n", _src[i], _srccpy[i]);
-      goto out;
-    }
-  }
+    last = clock();
+    for (i = 0; i < NITER; i++)
+      if (cbytes == 0) {
+        memcpy(dest, src, size);
+        nbytes = size;
+      }
+      else {
+        nbytes = blosc_decompress(dest, src, size);
+      }
+    current = clock();
+    tunshuf = (current-last)/((float)CLK_NITER);
+    printf("blosc_decompress:\t %fs, %.1f MB/s\t",
+           tunshuf, nbytes/(tunshuf*MB));
+    printf("Orig bytes: %d  Final bytes: %d\n", cbytes, nbytes);
 
-  }
+    /* Check if data has had a good roundtrip */
+    _src = (int *)src;
+    _srccpy = (int *)srccpy;
+    for(i = 0; i < size/sizeof(int); ++i){
+      if (_src[i] != _srccpy[i]) {
+        printf("Error: original data and round-trip do not match in pos %d\n",
+               (int)i);
+        printf("Orig--> %x, Copy--> %x\n", _src[i], _srccpy[i]);
+        goto out;
+      }
+    }
+
+  } /* End clevel loop */
 
  out:
   free(src); free(srccpy);  free(dest);

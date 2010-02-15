@@ -163,10 +163,8 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
   ctbytes += sizeof(int);
 
   if (clevel == 0) {
-    /* No compression wanted.  Just do a memcpy and return. */
-    *flags = 4;                     /* bit 2 set to 1 means no compression */
-    memcpy(_dest, _src, nbytes);
-    ctbytes += nbytes;
+    /* No compression wanted.  Just return without doing anything else. */
+    ctbytes = 0;
     goto out;
   }
 
@@ -340,12 +338,6 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
     return -1;
   }
   _src += sizeof(int);
-
-  if (flags == 4) {       /* No compression */
-    /* Just do a memcpy and return */
-    memcpy(_dest, _src, nbytes);
-    return nbytes;
-  }
 
   if (flags == 2) {
     /* Input is shuffled.  Unshuffle it. */
