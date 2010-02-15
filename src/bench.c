@@ -27,9 +27,10 @@
 
 
 /* Constants for benchmarking purposes */
-#define MB    1024*1024
-#define NITER 4*4000            /* Number of iterations */
-#define CLK_NITER CLOCKS_PER_SEC*NITER
+#define NITER  (100*1000)            /* Number of iterations */
+#define CLK_NITER  (CLOCKS_PER_SEC*NITER/1e6)
+#define MB    (1024*1024)
+
 
 int main(void) {
   unsigned int nbytes, cbytes;
@@ -37,17 +38,13 @@ int main(void) {
   size_t i;
   clock_t last, current;
   float tmemcpy, tshuf, tunshuf;
-  int size = 32*1024;         /* Buffer size */
+  int size = 32*1024;                  /* Buffer size */
   unsigned int elsize;                 /* Datatype size */
   int *_src;
   int *_srccpy;
-  int lshift = 21;
+  int rshift = 22;
   int clevel = 1;
   int doshuffle = 1;
-
-  printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
-  printf("Using random data with left shift of: %d\n", lshift);
-  printf("Shuffle active? %s\n", doshuffle ? "yes" : "no");
 
   src = malloc(size);
   srccpy = malloc(size);
@@ -66,7 +63,7 @@ int main(void) {
     /* _src[i] = 0x01020304; */
     /* _src[i] = i * 1/.3; */
     /* _src[i] = i; */
-    _src[i] = rand() >> lshift;
+    _src[i] = rand() >> rshift;
   }
 
   /* For data coming from a file */
@@ -84,6 +81,13 @@ int main(void) {
   /* } */
   /* close(fd); */
 
+  printf("********************** Setup info *****************************\n");
+  printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
+  printf("Using random data with %d significant bits (out of 32)\n", 32-rshift);
+  printf("Using a dataset of %d bytes\n", size);
+  printf("Shuffle active? %s\n", doshuffle ? "yes" : "no");
+  printf("********************** Running benchmarks *********************\n");
+
   set_shuffle(doshuffle);
 
   memcpy(srccpy, src, size);
@@ -93,8 +97,8 @@ int main(void) {
     memcpy(dest, src, size);
   }
   current = clock();
-  tmemcpy = (current-last)/((float)CLK_NITER);
-  printf("memcpy:\t\t %fs, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB));
+  tmemcpy = (current-last)/CLK_NITER;
+  printf("memcpy:\t\t %6.1f us, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB/1e6));
 
   for (clevel=1; clevel<10; clevel++) {
 
@@ -106,9 +110,11 @@ int main(void) {
       cbytes = blosc_compress(elsize, size, src, dest);
     }
     current = clock();
-    tshuf = (current-last)/((float)CLK_NITER);
-    printf("blosc_compress:\t\t %fs, %.1f MB/s\t", tshuf, size/(tshuf*MB));
-    printf("Orig bytes: %d  Final bytes: %d\n", size, cbytes);
+    tshuf = (current-last)/CLK_NITER;
+    printf("compression:\t %6.1f us, %.1f MB/s\t\t",
+           tshuf, size/(tshuf*MB/1e6));
+    printf("Final bytes: %d  Compr ratio: %3.1f\n",
+           cbytes, size/(float)cbytes);
 
     last = clock();
     for (i = 0; i < NITER; i++)
@@ -120,10 +126,10 @@ int main(void) {
         nbytes = blosc_decompress(dest, src, size);
       }
     current = clock();
-    tunshuf = (current-last)/((float)CLK_NITER);
-    printf("blosc_decompress:\t %fs, %.1f MB/s\t",
-           tunshuf, nbytes/(tunshuf*MB));
-    printf("Orig bytes: %d  Final bytes: %d\n", cbytes, nbytes);
+    tunshuf = (current-last)/CLK_NITER;
+    printf("decompression:\t %6.1f us, %.1f MB/s\t\t",
+           tunshuf, nbytes/(tunshuf*MB/1e6));
+    /* printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
 
     /* Check if data has had a good roundtrip */
     _src = (int *)src;
@@ -136,6 +142,8 @@ int main(void) {
         goto out;
       }
     }
+
+    printf("OK\n");
 
   } /* End clevel loop */
 
