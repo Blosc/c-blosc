@@ -41,10 +41,16 @@ int main(void) {
   unsigned int elsize;                 /* Datatype size */
   int *_src;
   int *_srccpy;
+  int lshift = 21;
+  int clevel = 1;
+  int doshuffle = 1;
 
-  src = malloc(size+6);
-  srccpy = malloc(size+6);
-  dest = malloc(size+6);
+  printf("Using random data with left shift of: %d\n", lshift);
+  printf("Shuffle? %d\n", doshuffle);
+
+  src = malloc(size);
+  srccpy = malloc(size);
+  dest = malloc(size);
 
   srand(1);
 
@@ -59,7 +65,7 @@ int main(void) {
     /* _src[i] = 0x01020304; */
     /* _src[i] = i * 1/.3; */
     /* _src[i] = i; */
-    _src[i] = rand() >> 22;
+    _src[i] = rand() >> lshift;
   }
 
   /* For data coming from a file */
@@ -77,8 +83,7 @@ int main(void) {
   /* } */
   /* close(fd); */
 
-  set_complevel(1);
-  set_shuffle(1);
+  set_shuffle(doshuffle);
 
   memcpy(srccpy, src, size);
 
@@ -90,13 +95,18 @@ int main(void) {
   tmemcpy = (current-last)/((float)CLK_NITER);
   printf("memcpy:\t\t %fs, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB));
 
+  for (clevel=0; clevel<10; clevel++) {
+
+  set_complevel(clevel);
+  printf("Compression level: %d\n", clevel);
+
   last = clock();
   for (i = 0; i < NITER; i++) {
     cbytes = blosc_compress(elsize, size, src, dest);
   }
   current = clock();
   tshuf = (current-last)/((float)CLK_NITER);
-  printf("blosc_compress:\t %fs, %.1f MB/s\t", tshuf, size/(tshuf*MB));
+  printf("blosc_compress:\t\t %fs, %.1f MB/s\t", tshuf, size/(tshuf*MB));
   printf("Orig bytes: %d  Final bytes: %d\n", size, cbytes);
 
   last = clock();
@@ -110,7 +120,7 @@ int main(void) {
     }
   current = clock();
   tunshuf = (current-last)/((float)CLK_NITER);
-  printf("blosc_d:\t %fs, %.1f MB/s\t", tunshuf, nbytes/(tunshuf*MB));
+  printf("blosc_decompress:\t %fs, %.1f MB/s\t", tunshuf, nbytes/(tunshuf*MB));
   printf("Orig bytes: %d  Final bytes: %d\n", cbytes, nbytes);
 
   /* Check if data has had a good roundtrip */
@@ -123,6 +133,8 @@ int main(void) {
       printf("Orig--> %x, Copy--> %x\n", _src[i], _srccpy[i]);
       goto out;
     }
+  }
+
   }
 
  out:
