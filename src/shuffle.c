@@ -1,7 +1,8 @@
 /*********************************************************************
   Blosc - Blocked Suffling and Compression Library
 
-  Copyright (C) 2009,2010 Francesc Alted (faltet@pytables.org)
+  Author: Francesc Alted (faltet@pytables.org)
+  Creation date: 2009-05-20
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
@@ -70,9 +71,6 @@ void printxmm(__m128i xmm0) {
 
 
 /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-20 */
 static void
 shuffle2(unsigned char* dest, unsigned char* src, size_t size)
 {
@@ -110,9 +108,6 @@ shuffle2(unsigned char* dest, unsigned char* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and have a power */
-/* of 2 size. */
-/* F. Alted 2009-05-20 */
 static void
 shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 {
@@ -150,9 +145,6 @@ shuffle4(unsigned char* dest, unsigned char* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-20 */
 static void
 shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 {
@@ -193,9 +185,6 @@ shuffle8(unsigned char* dest, unsigned char* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 16 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-20 */
 static void
 shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 {
@@ -250,7 +239,9 @@ void shuffle(size_t bytesoftype, size_t blocksize,
     return;
   }
 
-  /* Optimized shuffle? */
+  /* Optimized shuffle */
+  /* The buffer must be aligned on a 16 bytes boundary and have a power */
+  /* of 2 size. */
   if (bytesoftype == 4) {
     shuffle4(_dest, _src, blocksize);
   }
@@ -271,9 +262,6 @@ void shuffle(size_t bytesoftype, size_t blocksize,
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-13 */
 static void
 unshuffle2(unsigned char* dest, unsigned char* orig, size_t size)
 {
@@ -300,9 +288,6 @@ unshuffle2(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-13 */
 static void
 unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
 {
@@ -341,9 +326,6 @@ unshuffle4(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-13 */
 static void
 unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
 {
@@ -393,9 +375,6 @@ unshuffle8(unsigned char* dest, unsigned char* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 16 bytes. */
-/* The buffer must be aligned on a 16 bytes boundary and be of a power */
-/* of 2 size. */
-/* F. Alted 2009-05-13 */
 static void
 unshuffle16(unsigned char* dest, unsigned char* orig, size_t size)
 {
@@ -471,7 +450,9 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
     return;
   }
 
-  /* Optimized unshuffle? */
+  /* Optimized unshuffle */
+  /* The buffer must be aligned on a 16 bytes boundary and be of a power */
+  /* of 2 size. */
   if (bytesoftype == 4) {
     unshuffle4(_dest, _src, blocksize);
   }
@@ -485,6 +466,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
     unshuffle2(_dest, _src, blocksize);
   }
   else {
+    /* Non-optimized unshuffle */
     _unshuffle(bytesoftype, blocksize, _src, _dest);
   }
 }

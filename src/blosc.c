@@ -2,6 +2,7 @@
   Blosc - Blocked Suffling and Compression Library
 
   Author: Francesc Alted (faltet@pytables.org)
+  Creation date: 2009-05-20
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
@@ -15,7 +16,6 @@
 #include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
-
 #ifdef WIN32
   #include <windows.h>
 #else
@@ -116,18 +116,25 @@ _blosc_c(size_t typesize, size_t blocksize,
 unsigned int
 blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
 {
-  unsigned char *_src=NULL;   /* Alias for source buffer */
-  unsigned char *_dest=NULL;  /* Alias for destination buffer */
-  unsigned char *flags;       /* Flags for header */
-  size_t nblocks;             /* Number of complete blocks in buffer */
-  size_t j;                   /* Local index variables */
-  size_t leftover;            /* Extra bytes at end of buffer */
-  size_t blocksize;           /* Length of the block in bytes */
-  int cbytes;
-  unsigned int ctbytes;
-  unsigned char *tmp;         /* Temporary buffer for data block */
+  unsigned char *_src=NULL;     /* Alias for source buffer */
+  unsigned char *_dest=NULL;    /* Alias for destination buffer */
+  unsigned int *flags;          /* Flags for header */
+  unsigned int *starts;         /* Start pointers for each block */
+  size_t nblocks;               /* Number of complete blocks in buffer */
+  size_t tblocks;               /* Number of total blocks in buffer */
+  size_t leftover;              /* Extra bytes at end of buffer */
+  size_t blocksize;             /* Length of the block in bytes */
+  unsigned int ctbytes = 0;     /* The number of bytes in output buffer */
+  unsigned char *tmp;           /* Temporary buffer for data block */
+  int cbytes;                   /* Temporary compressed buffer length */
+  int i, j;                     /* Local index variables */
   const char *too_long_message = "The impossible happened: buffer overflow!\n";
-  int i;
+
+  if (clevel == 0) {
+    /* No compression wanted.  Just return without doing anything else. */
+    ctbytes = 0;
+    goto out;
+  }
 
   /* Compute a blocksize depending on the optimization level */
   blocksize = BLOCKSIZE;
@@ -152,33 +159,33 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
   leftover = nbytes % blocksize;
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
+  tblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Write header for this block */
-  *_dest++ = BLOSC_VERSION_FORMAT;       /* The blosc version format */
-  flags = _dest++;                       /* Flags (to be filled later on) */
-  *flags = 0;                            /* All bits set to 0 initally */
-  ctbytes = 2;
-  ((unsigned int *)(_dest))[0] = nbytes; /* The size of the chunk */
+  _dest[0] = BLOSC_VERSION_FORMAT;         /* The blosc version format */
+  _dest[1] = BLOSCLZ_VERSION_FORMAT;       /* The blosclz version format */
+  _dest += 4;                              /* 2 bytes skipped (future use?) */
+  ctbytes += 4;
+  flags = (unsigned int *)_dest;           /* Flags (to be filled later on) */
+  *flags = 0;                              /* All bits set to 0 initally */
   _dest += sizeof(int);
   ctbytes += sizeof(int);
-
-  if (clevel == 0) {
-    /* No compression wanted.  Just return without doing anything else. */
-    ctbytes = 0;
-    goto out;
-  }
+  ((unsigned int *)_dest)[0] = nbytes;     /* The size of the chunk */
+  ((unsigned int *)_dest)[1] = typesize;   /* The type size */
+  ((unsigned int *)_dest)[2] = blocksize;  /* The block size */
+  _dest += sizeof(int)*3;
+  ctbytes += sizeof(int)*3;
+  starts = (unsigned int *)_dest;          /* Starts for every block */
+  _dest += sizeof(int)*tblocks;            /* Book space for pointers to */
+  ctbytes += sizeof(int)*tblocks;          /* every block in output */
 
   if (do_shuffle) {
     /* Signal that shuffle is active */
-    *flags = 2;           /* bit 1 set to one, all the rest to 0 */
+    *flags = 1;           /* bit 0 set to one, all the rest to 0 */
   }
 
-  /* Write the shuffle header */
-  ((unsigned int *)_dest)[0] = typesize;       /* The type size */
-  ((unsigned int *)_dest)[1] = blocksize;      /* The block size */
-  _dest += 8;
-  ctbytes += 8;
   for (j = 0; j < nblocks; j++) {
+    starts[j] = ctbytes;
     cbytes = _blosc_c(typesize, blocksize, _src, _dest, tmp);
     if (cbytes < 0) {
       fprintf(stderr, too_long_message);
@@ -195,6 +202,7 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
   }  /* Close k < nblocks */
 
   if(leftover > 0) {
+    starts[nblocks] = ctbytes;
     if (do_shuffle && (typesize > 1)) {
       shuffle(typesize, leftover, _src, tmp);
     }
@@ -313,11 +321,13 @@ _blosc_d(int do_unshuffle, size_t typesize, size_t blocksize,
 unsigned int
 blosc_decompress(const void *src, void *dest, size_t dest_size)
 {
-  unsigned char *_src=NULL;         /* Alias for source buffer */
-  unsigned char *_dest=NULL;        /* Alias for destination buffer */
-  unsigned char version, flags;     /* Info in compressed header */
-  size_t leftover;                  /* Extra bytes at end of buffer */
-  size_t nblocks;                   /* Number of complete blocks in buffer */
+  unsigned char *_src=NULL;          /* Alias for source buffer */
+  unsigned char *_dest=NULL;         /* Alias for destination buffer */
+  unsigned char version, versionlz;  /* Versions for compressed header */
+  unsigned int *flags;               /* Flags for header */
+  size_t leftover;                   /* Extra bytes at end of buffer */
+  size_t nblocks;                    /* Number of complete blocks in buffer */
+  size_t tblocks;                    /* Number of total blocks in buffer */
   size_t j;
   size_t nbytes, dbytes, ntbytes = 0;
   int cbytes;
@@ -330,28 +340,29 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
 
   /* Read the header block */
   version = _src[0];                        /* The blosc version */
-  flags = _src[1];                          /* The flags for this block */
-  _src += 2;
-  nbytes = ((unsigned int *)_src)[0];       /* The size of the chunk */
-
-  if (nbytes > dest_size) {
-    return -1;
-  }
+  versionlz = _src[1];                      /* The blosclz version */
+  _src += 4;
+  flags = (unsigned int *)_src;             /* The flags for this block */
   _src += sizeof(int);
-
-  if (flags == 2) {
-    /* Input is shuffled.  Unshuffle it. */
-    do_unshuffle = 1;
-  }
-
-  /* Read header info */
-  typesize = ((unsigned int *)_src)[0];
-  blocksize = ((unsigned int *)_src)[1];
-  _src += 8;
-
+  nbytes = ((unsigned int *)_src)[0];       /* The size of the chunk */
+  typesize = ((unsigned int *)_src)[1];     /* The type size */
+  blocksize = ((unsigned int *)_src)[2];    /* The block size */
+  _src += sizeof(int)*3;
   /* Compute some params */
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
+  tblocks = (leftover>0)? nblocks+1: nblocks;
+  _src += sizeof(int)*tblocks;              /* Skip starts of blocks */
+
+  if (nbytes > dest_size) {
+    /* This should never happen, but just in case. */
+    return -1;
+  }
+
+  if ((*flags & 0x1) == 1) {
+    /* Input is shuffled.  Unshuffle it. */
+    do_unshuffle = 1;
+  }
 
   /* Create temporary area */
 #ifdef WIN32
@@ -375,7 +386,7 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   }
 
   if(leftover > 0) {
-    cbytes = ((unsigned int *)(_src))[0];
+    cbytes = ((unsigned int *)_src)[0];
     _src += sizeof(int);
     if (cbytes == (int) leftover) {
       memcpy(tmp, _src, leftover);

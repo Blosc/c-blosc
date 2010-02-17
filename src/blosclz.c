@@ -2,14 +2,14 @@
   Blosc - Blocked Suffling and Compression Library
 
   Author: Francesc Alted (faltet@pytables.org)
+  Creation date: 2009-05-20
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
 
 /*********************************************************************
   The code in this file is heavily based on FastLZ, a lightning-fast
-  lossless compression library.  See LICENSES/FASTLZ.txt for details
-  about copyright and rights to use.
+  lossless compression library.  See LICENSES/FASTLZ.txt for details.
 **********************************************************************/
 
 
