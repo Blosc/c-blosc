@@ -12,10 +12,10 @@
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    0    /* For major interface/format changes  */
-#define BLOSC_VERSION_MINOR    1    /* For minor interface/format changes  */
+#define BLOSC_VERSION_MINOR    3    /* For minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  0    /* For tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "0.3"             /* String version */
+#define BLOSC_VERSION_STRING   "0.3"    /* String version.  Sync with above! */
 #define BLOSC_VERSION_DATE     "2010-02-17"      /* Date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
