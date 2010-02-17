@@ -162,8 +162,8 @@ blosc_compress(size_t typesize, size_t nbytes, const void *src, void *dest)
   tblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Write header for this block */
-  _dest[0] = BLOSC_VERSION_FORMAT;         /* The blosc version format */
-  _dest[1] = BLOSCLZ_VERSION_FORMAT;       /* The blosclz version format */
+  _dest[0] = BLOSC_VERSION_FORMAT;         /* The blosc format version */
+  _dest[1] = BLOSCLZ_VERSION_FORMAT;       /* The blosclz format version */
   _dest += 4;                              /* 2 bytes skipped (future use?) */
   ctbytes += 4;
   flags = (unsigned int *)_dest;           /* Flags (to be filled later on) */
@@ -339,8 +339,8 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   _dest = (unsigned char *)(dest);
 
   /* Read the header block */
-  version = _src[0];                        /* The blosc version */
-  versionlz = _src[1];                      /* The blosclz version */
+  version = _src[0];                        /* The blosc format version */
+  versionlz = _src[1];                      /* The blosclz format version */
   _src += 4;
   flags = (unsigned int *)_src;             /* The flags for this block */
   _src += sizeof(int);

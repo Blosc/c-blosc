@@ -54,17 +54,21 @@ void set_shuffle(int doit);
   `src` buffer.  A bytesoftype > 1 will optimize the
   compression/decompression process by activating the shuffle filter.
 
-  The `dest` buffer must be at least the size of `src` buffer and can
-  not be smaller than 66 bytes.
+  The `dest` buffer must have at least the size of the `src` buffer
+  and can not be smaller than 66 bytes.
 
   The `src` buffer and the `dest` buffer can not overlap.
 
-  If `src` buffer is not compressible, the return value is zero and
-  you should discard the contents of the `dest` buffer.
+  If `src` buffer is not compressible (i.e. len(`dest`) > len(`src`)),
+  the return value is zero and you should discard the contents of the
+  `dest` buffer.
+
+  Compression is memory safe and guaranteed not to write the `dest`
+  buffer more than what is specified in `nbytes`.
 
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report this together
-  with the buffer and compression settings.
+  with the buffer data causing this and compression settings.
 
  */
 
