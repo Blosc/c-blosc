@@ -44,7 +44,7 @@ int main(void) {
   int clevel;
   int doshuffle = 1;
   int fd;
-  int rbytes;
+  int status;
   char *filename = "128KB-block-4B-typesize.data";
   int size = 128*1024;                       /* Buffer size */
   unsigned int elsize = 4;                   /* Datatype size */
@@ -71,9 +71,8 @@ int main(void) {
 
   /* For data coming from a file */
   fd = open(filename, 0);
-  rbytes = read(fd, src, size);
-  size = rbytes;
-  if (rbytes == -1) {
+  status = read(fd, src, size);
+  if (status == -1) {
     perror(NULL);
   }
   close(fd);
