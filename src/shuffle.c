@@ -11,7 +11,10 @@
 #include <string.h>
 #include "shuffle.h"
 
-#ifndef WIN32
+#ifdef WIN32
+  #include <windows.h>
+  #define __SSE2__          /* Windows does not define this by default */
+#else
   #include <stdint.h>
 #endif
 

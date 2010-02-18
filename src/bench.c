@@ -27,7 +27,7 @@
 
 #define MB    (1024*1024)
 
-#define NITER  (10*1000)               /* Number of iterations */
+#define NITER  (20*1000)               /* Number of iterations */
 #define CLK_NITER  (CLOCKS_PER_SEC*NITER/1e6)
 
 
@@ -38,13 +38,16 @@ int main(void) {
   size_t i;
   clock_t last, current;
   float tmemcpy, tshuf, tunshuf;
-  int size = 128*1024;                  /* Buffer size */
-  unsigned int elsize;                  /* Datatype size */
   int *_src;
   int *_srccpy;
-  int rshift = 22;
-  int clevel = 1;
+  int rshift = 22;           /* For random data */
+  int clevel;
   int doshuffle = 1;
+  int fd;
+  int rbytes;
+  char *filename = "128KB-block-4B-typesize.data";
+  int size = 128*1024;                       /* Buffer size */
+  unsigned int elsize = 4;                   /* Datatype size */
 
   src = malloc(size);
   srccpy = malloc(size);
@@ -53,38 +56,33 @@ int main(void) {
   srand(1);
 
   /* Initialize the original buffer */
-  _src = (int *)src;
-  _srccpy = (int *)srccpy;
-  elsize = sizeof(int);
-  for(i = 0; i < size/elsize; ++i) {
-    /* Choose one below */
-    /* _src[i] = 1; */
-    /* _src[i] = 0x01010101; */
-    /* _src[i] = 0x01020304; */
-    /* _src[i] = i * 1/.3; */
-    /* _src[i] = i; */
-    _src[i] = rand() >> rshift;
-  }
+  /* _src = (int *)src; */
+  /* _srccpy = (int *)srccpy; */
+  /* elsize = sizeof(int); */
+  /* for(i = 0; i < size/elsize; ++i) { */
+  /*   /\* Choose one below *\/ */
+  /*   /\* _src[i] = 1; *\/ */
+  /*   /\* _src[i] = 0x01010101; *\/ */
+  /*   /\* _src[i] = 0x01020304; *\/ */
+  /*   /\* _src[i] = i * 1/.3; *\/ */
+  /*   /\* _src[i] = i; *\/ */
+  /*   _src[i] = rand() >> rshift; */
+  /* } */
 
   /* For data coming from a file */
-  /* int fd; */
-  /* ssize_t rbytes; */
-  /* elsize = 8; */
-  /* fd = open("16KB-block-8B-typesize.data", 0); */
-  /* off_t seek = lseek(fd, 0, SEEK_SET); */
-  /* rbytes = read(fd, src, size); */
-  /* /\* rbytes = read(fd, src, 8192); *\/ */
-  /* size = rbytes; */
-  /* printf("Read %zd bytes with %zd seek\n", rbytes, seek); */
-  /* if (rbytes == -1) { */
-  /*   perror(NULL); */
-  /* } */
-  /* close(fd); */
+  fd = open(filename, 0);
+  rbytes = read(fd, src, size);
+  size = rbytes;
+  if (rbytes == -1) {
+    perror(NULL);
+  }
+  close(fd);
 
   printf("********************** Setup info *****************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
-  printf("Using random data with %d significant bits (out of 32)\n", 32-rshift);
-  printf("Using a dataset of %d bytes\n", size);
+/*  printf("Using random data with %d significant bits (out of 32)\n", 32-rshift); */
+  printf("Using data coming from file: %s\n", filename);
+  printf("Dataset size: %d bytes\t Type size: %d bytes\n", size, elsize);
   printf("Shuffle active?  %s\n", doshuffle ? "Yes" : "No");
   printf("********************** Running benchmarks *********************\n");
 
@@ -108,9 +106,9 @@ int main(void) {
     }
     current = clock();
     tshuf = (current-last)/CLK_NITER;
-    printf("compression:\t %6.1f us, %.1f MB/s\t\t",
+    printf("compression:\t %6.1f us, %.1f MB/s\t  ",
            tshuf, size/(tshuf*MB/1e6));
-    printf("Final bytes: %d  Compr ratio: %3.1f\n",
+    printf("Final bytes: %d  Compr ratio: %3.2f\n",
            cbytes, size/(float)cbytes);
 
     last = clock();
@@ -124,7 +122,7 @@ int main(void) {
       }
     current = clock();
     tunshuf = (current-last)/CLK_NITER;
-    printf("decompression:\t %6.1f us, %.1f MB/s\t\t",
+    printf("decompression:\t %6.1f us, %.1f MB/s\t  ",
            tunshuf, nbytes/(tunshuf*MB/1e6));
     if (nbytes < 0) {
       printf("FAIL.  Error code: %d\n", nbytes);

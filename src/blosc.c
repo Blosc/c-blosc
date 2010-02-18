@@ -152,7 +152,7 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   /* Create temporary area */
 #ifdef WIN32
-  tmp = _aligned_malloc(blocksize, 16);
+  tmp = (unsigned char *)_aligned_malloc(blocksize, 16);
 #else
   posix_memalign((void **)&tmp, 16, blocksize);
 #endif  /* WIN32 */
@@ -365,8 +365,8 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
 
   /* Create temporary area */
 #ifdef WIN32
-  tmp = _aligned_malloc(blocksize, 16);
-  tmp2 = _aligned_malloc(blocksize, 16);
+  tmp = (unsigned char*)_aligned_malloc(blocksize, 16);
+  tmp2 = (unsigned char*)_aligned_malloc(blocksize, 16);
 #else
   posix_memalign((void **)&tmp, 16, blocksize);
   posix_memalign((void **)&tmp2, 16, blocksize);
