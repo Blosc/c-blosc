@@ -25,21 +25,21 @@
 #include <time.h>
 #include "blosc.h"
 
-
-/* Constants for benchmarking purposes */
-#define NITER  (100*1000)            /* Number of iterations */
-#define CLK_NITER  (CLOCKS_PER_SEC*NITER/1e6)
 #define MB    (1024*1024)
+
+#define NITER  (10*1000)               /* Number of iterations */
+#define CLK_NITER  (CLOCKS_PER_SEC*NITER/1e6)
+
 
 
 int main(void) {
-  unsigned int nbytes, cbytes;
+  int nbytes, cbytes;
   void *src, *dest, *srccpy;
   size_t i;
   clock_t last, current;
   float tmemcpy, tshuf, tunshuf;
-  int size = 32*1024;                  /* Buffer size */
-  unsigned int elsize;                 /* Datatype size */
+  int size = 128*1024;                  /* Buffer size */
+  unsigned int elsize;                  /* Datatype size */
   int *_src;
   int *_srccpy;
   int rshift = 22;
@@ -85,10 +85,8 @@ int main(void) {
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   printf("Using random data with %d significant bits (out of 32)\n", 32-rshift);
   printf("Using a dataset of %d bytes\n", size);
-  printf("Shuffle active? %s\n", doshuffle ? "yes" : "no");
+  printf("Shuffle active?  %s\n", doshuffle ? "Yes" : "No");
   printf("********************** Running benchmarks *********************\n");
-
-  set_shuffle(doshuffle);
 
   memcpy(srccpy, src, size);
 
@@ -102,12 +100,11 @@ int main(void) {
 
   for (clevel=1; clevel<10; clevel++) {
 
-    set_complevel(clevel);
     printf("Compression level: %d\n", clevel);
 
     last = clock();
     for (i = 0; i < NITER; i++) {
-      cbytes = blosc_compress(elsize, size, src, dest);
+      cbytes = blosc_compress(clevel, doshuffle, elsize, size, src, dest);
     }
     current = clock();
     tshuf = (current-last)/CLK_NITER;
@@ -129,6 +126,9 @@ int main(void) {
     tunshuf = (current-last)/CLK_NITER;
     printf("decompression:\t %6.1f us, %.1f MB/s\t\t",
            tunshuf, nbytes/(tunshuf*MB/1e6));
+    if (nbytes < 0) {
+      printf("FAIL.  Error code: %d\n", nbytes);
+    }
     /* printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
 
     /* Check if data has had a good roundtrip */
