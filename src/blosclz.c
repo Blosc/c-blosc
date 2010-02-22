@@ -114,6 +114,7 @@ int blosclz_compress(int opt_level, const void* input,
   blzuint8 hash_log = hash_log_[opt_level];
   blzuint16 hash_size = 1 << hash_log;
   blzuint16 *htab;
+  blzuint8* op_limit;
 
   size_t hslot;
   size_t hval;
@@ -128,7 +129,7 @@ int blosclz_compress(int opt_level, const void* input,
   if (maxlength > (size_t) maxout) {
     maxlength = (size_t) maxout;
   }
-  blzuint8* op_limit = op + maxlength;
+  op_limit = op + maxlength;
 
   /* output buffer cannot be less than 66 bytes or we can get into problems.
      As output is usually the same length than input, we take input length. */

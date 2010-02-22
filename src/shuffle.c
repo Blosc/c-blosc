@@ -11,12 +11,12 @@
 #include <string.h>
 #include "shuffle.h"
 
-#ifdef WIN32
+#ifdef _WIN32
   #include <windows.h>
   #define __SSE2__          /* Windows does not define this by default */
 #else
   #include <stdint.h>
-#endif
+#endif  /* _WIN32 */
 
 
 /* The non-SSE2 versions of shuffle and unshuffle */

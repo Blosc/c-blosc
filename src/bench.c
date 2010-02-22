@@ -25,18 +25,77 @@
 #include <time.h>
 #include "blosc.h"
 
-#define MB    (1024*1024)
+#define MB  (1024*1024)
 
 #define NITER  (20*1000)               /* Number of iterations */
-#define CLK_NITER  (CLOCKS_PER_SEC*NITER/1e6)
 
+
+#ifdef _WIN32
+#include <windows.h>
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#else
+  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#endif
+
+struct timezone
+{
+  int  tz_minuteswest; /* minutes W of Greenwich */
+  int  tz_dsttime;     /* type of dst correction */
+};
+
+int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+  FILETIME ft;
+  unsigned __int64 tmpres = 0;
+  static int tzflag;
+
+  if (NULL != tv)
+  {
+    GetSystemTimeAsFileTime(&ft);
+
+    tmpres |= ft.dwHighDateTime;
+    tmpres <<= 32;
+    tmpres |= ft.dwLowDateTime;
+
+    /*converting file time to unix epoch*/
+    tmpres -= DELTA_EPOCH_IN_MICROSECS;
+    tmpres /= 10;  /*convert into microseconds*/
+    tv->tv_sec = (long)(tmpres / 1000000UL);
+    tv->tv_usec = (long)(tmpres % 1000000UL);
+  }
+
+  if (NULL != tz)
+  {
+    if (!tzflag)
+    {
+      _tzset();
+      tzflag++;
+    }
+    tz->tz_minuteswest = _timezone / 60;
+    tz->tz_dsttime = _daylight;
+  }
+
+  return 0;
+}
+#endif   /* _WIN32 */
+
+
+/* Given two timeval stamps, return the difference in seconds */
+float getseconds(struct timeval last, struct timeval current) {
+  int sec, usec;
+
+  sec = current.tv_sec - last.tv_sec;
+  usec = current.tv_usec - last.tv_usec;
+  return (float)(((double)sec + usec*1e-6)/(double)NITER*1e6);
+}
 
 
 int main(void) {
   int nbytes, cbytes;
   void *src, *dest, *srccpy;
   size_t i;
-  clock_t last, current;
+  struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
   int *_src;
   int *_srccpy;
@@ -87,30 +146,33 @@ int main(void) {
 
   memcpy(srccpy, src, size);
 
-  last = clock();
+  gettimeofday(&last, NULL);
   for (i = 0; i < NITER; i++) {
     memcpy(dest, src, size);
   }
-  current = clock();
-  tmemcpy = (current-last)/CLK_NITER;
+  gettimeofday(&current, NULL);
+  tmemcpy = getseconds(last, current);
   printf("memcpy:\t\t %6.1f us, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB/1e6));
 
   for (clevel=1; clevel<10; clevel++) {
 
     printf("Compression level: %d\n", clevel);
 
-    last = clock();
+    gettimeofday(&last, NULL);
     for (i = 0; i < NITER; i++) {
       cbytes = blosc_compress(clevel, doshuffle, elsize, size, src, dest);
     }
-    current = clock();
-    tshuf = (current-last)/CLK_NITER;
+    gettimeofday(&current, NULL);
+    tshuf = getseconds(last, current);
     printf("compression:\t %6.1f us, %.1f MB/s\t  ",
            tshuf, size/(tshuf*MB/1e6));
-    printf("Final bytes: %d  Compr ratio: %3.2f\n",
-           cbytes, size/(float)cbytes);
+    printf("Final bytes: %d  ", cbytes);
+    if (cbytes > 0) {
+      printf("Compr ratio: %3.2f", size/(float)cbytes);
+    }
+    printf("\n");
 
-    last = clock();
+    gettimeofday(&last, NULL);
     for (i = 0; i < NITER; i++)
       if (cbytes == 0) {
         memcpy(dest, src, size);
@@ -119,8 +181,8 @@ int main(void) {
       else {
         nbytes = blosc_decompress(dest, src, size);
       }
-    current = clock();
-    tunshuf = (current-last)/CLK_NITER;
+    gettimeofday(&current, NULL);
+    tunshuf = getseconds(last, current);
     printf("decompression:\t %6.1f us, %.1f MB/s\t  ",
            tunshuf, nbytes/(tunshuf*MB/1e6));
     if (nbytes < 0) {
