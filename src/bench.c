@@ -93,24 +93,26 @@ float getseconds(struct timeval last, struct timeval current) {
 
 int main(void) {
   int nbytes, cbytes;
-  void *src, *dest, *srccpy;
+  void *src, *srccpy, *dest, *dest2;
   size_t i;
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
-  int *_src;
+  int *_src, *_dest;
   int *_srccpy;
-  int rshift = 22;           /* For random data */
+  int rshift = 22;              /* For random data */
   int clevel;
-  int doshuffle = 1;
+  int doshuffle = 1;            /* Shuffle? */
   int fd;
   int status;
   char *filename = "128KB-block-4B-typesize.data";
-  int size = 128*1024;                       /* Buffer size */
-  unsigned int elsize = 4;                   /* Datatype size */
+  int size = 128*1024;          /* Buffer size */
+  unsigned int elsize = 4;      /* Datatype size */
+  unsigned char *orig, *round;
 
   src = malloc(size);
   srccpy = malloc(size);
   dest = malloc(size);
+  dest2 = malloc(size);
 
   srand(1);
 
@@ -148,7 +150,7 @@ int main(void) {
 
   gettimeofday(&last, NULL);
   for (i = 0; i < NITER; i++) {
-    memcpy(dest, src, size);
+    memcpy(srccpy, src, size);
   }
   gettimeofday(&current, NULL);
   tmemcpy = getseconds(last, current);
@@ -175,11 +177,11 @@ int main(void) {
     gettimeofday(&last, NULL);
     for (i = 0; i < NITER; i++)
       if (cbytes == 0) {
-        memcpy(dest, src, size);
+        memcpy(dest2, src, size);
         nbytes = size;
       }
       else {
-        nbytes = blosc_decompress(dest, src, size);
+        nbytes = blosc_decompress(dest, dest2, size);
       }
     gettimeofday(&current, NULL);
     tunshuf = getseconds(last, current);
@@ -191,13 +193,13 @@ int main(void) {
     /* printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
 
     /* Check if data has had a good roundtrip */
-    _src = (int *)src;
-    _srccpy = (int *)srccpy;
-    for(i = 0; i < size/sizeof(int); ++i){
-      if (_src[i] != _srccpy[i]) {
-        printf("Error: original data and round-trip do not match in pos %d\n",
-               (int)i);
-        printf("Orig--> %x, Copy--> %x\n", _src[i], _srccpy[i]);
+    orig = (unsigned char *)srccpy;
+    round = (unsigned char *)dest2;
+    for(i = 0; i < size; ++i){
+      if (orig[i] != round[i]) {
+        printf("\nError: original data and round-trip do not match in pos %d\n",
+               i);
+        printf("Orig--> %x, round-trip--> %x\n", orig[i], round[i]);
         goto out;
       }
     }
@@ -207,6 +209,6 @@ int main(void) {
   } /* End clevel loop */
 
  out:
-  free(src); free(srccpy);  free(dest);
+  free(src); free(srccpy); free(dest); free(dest2);
   return 0;
 }

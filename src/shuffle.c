@@ -235,16 +235,19 @@ shuffle16(unsigned char* dest, unsigned char* src, size_t size)
 void shuffle(size_t bytesoftype, size_t blocksize,
              unsigned char* _src, unsigned char* _dest) {
   int unaligned_dest = (uintptr_t)_dest % 16;
+  int power_of_two = (blocksize & (blocksize - 1)) == 0;
+  int too_small = (blocksize < 256);
 
-  if (unaligned_dest) {
-    /* _dest buffer is not aligned.  Call the non-sse2 version. */
+  if (unaligned_dest || !power_of_two || too_small) {
+    /* _dest buffer is not aligned, not a power of two or is too
+       small.  Call the non-sse2 version. */
     _shuffle(bytesoftype, blocksize, _src, _dest);
     return;
   }
 
   /* Optimized shuffle */
-  /* The buffer must be aligned on a 16 bytes boundary and have a power */
-  /* of 2 size. */
+  /* The buffer must be aligned on a 16 bytes boundary, have a power */
+  /* of 2 size and be larger or equal than 256 bytes. */
   if (bytesoftype == 4) {
     shuffle4(_dest, _src, blocksize);
   }
@@ -446,16 +449,19 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
                unsigned char* _src, unsigned char* _dest) {
   int unaligned_src = (uintptr_t)_src % 16;
   int unaligned_dest = (uintptr_t)_dest % 16;
+  int power_of_two = (blocksize & (blocksize - 1)) == 0;
+  int too_small = (blocksize < 256);
 
-  if (unaligned_src || unaligned_dest) {
-    /* _src or _dest buffers are not aligned.  Call the non-sse2 version. */
+  if (unaligned_dest || unaligned_dest || !power_of_two || too_small) {
+    /* _src or _dest buffer is not aligned, not a power of two or is
+       too small.  Call the non-sse2 version. */
     _unshuffle(bytesoftype, blocksize, _src, _dest);
     return;
   }
 
   /* Optimized unshuffle */
-  /* The buffer must be aligned on a 16 bytes boundary and be of a power */
-  /* of 2 size. */
+  /* The buffers must be aligned on a 16 bytes boundary, have a power */
+  /* of 2 size and be larger or equal than 256 bytes. */
   if (bytesoftype == 4) {
     unshuffle4(_dest, _src, blocksize);
   }

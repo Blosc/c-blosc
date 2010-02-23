@@ -43,8 +43,8 @@ int do_shuffle;                 /* Shuffle is active? */
 /* Shuffle & Compress a single block */
 static size_t
 _blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
-         int ctbytes, int nbytes, unsigned char* _src, unsigned char* _dest,
-         unsigned char *tmp) {
+         int leftoverblock, int ctbytes, int nbytes,
+         unsigned char* _src, unsigned char* _dest, unsigned char *tmp) {
   size_t j, neblock, nsplits;
   int cbytes, maxout;
   unsigned int btbytes = 0;
@@ -60,8 +60,9 @@ _blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
   }
 
   /* Compress for each shuffled slice split for this block. */
-  /* If the number of bytes is too large, do not split all. */
-  if (typesize <= MAXSPLITS) {
+  /* If the number of bytes is too large, or we are in a leftover
+     block, do not split all. */
+  if ((typesize <= MAXSPLITS) && (!leftoverblock)) {
     nsplits = typesize;
   }
   else {
@@ -105,7 +106,7 @@ _blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
     _dest += cbytes;
     btbytes += cbytes;
     ctbytes += cbytes;
-  }  /* Close j < nsplits */
+  }  /* Closes j < nsplits */
 
   return btbytes;
 }
@@ -123,11 +124,13 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   size_t tblocks;                  /* number of total blocks in buffer */
   size_t leftover;                 /* extra bytes at end of buffer */
   size_t blocksize;                /* length of the block in bytes */
+  size_t bsize;                    /* corrected blocksize for last block */
   unsigned int ctbytes = 0;        /* the number of bytes in output buffer */
   unsigned int *ctbytes_;          /* the number of bytes in output buffer */
   unsigned char *tmp;              /* temporary buffer for data block */
   int cbytes;                      /* temporary compressed buffer length */
   int maxout;                      /* maximum length for leftover compression */
+  int leftoverblock;               /* left over block? */
   int i, j;                        /* local index variables */
   const char *too_long_message = "The impossible happened: buffer overflow!\n";
 
@@ -173,7 +176,6 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
   tblocks = (leftover>0)? nblocks+1: nblocks;
-
   /* If typesize is too large, treat buffer as an 1-byte stream. */
   if (typesize > MAXTYPESIZE) {
     typesize = 1;
@@ -201,10 +203,16 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     *flags |= 0x1;                         /* bit 0 set to one in flags */
   }
 
-  for (j = 0; j < nblocks; j++) {
+  for (j = 0; j < tblocks; j++) {
     starts[j] = ctbytes;
-    cbytes = _blosc_c(clevel, doshuffle, typesize, blocksize, ctbytes, nbytes,
-                      _src, _dest, tmp);
+    bsize = blocksize;
+    leftoverblock = 0;
+    if ((j == tblocks - 1) && (leftover > 0)) {
+      bsize = leftover;
+      leftoverblock = 1;
+    }
+    cbytes = _blosc_c(clevel, doshuffle, typesize, bsize, leftoverblock,
+                      ctbytes, nbytes, _src, _dest, tmp);
     if (cbytes < 0) {
       fprintf(stderr, too_long_message);
       ctbytes = cbytes;         /* error in _blosc_c */
@@ -217,53 +225,7 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     _dest += cbytes;
     _src += blocksize;
     ctbytes += cbytes;
-  }  /* Close k < nblocks */
-
-  if(leftover > 0) {
-    starts[nblocks] = ctbytes;
-    if (doshuffle && (typesize > 1)) {
-      shuffle(typesize, leftover, _src, tmp);
-    }
-    else {
-      memcpy(tmp, _src, leftover);
-    }
-    _dest += sizeof(int);
-    ctbytes += sizeof(int);
-    maxout = leftover;
-    if (ctbytes+maxout > nbytes) {
-      maxout = nbytes - ctbytes;
-      if (maxout <= 0) {
-        ctbytes = 0;              /* uncompressible data */
-        goto out;
-      }
-    }
-    cbytes = blosclz_compress(clevel, tmp, leftover, _dest, maxout);
-    if (cbytes < 0) {
-      ctbytes = -3;             /* error in blosclz_compress */
-      goto out;
-    }
-    else if (cbytes > (int) leftover) {
-      fprintf(stderr, too_long_message);
-      ctbytes = -4;             /* too long compression size */
-      goto out;
-    }
-    else if ((cbytes == 0)  || (cbytes == (int) leftover)) {
-      /* The compressor has been unable to compress data
-         significantly.  Also, it may happen that the compressed
-         buffer has exactly the same length than the buffer size, but
-         this means uncompressible data.  Before doing the copy, check
-         that we are not running into a buffer overflow. */
-      if ((ctbytes+leftover) > nbytes) {
-        ctbytes = 0;    /* Uncompressible data */
-        goto out;
-      }
-      memcpy(_dest, tmp, leftover);
-      cbytes = leftover;
-    }
-    ((unsigned int *)(_dest))[-1] = cbytes;
-    _dest += cbytes;
-    ctbytes += cbytes;
-  }
+  }  /* Close j < tblocks */
 
   if (ctbytes == nbytes) {
     ctbytes = 0;               /* non-compressible data */
@@ -290,7 +252,7 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
 /* Decompress & unshuffle a single block */
 static size_t
-_blosc_d(int dounshuffle, size_t typesize, size_t blocksize,
+_blosc_d(int dounshuffle, size_t typesize, size_t blocksize, int leftoverblock,
          unsigned char* _src, unsigned char* _dest,
          unsigned char *tmp, unsigned char *tmp2)
 {
@@ -307,7 +269,7 @@ _blosc_d(int dounshuffle, size_t typesize, size_t blocksize,
 
   /* Compress for each shuffled slice split for this block. */
   /* If the number of bytes is too large, do not split all. */
-  if (typesize <= MAXSPLITS) {
+  if ((typesize <= MAXSPLITS) && (!leftoverblock)) {
     nsplits = typesize;
   }
   else {
@@ -333,7 +295,7 @@ _blosc_d(int dounshuffle, size_t typesize, size_t blocksize,
     ctbytes += cbytes;
     _tmp += neblock;
     ntbytes += nbytes;
-  }
+  } /* Closes j < nsplits */
 
   if (dounshuffle && (typesize > 1)) {
     if ((uintptr_t)_dest % 16 == 0) {
@@ -346,6 +308,7 @@ _blosc_d(int dounshuffle, size_t typesize, size_t blocksize,
       memcpy(_dest, tmp2, blocksize);
     }
   }
+
   return ctbytes;
 }
 
@@ -365,7 +328,8 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   int cbytes;
   unsigned char *tmp, *tmp2;
   int dounshuffle = 0;
-  unsigned int typesize, blocksize, ctbytes_;
+  unsigned int typesize, blocksize, bsize, ctbytes_;
+  int leftoverblock;               /* left over block? */
 
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
@@ -405,8 +369,14 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   posix_memalign((void **)&tmp2, 16, blocksize);
 #endif  /* _WIN32 */
 
-  for (j = 0; j < nblocks; j++) {
-    cbytes = _blosc_d(dounshuffle, typesize, blocksize,
+  for (j = 0; j < tblocks; j++) {
+    bsize = blocksize;
+    leftoverblock = 0;
+    if ((j == tblocks - 1) && (leftover > 0)) {
+      bsize = leftover;
+      leftoverblock = 1;
+    }
+    cbytes = _blosc_d(dounshuffle, typesize, bsize, leftoverblock,
                       _src, _dest, tmp, tmp2);
     if (cbytes < 0) {
       ntbytes = cbytes;          /* _blosc_d failure */
@@ -415,29 +385,6 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
     _src += cbytes;
     _dest += blocksize;
     ntbytes += blocksize;
-  }
-
-  if(leftover > 0) {
-    cbytes = ((unsigned int *)_src)[0];
-    _src += sizeof(int);
-    if (cbytes == (int) leftover) {
-      memcpy(tmp, _src, leftover);
-      dbytes = leftover;
-    }
-    else {
-      dbytes = blosclz_decompress(_src, cbytes, tmp, leftover);
-      if (dbytes != leftover) {
-        ntbytes = -3;            /* too large buffer */
-        goto out;
-      }
-    }
-    ntbytes += dbytes;
-    if (dounshuffle && (typesize > 1)) {
-      unshuffle(typesize, leftover, tmp, _dest);
-    }
-    else {
-      memcpy(_dest, tmp, leftover);
-    }
   }
 
  out:
