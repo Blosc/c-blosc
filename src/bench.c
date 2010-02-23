@@ -104,8 +104,8 @@ int main(void) {
   int doshuffle = 1;            /* Shuffle? */
   int fd;
   int status;
-  char *filename = "128KB-block-4B-typesize.data";
-  int size = 128*1024;          /* Buffer size */
+  char *filename = "25Kelem-4B-typesize.data";
+  int size = 100*1000;          /* Buffer size */
   unsigned int elsize = 4;      /* Datatype size */
   unsigned char *orig, *round;
 
@@ -188,7 +188,7 @@ int main(void) {
     printf("decompression:\t %6.1f us, %.1f MB/s\t  ",
            tunshuf, nbytes/(tunshuf*MB/1e6));
     if (nbytes < 0) {
-      printf("FAIL.  Error code: %d\n", nbytes);
+      printf("FAILED.  Error code: %d\n", nbytes);
     }
     /* printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
 
@@ -197,7 +197,7 @@ int main(void) {
     round = (unsigned char *)dest2;
     for(i = 0; i < size; ++i){
       if (orig[i] != round[i]) {
-        printf("\nError: original data and round-trip do not match in pos %d\n",
+        printf("\nError: Original data and round-trip do not match in pos %d\n",
                i);
         printf("Orig--> %x, round-trip--> %x\n", orig[i], round[i]);
         goto out;
