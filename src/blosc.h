@@ -12,11 +12,11 @@
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    0    /* for major interface/format changes  */
-#define BLOSC_VERSION_MINOR    6    /* for minor interface/format changes  */
+#define BLOSC_VERSION_MINOR    7    /* for minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "0.6"    /* string version.  Sync with above! */
-#define BLOSC_VERSION_DATE     "2010-02-22"      /* date version */
+#define BLOSC_VERSION_STRING   "0.7"    /* string version.  Sync with above! */
+#define BLOSC_VERSION_DATE     "2010-02-23"      /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    1   /* Blosc format version, starting at 1 */
