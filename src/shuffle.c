@@ -452,7 +452,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
   int power_of_two = (blocksize & (blocksize - 1)) == 0;
   int too_small = (blocksize < 256);
 
-  if (unaligned_dest || unaligned_dest || !power_of_two || too_small) {
+  if (unaligned_src || unaligned_dest || !power_of_two || too_small) {
     /* _src or _dest buffer is not aligned, not a power of two or is
        too small.  Call the non-sse2 version. */
     _unshuffle(bytesoftype, blocksize, _src, _dest);

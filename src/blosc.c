@@ -28,7 +28,7 @@
 #define BLOCKSIZE (4*1024)      /* 4 KB (page size) */
 
 /* Maximum typesize before considering buffer as a stream of bytes. */
-#define MAXTYPESIZE 255         /* Cannot be larger than 255 */
+#define MAXTYPESIZE 256         /* Cannot be larger than 256 */
 
 /* The maximum number of splits in a block for compression */
 #define MAXSPLITS 16         /* Cannot be larger than 128 */
@@ -43,7 +43,7 @@ int do_shuffle;                 /* Shuffle is active? */
 /* Shuffle & Compress a single block */
 static size_t
 _blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
-         int leftoverblock, int ctbytes, int nbytes,
+         int leftoverblock, unsigned int ctbytes, unsigned int nbytes,
          unsigned char* _src, unsigned char* _dest, unsigned char *tmp) {
   size_t j, neblock, nsplits;
   int cbytes, maxout;
@@ -129,9 +129,8 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   unsigned int *ctbytes_;          /* the number of bytes in output buffer */
   unsigned char *tmp;              /* temporary buffer for data block */
   int cbytes;                      /* temporary compressed buffer length */
-  int maxout;                      /* maximum length for leftover compression */
   int leftoverblock;               /* left over block? */
-  int i, j;                        /* local index variables */
+  unsigned int i, j;               /* local index variables */
   const char *too_long_message = "The impossible happened: buffer overflow!\n";
 
   /* Compression level */
@@ -155,7 +154,7 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   /* Compute a blocksize depending on the optimization level */
   blocksize = BLOCKSIZE;
   /* 3 first optimization levels will not change blocksize */
-  for (i=4; i<=clevel; i++) {
+  for (i=4; i<=(unsigned int)clevel; i++) {
     /* Escape if blocksize grows more than nbytes */
     if (blocksize*2 > nbytes) break;
     blocksize *= 2;
@@ -176,22 +175,27 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
   tblocks = (leftover>0)? nblocks+1: nblocks;
-  /* If typesize is too large, treat buffer as an 1-byte stream. */
-  if (typesize > MAXTYPESIZE) {
+
+  /* Check typesize limits */
+  if (typesize == MAXTYPESIZE) {
+    typesize = 0;               /* zero means MAXTYPESIZE */
+  }
+  else if (typesize > MAXTYPESIZE) {
+    /* If typesize is too large, treat buffer as an 1-byte stream. */
     typesize = 1;
   }
 
   /* Write header for this block */
   _dest[0] = BLOSC_VERSION_FORMAT;         /* blosc format version */
   _dest[1] = BLOSCLZ_VERSION_FORMAT;       /* blosclz format version */
-  _dest[2] = (unsigned char)typesize;      /* type size */
-  flags = _dest+3;                         /* flags */
-  *flags = 0;                              /* zeroes flags */
+  flags = _dest+2;                         /* flags */
+  _dest[2] = 0;                            /* zeroes flags */
+  _dest[3] = (unsigned char)typesize;      /* type size */
   _dest += 4;
   ctbytes += 4;
-  ctbytes_ = (unsigned int *)_dest;        /* compressed chunk size (pointer) */
-  ((unsigned int *)_dest)[1] = nbytes;     /* size of the chunk */
-  ((unsigned int *)_dest)[2] = blocksize;  /* block size */
+  ((unsigned int *)_dest)[0] = nbytes;     /* size of the chunk */
+  ((unsigned int *)_dest)[1] = blocksize;  /* block size */
+  ctbytes_ = (unsigned int *)(_dest+8);    /* compressed chunk size (pointer) */
   _dest += sizeof(int)*3;
   ctbytes += sizeof(int)*3;
   starts = (unsigned int *)_dest;          /* starts for every block */
@@ -324,7 +328,7 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   size_t nblocks;                    /* number of complete blocks in buffer */
   size_t tblocks;                    /* number of total blocks in buffer */
   size_t j;
-  size_t nbytes, dbytes, ntbytes = 0;
+  size_t nbytes, ntbytes = 0;
   int cbytes;
   unsigned char *tmp, *tmp2;
   int dounshuffle = 0;
@@ -337,18 +341,23 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   /* Read the header block */
   version = _src[0];                        /* blosc format version */
   versionlz = _src[1];                      /* blosclz format version */
-  typesize = (unsigned int)_src[2];         /* typesize */
-  flags = _src[3];                          /* flags */
+  flags = _src[2];                          /* flags */
+  typesize = (unsigned int)_src[3];         /* typesize */
   _src += 4;
-  ctbytes_ = ((unsigned int *)_src)[0];     /* compressed chunk size */
-  nbytes = ((unsigned int *)_src)[1];       /* chunk size */
-  blocksize = ((unsigned int *)_src)[2];    /* block size */
+  nbytes = ((unsigned int *)_src)[0];       /* chunk size */
+  blocksize = ((unsigned int *)_src)[1];    /* block size */
+  ctbytes_ = ((unsigned int *)_src)[2];     /* compressed chunk size */
   _src += sizeof(int)*3;
   /* Compute some params */
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
   tblocks = (leftover>0)? nblocks+1: nblocks;
   _src += sizeof(int)*tblocks;              /* skip starts of blocks */
+
+  /* Check zero typesizes */
+  if (typesize == 0) {
+    typesize = MAXTYPESIZE;
+  }
 
   if (nbytes > dest_size) {
     /* This should never happen, but just in case. */

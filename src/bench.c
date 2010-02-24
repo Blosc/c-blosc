@@ -20,9 +20,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+#ifdef _WIN32
+  #include <time.h>
+#else
+  #include <unistd.h>
+  #include <sys/time.h>
+#endif
 #include <math.h>
-#include <time.h>
 #include "blosc.h"
 
 #define MB  (1024*1024)
@@ -97,7 +104,7 @@ int main(void) {
   size_t i;
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
-  int *_src, *_dest;
+  int *_src;
   int *_srccpy;
   int rshift = 22;              /* For random data */
   int clevel;
@@ -105,7 +112,7 @@ int main(void) {
   int fd;
   int status;
   char *filename = "25Kelem-4B-typesize.data";
-  int size = 100*1000;          /* Buffer size */
+  unsigned int size = 100*1000; /* Buffer size */
   unsigned int elsize = 4;      /* Datatype size */
   unsigned char *orig, *round;
 
@@ -195,10 +202,10 @@ int main(void) {
     /* Check if data has had a good roundtrip */
     orig = (unsigned char *)srccpy;
     round = (unsigned char *)dest2;
-    for(i = 0; i < size; ++i){
+    for(i = 0; i<size; ++i){
       if (orig[i] != round[i]) {
         printf("\nError: Original data and round-trip do not match in pos %d\n",
-               i);
+               (int)i);
         printf("Orig--> %x, round-trip--> %x\n", orig[i], round[i]);
         goto out;
       }
