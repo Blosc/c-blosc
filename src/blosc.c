@@ -166,6 +166,9 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   /* Create temporary area */
 #ifdef _WIN32
   tmp = (unsigned char *)_aligned_malloc(blocksize, 16);
+#elif defined __APPLE__
+  /* Mac OS X guarantees 16-byte alignment in small allocs */
+  tmp = (unsigned char *)(malloc(blocksize));
 #else
   posix_memalign((void **)&tmp, 16, blocksize);
 #endif  /* _WIN32 */
@@ -373,6 +376,10 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
 #ifdef _WIN32
   tmp = (unsigned char*)_aligned_malloc(blocksize, 16);
   tmp2 = (unsigned char*)_aligned_malloc(blocksize, 16);
+#elif defined __APPLE__
+  /* Mac OS X guarantees 16-byte alignment in small allocs */
+  tmp = (unsigned char *)(malloc(blocksize));
+  tmp2 = (unsigned char *)(malloc(blocksize));
 #else
   posix_memalign((void **)&tmp, 16, blocksize);
   posix_memalign((void **)&tmp2, 16, blocksize);
