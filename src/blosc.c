@@ -411,7 +411,7 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   free(tmp);
   free(tmp2);
 #endif  /* _WIN32 */
-  return ntbytes;
+  return nbytes;
 }
 
 

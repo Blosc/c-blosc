@@ -35,6 +35,7 @@
 #define MB  (1024*1024)
 
 #define NITER  (20*1000)               /* Number of iterations */
+//#define NITER  (1)               /* Number of iterations */
 
 
 #ifdef _WIN32
@@ -164,6 +165,7 @@ int main(void) {
   printf("memcpy:\t\t %6.1f us, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB/1e6));
 
   for (clevel=1; clevel<10; clevel++) {
+  //for (clevel=9; clevel<10; clevel++) {
 
     printf("Compression level: %d\n", clevel);
 
@@ -197,7 +199,7 @@ int main(void) {
     if (nbytes < 0) {
       printf("FAILED.  Error code: %d\n", nbytes);
     }
-    /* printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
+    printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes);
 
     /* Check if data has had a good roundtrip */
     orig = (unsigned char *)srccpy;
