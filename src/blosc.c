@@ -395,7 +395,7 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
     cbytes = _blosc_d(dounshuffle, typesize, bsize, leftoverblock,
                       _src, _dest, tmp, tmp2);
     if (cbytes < 0) {
-      ntbytes = cbytes;          /* _blosc_d failure */
+      nbytes = cbytes;          /* _blosc_d failure */
       goto out;
     }
     _src += cbytes;
