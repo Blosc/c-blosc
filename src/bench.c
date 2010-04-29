@@ -34,7 +34,7 @@
 
 #define MB  (1024*1024)
 
-#define NITER  (20*1000)               /* Number of iterations */
+#define NITER  (1000)               /* Number of iterations */
 
 
 #ifdef _WIN32
@@ -107,6 +107,7 @@ int main(void) {
   int *_src;
   int *_srccpy;
   int rshift = 22;              /* For random data */
+  //int rshift = 20;              /* For random data */
   int clevel;
   int doshuffle = 1;            /* Shuffle? */
   int fd;
@@ -162,6 +163,8 @@ int main(void) {
   gettimeofday(&current, NULL);
   tmemcpy = getseconds(last, current);
   printf("memcpy:\t\t %6.1f us, %.1f MB/s\n", tmemcpy, size/(tmemcpy*MB/1e6));
+
+  //blosc_init_threads(1);
 
   for (clevel=1; clevel<10; clevel++) {
 
