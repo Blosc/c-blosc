@@ -13,10 +13,11 @@
 
 #ifdef _WIN32
   #include <windows.h>
-  #include <stdint-windows.h>
+  #include "stdint-windows.h"
   #define __SSE2__          /* Windows does not define this by default */
 #else
   #include <stdint.h>
+  #include <inttypes.h>
 #endif  /* _WIN32 */
 
 

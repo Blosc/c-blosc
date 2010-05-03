@@ -19,7 +19,8 @@
 #include "blosclz.h"
 
 #ifdef _WIN32
-  #include <stdint-windows.h>
+  #include <windows.h>
+  #include "stdint-windows.h"
 #else
   #include <stdint.h>
 #endif  /* _WIN32 */

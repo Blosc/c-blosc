@@ -21,10 +21,11 @@
 
 #ifdef _WIN32
   #include <windows.h>
-  #include <stdint-windows.h>
+  #include "stdint-windows.h"
 #else
   #include <stdint.h>
   #include <unistd.h>
+  #include <inttypes.h>
 #endif  /* _WIN32 */
 
 
