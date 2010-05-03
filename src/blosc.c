@@ -13,9 +13,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
+
 #ifdef _WIN32
   #include <windows.h>
 #else
@@ -23,46 +25,100 @@
   #include <unistd.h>
 #endif  /* _WIN32 */
 
+#include <pthread.h>
 
-/* Starting point for the blocksize computation */
-#define BLOCKSIZE (4*1024)      /* 4 KB (page size) */
+
+/* Minimal buffer size to be compressed */
+#define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
 
 /* Maximum typesize before considering buffer as a stream of bytes. */
-#define MAXTYPESIZE 256         /* Cannot be larger than 256 */
+#define MAX_TYPESIZE 256         /* Cannot be larger than 256 */
 
 /* The maximum number of splits in a block for compression */
-#define MAXSPLITS 16         /* Cannot be larger than 128 */
+#define MAX_SPLITS 16            /* Cannot be larger than 128 */
+
+/* The maximum number of threads (for some static arrays) */
+#define MAX_THREADS 64
+
+/* The size of L1 cache.  32 KB is quite common nowadays. */
+#define L1 (32*1024)
 
 
-/* Global variables for compressing/shuffling actions */
-int clevel;                     /* Compression level */
-int do_shuffle;                 /* Shuffle is active? */
+/* Global variables for main logic */
+int init_temps_done = 0;        /* temporaries for compr/decompr initialized? */
+size_t force_blocksize = 0;     /* should we force the use of a blocksize? */
+
+/* Global variables for threads */
+int nthreads = 1;               /* number of desired threads in pool */
+int init_threads_done = 0;      /* pool of threads initialized? */
+int end_threads = 0;            /* should exisiting threads end? */
+int giveup;                     /* should (de-)compression give up? */
+int nblock = -1;                /* block counter */
+pthread_t threads[MAX_THREADS]; /* opaque structure for threads */
+int tids[MAX_THREADS];          /* ID per each thread */
+pthread_attr_t ct_attr;         /* creation time attributes for threads */
+
+/* Syncronization variables */
+pthread_mutex_t count_mutex;
+pthread_barrier_t barr_init;
+pthread_barrier_t barr_inter;
+pthread_barrier_t barr_finish;
+
+/* Structure for parameters in (de-)compression threads */
+struct thread_data {
+  size_t typesize;
+  size_t blocksize;
+  int compress;
+  int clevel;
+  int shuffle;
+  int ntbytes;
+  unsigned int nbytes;
+  unsigned int nblocks;
+  unsigned int leftover;
+  unsigned int *bstarts;             /* start pointers for each block */
+  unsigned char *src;
+  unsigned char *dest;
+  unsigned char *tmp[MAX_THREADS];
+  unsigned char *tmp2[MAX_THREADS];
+} params;
+
+
+/* Structure for parameters meant for keeping track of current temporaries */
+struct temp_data {
+  int nthreads;
+  size_t typesize;
+  size_t blocksize;
+} current_temp;
 
 
 
-/* Shuffle & Compress a single block */
-static size_t
-_blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
-         int leftoverblock, unsigned int ctbytes, unsigned int nbytes,
-         unsigned char* _src, unsigned char* _dest, unsigned char *tmp) {
+/* Shuffle & compress a single block */
+static int
+blosc_c(size_t blocksize, int leftoverblock,
+        unsigned int ntbytes, unsigned int nbytes,
+        unsigned char *src, unsigned char *dest, unsigned char *tmp)
+{
   size_t j, neblock, nsplits;
-  int cbytes, maxout;
-  unsigned int btbytes = 0;
-  unsigned char* _tmp;
+  int cbytes;                   /* number of compressed bytes in split */
+  int ctbytes = 0;              /* number of compressed bytes in block */
+  int maxout;
+  unsigned char *_tmp;
+  size_t typesize = params.typesize;
 
-  if (doshuffle && (typesize > 1)) {
+  if (params.shuffle && (typesize > 1)) {
     /* Shuffle this block (this makes sense only if typesize > 1) */
-    shuffle(typesize, blocksize, _src, tmp);
+    shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
   }
   else {
-    _tmp = _src;
+    _tmp = src;
   }
 
   /* Compress for each shuffled slice split for this block. */
-  /* If the number of bytes is too large, or we are in a leftover
-     block, do not split all. */
-  if ((typesize <= MAXSPLITS) && (!leftoverblock)) {
+  /* If typesize is too large, neblock is too small or we are in a
+     leftover block, do not split at all. */
+  if ((typesize <= MAX_SPLITS) && (blocksize/typesize) >= MIN_BUFFERSIZE &&
+      (!leftoverblock)) {
     nsplits = typesize;
   }
   else {
@@ -70,19 +126,19 @@ _blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
   }
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
-    _dest += sizeof(int);
-    btbytes += sizeof(int);
+    dest += sizeof(int);
+    ntbytes += sizeof(int);
     ctbytes += sizeof(int);
     maxout = neblock;
-    if (ctbytes+maxout > nbytes) {
-      maxout = nbytes - ctbytes;   /* avoid buffer overrun */
+    if (ntbytes+maxout > nbytes) {
+      maxout = nbytes - ntbytes;   /* avoid buffer overrun */
       if (maxout <= 0) {
         return 0;                  /* non-compressible block */
       }
     }
-    cbytes = blosclz_compress(clevel, _tmp+j*neblock, neblock,
-                              _dest, maxout);
-    if (cbytes > maxout) {
+    cbytes = blosclz_compress(params.clevel, _tmp+j*neblock, neblock,
+                              dest, maxout-1);
+    if (cbytes >= maxout) {
       /* Buffer overrun caused by blosclz_compress (should never happen) */
       return -1;
     }
@@ -90,48 +146,329 @@ _blosc_c(int clevel, int doshuffle, size_t typesize, size_t blocksize,
       /* cbytes should never be negative */
       return -2;
     }
-    else if ((cbytes == 0) || (cbytes == (int) neblock)) {
-      /* The compressor has been unable to compress data
-         significantly.  Also, it may happen that the compressed
-         buffer has exactly the same length than the buffer size, but
-         this means uncompressible data.  Before doing the copy, check
-         that we are not running into a buffer overflow. */
-      if ((ctbytes+neblock) > nbytes) {
+    else if (cbytes == 0) {
+      /* The compressor has been unable to compress data significantly. */
+      /* Before doing the copy, check that we are not running into a
+         buffer overflow. */
+      if ((ntbytes+neblock) > nbytes) {
         return 0;    /* Non-compressible data */
       }
-      memcpy(_dest, _tmp+j*neblock, neblock);
+      memcpy(dest, _tmp+j*neblock, neblock);
       cbytes = neblock;
     }
-    ((unsigned int *)(_dest))[-1] = cbytes;
-    _dest += cbytes;
-    btbytes += cbytes;
+    ((unsigned int *)(dest))[-1] = cbytes;
+    dest += cbytes;
+    ntbytes += cbytes;
     ctbytes += cbytes;
   }  /* Closes j < nsplits */
 
-  return btbytes;
+  return ctbytes;
+}
+
+
+/* Decompress & unshuffle a single block */
+static int
+blosc_d(size_t blocksize, int leftoverblock,
+        unsigned char *src, unsigned char *dest,
+        unsigned char *tmp, unsigned char *tmp2)
+{
+  int j, neblock, nsplits;
+  int nbytes;                /* number of decompressed bytes in split */
+  int cbytes;                /* number of compressed bytes in split */
+  int ctbytes = 0;           /* number of compressed bytes in block */
+  int ntbytes = 0;           /* number of uncompressed bytes in block */
+  unsigned char *_tmp;
+  size_t typesize = params.typesize;
+  size_t shuffle = params.shuffle;
+
+  if (shuffle && (typesize > 1)) {
+    _tmp = tmp;
+  }
+  else {
+    _tmp = dest;
+  }
+
+  /* Compress for each shuffled slice split for this block. */
+  if ((typesize <= MAX_SPLITS) && (blocksize/typesize) >= MIN_BUFFERSIZE &&
+      (!leftoverblock)) {
+    nsplits = typesize;
+  }
+  else {
+    nsplits = 1;
+  }
+  neblock = blocksize / nsplits;
+  for (j = 0; j < nsplits; j++) {
+    cbytes = ((unsigned int *)(src))[0]; /* amount of compressed bytes */
+    src += sizeof(int);
+    ctbytes += sizeof(int);
+    /* Uncompress */
+    if (cbytes == neblock) {
+      memcpy(_tmp, src, neblock);
+      nbytes = neblock;
+    }
+    else {
+      nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
+      if (nbytes != neblock) {
+        return -2;
+      }
+    }
+    src += cbytes;
+    ctbytes += cbytes;
+    _tmp += nbytes;
+    ntbytes += nbytes;
+  } /* Closes j < nsplits */
+
+  if (shuffle && (typesize > 1)) {
+    if ((uintptr_t)dest % 16 == 0) {
+      /* 16-bytes aligned dest.  SSE2 unshuffle will work. */
+      unshuffle(typesize, blocksize, tmp, dest);
+    }
+    else {
+      /* dest is not aligned.  Use tmp2, which is aligned, and copy. */
+      unshuffle(typesize, blocksize, tmp, tmp2);
+      memcpy(dest, tmp2, blocksize);
+    }
+  }
+
+  /* Return the number of uncompressed bytes */
+  return ntbytes;
+}
+
+
+/* Serial version for compression/decompression */
+int
+serial_blosc(void)
+{
+  unsigned int j, bsize, leftoverblock;
+  int cbytes;
+  int compress = params.compress;
+  size_t blocksize = params.blocksize;
+  int ntbytes = params.ntbytes;
+  int nbytes = params.nbytes;
+  unsigned int nblocks = params.nblocks;
+  int leftover = params.nbytes % params.blocksize;
+  unsigned int *bstarts = params.bstarts;
+  unsigned char *src = params.src;
+  unsigned char *dest = params.dest;
+  unsigned char *tmp = params.tmp[0];     /* tmp for thread 0 */
+  unsigned char *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
+
+  for (j = 0; j < nblocks; j++) {
+    if (compress) {
+      bstarts[j] = ntbytes;
+    }
+    bsize = blocksize;
+    leftoverblock = 0;
+    if ((j == nblocks - 1) && (leftover > 0)) {
+      bsize = leftover;
+      leftoverblock = 1;
+    }
+    if (compress) {
+      cbytes = blosc_c(bsize, leftoverblock, ntbytes, nbytes,
+                       src+j*blocksize, dest+bstarts[j], tmp);
+      if (cbytes == 0) {
+        ntbytes = 0;              /* uncompressible data */
+        break;
+      }
+    }
+    else {
+      cbytes = blosc_d(bsize, leftoverblock,
+                       src+bstarts[j], dest+j*blocksize, tmp, tmp2);
+    }
+    if (cbytes < 0) {
+      ntbytes = cbytes;         /* error in blosc_c / blosc_d */
+      break;
+    }
+    ntbytes += cbytes;
+  }
+
+  /* Final check for ntbytes (only in compression mode) */
+  if (compress) {
+    if (ntbytes == nbytes) {
+      ntbytes = 0;               /* non-compressible data */
+    }
+    else if (ntbytes > nbytes) {
+      fprintf(stderr, "The impossible happened: buffer overflow!\n");
+      ntbytes = -5;               /* too large buffer */
+    }
+  }  /* Close j < nblocks */
+
+  return ntbytes;
+}
+
+
+/* Threaded version for compression/decompression */
+int
+parallel_blosc(void)
+{
+  int rc;
+
+  /* Synchronization point for all threads (wait for initialization) */
+  rc = pthread_barrier_wait(&barr_init);
+  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+    printf("Could not wait on barrier (init)\n");
+    exit(-1);
+  }
+  /* Synchronization point for all threads (wait for finalization) */
+  rc = pthread_barrier_wait(&barr_finish);
+  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+    printf("Could not wait on barrier (finish)\n");
+    exit(-1);
+  }
+
+  /* Return the total bytes decompressed in threads */
+  return params.ntbytes;
+}
+
+
+/* Convenience functions for creating and releasing temporaries */
+void
+create_temporaries(void)
+{
+  int tid;
+  size_t typesize = params.typesize;
+  size_t blocksize = params.blocksize;
+  /* Extended blocksize for temporary destination.  Extended blocksize
+   is only useful for compression in parallel mode, but it doesn't
+   hurt other modes either. */
+  size_t ebsize = blocksize + typesize*sizeof(int);
+  unsigned char *tmp, *tmp2;
+
+  /* Create temporary area for each thread */
+  for (tid = 0; tid < nthreads; tid++) {
+#ifdef _WIN32
+    tmp = (unsigned char *)_aligned_malloc(blocksize, 16);
+    tmp2 = (unsigned char *)_aligned_malloc(ebsize, 16);
+#elif defined __APPLE__
+    /* Mac OS X guarantees 16-byte alignment in small allocs */
+    tmp = (unsigned char *)malloc(blocksize);
+    tmp2 = (unsigned char *)malloc(ebsize);
+#else
+    posix_memalign((void **)&tmp, 16, blocksize);
+    posix_memalign((void **)&tmp2, 16, ebsize);
+#endif  /* _WIN32 */
+    params.tmp[tid] = tmp;
+    params.tmp2[tid] = tmp2;
+  }
+
+  init_temps_done = 1;
+  /* Update params for current temporaries */
+  current_temp.nthreads = nthreads;
+  current_temp.typesize = typesize;
+  current_temp.blocksize = blocksize;
+
+}
+
+
+void
+release_temporaries(void)
+{
+  int tid;
+  unsigned char *tmp, *tmp2;
+
+  /* Release buffers */
+  for (tid = 0; tid < nthreads; tid++) {
+    tmp = params.tmp[tid];
+    tmp2 = params.tmp2[tid];
+#ifdef _WIN32
+    _aligned_free(tmp);
+    _aligned_free(tmp2);
+#else
+    free(tmp);
+    free(tmp2);
+#endif  /* _WIN32 */
+  }
+
+  init_temps_done = 0;
+
+}
+
+
+/* Do the compression or decompression of the buffer depending on the
+   global params. */
+int
+do_job(void) {
+  int ntbytes;
+
+  /* Initialize/reset temporaries if needed */
+  if (!init_temps_done) {
+    create_temporaries();
+  }
+  else if (current_temp.nthreads != nthreads ||
+           current_temp.typesize != params.typesize ||
+           current_temp.blocksize != params.blocksize) {
+    release_temporaries();
+    create_temporaries();
+  }
+
+  /* Run the serial version when nthreads is 1 or when the buffers are
+     not much larger than blocksize */
+  if (nthreads == 1 || (params.nbytes / params.blocksize) <= 1) {
+    ntbytes = serial_blosc();
+  }
+  else {
+    ntbytes = parallel_blosc();
+  }
+
+  return ntbytes;
+}
+
+
+size_t
+compute_blocksize(int clevel, size_t typesize, size_t nbytes)
+{
+  size_t blocksize;
+  int i;
+
+  blocksize = nbytes;           /* Start by a whole buffer as blocksize */
+
+  if (force_blocksize) {
+    blocksize = force_blocksize;
+    /* Check that forced blocksize is not too small nor too large */
+    if (blocksize < MIN_BUFFERSIZE) {
+      blocksize = MIN_BUFFERSIZE;
+    }
+  }
+  else if (nbytes >= L1*typesize) {
+    blocksize = L1 * typesize;
+    if (clevel <= 3) {
+      blocksize /= 4;
+    }
+    else if (clevel <= 6) {
+      blocksize /= 2;
+    }
+    else if (clevel < 9) {
+      blocksize *= 1;
+    }
+    else {
+      blocksize *= 2;
+    }
+  }
+
+  /* Check that blocksize is not too large */
+  if (blocksize > nbytes) {
+    blocksize = nbytes;
+  }
+
+  /* blocksize must be a multiple of the typesize */
+  blocksize = blocksize / typesize * typesize;
+
+  return blocksize;
 }
 
 
 unsigned int
-blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
+blosc_compress(int clevel, int shuffle, size_t typesize, size_t nbytes,
                const void *src, void *dest)
 {
-  unsigned char *_src=NULL;        /* alias for source buffer */
-  unsigned char *_dest=NULL;       /* alias for destination buffer */
+  unsigned char *_dest=NULL;       /* current pos for destination buffer */
   unsigned char *flags;            /* flags for header */
-  unsigned int *starts;            /* start pointers for each block */
-  size_t nblocks;                  /* number of complete blocks in buffer */
-  size_t tblocks;                  /* number of total blocks in buffer */
-  size_t leftover;                 /* extra bytes at end of buffer */
+  unsigned int nblocks;            /* number of total blocks in buffer */
+  unsigned int leftover;           /* extra bytes at end of buffer */
+  unsigned int *bstarts;           /* start pointers for each block */
   size_t blocksize;                /* length of the block in bytes */
-  size_t bsize;                    /* corrected blocksize for last block */
-  unsigned int ctbytes = 0;        /* the number of bytes in output buffer */
-  unsigned int *ctbytes_;          /* the number of bytes in output buffer */
-  unsigned char *tmp;              /* temporary buffer for data block */
-  int cbytes;                      /* temporary compressed buffer length */
-  int leftoverblock;               /* left over block? */
-  unsigned int i, j;               /* local index variables */
-  const char *too_long_message = "The impossible happened: buffer overflow!\n";
+  unsigned int ntbytes = 0;        /* the number of compressed bytes */
+  unsigned int *ntbytes_;          /* placeholder for bytes in output buffer */
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
@@ -143,51 +480,35 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     /* No compression wanted.  Just return without doing anything else. */
     return 0;
   }
+  else if (nbytes < MIN_BUFFERSIZE) {
+    /* Too little buffer.  Just return without doing anything else. */
+    return 0;
+  }
 
   /* Shuffle */
-  if (doshuffle != 0 && doshuffle != 1) {
-    /* If shuffle not in 0,1, print an error */
-    fprintf(stderr, "`doshuffle` parameter must be either 0 or 1!\n");
+  if (shuffle != 0 && shuffle != 1) {
+    fprintf(stderr, "`shuffle` parameter must be either 0 or 1!\n");
     return -10;
   }
 
-  /* Compute a blocksize depending on the optimization level */
-  blocksize = BLOCKSIZE;
-  /* 3 first optimization levels will not change blocksize */
-  for (i=4; i<=(unsigned int)clevel; i++) {
-    /* Escape if blocksize grows more than nbytes */
-    if (blocksize*2 > nbytes) break;
-    blocksize *= 2;
-  }
+  /* Get the blocksize */
+  blocksize = compute_blocksize(clevel, typesize, nbytes);
 
-  /* blocksize must be a multiple of the typesize */
-  blocksize = blocksize / typesize * typesize;
-
-  /* Create temporary area */
-#ifdef _WIN32
-  tmp = (unsigned char *)_aligned_malloc(blocksize, 16);
-#elif defined __APPLE__
-  /* Mac OS X guarantees 16-byte alignment in small allocs */
-  tmp = (unsigned char *)(malloc(blocksize));
-#else
-  posix_memalign((void **)&tmp, 16, blocksize);
-#endif  /* _WIN32 */
-
+  /* Compute number of blocks in buffer */
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
-  _src = (unsigned char *)(src);
-  _dest = (unsigned char *)(dest);
-  tblocks = (leftover>0)? nblocks+1: nblocks;
+  nblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Check typesize limits */
-  if (typesize == MAXTYPESIZE) {
-    typesize = 0;               /* zero means MAXTYPESIZE */
+  if (typesize == MAX_TYPESIZE) {
+    typesize = 0;               /* zero means MAX_TYPESIZE */
   }
-  else if (typesize > MAXTYPESIZE) {
+  else if (typesize > MAX_TYPESIZE) {
     /* If typesize is too large, treat buffer as an 1-byte stream. */
     typesize = 1;
   }
 
+  _dest = (unsigned char *)(dest);
   /* Write header for this block */
   _dest[0] = BLOSC_VERSION_FORMAT;         /* blosc format version */
   _dest[1] = BLOSCLZ_VERSION_FORMAT;       /* blosclz format version */
@@ -195,148 +516,58 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   _dest[2] = 0;                            /* zeroes flags */
   _dest[3] = (unsigned char)typesize;      /* type size */
   _dest += 4;
-  ctbytes += 4;
-  ((unsigned int *)_dest)[0] = nbytes;     /* size of the chunk */
+  ntbytes += 4;
+  ((unsigned int *)_dest)[0] = nbytes;     /* size of the buffer */
   ((unsigned int *)_dest)[1] = blocksize;  /* block size */
-  ctbytes_ = (unsigned int *)(_dest+8);    /* compressed chunk size (pointer) */
+  ntbytes_ = (unsigned int *)(_dest+8);    /* compressed buffer size */
   _dest += sizeof(int)*3;
-  ctbytes += sizeof(int)*3;
-  starts = (unsigned int *)_dest;          /* starts for every block */
-  _dest += sizeof(int)*tblocks;            /* book space for pointers to */
-  ctbytes += sizeof(int)*tblocks;          /* every block in output */
+  ntbytes += sizeof(int)*3;
+  bstarts = (unsigned int *)_dest;         /* starts for every block */
+  _dest += sizeof(int)*nblocks;            /* book space for pointers to */
+  ntbytes += sizeof(int)*nblocks;          /* every block in output */
 
-  if (doshuffle == 1) {
+  if (shuffle == 1) {
     /* Shuffle is active */
     *flags |= 0x1;                         /* bit 0 set to one in flags */
   }
 
-  for (j = 0; j < tblocks; j++) {
-    starts[j] = ctbytes;
-    bsize = blocksize;
-    leftoverblock = 0;
-    if ((j == tblocks - 1) && (leftover > 0)) {
-      bsize = leftover;
-      leftoverblock = 1;
-    }
-    cbytes = _blosc_c(clevel, doshuffle, typesize, bsize, leftoverblock,
-                      ctbytes, nbytes, _src, _dest, tmp);
-    if (cbytes < 0) {
-      fprintf(stderr, too_long_message);
-      ctbytes = cbytes;         /* error in _blosc_c */
-      goto out;
-    }
-    if (cbytes == 0) {
-      ctbytes = 0;              /* uncompressible data */
-      goto out;
-    }
-    _dest += cbytes;
-    _src += blocksize;
-    ctbytes += cbytes;
-  }  /* Close j < tblocks */
+  /* Populate parameters for compression routines */
+  params.compress = 1;
+  params.clevel = clevel;
+  params.shuffle = shuffle;
+  params.typesize = typesize;
+  params.blocksize = blocksize;
+  params.ntbytes = ntbytes;
+  params.nbytes = nbytes;
+  params.nblocks = nblocks;
+  params.leftover = leftover;
+  params.bstarts = bstarts;
+  params.src = (unsigned char *)src;
+  params.dest = (unsigned char *)dest;
 
-  if (ctbytes == nbytes) {
-    ctbytes = 0;               /* non-compressible data */
-    goto out;
-  }
-  else if (ctbytes > nbytes) {
-    fprintf(stderr, too_long_message);
-    ctbytes = -5;               /* too large buffer */
-    goto out;
-  }
+  /* Do the actual compression */
+  ntbytes = do_job();
+  /* Set the number of compressed bytes in header */
+  *ntbytes_ = ntbytes;
 
- out:
-#ifdef _WIN32
-  _aligned_free(tmp);
-#else
-  free(tmp);
-#endif  /* _WIN32 */
-
-  *ctbytes_ = ctbytes;   /* set the number of compressed bytes in header */
-  return ctbytes;
-
-}
-
-
-/* Decompress & unshuffle a single block */
-static size_t
-_blosc_d(int dounshuffle, size_t typesize, size_t blocksize, int leftoverblock,
-         unsigned char* _src, unsigned char* _dest,
-         unsigned char *tmp, unsigned char *tmp2)
-{
-  size_t j, neblock, nsplits;
-  size_t nbytes, cbytes, ctbytes = 0, ntbytes = 0;
-  unsigned char* _tmp;
-
-  if (dounshuffle && (typesize > 1)) {
-    _tmp = tmp;
-  }
-  else {
-    _tmp = _dest;
-  }
-
-  /* Compress for each shuffled slice split for this block. */
-  /* If the number of bytes is too large, do not split all. */
-  if ((typesize <= MAXSPLITS) && (!leftoverblock)) {
-    nsplits = typesize;
-  }
-  else {
-    nsplits = 1;
-  }
-  neblock = blocksize / nsplits;
-  for (j = 0; j < nsplits; j++) {
-    cbytes = ((unsigned int *)(_src))[0]; /* amount of compressed bytes */
-    _src += sizeof(int);
-    ctbytes += sizeof(int);
-    /* Uncompress */
-    if (cbytes == neblock) {
-      memcpy(_tmp, _src, neblock);
-      nbytes = neblock;
-    }
-    else {
-      nbytes = blosclz_decompress(_src, cbytes, _tmp, neblock);
-      if (nbytes != neblock) {
-        return -2;
-      }
-    }
-    _src += cbytes;
-    ctbytes += cbytes;
-    _tmp += neblock;
-    ntbytes += nbytes;
-  } /* Closes j < nsplits */
-
-  if (dounshuffle && (typesize > 1)) {
-    if ((uintptr_t)_dest % 16 == 0) {
-      /* 16-bytes aligned _dest.  SSE2 unshuffle will work. */
-      unshuffle(typesize, blocksize, tmp, _dest);
-    }
-    else {
-      /* _dest is not aligned.  Use tmp2, which is aligned, and copy. */
-      unshuffle(typesize, blocksize, tmp, tmp2);
-      memcpy(_dest, tmp2, blocksize);
-    }
-  }
-
-  return ctbytes;
+  assert(ntbytes < (int)nbytes);
+  return ntbytes;
 }
 
 
 unsigned int
 blosc_decompress(const void *src, void *dest, size_t dest_size)
 {
-  unsigned char *_src=NULL;          /* alias for source buffer */
-  unsigned char *_dest=NULL;         /* alias for destination buffer */
+  unsigned char *_src=NULL;          /* current pos for source buffer */
+  unsigned char *_dest=NULL;         /* current pos for destination buffer */
   unsigned char version, versionlz;  /* versions for compressed header */
   unsigned char flags;               /* flags for header */
-  size_t leftover;                   /* extra bytes at end of buffer */
-  size_t nblocks;                    /* number of complete blocks in buffer */
-  size_t tblocks;                    /* number of total blocks in buffer */
-  size_t j;
-  size_t nbytes, ntbytes = 0;
-  int cbytes;
-  unsigned char *tmp, *tmp2;
-  int dounshuffle = 0;
-  unsigned int typesize, blocksize, bsize, ctbytes_;
-  int leftoverblock;               /* left over block? */
+  int shuffle = 0;                   /* do unshuffle? */
+  int ntbytes;                       /* the number of uncompressed bytes */
+  unsigned int nblocks;              /* number of total blocks in buffer */
+  unsigned int leftover;             /* extra bytes at end of buffer */
+  unsigned int *bstarts;             /* start pointers for each block */
+  unsigned int typesize, blocksize, nbytes, ctbytes;
 
   _src = (unsigned char *)(src);
   _dest = (unsigned char *)(dest);
@@ -347,71 +578,356 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   flags = _src[2];                          /* flags */
   typesize = (unsigned int)_src[3];         /* typesize */
   _src += 4;
-  nbytes = ((unsigned int *)_src)[0];       /* chunk size */
+  nbytes = ((unsigned int *)_src)[0];       /* buffer size */
   blocksize = ((unsigned int *)_src)[1];    /* block size */
-  ctbytes_ = ((unsigned int *)_src)[2];     /* compressed chunk size */
+  ctbytes = ((unsigned int *)_src)[2];      /* compressed buffer size */
   _src += sizeof(int)*3;
+  bstarts = (unsigned int *)_src;
   /* Compute some params */
+  /* Total blocks */
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
-  tblocks = (leftover>0)? nblocks+1: nblocks;
-  _src += sizeof(int)*tblocks;              /* skip starts of blocks */
+  nblocks = (leftover>0)? nblocks+1: nblocks;
+  _src += sizeof(int)*nblocks;
 
   /* Check zero typesizes */
   if (typesize == 0) {
-    typesize = MAXTYPESIZE;
+    typesize = MAX_TYPESIZE;
   }
 
   if (nbytes > dest_size) {
-    /* This should never happen, but just in case. */
+    /* This should never happen but just in case */
     return -1;
   }
 
   if ((flags & 0x1) == 1) {
     /* Input is shuffled.  Unshuffle it. */
-    dounshuffle = 1;
+    shuffle = 1;
   }
 
-  /* Create temporary area */
-#ifdef _WIN32
-  tmp = (unsigned char*)_aligned_malloc(blocksize, 16);
-  tmp2 = (unsigned char*)_aligned_malloc(blocksize, 16);
-#elif defined __APPLE__
-  /* Mac OS X guarantees 16-byte alignment in small allocs */
-  tmp = (unsigned char *)(malloc(blocksize));
-  tmp2 = (unsigned char *)(malloc(blocksize));
-#else
-  posix_memalign((void **)&tmp, 16, blocksize);
-  posix_memalign((void **)&tmp2, 16, blocksize);
-#endif  /* _WIN32 */
+  /* Populate parameters for decompression routines */
+  params.compress = 0;
+  params.clevel = 0;            /* specific for compression */
+  params.shuffle = shuffle;
+  params.typesize = typesize;
+  params.blocksize = blocksize;
+  params.ntbytes = 0;
+  params.nbytes = nbytes;
+  params.nblocks = nblocks;
+  params.leftover = leftover;
+  params.bstarts = bstarts;
+  params.src = (unsigned char *)src;
+  params.dest = (unsigned char *)dest;
 
-  for (j = 0; j < tblocks; j++) {
-    bsize = blocksize;
-    leftoverblock = 0;
-    if ((j == tblocks - 1) && (leftover > 0)) {
-      bsize = leftover;
-      leftoverblock = 1;
-    }
-    cbytes = _blosc_d(dounshuffle, typesize, bsize, leftoverblock,
-                      _src, _dest, tmp, tmp2);
-    if (cbytes < 0) {
-      nbytes = cbytes;          /* _blosc_d failure */
-      goto out;
-    }
-    _src += cbytes;
-    _dest += blocksize;
-    ntbytes += blocksize;
-  }
+  /* Do the actual decompression */
+  ntbytes = do_job();
 
- out:
-#ifdef _WIN32
-  _aligned_free(tmp);
-  _aligned_free(tmp2);
-#else
-  free(tmp);
-  free(tmp2);
-#endif  /* _WIN32 */
-  return nbytes;
+  assert(ntbytes <= (int)dest_size);
+  return ntbytes;
 }
 
+
+/* Decompress & unshuffle several blocks in a single thread */
+void *t_blosc(void *tids)
+{
+  int tid = *(int *)tids;
+  int cbytes, ntdest;
+  unsigned int tblocks;              /* number of blocks per thread */
+  unsigned int leftover2;
+  unsigned int tblock;               /* limit block on a thread */
+  unsigned int nblock_;              /* private copy of nblock */
+  int rc;
+  unsigned int bsize, leftoverblock;
+  /* Parameters for threads */
+  size_t blocksize;
+  size_t ebsize;
+  int compress;
+  unsigned int nbytes;
+  unsigned int ntbytes;
+  unsigned int nblocks;
+  unsigned int leftover;
+  unsigned int *bstarts;
+  unsigned char *src;
+  unsigned char *dest;
+  unsigned char *tmp;
+  unsigned char *tmp2;
+
+  while (1) {
+    /* Meeting point for all threads (wait for initialization) */
+    rc = pthread_barrier_wait(&barr_init);
+    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+      printf("Could not wait on barrier (init)\n");
+      exit(-1);
+    }
+    if (end_threads) {
+      return(0);
+    }
+
+    /* Get parameters for this thread */
+    blocksize = params.blocksize;
+    ebsize = blocksize + params.typesize*sizeof(int);
+    compress = params.compress;
+    nbytes = params.nbytes;
+    ntbytes = params.ntbytes;
+    nblocks = params.nblocks;
+    leftover = params.leftover;
+    bstarts = params.bstarts;
+    src = params.src;
+    dest = params.dest;
+    tmp = params.tmp[tid];
+    tmp2 = params.tmp2[tid];
+
+    giveup = 0;
+    if (compress) {
+      /* Compression always has to follow the block order */
+      pthread_mutex_lock(&count_mutex);
+      nblock++;
+      nblock_ = nblock;
+      pthread_mutex_unlock(&count_mutex);
+      tblock = nblocks;
+    }
+    else {
+      /* Decompression can happen using any order.  We choose
+       sequential block order on each thread */
+
+      /* Blocks per thread */
+      tblocks = nblocks / nthreads;
+      leftover2 = nblocks % nthreads;
+      tblocks = (leftover2>0)? tblocks+1: tblocks;
+
+      nblock_ = tid*tblocks;
+      tblock = nblock_ + tblocks;
+      if (tblock > nblocks) {
+        tblock = nblocks;
+      }
+      ntbytes = 0;
+    }
+
+    /* Loop over blocks */
+    leftoverblock = 0;
+    while ((nblock_ < tblock) && !giveup) {
+      bsize = blocksize;
+      if (nblock_ == (nblocks - 1) && (leftover > 0)) {
+        bsize = leftover;
+        leftoverblock = 1;
+      }
+      if (compress) {
+        cbytes = blosc_c(bsize, leftoverblock, 0, ebsize,
+                         src+nblock_*blocksize, tmp2, tmp);
+      }
+      else {
+        cbytes = blosc_d(bsize, leftoverblock,
+                         src+bstarts[nblock_], dest+nblock_*blocksize,
+                         tmp, tmp2);
+      }
+
+      /* Check whether current thread has to giveup */
+      /* This is critical in order to not overwrite variables */
+      if (giveup != 0) {
+        break;
+      }
+
+      /* Check results for the decompressed block */
+      if (cbytes < 0) {            /* compr/decompr failure */
+        /* Set cbytes code error first */
+        pthread_mutex_lock(&count_mutex);
+        params.ntbytes = cbytes;
+        pthread_mutex_unlock(&count_mutex);
+        giveup = 1;                 /* give up (de-)compressing after */
+        break;
+      }
+
+      if (compress) {
+        /* Start critical section */
+        pthread_mutex_lock(&count_mutex);
+        if (cbytes == 0) {            /* uncompressible buffer */
+          params.ntbytes = 0;
+          pthread_mutex_unlock(&count_mutex);
+          giveup = 1;                 /* give up compressing */
+          break;
+        }
+        bstarts[nblock_] = params.ntbytes;   /* update block start counter */
+        ntdest = params.ntbytes;
+        if (ntdest+cbytes > nbytes) {         /* uncompressible buffer */
+          params.ntbytes = 0;
+          pthread_mutex_unlock(&count_mutex);
+          giveup = 1;
+          break;
+        }
+        nblock++;
+        nblock_ = nblock;
+        params.ntbytes += cbytes;       /* update return bytes counter */
+        pthread_mutex_unlock(&count_mutex);
+        /* End of critical section */
+
+        /* Copy the compressed buffer to destination */
+        memcpy(dest+ntdest, tmp2, cbytes);
+      }
+      else {
+        nblock_++;
+      }
+      /* Update counter for this thread */
+      ntbytes += cbytes;
+
+    } /* closes while (nblock_) */
+
+    if (!compress && !giveup) {
+      /* Update global counter for all threads (decompression only) */
+      pthread_mutex_lock(&count_mutex);
+      params.ntbytes += ntbytes;
+      pthread_mutex_unlock(&count_mutex);
+    }
+
+    /* Meeting point for all threads (wait for finalization) */
+    rc = pthread_barrier_wait(&barr_finish);
+    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+      printf("Could not wait on barrier (finish)\n");
+      exit(-1);
+    }
+    /* Reset block counter */
+    nblock = -1;
+
+  }  /* closes while(1) */
+
+  /* This should never be reached, but anyway */
+  return(0);
+}
+
+
+int
+init_threads()
+{
+  int tid, rc;
+
+  /* Initialize mutex and condition variable objects */
+  pthread_mutex_init(&count_mutex, NULL);
+
+  /* Barrier initialization */
+  pthread_barrier_init(&barr_init, NULL, nthreads+1);
+  pthread_barrier_init(&barr_inter, NULL, nthreads);
+  pthread_barrier_init(&barr_finish, NULL, nthreads+1);
+
+  /* Initialize and set thread detached attribute */
+  pthread_attr_init(&ct_attr);
+  pthread_attr_setdetachstate(&ct_attr, PTHREAD_CREATE_JOINABLE);
+
+  /* Finally, create the threads in detached state */
+  for (tid = 0; tid < nthreads; tid++) {
+    tids[tid] = tid;
+    rc = pthread_create(&threads[tid], &ct_attr, t_blosc, (void *)&tids[tid]);
+    if (rc) {
+      fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
+      fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+      exit(-1);
+    }
+  }
+
+  init_threads_done = 1;                 /* Initialization done! */
+
+  return(0);
+}
+
+
+int
+blosc_set_nthreads(int nthreads_new)
+{
+  int nthreads_old = nthreads;
+  int t, rc;
+  void *status;
+
+  if (nthreads_new > MAX_THREADS) {
+    fprintf(stderr, "Error.  nthreads cannot be larger than MAX_THREADS (%d)",
+            MAX_THREADS);
+    return -1;
+  }
+  else if (nthreads_new <= 0) {
+    fprintf(stderr, "Error.  nthreads must be a positive integer");
+    return -1;
+  }
+  else if (nthreads_new != nthreads) {
+    if (nthreads > 1 && init_threads_done) {
+      /* Tell all existing threads to end */
+      end_threads = 1;
+      rc = pthread_barrier_wait(&barr_init);
+      if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+        printf("Could not wait on barrier (init)\n");
+        exit(-1);
+      }
+      /* Join exiting threads */
+      for (t=0; t<nthreads; t++) {
+        rc = pthread_join(threads[t], &status);
+        if (rc) {
+          fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
+          fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+          exit(-1);
+        }
+      }
+      init_threads_done = 0;
+      end_threads = 0;
+    }
+    nthreads = nthreads_new;
+    if (nthreads > 1) {
+      /* Launch a new pool of threads */
+      init_threads();
+    }
+    return nthreads_old;
+  }
+  return 0;
+}
+
+
+/* Free possible memory temporaries and thread resources */
+void
+blosc_free_resources(void)
+{
+  int t, rc;
+  void *status;
+
+  /* Release temporaries */
+  if (init_temps_done) {
+    release_temporaries();
+  }
+
+  /* Finish the possible thread pool */
+  if (nthreads > 1 && init_threads_done) {
+    /* Tell all existing threads to end */
+    end_threads = 1;
+    rc = pthread_barrier_wait(&barr_init);
+    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+      exit(-1);
+    }
+    /* Join exiting threads */
+    for (t=0; t<nthreads; t++) {
+      rc = pthread_join(threads[t], &status);
+      if (rc) {
+        fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
+        fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+        exit(-1);
+      }
+    }
+
+    /* Release mutex and condition variable objects */
+    pthread_mutex_destroy(&count_mutex);
+
+    /* Barriers */
+    pthread_barrier_destroy(&barr_init);
+    pthread_barrier_destroy(&barr_inter);
+    pthread_barrier_destroy(&barr_finish);
+
+    /* Thread attributes */
+    pthread_attr_destroy(&ct_attr);
+
+    init_threads_done = 0;
+    end_threads = 0;
+  }
+}
+
+
+/* Force the use of a specific blocksize.  If 0, an automatic
+   blocksize will be used (the default). */
+void
+blosc_set_blocksize(size_t size)
+{
+  force_blocksize = size;
+}
 

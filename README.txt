@@ -26,11 +26,14 @@ can provide the size of the data type that originated the data file.
 
 To compile using GCC:
 
-  gcc -O3 -msse2 -o your_program your_program.c blosc.c blosclz.c shuffle.c
+  gcc -O3 -msse2 -o your_program your_program.c \
+                    blosc.c blosclz.c shuffle.c -lpthread
 
-Using Windows and MSVC:
+Using Windows and MSVC (remember to set the LIB and INCLUDE environment
+variables to pthread-win32 directories first):
 
-  cl /Ox /Feyour_program.exe your_program.c blosc.c blosclz.c shuffle.c
+  cl /Ox /Feyour_program.exe your_program.c \
+          blosc.c blosclz.c shuffle.c  /link pthreadvc2.lib
 
 
 A simple usage example is the benchmark in the src/bench.c file.

@@ -110,7 +110,7 @@ int blosclz_compress(int opt_level, const void* input,
   blzuint8* op = (blzuint8*) output;
 
   /* Hash table depends on the opt level.  Hash_log cannot be larger than 15. */
-  blzuint8 hash_log_[10] = {-1, 7, 8, 9, 10, 11, 12, 13, 14, 14};
+  blzuint8 hash_log_[10] = {-1, 9, 9, 9, 11, 11, 11, 12, 12, 13};
   blzuint8 hash_log = hash_log_[opt_level];
   blzuint16 hash_size = 1 << hash_log;
   blzuint16 *htab;
@@ -120,11 +120,7 @@ int blosclz_compress(int opt_level, const void* input,
   size_t hval;
   size_t copy;
 
-  /* Maximum length for output depends on the opt_level.  95% is a maximum. */
-  /* float maxlength_[10] = {-1, .2, .4, .5, .6, .7, .8, .9, .925, .95}; */
-  /* The next values are more aggressive, but fine for high performance,
-     specially with 1, 2 and 3 compression levels. */
-  float maxlength_[10] = {-1, .1, .15, .2, .5, .7, .85, .9, .925, .95};
+  float maxlength_[10] = {-1, .1, .15, .2, .5, .7, .85, .925, .975, 1.0};
   size_t maxlength = (size_t) (length * maxlength_[opt_level]);
   if (maxlength > (size_t) maxout) {
     maxlength = (size_t) maxout;
@@ -402,11 +398,13 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
       }
 
 #ifdef BLOSCLZ_SAFE
-      if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + len + 3 > op_limit))
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + len + 3 > op_limit)) {
         return 0;
+      }
 
-      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ref-1 < (blzuint8 *)output))
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ref-1 < (blzuint8 *)output)) {
         return 0;
+      }
 #endif
 
       if(BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit))
@@ -444,10 +442,12 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
     else {
       ctrl++;
 #ifdef BLOSCLZ_SAFE
-      if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + ctrl > op_limit))
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + ctrl > op_limit)) {
         return 0;
-      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + ctrl > ip_limit))
+      }
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + ctrl > ip_limit)) {
         return 0;
+      }
 #endif
 
       memcpy(op, ip, ctrl);
