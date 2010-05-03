@@ -32,7 +32,7 @@
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
 
 /* Maximum typesize before considering buffer as a stream of bytes. */
-#define MAX_TYPESIZE 256         /* Cannot be larger than 256 */
+#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
 
 /* The maximum number of splits in a block for compression */
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
@@ -500,10 +500,7 @@ blosc_compress(int clevel, int shuffle, size_t typesize, size_t nbytes,
   nblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Check typesize limits */
-  if (typesize == MAX_TYPESIZE) {
-    typesize = 0;               /* zero means MAX_TYPESIZE */
-  }
-  else if (typesize > MAX_TYPESIZE) {
+  if (typesize > MAX_TYPESIZE) {
     /* If typesize is too large, treat buffer as an 1-byte stream. */
     typesize = 1;
   }
@@ -590,9 +587,11 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   nblocks = (leftover>0)? nblocks+1: nblocks;
   _src += sizeof(int)*nblocks;
 
-  /* Check zero typesizes */
-  if (typesize == 0) {
-    typesize = MAX_TYPESIZE;
+  /* Check zero typesizes.  From Blosc version format 2 on, this value
+   has been reserved for future use (most probably to indicate
+   uncompressible buffers). */
+  if ((version == 1) && (typesize == 0)) {
+    typesize = 256;             /* 0 means 256 in format version 1 */
   }
 
   if (nbytes > dest_size) {

@@ -9,6 +9,10 @@
 Changes from 0.8.0 to 0.9
 =========================
 
+- Internal format version bumped to 2 in order to allow an easy way to
+  indicate that a buffer is being saved uncompressed.  This is not
+  supported yet, but it might be in the future.
+
 - Blosc can use threads now for leveraging the increasing number of
   multi-core processors out there.  See README-threaded.txt for more
   info.
