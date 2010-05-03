@@ -9,6 +9,10 @@
 Changes from 0.8.0 to 0.9
 =========================
 
+- Blosc can use threads now for leveraging the increasing number of
+  multi-core processors out there.  See README-threaded.txt for more
+  info.
+
 - Added a protection for MacOSX so that it has to not link against
   posix_memalign() funtion, which seems not available in old versions of
   MacOSX (for example, Tiger).  At nay rate, posix_memalign() is not

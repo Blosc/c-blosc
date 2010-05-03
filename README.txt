@@ -21,8 +21,9 @@ shuffle.h and shuffle.c  -- the shuffle code
 Just add these files to your project in order to use Blosc. For
 information on compression and decompression routines, see blosc.h.
 
-Blosc is a compressor for binary data, and it gets best results if you
-can provide the size of the data type that originated the data file.
+Blosc is a compressor for binary data, that can use threads and SSE2
+and that gets best results if you can provide the size of the data
+type that originated the data file.
 
 To compile using GCC:
 
