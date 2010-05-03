@@ -18,6 +18,13 @@
 #include <string.h>
 #include "blosclz.h"
 
+#ifdef _WIN32
+  #include <windows.h>
+#else
+  #include <stdint.h>
+#endif  /* _WIN32 */
+
+
 /*
  * Prevent accessing more than 8-bit at once, except on x86 architectures.
  */
@@ -66,15 +73,6 @@
 #define BLOSCLZ_INLINE
 #endif
 
-/*
- * FIXME: use preprocessor magic to set this on different platforms!
- */
-typedef unsigned char  blzuint8;
-typedef unsigned short blzuint16;
-typedef unsigned int   blzuint32;
-typedef long long      blzint64;
-
-
 #define MAX_COPY       32
 #define MAX_LEN       264  /* 256 + 8 */
 #define MAX_DISTANCE 8191
@@ -83,11 +81,11 @@ typedef long long      blzint64;
 #ifdef BLOSCLZ_STRICT_ALIGN
   #define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
 #else
-  #define BLOSCLZ_READU16(p) *((const blzuint16*)(p))
+  #define BLOSCLZ_READU16(p) *((const uint16_t*)(p))
 #endif
 
 
-BLOSCLZ_INLINE size_t hash_function(blzuint8* p, blzuint8 hash_log)
+BLOSCLZ_INLINE size_t hash_function(uint8_t* p, uint8_t hash_log)
 {
   size_t v;
 
@@ -103,18 +101,18 @@ BLOSCLZ_INLINE size_t hash_function(blzuint8* p, blzuint8 hash_log)
 int blosclz_compress(int opt_level, const void* input,
                      int length, void* output, int maxout)
 {
-  blzuint8* ip = (blzuint8*) input;
-  blzuint8* ibase = (blzuint8*) input;
-  blzuint8* ip_bound = ip + length - IP_BOUNDARY;
-  blzuint8* ip_limit = ip + length - 12;
-  blzuint8* op = (blzuint8*) output;
+  uint8_t* ip = (uint8_t*) input;
+  uint8_t* ibase = (uint8_t*) input;
+  uint8_t* ip_bound = ip + length - IP_BOUNDARY;
+  uint8_t* ip_limit = ip + length - 12;
+  uint8_t* op = (uint8_t*) output;
 
   /* Hash table depends on the opt level.  Hash_log cannot be larger than 15. */
-  blzuint8 hash_log_[10] = {-1, 9, 9, 9, 11, 11, 11, 12, 12, 13};
-  blzuint8 hash_log = hash_log_[opt_level];
-  blzuint16 hash_size = 1 << hash_log;
-  blzuint16 *htab;
-  blzuint8* op_limit;
+  uint8_t hash_log_[10] = {-1, 9, 9, 9, 11, 11, 11, 12, 12, 13};
+  uint8_t hash_log = hash_log_[opt_level];
+  uint16_t hash_size = 1 << hash_log;
+  uint16_t *htab;
+  uint8_t* op_limit;
 
   size_t hslot;
   size_t hval;
@@ -133,7 +131,7 @@ int blosclz_compress(int opt_level, const void* input,
     return 0;                   /* Mark this as uncompressible */
   }
 
-  htab = malloc(hash_size*sizeof(blzuint16));
+  htab = malloc(hash_size*sizeof(uint16_t));
 
   /* sanity check */
   if(BLOSCLZ_UNEXPECT_CONDITIONAL(length < 4)) {
@@ -163,10 +161,10 @@ int blosclz_compress(int opt_level, const void* input,
 
   /* main loop */
   while(BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit)) {
-    const blzuint8* ref;
+    const uint8_t* ref;
     size_t distance;
     size_t len = 3;         /* minimum match length */
-    blzuint8* anchor = ip;  /* comparison starting-point */
+    uint8_t* anchor = ip;  /* comparison starting-point */
 
     /* check for a run */
     if(ip[0] == ip[-1] && BLOSCLZ_READU16(ip-1)==BLOSCLZ_READU16(ip+1)) {
@@ -207,13 +205,13 @@ int blosclz_compress(int opt_level, const void* input,
 
     if(!distance) {
       /* zero distance means a run */
-      blzuint8 x = ip[-1];
-      blzint64 value, value2;
+      uint8_t x = ip[-1];
+      int64_t value, value2;
       /* Broadcast the value for every byte in a 64-bit register */
       memset(&value, x, 8);
       /* safe because the outer check against ip limit */
-      while (ip < (ip_bound - (sizeof(blzint64) - IP_BOUNDARY))) {
-        value2 = ((blzint64 *)ref)[0];
+      while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
+        value2 = ((int64_t *)ref)[0];
         if (value != value2) {
           /* Find the byte that starts to differ */
           while (ip < ip_bound) {
@@ -235,9 +233,9 @@ int blosclz_compress(int opt_level, const void* input,
     else {
       for(;;) {
         /* safe because the outer check against ip limit */
-        while (ip < (ip_bound - (sizeof(blzint64) - IP_BOUNDARY))) {
+        while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
           if (*ref++ != *ip++) break;
-          if (((blzint64 *)ref)[0] != ((blzint64 *)ip)[0]) {
+          if (((int64_t *)ref)[0] != ((int64_t *)ip)[0]) {
             /* Find the byte that starts to differ */
             while (ip < ip_bound) {
               if (*ref++ != *ip++) break;
@@ -356,29 +354,29 @@ int blosclz_compress(int opt_level, const void* input,
     op--;
 
   /* marker for blosclz */
-  *(blzuint8*)output |= (1 << 5);
+  *(uint8_t*)output |= (1 << 5);
 
   free(htab);
-  return op - (blzuint8*)output;
+  return op - (uint8_t*)output;
 }
 
 
 int blosclz_decompress(const void* input, int length, void* output, int maxout)
 {
-  const blzuint8* ip = (const blzuint8*) input;
-  const blzuint8* ip_limit  = ip + length;
-  blzuint8* op = (blzuint8*) output;
-  blzuint8* op_limit = op + maxout;
-  blzuint32 ctrl = (*ip++) & 31;
+  const uint8_t* ip = (const uint8_t*) input;
+  const uint8_t* ip_limit  = ip + length;
+  uint8_t* op = (uint8_t*) output;
+  uint8_t* op_limit = op + maxout;
+  uint32_t ctrl = (*ip++) & 31;
   size_t loop = 1;
 
   do {
-    const blzuint8* ref = op;
+    const uint8_t* ref = op;
     size_t len = ctrl >> 5;
     size_t ofs = (ctrl & 31) << 8;
 
     if(ctrl >= 32) {
-      blzuint8 code;
+      uint8_t code;
       len--;
       ref -= ofs;
       if (len == 7-1)
@@ -402,7 +400,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
         return 0;
       }
 
-      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ref-1 < (blzuint8 *)output)) {
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ref-1 < (uint8_t *)output)) {
         return 0;
       }
 #endif
@@ -414,7 +412,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
 
       if(ref == op) {
         /* optimize copy for a run */
-        blzuint8 b = ref[-1];
+        uint8_t b = ref[-1];
         memset(op, b, len+3);
         op += len+3;
       }
@@ -460,5 +458,5 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
     }
   } while(BLOSCLZ_EXPECT_CONDITIONAL(loop));
 
-  return op - (blzuint8*)output;
+  return op - (uint8_t*)output;
 }

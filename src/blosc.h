@@ -35,8 +35,7 @@
 
 */
 
-int
-blosc_set_nthreads(int nthreads);
+int blosc_set_nthreads(int nthreads);
 
 
 /**
@@ -74,9 +73,8 @@ blosc_set_nthreads(int nthreads);
 
  */
 
-unsigned int
-blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
-               const void *src, void *dest);
+unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
+                            size_t nbytes, const void *src, void *dest);
 
 
 /**
@@ -96,8 +94,7 @@ blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
 */
 
-unsigned int
-blosc_decompress(const void *src, void *dest, size_t dest_size);
+unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size);
 
 
 /**
@@ -107,8 +104,7 @@ blosc_decompress(const void *src, void *dest, size_t dest_size);
 
 */
 
-void
-blosc_free_resources(void);
+void blosc_free_resources(void);
 
 
 
@@ -126,8 +122,7 @@ blosc_free_resources(void);
 
 */
 
-void
-blosc_set_blocksize(size_t blocksize);
+void blosc_set_blocksize(size_t blocksize);
 
 
 #endif

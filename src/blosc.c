@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <pthread.h>
 #include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
@@ -25,7 +26,6 @@
   #include <unistd.h>
 #endif  /* _WIN32 */
 
-#include <pthread.h>
 
 
 /* Minimal buffer size to be compressed */
@@ -45,18 +45,18 @@
 
 
 /* Global variables for main logic */
-int init_temps_done = 0;        /* temporaries for compr/decompr initialized? */
+int32_t init_temps_done = 0;    /* temporaries for compr/decompr initialized? */
 size_t force_blocksize = 0;     /* should we force the use of a blocksize? */
 
 /* Global variables for threads */
-int nthreads = 1;               /* number of desired threads in pool */
-int init_threads_done = 0;      /* pool of threads initialized? */
-int end_threads = 0;            /* should exisiting threads end? */
-int giveup;                     /* should (de-)compression give up? */
-int nblock = -1;                /* block counter */
-pthread_t threads[MAX_THREADS]; /* opaque structure for threads */
-int tids[MAX_THREADS];          /* ID per each thread */
-pthread_attr_t ct_attr;         /* creation time attributes for threads */
+int32_t nthreads = 1;            /* number of desired threads in pool */
+int32_t init_threads_done = 0;   /* pool of threads initialized? */
+int32_t end_threads = 0;         /* should exisiting threads end? */
+int32_t giveup;                  /* should (de-)compression give up? */
+int32_t nblock = -1;             /* block counter */
+pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
+int32_t tids[MAX_THREADS];       /* ID per each thread */
+pthread_attr_t ct_attr;          /* creation time attributes for threads */
 
 /* Syncronization variables */
 pthread_mutex_t count_mutex;
@@ -68,24 +68,24 @@ pthread_barrier_t barr_finish;
 struct thread_data {
   size_t typesize;
   size_t blocksize;
-  int compress;
-  int clevel;
-  int shuffle;
-  int ntbytes;
-  unsigned int nbytes;
-  unsigned int nblocks;
-  unsigned int leftover;
-  unsigned int *bstarts;             /* start pointers for each block */
-  unsigned char *src;
-  unsigned char *dest;
-  unsigned char *tmp[MAX_THREADS];
-  unsigned char *tmp2[MAX_THREADS];
+  int32_t compress;
+  int32_t clevel;
+  int32_t shuffle;
+  int32_t ntbytes;
+  uint32_t nbytes;
+  uint32_t nblocks;
+  uint32_t leftover;
+  uint32_t *bstarts;             /* start pointers for each block */
+  uint8_t *src;
+  uint8_t *dest;
+  uint8_t *tmp[MAX_THREADS];
+  uint8_t *tmp2[MAX_THREADS];
 } params;
 
 
 /* Structure for parameters meant for keeping track of current temporaries */
 struct temp_data {
-  int nthreads;
+  int32_t nthreads;
   size_t typesize;
   size_t blocksize;
 } current_temp;
@@ -93,16 +93,15 @@ struct temp_data {
 
 
 /* Shuffle & compress a single block */
-static int
-blosc_c(size_t blocksize, int leftoverblock,
-        unsigned int ntbytes, unsigned int nbytes,
-        unsigned char *src, unsigned char *dest, unsigned char *tmp)
+static int blosc_c(size_t blocksize, int32_t leftoverblock,
+                   uint32_t ntbytes, uint32_t nbytes,
+                   uint8_t *src, uint8_t *dest, uint8_t *tmp)
 {
   size_t j, neblock, nsplits;
-  int cbytes;                   /* number of compressed bytes in split */
-  int ctbytes = 0;              /* number of compressed bytes in block */
-  int maxout;
-  unsigned char *_tmp;
+  int32_t cbytes;                   /* number of compressed bytes in split */
+  int32_t ctbytes = 0;              /* number of compressed bytes in block */
+  int32_t maxout;
+  uint8_t *_tmp;
   size_t typesize = params.typesize;
 
   if (params.shuffle && (typesize > 1)) {
@@ -126,9 +125,9 @@ blosc_c(size_t blocksize, int leftoverblock,
   }
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
-    dest += sizeof(int);
-    ntbytes += sizeof(int);
-    ctbytes += sizeof(int);
+    dest += sizeof(int32_t);
+    ntbytes += sizeof(int32_t);
+    ctbytes += sizeof(int32_t);
     maxout = neblock;
     if (ntbytes+maxout > nbytes) {
       maxout = nbytes - ntbytes;   /* avoid buffer overrun */
@@ -156,7 +155,7 @@ blosc_c(size_t blocksize, int leftoverblock,
       memcpy(dest, _tmp+j*neblock, neblock);
       cbytes = neblock;
     }
-    ((unsigned int *)(dest))[-1] = cbytes;
+    ((uint32_t *)(dest))[-1] = cbytes;
     dest += cbytes;
     ntbytes += cbytes;
     ctbytes += cbytes;
@@ -167,17 +166,15 @@ blosc_c(size_t blocksize, int leftoverblock,
 
 
 /* Decompress & unshuffle a single block */
-static int
-blosc_d(size_t blocksize, int leftoverblock,
-        unsigned char *src, unsigned char *dest,
-        unsigned char *tmp, unsigned char *tmp2)
+static int blosc_d(size_t blocksize, int32_t leftoverblock,
+                   uint8_t *src, uint8_t *dest, uint8_t *tmp, uint8_t *tmp2)
 {
-  int j, neblock, nsplits;
-  int nbytes;                /* number of decompressed bytes in split */
-  int cbytes;                /* number of compressed bytes in split */
-  int ctbytes = 0;           /* number of compressed bytes in block */
-  int ntbytes = 0;           /* number of uncompressed bytes in block */
-  unsigned char *_tmp;
+  int32_t j, neblock, nsplits;
+  int32_t nbytes;                /* number of decompressed bytes in split */
+  int32_t cbytes;                /* number of compressed bytes in split */
+  int32_t ctbytes = 0;           /* number of compressed bytes in block */
+  int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
+  uint8_t *_tmp;
   size_t typesize = params.typesize;
   size_t shuffle = params.shuffle;
 
@@ -198,9 +195,9 @@ blosc_d(size_t blocksize, int leftoverblock,
   }
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
-    cbytes = ((unsigned int *)(src))[0]; /* amount of compressed bytes */
-    src += sizeof(int);
-    ctbytes += sizeof(int);
+    cbytes = ((uint32_t *)(src))[0];   /* amount of compressed bytes */
+    src += sizeof(int32_t);
+    ctbytes += sizeof(int32_t);
     /* Uncompress */
     if (cbytes == neblock) {
       memcpy(_tmp, src, neblock);
@@ -236,22 +233,21 @@ blosc_d(size_t blocksize, int leftoverblock,
 
 
 /* Serial version for compression/decompression */
-int
-serial_blosc(void)
+int serial_blosc(void)
 {
-  unsigned int j, bsize, leftoverblock;
-  int cbytes;
-  int compress = params.compress;
+  uint32_t j, bsize, leftoverblock;
+  int32_t cbytes;
+  int32_t compress = params.compress;
   size_t blocksize = params.blocksize;
-  int ntbytes = params.ntbytes;
-  int nbytes = params.nbytes;
-  unsigned int nblocks = params.nblocks;
-  int leftover = params.nbytes % params.blocksize;
-  unsigned int *bstarts = params.bstarts;
-  unsigned char *src = params.src;
-  unsigned char *dest = params.dest;
-  unsigned char *tmp = params.tmp[0];     /* tmp for thread 0 */
-  unsigned char *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
+  int32_t ntbytes = params.ntbytes;
+  int32_t nbytes = params.nbytes;
+  uint32_t nblocks = params.nblocks;
+  int32_t leftover = params.nbytes % params.blocksize;
+  uint32_t *bstarts = params.bstarts;
+  uint8_t *src = params.src;
+  uint8_t *dest = params.dest;
+  uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
+  uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
 
   for (j = 0; j < nblocks; j++) {
     if (compress) {
@@ -298,10 +294,9 @@ serial_blosc(void)
 
 
 /* Threaded version for compression/decompression */
-int
-parallel_blosc(void)
+int parallel_blosc(void)
 {
-  int rc;
+  int32_t rc;
 
   /* Synchronization point for all threads (wait for initialization) */
   rc = pthread_barrier_wait(&barr_init);
@@ -322,27 +317,26 @@ parallel_blosc(void)
 
 
 /* Convenience functions for creating and releasing temporaries */
-void
-create_temporaries(void)
+void create_temporaries(void)
 {
-  int tid;
+  int32_t tid;
   size_t typesize = params.typesize;
   size_t blocksize = params.blocksize;
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
    hurt other modes either. */
-  size_t ebsize = blocksize + typesize*sizeof(int);
-  unsigned char *tmp, *tmp2;
+  size_t ebsize = blocksize + typesize*sizeof(int32_t);
+  uint8_t *tmp, *tmp2;
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
 #ifdef _WIN32
-    tmp = (unsigned char *)_aligned_malloc(blocksize, 16);
-    tmp2 = (unsigned char *)_aligned_malloc(ebsize, 16);
+    tmp = (uint8_t *)_aligned_malloc(blocksize, 16);
+    tmp2 = (uint8_t *)_aligned_malloc(ebsize, 16);
 #elif defined __APPLE__
     /* Mac OS X guarantees 16-byte alignment in small allocs */
-    tmp = (unsigned char *)malloc(blocksize);
-    tmp2 = (unsigned char *)malloc(ebsize);
+    tmp = (uint8_t *)malloc(blocksize);
+    tmp2 = (uint8_t *)malloc(ebsize);
 #else
     posix_memalign((void **)&tmp, 16, blocksize);
     posix_memalign((void **)&tmp2, 16, ebsize);
@@ -360,11 +354,10 @@ create_temporaries(void)
 }
 
 
-void
-release_temporaries(void)
+void release_temporaries(void)
 {
-  int tid;
-  unsigned char *tmp, *tmp2;
+  int32_t tid;
+  uint8_t *tmp, *tmp2;
 
   /* Release buffers */
   for (tid = 0; tid < nthreads; tid++) {
@@ -386,9 +379,8 @@ release_temporaries(void)
 
 /* Do the compression or decompression of the buffer depending on the
    global params. */
-int
-do_job(void) {
-  int ntbytes;
+int do_job(void) {
+  int32_t ntbytes;
 
   /* Initialize/reset temporaries if needed */
   if (!init_temps_done) {
@@ -414,11 +406,9 @@ do_job(void) {
 }
 
 
-size_t
-compute_blocksize(int clevel, size_t typesize, size_t nbytes)
+size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
 {
   size_t blocksize;
-  int i;
 
   blocksize = nbytes;           /* Start by a whole buffer as blocksize */
 
@@ -457,18 +447,17 @@ compute_blocksize(int clevel, size_t typesize, size_t nbytes)
 }
 
 
-unsigned int
-blosc_compress(int clevel, int shuffle, size_t typesize, size_t nbytes,
-               const void *src, void *dest)
+unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
+                            size_t nbytes, const void *src, void *dest)
 {
-  unsigned char *_dest=NULL;       /* current pos for destination buffer */
-  unsigned char *flags;            /* flags for header */
-  unsigned int nblocks;            /* number of total blocks in buffer */
-  unsigned int leftover;           /* extra bytes at end of buffer */
-  unsigned int *bstarts;           /* start pointers for each block */
-  size_t blocksize;                /* length of the block in bytes */
-  unsigned int ntbytes = 0;        /* the number of compressed bytes */
-  unsigned int *ntbytes_;          /* placeholder for bytes in output buffer */
+  uint8_t *_dest=NULL;         /* current pos for destination buffer */
+  uint8_t *flags;              /* flags for header */
+  uint32_t nblocks;            /* number of total blocks in buffer */
+  uint32_t leftover;           /* extra bytes at end of buffer */
+  uint32_t *bstarts;           /* start pointers for each block */
+  size_t blocksize;            /* length of the block in bytes */
+  uint32_t ntbytes = 0;        /* the number of compressed bytes */
+  uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
@@ -505,23 +494,23 @@ blosc_compress(int clevel, int shuffle, size_t typesize, size_t nbytes,
     typesize = 1;
   }
 
-  _dest = (unsigned char *)(dest);
+  _dest = (uint8_t *)(dest);
   /* Write header for this block */
   _dest[0] = BLOSC_VERSION_FORMAT;         /* blosc format version */
   _dest[1] = BLOSCLZ_VERSION_FORMAT;       /* blosclz format version */
   flags = _dest+2;                         /* flags */
   _dest[2] = 0;                            /* zeroes flags */
-  _dest[3] = (unsigned char)typesize;      /* type size */
+  _dest[3] = (uint8_t)typesize;            /* type size */
   _dest += 4;
   ntbytes += 4;
-  ((unsigned int *)_dest)[0] = nbytes;     /* size of the buffer */
-  ((unsigned int *)_dest)[1] = blocksize;  /* block size */
-  ntbytes_ = (unsigned int *)(_dest+8);    /* compressed buffer size */
-  _dest += sizeof(int)*3;
-  ntbytes += sizeof(int)*3;
-  bstarts = (unsigned int *)_dest;         /* starts for every block */
-  _dest += sizeof(int)*nblocks;            /* book space for pointers to */
-  ntbytes += sizeof(int)*nblocks;          /* every block in output */
+  ((uint32_t *)_dest)[0] = nbytes;         /* size of the buffer */
+  ((uint32_t *)_dest)[1] = blocksize;      /* block size */
+  ntbytes_ = (uint32_t *)(_dest+8);        /* compressed buffer size */
+  _dest += sizeof(int32_t)*3;
+  ntbytes += sizeof(int32_t)*3;
+  bstarts = (uint32_t *)_dest;             /* starts for every block */
+  _dest += sizeof(int32_t)*nblocks;        /* book space for pointers to */
+  ntbytes += sizeof(int32_t)*nblocks;      /* every block in output */
 
   if (shuffle == 1) {
     /* Shuffle is active */
@@ -539,53 +528,52 @@ blosc_compress(int clevel, int shuffle, size_t typesize, size_t nbytes,
   params.nblocks = nblocks;
   params.leftover = leftover;
   params.bstarts = bstarts;
-  params.src = (unsigned char *)src;
-  params.dest = (unsigned char *)dest;
+  params.src = (uint8_t *)src;
+  params.dest = (uint8_t *)dest;
 
   /* Do the actual compression */
   ntbytes = do_job();
   /* Set the number of compressed bytes in header */
   *ntbytes_ = ntbytes;
 
-  assert(ntbytes < (int)nbytes);
+  assert((int32_t)ntbytes < (int32_t)nbytes);
   return ntbytes;
 }
 
 
-unsigned int
-blosc_decompress(const void *src, void *dest, size_t dest_size)
+unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
 {
-  unsigned char *_src=NULL;          /* current pos for source buffer */
-  unsigned char *_dest=NULL;         /* current pos for destination buffer */
-  unsigned char version, versionlz;  /* versions for compressed header */
-  unsigned char flags;               /* flags for header */
-  int shuffle = 0;                   /* do unshuffle? */
-  int ntbytes;                       /* the number of uncompressed bytes */
-  unsigned int nblocks;              /* number of total blocks in buffer */
-  unsigned int leftover;             /* extra bytes at end of buffer */
-  unsigned int *bstarts;             /* start pointers for each block */
-  unsigned int typesize, blocksize, nbytes, ctbytes;
+  uint8_t *_src=NULL;            /* current pos for source buffer */
+  uint8_t *_dest=NULL;           /* current pos for destination buffer */
+  uint8_t version, versionlz;    /* versions for compressed header */
+  uint8_t flags;                 /* flags for header */
+  int32_t shuffle = 0;           /* do unshuffle? */
+  int32_t ntbytes;               /* the number of uncompressed bytes */
+  uint32_t nblocks;              /* number of total blocks in buffer */
+  uint32_t leftover;             /* extra bytes at end of buffer */
+  uint32_t *bstarts;             /* start pointers for each block */
+  uint32_t typesize, blocksize, nbytes, ctbytes;
 
-  _src = (unsigned char *)(src);
-  _dest = (unsigned char *)(dest);
+  _src = (uint8_t *)(src);
+  _dest = (uint8_t *)(dest);
 
   /* Read the header block */
-  version = _src[0];                        /* blosc format version */
-  versionlz = _src[1];                      /* blosclz format version */
-  flags = _src[2];                          /* flags */
-  typesize = (unsigned int)_src[3];         /* typesize */
+  version = _src[0];                   /* blosc format version */
+  versionlz = _src[1];                 /* blosclz format version */
+  flags = _src[2];                     /* flags */
+  typesize = (uint32_t)_src[3];        /* typesize */
   _src += 4;
-  nbytes = ((unsigned int *)_src)[0];       /* buffer size */
-  blocksize = ((unsigned int *)_src)[1];    /* block size */
-  ctbytes = ((unsigned int *)_src)[2];      /* compressed buffer size */
-  _src += sizeof(int)*3;
-  bstarts = (unsigned int *)_src;
+  nbytes = ((uint32_t *)_src)[0];      /* buffer size */
+  blocksize = ((uint32_t *)_src)[1];   /* block size */
+  ctbytes = ((uint32_t *)_src)[2];     /* compressed buffer size */
+  _src += sizeof(int32_t)*3;
+  bstarts = (uint32_t *)_src;
   /* Compute some params */
   /* Total blocks */
   nblocks = nbytes / blocksize;
   leftover = nbytes % blocksize;
   nblocks = (leftover>0)? nblocks+1: nblocks;
-  _src += sizeof(int)*nblocks;
+  _src += sizeof(int32_t)*nblocks;
 
   /* Check zero typesizes.  From Blosc version format 2 on, this value
    has been reserved for future use (most probably to indicate
@@ -615,13 +603,13 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
   params.nblocks = nblocks;
   params.leftover = leftover;
   params.bstarts = bstarts;
-  params.src = (unsigned char *)src;
-  params.dest = (unsigned char *)dest;
+  params.src = (uint8_t *)src;
+  params.dest = (uint8_t *)dest;
 
   /* Do the actual decompression */
   ntbytes = do_job();
 
-  assert(ntbytes <= (int)dest_size);
+  assert(ntbytes <= (int32_t)dest_size);
   return ntbytes;
 }
 
@@ -629,27 +617,27 @@ blosc_decompress(const void *src, void *dest, size_t dest_size)
 /* Decompress & unshuffle several blocks in a single thread */
 void *t_blosc(void *tids)
 {
-  int tid = *(int *)tids;
-  int cbytes, ntdest;
-  unsigned int tblocks;              /* number of blocks per thread */
-  unsigned int leftover2;
-  unsigned int tblock;               /* limit block on a thread */
-  unsigned int nblock_;              /* private copy of nblock */
-  int rc;
-  unsigned int bsize, leftoverblock;
+  int32_t tid = *(int32_t *)tids;
+  int32_t cbytes, ntdest;
+  uint32_t tblocks;              /* number of blocks per thread */
+  uint32_t leftover2;
+  uint32_t tblock;               /* limit block on a thread */
+  uint32_t nblock_;              /* private copy of nblock */
+  int32_t rc;
+  uint32_t bsize, leftoverblock;
   /* Parameters for threads */
   size_t blocksize;
   size_t ebsize;
-  int compress;
-  unsigned int nbytes;
-  unsigned int ntbytes;
-  unsigned int nblocks;
-  unsigned int leftover;
-  unsigned int *bstarts;
-  unsigned char *src;
-  unsigned char *dest;
-  unsigned char *tmp;
-  unsigned char *tmp2;
+  int32_t compress;
+  uint32_t nbytes;
+  uint32_t ntbytes;
+  uint32_t nblocks;
+  uint32_t leftover;
+  uint32_t *bstarts;
+  uint8_t *src;
+  uint8_t *dest;
+  uint8_t *tmp;
+  uint8_t *tmp2;
 
   while (1) {
     /* Meeting point for all threads (wait for initialization) */
@@ -664,7 +652,7 @@ void *t_blosc(void *tids)
 
     /* Get parameters for this thread */
     blocksize = params.blocksize;
-    ebsize = blocksize + params.typesize*sizeof(int);
+    ebsize = blocksize + params.typesize*sizeof(int32_t);
     compress = params.compress;
     nbytes = params.nbytes;
     ntbytes = params.ntbytes;
@@ -747,7 +735,7 @@ void *t_blosc(void *tids)
         }
         bstarts[nblock_] = params.ntbytes;   /* update block start counter */
         ntdest = params.ntbytes;
-        if (ntdest+cbytes > nbytes) {         /* uncompressible buffer */
+        if (ntdest+cbytes > (int32_t)nbytes) {   /* uncompressible buffer */
           params.ntbytes = 0;
           pthread_mutex_unlock(&count_mutex);
           giveup = 1;
@@ -793,10 +781,9 @@ void *t_blosc(void *tids)
 }
 
 
-int
-init_threads()
+int init_threads(void)
 {
-  int tid, rc;
+  int32_t tid, rc;
 
   /* Initialize mutex and condition variable objects */
   pthread_mutex_init(&count_mutex, NULL);
@@ -827,11 +814,10 @@ init_threads()
 }
 
 
-int
-blosc_set_nthreads(int nthreads_new)
+int blosc_set_nthreads(int nthreads_new)
 {
-  int nthreads_old = nthreads;
-  int t, rc;
+  int32_t nthreads_old = nthreads;
+  int32_t t, rc;
   void *status;
 
   if (nthreads_new > MAX_THREADS) {
@@ -876,10 +862,9 @@ blosc_set_nthreads(int nthreads_new)
 
 
 /* Free possible memory temporaries and thread resources */
-void
-blosc_free_resources(void)
+void blosc_free_resources(void)
 {
-  int t, rc;
+  int32_t t, rc;
   void *status;
 
   /* Release temporaries */
@@ -924,8 +909,7 @@ blosc_free_resources(void)
 
 /* Force the use of a specific blocksize.  If 0, an automatic
    blocksize will be used (the default). */
-void
-blosc_set_blocksize(size_t size)
+void blosc_set_blocksize(size_t size)
 {
   force_blocksize = size;
 }
