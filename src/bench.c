@@ -36,7 +36,7 @@
 
 /* #define NCHUNKS (100) */
 /* #define NITER  (10)               /\* Number of iterations *\/ */
-#define NCHUNKS (100)
+#define NCHUNKS (128)
 #define NITER  (10)               /* Number of iterations */
 
 
@@ -105,7 +105,7 @@ int get_value(int i, int rshift) {
   int v;
 
   v = (i<<26)^(i<<18)^(i<<11)^(i<<3)^i;
-  v &= (1 << (32-rshift)) - 1;
+  v &= (1 << rshift) - 1;
   return v;
 }
 
@@ -125,13 +125,13 @@ void init_buffer(void *src, int size, int rshift) {
     //_src[i] = 0x01020304;
     //_src[i] = i * 1/.3;
     //_src[i] = i;
-    //_src[i] = rand() >> rshift;
+    //_src[i] = rand() >> (32-rshift);
     _src[i] = get_value(i, rshift);
   }
 }
 
 
-int main(void) {
+int main(int argc, char *argv[]) {
   int nbytes, cbytes;
   void *src, *srccpy;
   void **dest[NCHUNKS], *dest2;
@@ -139,12 +139,35 @@ int main(void) {
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
   int clevel;
-  unsigned int size = 128*1024;   /* Buffer size */
-  unsigned int elsize = 4;        /* Datatype size */
-  int rshift = 12;                /* For random data */
-  int nthreads = 1;               /* The number of threads */
-  int doshuffle = 1;              /* Shuffle? */
+  unsigned int size = 1024*1024;   /* Buffer size */
+  unsigned int elsize = 4;         /* Datatype size */
+  int rshift = 20;                 /* Significant bits */
+  int nthreads = 1;                /* The number of threads */
+  int doshuffle = 1;               /* Shuffle? */
   unsigned char *orig, *round;
+
+  if (argc >= 2) {
+    nthreads = atoi(argv[1]);
+  }
+  if (argc >= 3) {
+    size = atoi(argv[2])*1024;
+    if (size > 2*1024*1024) {
+      printf("The test is going to require more than 256 MB of RAM!\n");
+    }
+  }
+  if (argc >= 4) {
+    elsize = atoi(argv[3]);
+  }
+  if (argc >= 5) {
+    rshift = atoi(argv[4]);
+  }
+  if (argc >= 6) {
+    doshuffle = atoi(argv[5]);
+  }
+  if (argc >= 7) {
+    printf("Usage: bench [nthreads [bufsize(KB) [typesize [sbits [shuf]]]]]\n");
+    exit(1);
+  }
 
   blosc_set_nthreads(nthreads);
   //blosc_set_blocksize(64*1024);
@@ -162,9 +185,10 @@ int main(void) {
 
   printf("********************** Setup info *****************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
-  printf("Using random data with %d significant bits (out of 32)\n", 32-rshift);
-  printf("Dataset size: %d bytes\t Type size: %d bytes\n", size, elsize);
-  printf("Shuffle active?  %s\n", doshuffle ? "Yes" : "No");
+  printf("Using random data with %d significant bits (out of 32)\n", rshift);
+  printf("Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
+  printf("Shuffle active?  %s\t\t", doshuffle ? "Yes" : "No");
+  printf("Number of threads: %d\n", nthreads);
   printf("********************** Running benchmarks *********************\n");
 
   gettimeofday(&last, NULL);
