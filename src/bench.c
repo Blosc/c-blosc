@@ -105,7 +105,9 @@ int get_value(int i, int rshift) {
   int v;
 
   v = (i<<26)^(i<<18)^(i<<11)^(i<<3)^i;
-  v &= (1 << rshift) - 1;
+  if (rshift < 32) {
+    v &= (1 << rshift) - 1;
+  }
   return v;
 }
 
