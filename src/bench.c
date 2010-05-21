@@ -32,6 +32,7 @@
 #include <math.h>
 #include "blosc.h"
 
+#define KB  1024
 #define MB  (1024*1024)
 
 /* #define NCHUNKS (100) */
@@ -133,63 +134,33 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-int main(int argc, char *argv[]) {
-  int nbytes, cbytes;
+do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   void *src, *srccpy;
   void **dest[NCHUNKS], *dest2;
+  int nbytes, cbytes;
   size_t i, j;
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
-  int clevel;
-  unsigned int size = 1024*1024;   /* Buffer size */
-  unsigned int elsize = 4;         /* Datatype size */
-  int rshift = 20;                 /* Significant bits */
-  int nthreads = 1;                /* The number of threads */
-  int doshuffle = 1;               /* Shuffle? */
+  int clevel, doshuffle=1;
   unsigned char *orig, *round;
 
-  if (argc >= 2) {
-    nthreads = atoi(argv[1]);
-  }
-  if (argc >= 3) {
-    size = atoi(argv[2])*1024;
-    if (size > 2*1024*1024) {
-      printf("The test is going to require more than 256 MB of RAM!\n");
-    }
-  }
-  if (argc >= 4) {
-    elsize = atoi(argv[3]);
-  }
-  if (argc >= 5) {
-    rshift = atoi(argv[4]);
-  }
-  if (argc >= 6) {
-    doshuffle = atoi(argv[5]);
-  }
-  if (argc >= 7) {
-    printf("Usage: bench [nthreads [bufsize(KB) [typesize [sbits [shuf]]]]]\n");
-    exit(1);
-  }
-
   blosc_set_nthreads(nthreads);
-  //blosc_set_blocksize(64*1024);
 
+  /* Initialize buffers */
   src = malloc(size);
   srccpy = malloc(size);
   dest2 = malloc(size);
-
-  /* Initialize buffers */
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < NCHUNKS; j++) {
     dest[j] = malloc(size);
   }
 
-  printf("********************** Setup info *****************************\n");
+  printf("********************** Run info ******************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   printf("Using random data with %d significant bits (out of 32)\n", rshift);
   printf("Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
-  printf("Shuffle active?  %s\t\t", doshuffle ? "Yes" : "No");
+  printf("Working set: %.1f MB\t\t", (size*NCHUNKS) / (float)MB);
   printf("Number of threads: %d\n", nthreads);
   printf("********************** Running benchmarks *********************\n");
 
@@ -218,7 +189,6 @@ int main(int argc, char *argv[]) {
   for (clevel=1; clevel<10; clevel++) {
 
     printf("Compression level: %d\n", clevel);
-    //blosc_set_nthreads(clevel);
 
     gettimeofday(&last, NULL);
     for (i = 0; i < NITER; i++) {
@@ -228,11 +198,11 @@ int main(int argc, char *argv[]) {
     }
     gettimeofday(&current, NULL);
     tshuf = getseconds(last, current);
-    printf("compression(write):\t %6.1f us, %.1f MB/s\t  ",
+    printf("comp(write):\t %6.1f us, %.1f MB/s\t  ",
            tshuf, size/(tshuf*MB/1e6));
     printf("Final bytes: %d  ", cbytes);
     if (cbytes > 0) {
-      printf("Compr ratio: %3.2f", size/(float)cbytes);
+      printf("Ratio: %3.2f", size/(float)cbytes);
     }
     printf("\n");
 
@@ -257,7 +227,7 @@ int main(int argc, char *argv[]) {
     }
     gettimeofday(&current, NULL);
     tunshuf = getseconds(last, current);
-    printf("decompression(read):\t %6.1f us, %.1f MB/s\t  ",
+    printf("decomp(read):\t %6.1f us, %.1f MB/s\t  ",
            tunshuf, nbytes/(tunshuf*MB/1e6));
     if (nbytes < 0) {
       printf("FAILED.  Error code: %d\n", nbytes);
@@ -272,15 +242,14 @@ int main(int argc, char *argv[]) {
         printf("\nError: Original data and round-trip do not match in pos %d\n",
                (int)i);
         printf("Orig--> %x, round-trip--> %x\n", orig[i], round[i]);
-        goto out;
+        break;
       }
     }
 
-    printf("OK\n");
+    if (i == size) printf("OK\n");
 
   } /* End clevel loop */
 
- out:
   free(src); free(srccpy); free(dest2);
   for (i = 0; i < NCHUNKS; i++) {
     free(dest[i]);
@@ -288,6 +257,68 @@ int main(int argc, char *argv[]) {
 
   /* Free blosc resources */
   blosc_free_resources();
+
+}
+
+
+int main(int argc, char *argv[]) {
+  int suite = 0;
+  int hard_suite = 0;
+  int nthreads = 1;                /* The number of threads */
+  unsigned int size = 1024*1024;   /* Buffer size */
+  unsigned int elsize = 4;         /* Datatype size */
+  int rshift = 20;                 /* Significant bits */
+
+  if ((argc == 2) && strcmp(argv[1], "suite") == 0) {
+    suite = 1;
+  }
+  else if ((argc == 2) && strcmp(argv[1], "hard_suite") == 0) {
+    hard_suite = 1;
+  }
+  else if (argc >= 2) {
+    nthreads = atoi(argv[1]);
+  }
+  
+  if (argc >= 3) {
+    size = atoi(argv[2])*1024;
+    if (size > 2*1024*1024) {
+      printf("The test is going to require more than 256 MB of RAM!\n");
+    }
+  }
+  if (argc >= 4) {
+    elsize = atoi(argv[3]);
+  }
+  if (argc >= 5) {
+    rshift = atoi(argv[4]);
+  }
+  if (argc >= 6) {
+    printf("Usage: bench 'suite' | 'hard_suite' | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
+    exit(1);
+  }
+
+  if (suite) {
+    for (nthreads=1; nthreads < 10; nthreads++) {
+      for (size=32*KB; size < 8*MB; size *=2) {
+	for (elsize=1; elsize < 32; elsize *=2) {
+	  do_bench(nthreads, size, elsize, rshift);
+	}
+      }
+    }
+  }
+  else if (hard_suite) {
+    for (nthreads=1; nthreads < 10; nthreads++) {
+      for (size=32*KB; size < 8*MB; size *=2) {
+	for (elsize=1; elsize < 32; elsize *=2) {
+	  for (rshift=0; rshift < 32; rshift++) {
+	    do_bench(nthreads, size, elsize, rshift);
+	  }
+	}
+      }
+    }
+  }
+  else {
+    do_bench(nthreads, size, elsize, rshift);
+  }
 
   return 0;
 }
