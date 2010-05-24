@@ -255,9 +255,6 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     free(dest[i]);
   }
 
-  /* Free blosc resources */
-  blosc_free_resources();
-
 }
 
 
@@ -319,6 +316,9 @@ int main(int argc, char *argv[]) {
   else {
     do_bench(nthreads, size, elsize, rshift);
   }
+
+  /* Free blosc resources */
+  blosc_free_resources();
 
   return 0;
 }
