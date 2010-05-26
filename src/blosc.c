@@ -60,11 +60,21 @@ pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
 int32_t tids[MAX_THREADS];       /* ID per each thread */
 pthread_attr_t ct_attr;          /* creation time attributes for threads */
 
+#if defined(_POSIX_BARRIERS) && (_POSIX_BARRIERS - 20012L) >= 0
+#define _POSIX_BARRIERS_MINE
+#endif
+
 /* Syncronization variables */
 pthread_mutex_t count_mutex;
+#ifdef _POSIX_BARRIERS_MINE
 pthread_barrier_t barr_init;
-pthread_barrier_t barr_inter;
 pthread_barrier_t barr_finish;
+#else
+int32_t count_threads = 0;
+pthread_mutex_t count_threads_mutex;
+pthread_cond_t count_threads_cv;
+#endif
+
 
 /* Structure for parameters in (de-)compression threads */
 struct thread_data {
@@ -301,17 +311,42 @@ int parallel_blosc(void)
   int32_t rc;
 
   /* Synchronization point for all threads (wait for initialization) */
+#ifdef _POSIX_BARRIERS_MINE
   rc = pthread_barrier_wait(&barr_init);
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
     printf("Could not wait on barrier (init)\n");
     exit(-1);
   }
+#else
+  pthread_mutex_lock(&count_threads_mutex);
+  if (count_threads < nthreads) {
+    count_threads++;
+    pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
+  }
+  else {
+    pthread_cond_broadcast(&count_threads_cv);
+  }
+  pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
   /* Synchronization point for all threads (wait for finalization) */
+#ifdef _POSIX_BARRIERS_MINE
   rc = pthread_barrier_wait(&barr_finish);
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
     printf("Could not wait on barrier (finish)\n");
     exit(-1);
   }
+#else
+  pthread_mutex_lock(&count_threads_mutex);
+  if (count_threads > 0) {
+    count_threads--;
+    pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
+  }
+  else {
+    pthread_cond_broadcast(&count_threads_cv);
+  }
+  pthread_mutex_unlock(&count_threads_mutex);
+#endif
 
   /* Return the total bytes decompressed in threads */
   return params.ntbytes;
@@ -646,11 +681,24 @@ void *t_blosc(void *tids)
 
   while (1) {
     /* Meeting point for all threads (wait for initialization) */
+#ifdef _POSIX_BARRIERS_MINE
     rc = pthread_barrier_wait(&barr_init);
     if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
       printf("Could not wait on barrier (init)\n");
       exit(-1);
     }
+#else
+    pthread_mutex_lock(&count_threads_mutex);
+    if (count_threads < nthreads) {
+      count_threads++;
+      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
+    }
+    else {
+      pthread_cond_broadcast(&count_threads_cv);
+    }
+    pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
     if (end_threads) {
       return(0);
     }
@@ -771,11 +819,24 @@ void *t_blosc(void *tids)
     }
 
     /* Meeting point for all threads (wait for finalization) */
+#ifdef _POSIX_BARRIERS_MINE
     rc = pthread_barrier_wait(&barr_finish);
     if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
       printf("Could not wait on barrier (finish)\n");
       exit(-1);
     }
+#else
+    pthread_mutex_lock(&count_threads_mutex);
+    if (count_threads > 0) {
+      count_threads--;
+      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
+    }
+    else {
+      pthread_cond_broadcast(&count_threads_cv);
+    }
+    pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
     /* Reset block counter */
     nblock = -1;
 
@@ -794,9 +855,13 @@ int init_threads(void)
   pthread_mutex_init(&count_mutex, NULL);
 
   /* Barrier initialization */
+#ifdef _POSIX_BARRIERS_MINE
   pthread_barrier_init(&barr_init, NULL, nthreads+1);
-  pthread_barrier_init(&barr_inter, NULL, nthreads);
   pthread_barrier_init(&barr_finish, NULL, nthreads+1);
+#else
+  pthread_mutex_init(&count_threads_mutex, NULL);
+  pthread_cond_init(&count_threads_cv, NULL);
+#endif
 
   /* Initialize and set thread detached attribute */
   pthread_attr_init(&ct_attr);
@@ -836,13 +901,27 @@ int blosc_set_nthreads(int nthreads_new)
   }
   else if (nthreads_new != nthreads) {
     if (nthreads > 1 && init_threads_done) {
-      /* Tell all existing threads to end */
+      /* Tell all existing threads to finish */
       end_threads = 1;
+#ifdef _POSIX_BARRIERS_MINE
       rc = pthread_barrier_wait(&barr_init);
       if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
         printf("Could not wait on barrier (init)\n");
         exit(-1);
       }
+#else
+      pthread_mutex_lock(&count_threads_mutex);
+      if (count_threads < nthreads) {
+        count_threads++;
+        pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
+      }
+      else {
+        pthread_cond_broadcast(&count_threads_cv);
+        count_threads = 0;      /* Reset count to 0 */
+      }
+      pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
       /* Join exiting threads */
       for (t=0; t<nthreads; t++) {
         rc = pthread_join(threads[t], &status);
@@ -879,12 +958,27 @@ void blosc_free_resources(void)
 
   /* Finish the possible thread pool */
   if (nthreads > 1 && init_threads_done) {
-    /* Tell all existing threads to end */
+    /* Tell all existing threads to finish */
     end_threads = 1;
+#ifdef _POSIX_BARRIERS_MINE
     rc = pthread_barrier_wait(&barr_init);
     if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+        printf("Could not wait on barrier (init)\n");
       exit(-1);
     }
+#else
+    pthread_mutex_lock(&count_threads_mutex);
+    if (count_threads < nthreads) {
+      count_threads++;
+      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
+    }
+    else {
+      pthread_cond_broadcast(&count_threads_cv);
+      count_threads = 0;      /* Reset count to 0 */
+    }
+    pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
     /* Join exiting threads */
     for (t=0; t<nthreads; t++) {
       rc = pthread_join(threads[t], &status);
@@ -899,9 +993,13 @@ void blosc_free_resources(void)
     pthread_mutex_destroy(&count_mutex);
 
     /* Barriers */
+#ifdef _POSIX_BARRIERS_MINE
     pthread_barrier_destroy(&barr_init);
-    pthread_barrier_destroy(&barr_inter);
     pthread_barrier_destroy(&barr_finish);
+#else
+    pthread_mutex_destroy(&count_threads_mutex);
+    pthread_cond_destroy(&count_threads_cv);
+#endif
 
     /* Thread attributes */
     pthread_attr_destroy(&ct_attr);

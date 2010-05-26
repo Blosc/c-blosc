@@ -31,7 +31,7 @@
   Initialize a pool of threads for compression/decompression.  If
   `nthreads` is 1, then the serial version is chosen and a possible
   previous existing pool is ended.  Returns the previous number of
-  threads.
+  threads.  If this is not called, `nthreads` is set to 1 internally.
 
 */
 
