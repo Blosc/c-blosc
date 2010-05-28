@@ -54,8 +54,7 @@ size_t force_blocksize = 0;     /* should we force the use of a blocksize? */
 int32_t nthreads = 1;            /* number of desired threads in pool */
 int32_t init_threads_done = 0;   /* pool of threads initialized? */
 int32_t end_threads = 0;         /* should exisiting threads end? */
-int32_t giveup;                  /* should (de-)compression give up? */
-int32_t error_code;              /* error_code when give up */
+int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
 pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
 int32_t tids[MAX_THREADS];       /* ID per each thread */
@@ -353,13 +352,13 @@ int parallel_blosc(void)
   pthread_mutex_unlock(&count_threads_mutex);
 #endif
 
-  if (!giveup) {
+  if (giveup_code > 0) {
     /* Return the total bytes (de-)compressed in threads */
     return params.ntbytes;
   }
   else {
-    /* Compression/decompression gave up.  Return error_code. */
-    return error_code;
+    /* Compression/decompression gave up.  Return error code. */
+    return giveup_code;
   }
 }
 
@@ -716,8 +715,7 @@ void *t_blosc(void *tids)
     }
 
     /* Set sentinels and other global variables */
-    giveup = 0;                 /* not give up initially */
-    error_code = 1;             /* no error code initially */
+    giveup_code = 1;            /* no error code initially */
     nblock = -1;                /* block counter */
 
     /* Get parameters for this thread before entering the second barrier */
@@ -782,7 +780,7 @@ void *t_blosc(void *tids)
 
     /* Loop over blocks */
     leftoverblock = 0;
-    while ((nblock_ < tblock) && !giveup) {
+    while ((nblock_ < tblock) && giveup_code > 0) {
       bsize = blocksize;
       if (nblock_ == (nblocks - 1) && (leftover > 0)) {
         bsize = leftover;
@@ -799,16 +797,15 @@ void *t_blosc(void *tids)
       }
 
       /* Check whether current thread has to giveup */
-      if (giveup) {
+      if (giveup_code <= 0) {
         break;
       }
 
       /* Check results for the compressed/decompressed block */
       if (cbytes < 0) {            /* compr/decompr failure */
-        /* Set cbytes code error first */
+        /* Set giveup_code error */
         pthread_mutex_lock(&count_mutex);
-        error_code = cbytes;
-        giveup = 1;                 /* give up (de-)compressing after */
+        giveup_code = cbytes;
         pthread_mutex_unlock(&count_mutex);
         break;
       }
@@ -819,8 +816,7 @@ void *t_blosc(void *tids)
         ntdest = params.ntbytes;
         bstarts[nblock_] = ntdest;    /* update block start counter */
         if ( (cbytes == 0) || (ntdest+cbytes > (int32_t)nbytes) ) {
-          error_code = 0;             /* uncompressible buffer */
-          giveup = 1;                 /* give up compressing */
+          giveup_code = 0;             /* uncompressible buffer */
           pthread_mutex_unlock(&count_mutex);
           break;
         }
@@ -841,7 +837,7 @@ void *t_blosc(void *tids)
 
     } /* closes while (nblock_) */
 
-    if (!compress && !giveup) {
+    if (!compress && giveup_code > 0) {
       /* Update global counter for all threads (decompression only) */
       pthread_mutex_lock(&count_mutex);
       params.ntbytes += ntbytes;
