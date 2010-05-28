@@ -294,9 +294,9 @@ int main(int argc, char *argv[]) {
   }
 
   if (suite) {
-    for (nthreads=1; nthreads < 10; nthreads++) {
-      for (size=32*KB; size < 8*MB; size *=2) {
-	for (elsize=1; elsize < 32; elsize *=2) {
+    for (nthreads=1; nthreads <= 10; nthreads++) {
+      for (size=32*KB; size <= 8*MB; size *=2) {
+	for (elsize=1; elsize <= 32; elsize *=2) {
 	  do_bench(nthreads, size, elsize, rshift);
 	}
       }
