@@ -55,7 +55,8 @@ int32_t nthreads = 1;            /* number of desired threads in pool */
 int32_t init_threads_done = 0;   /* pool of threads initialized? */
 int32_t end_threads = 0;         /* should exisiting threads end? */
 int32_t giveup;                  /* should (de-)compression give up? */
-int32_t nblock = -1;             /* block counter */
+int32_t error_code;              /* error_code when give up */
+int32_t nblock;                  /* block counter */
 pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
 int32_t tids[MAX_THREADS];       /* ID per each thread */
 pthread_attr_t ct_attr;          /* creation time attributes for threads */
@@ -68,11 +69,15 @@ pthread_attr_t ct_attr;          /* creation time attributes for threads */
 pthread_mutex_t count_mutex;
 #ifdef _POSIX_BARRIERS_MINE
 pthread_barrier_t barr_init;
+pthread_barrier_t barr2_init;
 pthread_barrier_t barr_finish;
 #else
 int32_t count_threads = 0;
+int32_t count2_threads = 0;
 pthread_mutex_t count_threads_mutex;
 pthread_cond_t count_threads_cv;
+pthread_mutex_t count2_threads_mutex;
+pthread_cond_t count2_threads_cv;
 #endif
 
 
@@ -348,8 +353,14 @@ int parallel_blosc(void)
   pthread_mutex_unlock(&count_threads_mutex);
 #endif
 
-  /* Return the total bytes decompressed in threads */
-  return params.ntbytes;
+  if (!giveup) {
+    /* Return the total bytes (de-)compressed in threads */
+    return params.ntbytes;
+  }
+  else {
+    /* Compression/decompression gave up.  Return error_code. */
+    return error_code;
+  }
 }
 
 
@@ -699,11 +710,17 @@ void *t_blosc(void *tids)
     pthread_mutex_unlock(&count_threads_mutex);
 #endif
 
+    /* Check if thread has been asked to return */
     if (end_threads) {
       return(0);
     }
 
-    /* Get parameters for this thread */
+    /* Set sentinels and other global variables */
+    giveup = 0;                 /* not give up initially */
+    error_code = 1;             /* no error code initially */
+    nblock = -1;                /* block counter */
+
+    /* Get parameters for this thread before entering the second barrier */
     blocksize = params.blocksize;
     ebsize = blocksize + params.typesize*sizeof(int32_t);
     compress = params.compress;
@@ -717,7 +734,28 @@ void *t_blosc(void *tids)
     tmp = params.tmp[tid];
     tmp2 = params.tmp2[tid];
 
-    giveup = 0;
+
+    /* Ensure that all threads arrive here before to continue.  This
+       avoids sentinels and others globals above to be overwritten. */
+#ifdef _POSIX_BARRIERS_MINE
+    rc = pthread_barrier_wait(&barr2_init);
+    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+      printf("Could not wait on barrier (init)\n");
+      exit(-1);
+    }
+#else
+    pthread_mutex_lock(&count2_threads_mutex);
+    if (count2_threads < nthreads-1) {
+      count2_threads++;
+      pthread_cond_wait(&count2_threads_cv, &count2_threads_mutex);
+    }
+    else {
+      pthread_cond_broadcast(&count2_threads_cv);
+      count2_threads = 0;       /* Reset counter */
+    }
+    pthread_mutex_unlock(&count2_threads_mutex);
+#endif
+
     if (compress) {
       /* Compression always has to follow the block order */
       pthread_mutex_lock(&count_mutex);
@@ -740,7 +778,6 @@ void *t_blosc(void *tids)
       if (tblock > nblocks) {
         tblock = nblocks;
       }
-      ntbytes = 0;
     }
 
     /* Loop over blocks */
@@ -762,36 +799,29 @@ void *t_blosc(void *tids)
       }
 
       /* Check whether current thread has to giveup */
-      /* This is critical in order to not overwrite variables */
-      if (giveup != 0) {
+      if (giveup) {
         break;
       }
 
-      /* Check results for the decompressed block */
+      /* Check results for the compressed/decompressed block */
       if (cbytes < 0) {            /* compr/decompr failure */
         /* Set cbytes code error first */
         pthread_mutex_lock(&count_mutex);
-        params.ntbytes = cbytes;
-        pthread_mutex_unlock(&count_mutex);
+        error_code = cbytes;
         giveup = 1;                 /* give up (de-)compressing after */
+        pthread_mutex_unlock(&count_mutex);
         break;
       }
 
       if (compress) {
         /* Start critical section */
         pthread_mutex_lock(&count_mutex);
-        if (cbytes == 0) {            /* uncompressible buffer */
-          params.ntbytes = 0;
-          pthread_mutex_unlock(&count_mutex);
-          giveup = 1;                 /* give up compressing */
-          break;
-        }
-        bstarts[nblock_] = params.ntbytes;   /* update block start counter */
         ntdest = params.ntbytes;
-        if (ntdest+cbytes > (int32_t)nbytes) {   /* uncompressible buffer */
-          params.ntbytes = 0;
+        bstarts[nblock_] = ntdest;    /* update block start counter */
+        if ( (cbytes == 0) || (ntdest+cbytes > (int32_t)nbytes) ) {
+          error_code = 0;             /* uncompressible buffer */
+          giveup = 1;                 /* give up compressing */
           pthread_mutex_unlock(&count_mutex);
-          giveup = 1;
           break;
         }
         nblock++;
@@ -837,9 +867,6 @@ void *t_blosc(void *tids)
     pthread_mutex_unlock(&count_threads_mutex);
 #endif
 
-    /* Reset block counter */
-    nblock = -1;
-
   }  /* closes while(1) */
 
   /* This should never be reached, but anyway */
@@ -857,10 +884,13 @@ int init_threads(void)
   /* Barrier initialization */
 #ifdef _POSIX_BARRIERS_MINE
   pthread_barrier_init(&barr_init, NULL, nthreads+1);
+  pthread_barrier_init(&barr2_init, NULL, nthreads);
   pthread_barrier_init(&barr_finish, NULL, nthreads+1);
 #else
   pthread_mutex_init(&count_threads_mutex, NULL);
   pthread_cond_init(&count_threads_cv, NULL);
+  pthread_mutex_init(&count2_threads_mutex, NULL);
+  pthread_cond_init(&count2_threads_cv, NULL);
 #endif
 
   /* Initialize and set thread detached attribute */
@@ -995,10 +1025,13 @@ void blosc_free_resources(void)
     /* Barriers */
 #ifdef _POSIX_BARRIERS_MINE
     pthread_barrier_destroy(&barr_init);
+    pthread_barrier_destroy(&barr2_init);
     pthread_barrier_destroy(&barr_finish);
 #else
     pthread_mutex_destroy(&count_threads_mutex);
     pthread_cond_destroy(&count_threads_cv);
+    pthread_mutex_destroy(&count2_threads_mutex);
+    pthread_cond_destroy(&count2_threads_cv);
 #endif
 
     /* Thread attributes */
