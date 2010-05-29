@@ -54,6 +54,7 @@ size_t force_blocksize = 0;     /* should we force the use of a blocksize? */
 int32_t nthreads = 1;            /* number of desired threads in pool */
 int32_t init_threads_done = 0;   /* pool of threads initialized? */
 int32_t end_threads = 0;         /* should exisiting threads end? */
+int32_t init_sentinels_done = 0; /* sentinels initialized? */
 int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
 pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
@@ -690,6 +691,9 @@ void *t_blosc(void *tids)
   uint8_t *tmp2;
 
   while (1) {
+
+    init_sentinels_done = 0;     /* sentinels have to be initialised yet */
+    
     /* Meeting point for all threads (wait for initialization) */
 #ifdef _POSIX_BARRIERS_MINE
     rc = pthread_barrier_wait(&barr_init);
@@ -714,16 +718,20 @@ void *t_blosc(void *tids)
       return(0);
     }
 
-    /* Set sentinels and other global variables */
-    giveup_code = 1;            /* no error code initially */
-    nblock = -1;                /* block counter */
+    pthread_mutex_lock(&count_mutex);
+    if (!init_sentinels_done) {
+      /* Set sentinels and other global variables */
+      giveup_code = 1;            /* no error code initially */
+      nblock = -1;                /* block counter */
+      init_sentinels_done = 1;    /* sentinels have been initialised */
+    }
+    pthread_mutex_unlock(&count_mutex);
 
-    /* Get parameters for this thread before entering the second barrier */
+    /* Get parameters for this thread before entering the main loop */
     blocksize = params.blocksize;
     ebsize = blocksize + params.typesize*sizeof(int32_t);
     compress = params.compress;
     nbytes = params.nbytes;
-    ntbytes = params.ntbytes;
     nblocks = params.nblocks;
     leftover = params.leftover;
     bstarts = params.bstarts;
@@ -732,27 +740,7 @@ void *t_blosc(void *tids)
     tmp = params.tmp[tid];
     tmp2 = params.tmp2[tid];
 
-
-    /* Ensure that all threads arrive here before to continue.  This
-       avoids sentinels and others globals above to be overwritten. */
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr2_init);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-      printf("Could not wait on barrier (init)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count2_threads_mutex);
-    if (count2_threads < nthreads-1) {
-      count2_threads++;
-      pthread_cond_wait(&count2_threads_cv, &count2_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count2_threads_cv);
-      count2_threads = 0;       /* Reset counter */
-    }
-    pthread_mutex_unlock(&count2_threads_mutex);
-#endif
+    ntbytes = 0;                /* only useful for decompression */
 
     if (compress) {
       /* Compression always has to follow the block order */
@@ -831,12 +819,13 @@ void *t_blosc(void *tids)
       }
       else {
         nblock_++;
+        /* Update counter for this thread */
+        ntbytes += cbytes;
       }
-      /* Update counter for this thread */
-      ntbytes += cbytes;
 
     } /* closes while (nblock_) */
 
+    /* Sum up all the bytes decompressed */
     if (!compress && giveup_code > 0) {
       /* Update global counter for all threads (decompression only) */
       pthread_mutex_lock(&count_mutex);
