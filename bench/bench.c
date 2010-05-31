@@ -5,9 +5,10 @@
   well as external datafiles (uncomment the lines after "For data
   coming from a file" comment).
 
-  To compile using GCC:
+  To compile using GCC, go to src/ directory and do:
 
-    gcc -O3 -msse2 -o bench bench.c blosc.c blosclz.c shuffle.c
+    gcc -O3 -msse2 -o bench bench.c \
+        ../src/blosc.c ../src/blosclz.c ../src/shuffle.c -lpthread
 
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!
@@ -30,7 +31,7 @@
   #include <sys/time.h>
 #endif
 #include <math.h>
-#include "blosc.h"
+#include "../src/blosc.h"
 
 #define KB  1024
 #define MB  (1024*1024)
