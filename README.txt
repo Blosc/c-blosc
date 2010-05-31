@@ -37,7 +37,7 @@ variables to pthread-win32 directories first):
           blosc.c blosclz.c shuffle.c  /link pthreadvc2.lib
 
 
-A simple usage example is the benchmark in the src/bench.c file.
+A simple usage example is the benchmark in the bench/bench.c file.
 
 I have not tried to compile this with other compilers than GCC and
 MSVC yet.  Please report your experiences with your own platforms.
