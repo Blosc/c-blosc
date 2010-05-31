@@ -954,9 +954,8 @@ int blosc_set_nthreads(int nthreads_new)
       /* Launch a new pool of threads */
       init_threads();
     }
-    return nthreads_old;
   }
-  return 0;
+  return nthreads_old;
 }
 
 
