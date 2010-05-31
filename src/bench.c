@@ -156,6 +156,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     dest[j] = malloc(size);
   }
 
+  printf("--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
   printf("********************** Run info ******************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   printf("Using random data with %d significant bits (out of 32)\n", rshift);
@@ -275,7 +276,7 @@ int main(int argc, char *argv[]) {
   else if (argc >= 2) {
     nthreads = atoi(argv[1]);
   }
-  
+
   if (argc >= 3) {
     size = atoi(argv[2])*1024;
     if (size > 2*1024*1024) {
@@ -294,9 +295,9 @@ int main(int argc, char *argv[]) {
   }
 
   if (suite) {
-    for (nthreads=1; nthreads <= 10; nthreads++) {
-      for (size=32*KB; size <= 8*MB; size *=2) {
-	for (elsize=1; elsize <= 32; elsize *=2) {
+    for (nthreads=1; nthreads <= 6; nthreads++) {
+      for (size=64*KB; size <= 4*MB; size *=2) {
+	for (elsize=1; elsize <= 16; elsize *=2) {
 	  do_bench(nthreads, size, elsize, rshift);
 	}
       }
