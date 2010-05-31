@@ -159,7 +159,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   printf("--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
   printf("********************** Run info ******************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
-  printf("Using random data with %d significant bits (out of 32)\n", rshift);
+  printf("Using synthetic with %d significant bits (out of 32)\n", rshift);
   printf("Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
   printf("Working set: %.1f MB\t\t", (size*NCHUNKS) / (float)MB);
   printf("Number of threads: %d\n", nthreads);
@@ -263,9 +263,10 @@ int main(int argc, char *argv[]) {
   int suite = 0;
   int hard_suite = 0;
   int nthreads = 1;                /* The number of threads */
-  unsigned int size = 1024*1024;   /* Buffer size */
+  unsigned int size = 2*1024*1024; /* Buffer size */
   unsigned int elsize = 4;         /* Datatype size */
-  int rshift = 20;                 /* Significant bits */
+  int rshift = 19;                 /* Significant bits */
+  int j;
 
   if ((argc == 2) && strcmp(argv[1], "suite") == 0) {
     suite = 1;
@@ -315,7 +316,9 @@ int main(int argc, char *argv[]) {
     }
   }
   else {
-    do_bench(nthreads, size, elsize, rshift);
+    for (j=1; j <= nthreads; j++) {
+      do_bench(j, size, elsize, rshift);
+    }
   }
 
   /* Free blosc resources */
