@@ -661,12 +661,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
   ntbytes = do_job();
 
   assert(ntbytes <= (int32_t)dest_size);
-  if (ntbytes < 0) {
-    return ntbytes;
-  }
-  else {
-    return nbytes;
-  }
+  return ntbytes;
 }
 
 
@@ -830,7 +825,6 @@ void *t_blosc(void *tids)
 
     } /* closes while (nblock_) */
 
-# if 0
     /* Sum up all the bytes decompressed */
     if (!compress && giveup_code > 0) {
       /* Update global counter for all threads (decompression only) */
@@ -838,7 +832,6 @@ void *t_blosc(void *tids)
       params.ntbytes += ntbytes;
       pthread_mutex_unlock(&count_mutex);
     }
-#endif
 
     /* Meeting point for all threads (wait for finalization) */
 #ifdef _POSIX_BARRIERS_MINE
