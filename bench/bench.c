@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
   int hard_suite = 0;
   int nthreads = 1;                /* The number of threads */
   unsigned int size = 2*1024*1024; /* Buffer size */
-  unsigned int elsize = 4;         /* Datatype size */
+  unsigned int elsize = 8;         /* Datatype size */
   int rshift = 19;                 /* Significant bits */
   int j;
 
