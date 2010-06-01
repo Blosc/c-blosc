@@ -1,4 +1,15 @@
+"""Script for plotting the results of the 'suite' benchmark.
+Invoke without parameters for usage hints.
+
+:Author: Francesc Alted
+:Date: 2010-06-01
+"""
+
+import matplotlib as mpl
 from pylab import *
+
+MB_ = 1024*1024
+NCHUNKS = 128    # keep in sync with bench.c
 
 linewidth=2
 #markers= ['+', ',', 'o', '.', 's', 'v', 'x', '>', '<', '^']
@@ -8,25 +19,28 @@ markersize = 8
 
 def get_values(filename):
     f = open(filename)
-    values = {}
+    values = {"memcpyw": [], "memcpyr": []}
 
     for line in f:
         if line.startswith('-->'):
             tmp = line.split('-->')[1]
             nthreads, size, elsize, sbits = [int(i) for i in tmp.split(', ')]
+            values["size"] = size * NCHUNKS / MB_;
+            values["elsize"] = elsize;
+            values["sbits"] = sbits;
             # New run for nthreads
             (ratios, speedsw, speedsr) = ([], [], [])
             # Add a new entry for (ratios, speedw, speedr)
             values[nthreads] = (ratios, speedsw, speedsr)
-            print "-->", nthreads, size, elsize, sbits
+            #print "-->", nthreads, size, elsize, sbits
         elif line.startswith('memcpy(write):'):
             tmp = line.split(',')[1]
             memcpyw = float(tmp.split(' ')[1])
-            print "memcpyw-->", memcpyw
+            values["memcpyw"].append(memcpyw)
         elif line.startswith('memcpy(read):'):
             tmp = line.split(',')[1]
             memcpyr = float(tmp.split(' ')[1])
-            print "memcpyr-->", memcpyr
+            values["memcpyr"].append(memcpyr)
         elif line.startswith('comp(write):'):
             tmp = line.split(',')[1]
             speedw = float(tmp.split(' ')[1])
@@ -49,16 +63,20 @@ def show_plot(plots, yaxis, legends, gtitle):
     ylabel('Speed (MB/s)')
     title(gtitle)
     #ylim(0, 10000)
+    ylim(0, None)
     grid(True)
 
 #     legends = [f[f.find('-'):f.index('.out')] for f in filenames]
 #     legends = [l.replace('-', ' ') for l in legends]
     #legend([p[0] for p in plots], legends, loc = "upper left")
-    legend([p[0] for p in plots], legends, loc = "best")
+    legend([p[0] for p in plots
+            if not isinstance(p, mpl.lines.Line2D)],
+           legends, loc = "best")
 
 
     #subplots_adjust(bottom=0.2, top=None, wspace=0.2, hspace=0.2)
     if outfile:
+        print "Saving plot to:", outfile
         savefig(outfile)
     else:
         show()
@@ -92,9 +110,9 @@ if __name__ == '__main__':
     outfile = None
     tit = None
     cspeed = False
+    gtitle = "Decompression speed"
     dspeed = True
     yaxis = "No axis name"
-    gtitle = "Please set a title!"
 
     # Get the options
     for option in opts:
@@ -113,14 +131,18 @@ if __name__ == '__main__':
 
     filename = pargs[0]
 
-    if tit:
-        gtitle = tit
-
     plots = []
     legends = []
     nthreads, values = get_values(filename)
+    #print "Values:", values
+
+    if tit:
+        gtitle = tit
+    else:
+        gtitle += " (%(size).1f MB, %(elsize)d bytes, %(sbits)d bits)" % values
+
     for nt in range(1, nthreads+1):
-        print "Values for %s threads --> %s" % (nt, values)
+        #print "Values for %s threads --> %s" % (nt, values[nt])
         (ratios, speedw, speedr) = values[nt]
         if cspeed:
             speed = speedw
@@ -136,4 +158,16 @@ if __name__ == '__main__':
              linewidth=linewidth)
         legends.append("%d threads" % nt)
 
+    # Add memcpy lines
+    if cspeed:
+        mean = sum(values["memcpyw"]) / nthreads
+        message = "memcpy (write to memory)"
+    else:
+        mean = sum(values["memcpyr"]) / nthreads
+        message = "memcpy (read from memory)"
+    plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
+    text(0.5, mean+50, message)
+    plots.append(plot_)
     show_plot(plots, yaxis, legends, gtitle)
+
+
