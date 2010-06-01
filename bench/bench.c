@@ -160,7 +160,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   printf("--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
   printf("********************** Run info ******************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
-  printf("Using synthetic with %d significant bits (out of 32)\n", rshift);
+  printf("Using synthetic data with %d significant bits (out of 32)\n", rshift);
   printf("Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
   printf("Working set: %.1f MB\t\t", (size*NCHUNKS) / (float)MB);
   printf("Number of threads: %d\n", nthreads);
@@ -269,57 +269,58 @@ int main(int argc, char *argv[]) {
   int rshift = 19;                 /* Significant bits */
   int j;
 
-  if ((argc == 2) && strcmp(argv[1], "suite") == 0) {
+  if ((argc >= 2) && (strcmp(argv[1], "suite") == 0)) {
     suite = 1;
-  }
-  else if ((argc == 2) && strcmp(argv[1], "hard_suite") == 0) {
-    hard_suite = 1;
-  }
-  else if (argc >= 2) {
-    nthreads = atoi(argv[1]);
-  }
-
-  if (argc >= 3) {
-    size = atoi(argv[2])*1024;
-    if (size > 2*1024*1024) {
-      printf("The test is going to require more than 256 MB of RAM!\n");
+    if (argc == 3) {
+      nthreads = atoi(argv[2]);
     }
   }
-  if (argc >= 4) {
-    elsize = atoi(argv[3]);
+  else if ((argc >= 2) && (strcmp(argv[1], "hard_suite") == 0)) {
+    hard_suite = 1;
+    if (argc == 3) {
+      nthreads = atoi(argv[2]);
+    }
   }
-  if (argc >= 5) {
-    rshift = atoi(argv[4]);
-  }
-  if (argc >= 6) {
-    printf("Usage: bench 'suite' | 'hard_suite' | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
-    exit(1);
-  }
-
-  if (suite) {
-    for (nthreads=1; nthreads <= 6; nthreads++) {
-      for (size=64*KB; size <= 4*MB; size *=2) {
-	for (elsize=1; elsize <= 16; elsize *=2) {
-	  do_bench(nthreads, size, elsize, rshift);
-	}
+  else {
+    if (argc >= 2) {
+      nthreads = atoi(argv[1]);
+    }
+    if (argc >= 3) {
+      size = atoi(argv[2])*1024;
+      if (size > 2*1024*1024) {
+        printf("The test is going to require more than 256 MB of RAM!\n");
       }
     }
+    if (argc >= 4) {
+      elsize = atoi(argv[3]);
+    }
+    if (argc >= 5) {
+      rshift = atoi(argv[4]);
+    }
+    if (argc >= 6) {
+      printf("Usage: bench 'suite' [nthreads] | 'hard_suite' [nthreads] | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
+      exit(1);
+    }
   }
-  else if (hard_suite) {
-    for (nthreads=1; nthreads < 10; nthreads++) {
-      for (size=32*KB; size < 8*MB; size *=2) {
-	for (elsize=1; elsize < 32; elsize *=2) {
+
+  if (hard_suite) {
+    for (j=1; j <= nthreads; j++) {
+      for (size=32*KB; size <= 8*MB; size *=2) {
+	for (elsize=1; elsize < 32; elsize +=2) {
 	  for (rshift=0; rshift < 32; rshift++) {
-	    do_bench(nthreads, size, elsize, rshift);
+	    do_bench(j, size, elsize, rshift);
 	  }
 	}
       }
     }
   }
-  else {
+  else if (suite) {
     for (j=1; j <= nthreads; j++) {
-      do_bench(j, size, elsize, rshift);
+        do_bench(j, size, elsize, rshift);
     }
+  }
+  else {
+    do_bench(nthreads, size, elsize, rshift);
   }
 
   /* Free blosc resources */
