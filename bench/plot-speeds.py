@@ -86,7 +86,7 @@ if __name__ == '__main__':
     import sys, getopt
 
     usage = """usage: %s [-o outfile] [-t title ] [-c] [-d] filename
- -o filename for output (only .png, .jpg  and .pdf extensions supported)
+ -o filename for output (many extensions supported, e.g. .png, .jpg, .pdf)
  -t title of the plot
  -c plot compression speed
  -d plot decompression speed (default)
