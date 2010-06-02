@@ -157,6 +157,11 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     dest[j] = malloc(size);
   }
 
+  /* Warm destination memory (memcpy() will go a bit faster later on) */
+  for (j = 0; j < NCHUNKS; j++) {
+    memcpy(dest[j], src, size);
+  }
+
   printf("--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
   printf("********************** Run info ******************************\n");
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
