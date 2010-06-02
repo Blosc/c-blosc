@@ -166,7 +166,7 @@ if __name__ == '__main__':
         mean = sum(values["memcpyr"]) / nthreads
         message = "memcpy (read from memory)"
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
-    text(0.5, mean+50, message)
+    text(8.0, mean+100, message)
     plots.append(plot_)
     show_plot(plots, yaxis, legends, gtitle)
 
