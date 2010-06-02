@@ -310,9 +310,9 @@ int main(int argc, char *argv[]) {
 
   if (hard_suite) {
     for (j=1; j <= nthreads; j++) {
-      for (size=32*KB; size <= 8*MB; size *=2) {
-	for (elsize=1; elsize < 32; elsize +=2) {
-	  for (rshift=0; rshift < 32; rshift++) {
+      for (size=64*KB; size <= 8*MB; size *=2) {
+	for (elsize=1; elsize < 32; elsize *=2) {
+	  for (rshift=0; rshift < 32; rshift +=5) {
 	    do_bench(j, size, elsize, rshift);
 	  }
 	}
