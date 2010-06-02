@@ -19,7 +19,7 @@
 #include "blosclz.h"
 #include "shuffle.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
   #include "stdint-windows.h"
 #else
@@ -378,7 +378,7 @@ void create_temporaries(void)
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
-#ifdef _WIN32
+#if defined(_WIN32)
     tmp = (uint8_t *)_aligned_malloc(blocksize, 16);
     tmp2 = (uint8_t *)_aligned_malloc(ebsize, 16);
 #elif defined __APPLE__
@@ -411,7 +411,7 @@ void release_temporaries(void)
   for (tid = 0; tid < nthreads; tid++) {
     tmp = params.tmp[tid];
     tmp2 = params.tmp2[tid];
-#ifdef _WIN32
+#if defined(_WIN32)
     _aligned_free(tmp);
     _aligned_free(tmp2);
 #else

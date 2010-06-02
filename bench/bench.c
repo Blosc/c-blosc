@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
   #include <time.h>
 #else
   #include <unistd.h>
@@ -42,7 +42,7 @@
 #define NITER  (10)               /* Number of iterations */
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
 #include <windows.h>
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
   #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
