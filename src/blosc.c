@@ -467,7 +467,7 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
       blocksize = MIN_BUFFERSIZE;
     }
   }
-  else if (nbytes >= L1*typesize) {
+  else if (nbytes >= L1*4) {
     blocksize = L1 * typesize;
     if (clevel <= 3) {
       blocksize /= 8;
