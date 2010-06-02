@@ -25,7 +25,7 @@ Blosc is a compressor for binary data, that can use threads and SSE2
 and that gets best results if you can provide the size of the data
 type that originated the data file.
 
-To compile using GCC:
+To compile using GCC/MINGW:
 
   gcc -O3 -msse2 -o your_program your_program.c \
                     blosc.c blosclz.c shuffle.c -lpthread
@@ -39,7 +39,7 @@ variables to pthread-win32 directories first):
 
 A simple usage example is the benchmark in the bench/bench.c file.
 
-I have not tried to compile this with other compilers than GCC and
-MSVC yet.  Please report your experiences with your own platforms.
+I have not tried to compile this with other compilers than GCC, MINGW
+and MSVC yet.  Please report your experiences with your own platforms.
 
 Thank you!
