@@ -5,7 +5,7 @@
   well as external datafiles (uncomment the lines after "For data
   coming from a file" comment).
 
-  To compile using GCC, go to src/ directory and do:
+  To compile using GCC, stay in this directory and do:
 
     gcc -O3 -msse2 -o bench bench.c \
         ../src/blosc.c ../src/blosclz.c ../src/shuffle.c -lpthread
@@ -34,13 +34,16 @@
 #include "../src/blosc.h"
 
 #define KB  1024
-#define MB  (1024*1024)
+#define MB  (1024*KB)
+#define GB  (1024*MB)
 
-/* #define NCHUNKS (100) */
-/* #define NITER  (10)               /\* Number of iterations *\/ */
-#define NCHUNKS (128)
-#define NITER  (10)               /* Number of iterations */
+#define WORKINGSET (256*MB)     /* do not exceed this memory consumption */
+#define NCHUNKS (32*1024)       /* maximum number of chunks */
+#define NITER  3                /* number of iterations */
 
+
+int nchunks = NCHUNKS;
+int niter = NITER;
 
 #if defined(_WIN32) && !defined(__MINGW32__)
 #include <windows.h>
@@ -99,7 +102,7 @@ float getseconds(struct timeval last, struct timeval current) {
 
   sec = current.tv_sec - last.tv_sec;
   usec = current.tv_usec - last.tv_usec;
-  return (float)(((double)sec + usec*1e-6)/((double)NITER*NCHUNKS)*1e6);
+  return (float)(((double)sec + usec*1e-6)/((double)niter*nchunks)*1e6);
 }
 
 
@@ -153,12 +156,12 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   dest2 = malloc(size);
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
-  for (j = 0; j < NCHUNKS; j++) {
+  for (j = 0; j < nchunks; j++) {
     dest[j] = malloc(size);
   }
 
   /* Warm destination memory (memcpy() will go a bit faster later on) */
-  for (j = 0; j < NCHUNKS; j++) {
+  for (j = 0; j < nchunks; j++) {
     memcpy(dest[j], src, size);
   }
 
@@ -167,13 +170,13 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   printf("Using synthetic data with %d significant bits (out of 32)\n", rshift);
   printf("Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
-  printf("Working set: %.1f MB\t\t", (size*NCHUNKS) / (float)MB);
+  printf("Working set: %.1f MB\t\t", (size*nchunks) / (float)MB);
   printf("Number of threads: %d\n", nthreads);
   printf("********************** Running benchmarks *********************\n");
 
   gettimeofday(&last, NULL);
-  for (i = 0; i < NITER; i++) {
-    for (j = 0; j < NCHUNKS; j++) {
+  for (i = 0; i < niter; i++) {
+    for (j = 0; j < nchunks; j++) {
       memcpy(dest[j], src, size);
     }
   }
@@ -183,8 +186,8 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
          tmemcpy, size/(tmemcpy*MB/1e6));
 
   gettimeofday(&last, NULL);
-  for (i = 0; i < NITER; i++) {
-    for (j = 0; j < NCHUNKS; j++) {
+  for (i = 0; i < niter; i++) {
+    for (j = 0; j < nchunks; j++) {
       memcpy(dest2, dest[j], size);
     }
   }
@@ -198,8 +201,8 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     printf("Compression level: %d\n", clevel);
 
     gettimeofday(&last, NULL);
-    for (i = 0; i < NITER; i++) {
-      for (j = 0; j < NCHUNKS; j++) {
+    for (i = 0; i < niter; i++) {
+      for (j = 0; j < nchunks; j++) {
         cbytes = blosc_compress(clevel, doshuffle, elsize, size, src, dest[j]);
       }
     }
@@ -215,14 +218,14 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
 
     /* Compressor was unable to compress.  Copy the buffer manually. */
     if (cbytes == 0) {
-      for (j = 0; j < NCHUNKS; j++) {
+      for (j = 0; j < nchunks; j++) {
         memcpy(dest[j], src, size);
       }
     }
 
     gettimeofday(&last, NULL);
-    for (i = 0; i < NITER; i++) {
-      for (j = 0; j < NCHUNKS; j++) {
+    for (i = 0; i < niter; i++) {
+      for (j = 0; j < nchunks; j++) {
         if (cbytes == 0) {
           memcpy(dest2, dest[j], size);
           nbytes = size;
@@ -258,20 +261,33 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   } /* End clevel loop */
 
   free(src); free(srccpy); free(dest2);
-  for (i = 0; i < NCHUNKS; i++) {
+  for (i = 0; i < nchunks; i++) {
     free(dest[i]);
   }
 
 }
 
 
+/* Compute a sensible value for nchunks */
+int get_nchunks(unsigned int size_) {
+  int nchunks;
+
+  nchunks = WORKINGSET / size_;
+  if (nchunks > NCHUNKS) nchunks = NCHUNKS;
+  if (nchunks < 1) nchunks = 1;
+  return nchunks;
+}
+
+
 int main(int argc, char *argv[]) {
   int suite = 0;
   int hard_suite = 0;
-  int nthreads = 1;                /* The number of threads */
-  unsigned int size = 2*1024*1024; /* Buffer size */
-  unsigned int elsize = 8;         /* Datatype size */
-  int rshift = 19;                 /* Significant bits */
+  int nloops = 0;
+  float totalsize;
+  int nthreads = 1;                    /* The number of threads */
+  unsigned int size = 2*1024*1024;     /* Buffer size */
+  unsigned int elsize = 8;             /* Datatype size */
+  int rshift = 19;                     /* Significant bits */
   int j;
 
   if ((argc >= 2) && (strcmp(argv[1], "suite") == 0)) {
@@ -292,9 +308,6 @@ int main(int argc, char *argv[]) {
     }
     if (argc >= 3) {
       size = atoi(argv[2])*1024;
-      if (size > 2*1024*1024) {
-        printf("The test is going to require more than 256 MB of RAM!\n");
-      }
     }
     if (argc >= 4) {
       elsize = atoi(argv[3]);
@@ -308,16 +321,24 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  nchunks = get_nchunks(size);
+
   if (hard_suite) {
-    for (j=1; j <= nthreads; j++) {
-      for (size=64*KB; size <= 8*MB; size *=2) {
-	for (elsize=1; elsize < 32; elsize *=2) {
-	  for (rshift=0; rshift < 32; rshift +=5) {
+    for (rshift=0; rshift < 32; rshift +=5) {
+      for (elsize=1; elsize <= 32; elsize *=2) {
+        for (size=32*KB; size <= 8*MB; size *=2) {
+          nchunks = get_nchunks(size);
+          for (j=1; j <= nthreads; j++) {
 	    do_bench(j, size, elsize, rshift);
+            nloops++;
 	  }
 	}
       }
     }
+    /* To compute the totalsize, we should take into account the 9
+       compression levels */
+    totalsize = (1. * nloops * WORKINGSET * NITER * 9) / GB;
+    printf("Performed round-trip compr/decompr on %.1f GB", totalsize);
   }
   else if (suite) {
     for (j=1; j <= nthreads; j++) {
