@@ -45,6 +45,7 @@
 
 int nchunks = NCHUNKS;
 int niter = NITER;
+float totalsize = 0.;           /* total compressed/decompressed size */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
 #include <windows.h>
@@ -266,6 +267,11 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
 
   } /* End clevel loop */
 
+
+  /* To compute the totalsize, we should take into account the 9
+     compression levels */
+  totalsize += (size * nchunks * niter * 9.);
+
   free(src); free(srccpy); free(dest2);
   for (i = 0; i < nchunks; i++) {
     free(dest[i]);
@@ -288,8 +294,6 @@ int get_nchunks(int size_, int ws) {
 int main(int argc, char *argv[]) {
   int suite = 0;
   int hard_suite = 0;
-  int nloops = 0;
-  float totalsize;
   int nthreads = 1;                    /* The number of threads */
   int size = 2*1024*1024;              /* Buffer size */
   int elsize = 8;                      /* Datatype size */
@@ -331,8 +335,8 @@ int main(int argc, char *argv[]) {
 
   nchunks = get_nchunks(size, WORKINGSET);
 
+  gettimeofday(&last, NULL);
   if (hard_suite) {
-    gettimeofday(&last, NULL);
     for (rshift = 0; rshift < 32; rshift += 5) {
       for (elsize = 1; elsize <= 32; elsize *= 2) {
         /* The next loop is for getting sizes that are not power of 2 */
@@ -340,22 +344,13 @@ int main(int argc, char *argv[]) {
           for (size = 32*KB; size <= 8*MB; size *= 2) {
             nchunks = get_nchunks(size+i, WORKINGSET_H);
     	    niter = 1;
-	    for (j=1; j <= nthreads; j++) {
-	      do_bench(j, size+i, elsize, rshift);
-	      nloops++;
-	    }
-	  }
-	}
+            for (j=1; j <= nthreads; j++) {
+              do_bench(j, size+i, elsize, rshift);
+            }
+          }
+        }
       }
     }
-    /* To compute the totalsize, we should take into account the 9
-       compression levels */
-    gettimeofday(&current, NULL);
-    totalsize = (1. * nloops * (WORKINGSET_H) * NITER * 9) / GB;
-    printf("\nRound-trip compr/decompr on %.1f GB\n", totalsize);
-    totaltime = getseconds(last, current);
-    printf("Elapsed time:\t %6.1f s, %.1f MB/s\n",
-           totaltime, totalsize*KB/totaltime);
   }
   else if (suite) {
     for (j=1; j <= nthreads; j++) {
@@ -365,6 +360,13 @@ int main(int argc, char *argv[]) {
   else {
     do_bench(nthreads, size, elsize, rshift);
   }
+
+  /* Print out some statistics */
+  gettimeofday(&current, NULL);
+  totaltime = getseconds(last, current);
+  printf("\nRound-trip compr/decompr on %.1f GB\n", totalsize / GB);
+  printf("Elapsed time:\t %6.1f s, %.1f MB/s\n",
+         totaltime, totalsize/(GB*totaltime));
 
   /* Free blosc resources */
   blosc_free_resources();
