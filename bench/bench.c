@@ -39,7 +39,7 @@
 
 #define WORKINGSET (256*MB)     /* working set for normal operation */
 #define WORKINGSET_H (64*MB)    /* working set for hardsuite operation */
-#define WORKINGSET_E (16*MB)    /* working set for extremesuite operation */
+#define WORKINGSET_E (32*MB)    /* working set for extremesuite operation */
 #define NCHUNKS (32*1024)       /* maximum number of chunks */
 #define NITER  3                /* number of iterations for normal operation */
 
