@@ -39,6 +39,7 @@
 
 #define WORKINGSET (256*MB)     /* working set for normal operation */
 #define WORKINGSET_H (64*MB)    /* working set for hardsuite operation */
+#define WORKINGSET_E (16*MB)    /* working set for extremesuite operation */
 #define NCHUNKS (32*1024)       /* maximum number of chunks */
 #define NITER  3                /* number of iterations for normal operation */
 
@@ -294,6 +295,8 @@ int get_nchunks(int size_, int ws) {
 int main(int argc, char *argv[]) {
   int suite = 0;
   int hard_suite = 0;
+  int extreme_suite = 0;
+  int special_suite = 0;
   int nthreads = 1;                    /* The number of threads */
   int size = 2*1024*1024;              /* Buffer size */
   int elsize = 8;                      /* Datatype size */
@@ -304,12 +307,21 @@ int main(int argc, char *argv[]) {
 
   if ((argc >= 2) && (strcmp(argv[1], "suite") == 0)) {
     suite = 1;
+    special_suite = 1;
     if (argc == 3) {
       nthreads = atoi(argv[2]);
     }
   }
   else if ((argc >= 2) && (strcmp(argv[1], "hardsuite") == 0)) {
     hard_suite = 1;
+    special_suite = 1;
+    if (argc == 3) {
+      nthreads = atoi(argv[2]);
+    }
+  }
+  else if ((argc >= 2) && (strcmp(argv[1], "extremesuite") == 0)) {
+    extreme_suite = 1;
+    special_suite = 1;
     if (argc == 3) {
       nthreads = atoi(argv[2]);
     }
@@ -327,16 +339,22 @@ int main(int argc, char *argv[]) {
     if (argc >= 5) {
       rshift = atoi(argv[4]);
     }
-    if (argc >= 6) {
-      printf("Usage: bench 'suite' [nthreads] | 'hardsuite' [nthreads] | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
-      exit(1);
-    }
+  }
+
+  if ((argc >= 6) || (special_suite && argc >= 4)) {
+    printf("Usage: bench 'suite' [nthreads] | 'hardsuite' [nthreads] | 'extremesuite' [nthreads] | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
+    exit(1);
   }
 
   nchunks = get_nchunks(size, WORKINGSET);
-
   gettimeofday(&last, NULL);
-  if (hard_suite) {
+
+  if (suite) {
+    for (j=1; j <= nthreads; j++) {
+        do_bench(j, size, elsize, rshift);
+    }
+  }
+  else if (hard_suite) {
     for (rshift = 0; rshift < 32; rshift += 5) {
       for (elsize = 1; elsize <= 32; elsize *= 2) {
         /* The next loop is for getting sizes that are not power of 2 */
@@ -352,9 +370,20 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  else if (suite) {
-    for (j=1; j <= nthreads; j++) {
-        do_bench(j, size, elsize, rshift);
+  else if (extreme_suite) {
+    for (rshift = 0; rshift <= 32; rshift++) {
+      for (elsize = 1; elsize <= 32; elsize++) {
+        /* The next loop is for getting sizes that are not power of 2 */
+        for (i = -elsize*2; i <= elsize*2; i += elsize) {
+          for (size = 16*KB; size <= 16*MB; size *= 2) {
+            nchunks = get_nchunks(size+i, WORKINGSET_E);
+    	    niter = 1;
+            for (j=1; j <= nthreads; j++) {
+              do_bench(j, size+i, elsize, rshift);
+            }
+          }
+        }
+      }
     }
   }
   else {
