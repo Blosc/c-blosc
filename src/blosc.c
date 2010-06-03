@@ -468,7 +468,7 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
     }
   }
   else if (nbytes >= L1*4) {
-    blocksize = L1 * typesize;
+    blocksize = L1 * 4;
     if (clevel <= 3) {
       blocksize /= 8;
     }
