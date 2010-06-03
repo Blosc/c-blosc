@@ -37,9 +37,10 @@
 #define MB  (1024*KB)
 #define GB  (1024*MB)
 
-#define WORKINGSET (256*MB)     /* do not exceed this memory consumption */
+#define WORKINGSET (256*MB)     /* working set for normal operation */
+#define WORKINGSET_H (64*MB)    /* working set for hardsuite operation */
 #define NCHUNKS (32*1024)       /* maximum number of chunks */
-#define NITER  3                /* number of iterations */
+#define NITER  3                /* number of iterations for normal operation */
 
 
 int nchunks = NCHUNKS;
@@ -102,7 +103,12 @@ float getseconds(struct timeval last, struct timeval current) {
 
   sec = current.tv_sec - last.tv_sec;
   usec = current.tv_usec - last.tv_usec;
-  return (float)(((double)sec + usec*1e-6)/((double)niter*nchunks)*1e6);
+  return (float)(((double)sec + usec*1e-6));
+}
+
+/* Given two timeval stamps, return the time per chunk in usec */
+float get_usec_chunk(struct timeval last, struct timeval current) {
+  return (float)(getseconds(last, current)/(niter*nchunks)*1e6);
 }
 
 
@@ -181,7 +187,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     }
   }
   gettimeofday(&current, NULL);
-  tmemcpy = getseconds(last, current);
+  tmemcpy = get_usec_chunk(last, current);
   printf("memcpy(write):\t\t %6.1f us, %.1f MB/s\n",
          tmemcpy, size/(tmemcpy*MB/1e6));
 
@@ -192,7 +198,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     }
   }
   gettimeofday(&current, NULL);
-  tmemcpy = getseconds(last, current);
+  tmemcpy = get_usec_chunk(last, current);
   printf("memcpy(read):\t\t %6.1f us, %.1f MB/s\n",
          tmemcpy, size/(tmemcpy*MB/1e6));
 
@@ -207,7 +213,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
       }
     }
     gettimeofday(&current, NULL);
-    tshuf = getseconds(last, current);
+    tshuf = get_usec_chunk(last, current);
     printf("comp(write):\t %6.1f us, %.1f MB/s\t  ",
            tshuf, size/(tshuf*MB/1e6));
     printf("Final bytes: %d  ", cbytes);
@@ -236,7 +242,7 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
       }
     }
     gettimeofday(&current, NULL);
-    tunshuf = getseconds(last, current);
+    tunshuf = get_usec_chunk(last, current);
     printf("decomp(read):\t %6.1f us, %.1f MB/s\t  ",
            tunshuf, nbytes/(tunshuf*MB/1e6));
     if (nbytes < 0) {
@@ -269,10 +275,10 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
 
 
 /* Compute a sensible value for nchunks */
-int get_nchunks(unsigned int size_) {
+int get_nchunks(int size_, int ws) {
   int nchunks;
 
-  nchunks = WORKINGSET / size_;
+  nchunks = ws / size_;
   if (nchunks > NCHUNKS) nchunks = NCHUNKS;
   if (nchunks < 1) nchunks = 1;
   return nchunks;
@@ -285,10 +291,12 @@ int main(int argc, char *argv[]) {
   int nloops = 0;
   float totalsize;
   int nthreads = 1;                    /* The number of threads */
-  unsigned int size = 2*1024*1024;     /* Buffer size */
-  unsigned int elsize = 8;             /* Datatype size */
+  int size = 2*1024*1024;              /* Buffer size */
+  int elsize = 8;                      /* Datatype size */
   int rshift = 19;                     /* Significant bits */
-  int j;
+  int i, j;
+  struct timeval last, current;
+  float totaltime;
 
   if ((argc >= 2) && (strcmp(argv[1], "suite") == 0)) {
     suite = 1;
@@ -296,7 +304,7 @@ int main(int argc, char *argv[]) {
       nthreads = atoi(argv[2]);
     }
   }
-  else if ((argc >= 2) && (strcmp(argv[1], "hard_suite") == 0)) {
+  else if ((argc >= 2) && (strcmp(argv[1], "hardsuite") == 0)) {
     hard_suite = 1;
     if (argc == 3) {
       nthreads = atoi(argv[2]);
@@ -316,29 +324,38 @@ int main(int argc, char *argv[]) {
       rshift = atoi(argv[4]);
     }
     if (argc >= 6) {
-      printf("Usage: bench 'suite' [nthreads] | 'hard_suite' [nthreads] | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
+      printf("Usage: bench 'suite' [nthreads] | 'hardsuite' [nthreads] | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
       exit(1);
     }
   }
 
-  nchunks = get_nchunks(size);
+  nchunks = get_nchunks(size, WORKINGSET);
 
   if (hard_suite) {
-    for (rshift=0; rshift < 32; rshift +=5) {
-      for (elsize=1; elsize <= 32; elsize *=2) {
-        for (size=32*KB; size <= 8*MB; size *=2) {
-          nchunks = get_nchunks(size);
-          for (j=1; j <= nthreads; j++) {
-	    do_bench(j, size, elsize, rshift);
-            nloops++;
+    gettimeofday(&last, NULL);
+    for (rshift = 0; rshift < 32; rshift += 5) {
+      for (elsize = 1; elsize <= 32; elsize *= 2) {
+        /* The next loop is for getting sizes that are not power of 2 */
+        for (i = -elsize; i <= elsize; i += elsize) {
+          for (size = 32*KB; size <= 8*MB; size *= 2) {
+            nchunks = get_nchunks(size+i, WORKINGSET_H);
+    	    niter = 1;
+	    for (j=1; j <= nthreads; j++) {
+	      do_bench(j, size+i, elsize, rshift);
+	      nloops++;
+	    }
 	  }
 	}
       }
     }
     /* To compute the totalsize, we should take into account the 9
        compression levels */
-    totalsize = (1. * nloops * WORKINGSET * NITER * 9) / GB;
-    printf("Performed round-trip compr/decompr on %.1f GB", totalsize);
+    gettimeofday(&current, NULL);
+    totalsize = (1. * nloops * (WORKINGSET_H) * NITER * 9) / GB;
+    printf("\nRound-trip compr/decompr on %.1f GB\n", totalsize);
+    totaltime = getseconds(last, current);
+    printf("Elapsed time:\t %6.1f s, %.1f MB/s\n",
+           totaltime, totalsize*KB/totaltime);
   }
   else if (suite) {
     for (j=1; j <= nthreads; j++) {
