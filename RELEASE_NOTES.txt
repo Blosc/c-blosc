@@ -1,9 +1,21 @@
-=============================
- Release notes for Blosc 0.9
-=============================
+==============================
+ Release notes for Blosc 0.9.3
+==============================
 
 :Author: Francesc Alted i Abad
 :Contact: faltet@pytables.org
+
+
+Changes from 0.9.0 to 0.9.3
+===========================
+
+- Fixed several nasty bugs uncovered by the new suites in bench.c.
+  Thanks to Tony Theodore and Gabriel Beckers for their (very)
+  responsive beta testing and feedback.
+
+- Added several modes (suites), namely ``suite``, ``hardsuite`` and
+  ``extremehardsuite`` in bench.c so as to allow different levels of
+  testing.
 
 
 Changes from 0.8.0 to 0.9
