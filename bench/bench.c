@@ -37,9 +37,6 @@
 #define MB  (1024*KB)
 #define GB  (1024*MB)
 
-#define WORKINGSET (256*MB)     /* working set for normal operation */
-#define WORKINGSET_H (64*MB)    /* working set for hardsuite operation */
-#define WORKINGSET_E (32*MB)    /* working set for extremesuite operation */
 #define NCHUNKS (32*1024)       /* maximum number of chunks */
 #define NITER  3                /* number of iterations for normal operation */
 
@@ -293,77 +290,97 @@ int get_nchunks(int size_, int ws) {
 
 
 int main(int argc, char *argv[]) {
+  int single = 1;
   int suite = 0;
   int hard_suite = 0;
   int extreme_suite = 0;
-  int special_suite = 0;
-  int nthreads = 1;                    /* The number of threads */
-  int size = 2*1024*1024;              /* Buffer size */
-  int elsize = 8;                      /* Datatype size */
-  int rshift = 19;                     /* Significant bits */
-  int i, j;
+  int nthreads = 1;                     /* The number of threads */
+  int size = 2*MB;                      /* Buffer size */
+  int elsize = 8;                       /* Datatype size */
+  int rshift = 19;                      /* Significant bits */
+  int workingset = 256*MB;              /* The maximum allocated memory */
+  int nthreads_, size_, elsize_, rshift_, i;
   struct timeval last, current;
   float totaltime;
+  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite'] [nthreads [bufsize(KB) [typesize [sbits ]]]]";
 
-  if ((argc >= 2) && (strcmp(argv[1], "suite") == 0)) {
+  
+  if (strcmp(argv[1], "single") == 0) {
+    niter = 10;
+    workingset = 32*MB;
+  }
+  else if (strcmp(argv[1], "suite") == 0) {
     suite = 1;
-    special_suite = 1;
-    if (argc == 3) {
-      nthreads = atoi(argv[2]);
-    }
+    nthreads = 1;
+    niter = 5;
+    size = 2*MB;
+    elsize = 8;
+    rshift = 19;
   }
-  else if ((argc >= 2) && (strcmp(argv[1], "hardsuite") == 0)) {
+  else if (strcmp(argv[1], "hardsuite") == 0) {
     hard_suite = 1;
-    special_suite = 1;
-    if (argc == 3) {
-      nthreads = atoi(argv[2]);
-    }
+    nthreads = 2;
+    niter = 3;
+    size = 8*MB;
+    elsize = 32;
+    rshift = 32;
+    workingset = 64*MB;
   }
-  else if ((argc >= 2) && (strcmp(argv[1], "extremesuite") == 0)) {
+  else if (strcmp(argv[1], "extremesuite") == 0) {
     extreme_suite = 1;
-    special_suite = 1;
-    if (argc == 3) {
-      nthreads = atoi(argv[2]);
-    }
+    nthreads = 1;
+    niter = 1;
+    /* Values here are starting points.  This is useful for debugging. */
+    size = 16*KB;
+    elsize = 1;
+    rshift = 0;
+    workingset = 32*MB;
   }
   else {
-    if (argc >= 2) {
-      nthreads = atoi(argv[1]);
-    }
-    if (argc >= 3) {
-      size = atoi(argv[2])*1024;
-    }
-    if (argc >= 4) {
-      elsize = atoi(argv[3]);
-    }
-    if (argc >= 5) {
-      rshift = atoi(argv[4]);
-    }
-  }
-
-  if ((argc >= 6) || (special_suite && argc >= 4)) {
-    printf("Usage: bench 'suite' [nthreads] | 'hardsuite' [nthreads] | 'extremesuite' [nthreads] | [nthreads [bufsize(KB) [typesize [sbits ]]]]\n");
+    printf("%s\n", usage);
     exit(1);
   }
 
-  nchunks = get_nchunks(size, WORKINGSET);
+  if (argc >= 3) {
+    nthreads = atoi(argv[2]);
+  }
+  if (argc >= 4) {
+    size = atoi(argv[3]);
+  }
+  if (argc >= 5) {
+    elsize = atoi(argv[4]);
+  }
+  if (argc >= 6) {
+    rshift = atoi(argv[5]);
+  }
+
+  if ((argc >= 7) || !(single || suite || hard_suite || extreme_suite)) {
+    printf("%s\n", usage);
+    exit(1);
+  }
+
+  nchunks = get_nchunks(size, workingset);
   gettimeofday(&last, NULL);
 
   if (suite) {
-    for (j=1; j <= nthreads; j++) {
-        do_bench(j, size, elsize, rshift);
+    for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
+        do_bench(nthreads_, size, elsize, rshift);
     }
   }
   else if (hard_suite) {
-    for (rshift = 0; rshift < 32; rshift += 5) {
-      for (elsize = 1; elsize <= 32; elsize *= 2) {
+    for (rshift_ = 0; rshift_ < rshift; rshift_ += 5) {
+      for (elsize_ = 1; elsize_ <= elsize; elsize_ *= 2) {
         /* The next loop is for getting sizes that are not power of 2 */
-        for (i = -elsize; i <= elsize; i += elsize) {
-          for (size = 32*KB; size <= 8*MB; size *= 2) {
-            nchunks = get_nchunks(size+i, WORKINGSET_H);
+        for (i = -elsize_; i <= elsize_; i += elsize_) {
+          for (size_ = 32*KB; size_ <= size; size_ *= 2) {
+            nchunks = get_nchunks(size_+i, workingset);
     	    niter = 1;
-            for (j=1; j <= nthreads; j++) {
-              do_bench(j, size+i, elsize, rshift);
+            for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
+              do_bench(nthreads_, size_+i, elsize_, rshift_);
+	      gettimeofday(&current, NULL);
+	      totaltime = getseconds(last, current);
+	      printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
+  	             totaltime, totalsize / GB);
             }
           }
         }
@@ -371,21 +388,25 @@ int main(int argc, char *argv[]) {
     }
   }
   else if (extreme_suite) {
-    for (rshift = 0; rshift <= 32; rshift++) {
-      for (elsize = 1; elsize <= 32; elsize++) {
+    for (rshift_ = rshift; rshift_ <= 32; rshift_++) {
+      for (elsize_ = elsize; elsize_ <= 32; elsize_++) {
         /* The next loop is for getting sizes that are not power of 2 */
-        for (i = -elsize*2; i <= elsize*2; i += elsize) {
-          for (size = 16*KB; size <= 16*MB; size *= 2) {
-            nchunks = get_nchunks(size+i, WORKINGSET_E);
-    	    niter = 1;
-            for (j=1; j <= nthreads; j++) {
-              do_bench(j, size+i, elsize, rshift);
+        for (i = -elsize_*2; i <= elsize_*2; i += elsize_) {
+          for (size_ = size; size_ <= 16*MB; size_ *= 2) {
+            nchunks = get_nchunks(size_+i, workingset);
+            for (nthreads_ = nthreads; nthreads_ <= 6; nthreads_++) {
+              do_bench(nthreads_, size_+i, elsize_, rshift_);
+	      gettimeofday(&current, NULL);
+	      totaltime = getseconds(last, current);
+	      printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
+  	             totaltime, totalsize / GB);
             }
           }
         }
       }
     }
   }
+  /* Single mode */
   else {
     do_bench(nthreads, size, elsize, rshift);
   }
