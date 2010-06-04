@@ -38,11 +38,10 @@
 #define GB  (1024*MB)
 
 #define NCHUNKS (32*1024)       /* maximum number of chunks */
-#define NITER  3                /* number of iterations for normal operation */
 
 
 int nchunks = NCHUNKS;
-int niter = NITER;
+int niter = 3;                  /* default number of iterations */
 float totalsize = 0.;           /* total compressed/decompressed size */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -159,6 +158,8 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   src = malloc(size);
   srccpy = malloc(size);
   dest2 = malloc(size);
+  /* zero src to initialize byte on it, and not only multiples of 4 */
+  memset(src, 0, size);
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < nchunks; j++) {
@@ -304,37 +305,32 @@ int main(int argc, char *argv[]) {
   float totaltime;
   char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite'] [nthreads [bufsize(KB) [typesize [sbits ]]]]";
 
-  
+
   if (strcmp(argv[1], "single") == 0) {
-    niter = 10;
-    workingset = 32*MB;
+    single = 1;
   }
   else if (strcmp(argv[1], "suite") == 0) {
     suite = 1;
-    nthreads = 1;
-    niter = 5;
-    size = 2*MB;
-    elsize = 8;
-    rshift = 19;
   }
   else if (strcmp(argv[1], "hardsuite") == 0) {
     hard_suite = 1;
+    workingset = 64*MB;
+    /* Values here are ending points for loops */
     nthreads = 2;
-    niter = 3;
     size = 8*MB;
     elsize = 32;
     rshift = 32;
-    workingset = 64*MB;
   }
   else if (strcmp(argv[1], "extremesuite") == 0) {
     extreme_suite = 1;
-    nthreads = 1;
+    workingset = 32*MB;
     niter = 1;
-    /* Values here are starting points.  This is useful for debugging. */
+    /* Warning: values here are starting points for loops.  This is
+       useful for debugging. */
+    nthreads = 1;
     size = 16*KB;
     elsize = 1;
     rshift = 0;
-    workingset = 32*MB;
   }
   else {
     printf("%s\n", usage);
