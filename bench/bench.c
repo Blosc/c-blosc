@@ -412,7 +412,7 @@ int main(int argc, char *argv[]) {
   totaltime = getseconds(last, current);
   printf("\nRound-trip compr/decompr on %.1f GB\n", totalsize / GB);
   printf("Elapsed time:\t %6.1f s, %.1f MB/s\n",
-         totaltime, totalsize/(GB*totaltime));
+         totaltime, totalsize*2*1.1/(MB*totaltime));
 
   /* Free blosc resources */
   blosc_free_resources();
