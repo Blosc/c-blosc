@@ -72,11 +72,8 @@ pthread_barrier_t barr_init;
 pthread_barrier_t barr_finish;
 #else
 int32_t count_threads = 0;
-int32_t count2_threads = 0;
 pthread_mutex_t count_threads_mutex;
 pthread_cond_t count_threads_cv;
-pthread_mutex_t count2_threads_mutex;
-pthread_cond_t count2_threads_cv;
 #endif
 
 
@@ -872,8 +869,6 @@ int init_threads(void)
 #else
   pthread_mutex_init(&count_threads_mutex, NULL);
   pthread_cond_init(&count_threads_cv, NULL);
-  pthread_mutex_init(&count2_threads_mutex, NULL);
-  pthread_cond_init(&count2_threads_cv, NULL);
 #endif
 
   /* Initialize and set thread detached attribute */
@@ -1011,8 +1006,6 @@ void blosc_free_resources(void)
 #else
     pthread_mutex_destroy(&count_threads_mutex);
     pthread_cond_destroy(&count_threads_cv);
-    pthread_mutex_destroy(&count2_threads_mutex);
-    pthread_cond_destroy(&count2_threads_cv);
 #endif
 
     /* Thread attributes */
