@@ -145,9 +145,7 @@ int blosclz_compress(int opt_level, const void* input,
       free(htab);
       return length+1;
     }
-    else
-      free(htab);
-      return 0;
+    else goto out;
   }
 
   /* initializes hash table */
@@ -273,6 +271,9 @@ int blosclz_compress(int opt_level, const void* input,
     ip -= 3;
     len = ip - anchor;
 
+    /* check that we have space enough to encode the match for all the cases */
+    if (op+(len/255)+6 > op_limit) goto out;
+
     /* encode the match */
     if(distance < MAX_DISTANCE) {
       if(len < 7) {
@@ -327,19 +328,13 @@ int blosclz_compress(int opt_level, const void* input,
         copy = 0;
         *op++ = MAX_COPY-1;
       }
-      if (op > op_limit) {
-        free(htab);
-        return 0;
-      }
+      if (op > op_limit) goto out;
   }
 
   /* left-over as literal copy */
   ip_bound++;
   while(ip <= ip_bound) {
-    if (op > op_limit) {
-      free(htab);
-      return 0;
-    }
+    if (op > op_limit) goto out;
     *op++ = *ip++;
     copy++;
     if(copy == MAX_COPY) {
@@ -359,6 +354,11 @@ int blosclz_compress(int opt_level, const void* input,
 
   free(htab);
   return op - (uint8_t*)output;
+
+ out:
+  free(htab);
+  return 0;
+
 }
 
 
