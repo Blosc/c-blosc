@@ -303,7 +303,7 @@ int main(int argc, char *argv[]) {
   int nthreads_, size_, elsize_, rshift_, i;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite'] [nthreads [bufsize(KB) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
   if (strcmp(argv[1], "single") == 0) {
