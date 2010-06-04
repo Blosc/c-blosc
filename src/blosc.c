@@ -69,7 +69,6 @@ pthread_attr_t ct_attr;          /* creation time attributes for threads */
 pthread_mutex_t count_mutex;
 #ifdef _POSIX_BARRIERS_MINE
 pthread_barrier_t barr_init;
-pthread_barrier_t barr2_init;
 pthread_barrier_t barr_finish;
 #else
 int32_t count_threads = 0;
@@ -693,7 +692,7 @@ void *t_blosc(void *tids)
   while (1) {
 
     init_sentinels_done = 0;     /* sentinels have to be initialised yet */
-    
+
     /* Meeting point for all threads (wait for initialization) */
 #ifdef _POSIX_BARRIERS_MINE
     rc = pthread_barrier_wait(&barr_init);
@@ -869,7 +868,6 @@ int init_threads(void)
   /* Barrier initialization */
 #ifdef _POSIX_BARRIERS_MINE
   pthread_barrier_init(&barr_init, NULL, nthreads+1);
-  pthread_barrier_init(&barr2_init, NULL, nthreads);
   pthread_barrier_init(&barr_finish, NULL, nthreads+1);
 #else
   pthread_mutex_init(&count_threads_mutex, NULL);
@@ -1009,7 +1007,6 @@ void blosc_free_resources(void)
     /* Barriers */
 #ifdef _POSIX_BARRIERS_MINE
     pthread_barrier_destroy(&barr_init);
-    pthread_barrier_destroy(&barr2_init);
     pthread_barrier_destroy(&barr_finish);
 #else
     pthread_mutex_destroy(&count_threads_mutex);
