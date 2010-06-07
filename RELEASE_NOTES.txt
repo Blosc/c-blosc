@@ -1,9 +1,16 @@
 ==============================
- Release notes for Blosc 0.9.3
+ Release notes for Blosc 0.9.4
 ==============================
 
 :Author: Francesc Alted i Abad
 :Contact: faltet@pytables.org
+
+
+Changes from 0.9.3 to 0.9.4
+===========================
+
+- Support for cross-platform big/little endian compatibility in Blosc
+  headers has been added.
 
 
 Changes from 0.9.0 to 0.9.3
