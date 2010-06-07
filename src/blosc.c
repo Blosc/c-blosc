@@ -174,7 +174,7 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
       }
     }
     cbytes = blosclz_compress(params.clevel, _tmp+j*neblock, neblock,
-                              dest, maxout-1);
+                              dest, maxout);
     if (cbytes >= maxout) {
       /* Buffer overrun caused by blosclz_compress (should never happen) */
       return -1;

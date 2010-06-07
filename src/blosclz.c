@@ -321,6 +321,7 @@ int blosclz_compress(int opt_level, const void* input,
     continue;
 
     literal:
+      if (op+2 > op_limit) goto out;
       *op++ = *anchor++;
       ip = anchor;
       copy++;
@@ -328,13 +329,12 @@ int blosclz_compress(int opt_level, const void* input,
         copy = 0;
         *op++ = MAX_COPY-1;
       }
-      if (op > op_limit) goto out;
   }
 
   /* left-over as literal copy */
   ip_bound++;
   while(ip <= ip_bound) {
-    if (op > op_limit) goto out;
+    if (op+2 > op_limit) goto out;
     *op++ = *ip++;
     copy++;
     if(copy == MAX_COPY) {
