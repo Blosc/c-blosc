@@ -86,6 +86,7 @@ struct thread_data {
   int32_t shuffle;
   int32_t ntbytes;
   uint32_t nbytes;
+  uint32_t maxbytes;
   uint32_t nblocks;
   uint32_t leftover;
   uint32_t *bstarts;             /* start pointers for each block */
@@ -132,7 +133,7 @@ int32_t sw32(int32_t a)
 
 /* Shuffle & compress a single block */
 static int blosc_c(size_t blocksize, int32_t leftoverblock,
-                   uint32_t ntbytes, uint32_t nbytes,
+                   uint32_t ntbytes, uint32_t maxbytes,
                    uint8_t *src, uint8_t *dest, uint8_t *tmp)
 {
   size_t j, neblock, nsplits;
@@ -167,8 +168,8 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
     ntbytes += sizeof(int32_t);
     ctbytes += sizeof(int32_t);
     maxout = neblock;
-    if (ntbytes+maxout > nbytes) {
-      maxout = nbytes - ntbytes;   /* avoid buffer overrun */
+    if (ntbytes+maxout > maxbytes) {
+      maxout = maxbytes - ntbytes;   /* avoid buffer overrun */
       if (maxout <= 0) {
         return 0;                  /* non-compressible block */
       }
@@ -187,7 +188,7 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
       /* The compressor has been unable to compress data significantly. */
       /* Before doing the copy, check that we are not running into a
          buffer overflow. */
-      if ((ntbytes+neblock) > nbytes) {
+      if ((ntbytes+neblock) > maxbytes) {
         return 0;    /* Non-compressible data */
       }
       memcpy(dest, _tmp+j*neblock, neblock);
@@ -278,7 +279,7 @@ int serial_blosc(void)
   int32_t compress = params.compress;
   size_t blocksize = params.blocksize;
   int32_t ntbytes = params.ntbytes;
-  int32_t nbytes = params.nbytes;
+  uint32_t maxbytes = params.maxbytes;
   uint32_t nblocks = params.nblocks;
   int32_t leftover = params.nbytes % params.blocksize;
   uint32_t *bstarts = params.bstarts;
@@ -298,7 +299,7 @@ int serial_blosc(void)
       leftoverblock = 1;
     }
     if (compress) {
-      cbytes = blosc_c(bsize, leftoverblock, ntbytes, nbytes,
+      cbytes = blosc_c(bsize, leftoverblock, ntbytes, maxbytes,
                        src+j*blocksize, dest+ntbytes, tmp);
       if (cbytes == 0) {
         ntbytes = 0;              /* uncompressible data */
@@ -310,7 +311,7 @@ int serial_blosc(void)
                        src+sw32(bstarts[j]), dest+j*blocksize, tmp, tmp2);
     }
     if (cbytes < 0) {
-      ntbytes = cbytes;         /* error in blosc_c / blosc_d */
+      ntbytes = cbytes;         /* error in blosc_c or blosc_d */
       break;
     }
     ntbytes += cbytes;
@@ -318,10 +319,10 @@ int serial_blosc(void)
 
   /* Final check for ntbytes (only in compression mode) */
   if (compress) {
-    if (ntbytes == nbytes) {
+    if (ntbytes == maxbytes) {
       ntbytes = 0;               /* non-compressible data */
     }
-    else if (ntbytes > nbytes) {
+    else if (ntbytes > maxbytes) {
       fprintf(stderr, "The impossible happened: buffer overflow!\n");
       ntbytes = -5;               /* too large buffer */
     }
@@ -519,11 +520,15 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
 }
 
 
+/* The public routine for compression.  See blosc.h for docstrings. */
 unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
-                            size_t nbytes, const void *src, void *dest)
+                            size_t nbytes, const void *src, void *dest,
+                            size_t maxbytes)
 {
   uint8_t *_dest=NULL;         /* current pos for destination buffer */
-  uint8_t *flags;              /* flags for header */
+  uint8_t *flags;              /* flags for header.  Currently booked:
+                                  - 0: shuffled?
+                                  - 1: memcpy'ed? */
   uint32_t nblocks;            /* number of total blocks in buffer */
   uint32_t leftover;           /* extra bytes at end of buffer */
   uint32_t *bstarts;           /* start pointers for each block */
@@ -542,7 +547,7 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
     return 0;
   }
   else if (nbytes < MIN_BUFFERSIZE) {
-    /* Too little buffer.  Just return without doing anything else. */
+    /* Buffer too small.  Just return without doing anything else. */
     return 0;
   }
 
@@ -595,6 +600,7 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
   params.blocksize = blocksize;
   params.ntbytes = ntbytes;
   params.nbytes = nbytes;
+  params.maxbytes = maxbytes;
   params.nblocks = nblocks;
   params.leftover = leftover;
   params.bstarts = bstarts;
@@ -603,15 +609,26 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
 
   /* Do the actual compression */
   ntbytes = do_job();
+
+  /* Last chance for fitting `src` buffer in `dest` */
+  if ((ntbytes == 0) && (nbytes+16 <= maxbytes)) {
+    /* Specify that this buffer is memcpy'ed (bit 2 set to 1 in flags) */
+    _dest = (uint8_t *)(dest);
+    _dest[2] = 0x2;
+    memcpy(dest+16, src, nbytes);
+    ntbytes = nbytes+16;
+  }
+
   /* Set the number of compressed bytes in header */
   *ntbytes_ = sw32(ntbytes);
 
-  assert((int32_t)ntbytes < (int32_t)nbytes);
+  assert((int32_t)ntbytes <= (int32_t)maxbytes);
   return ntbytes;
 }
 
 
-unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
+/* The public routine for decompression.  See blosc.h for docstrings. */
+unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   uint8_t *_src=NULL;            /* current pos for source buffer */
   uint8_t *_dest=NULL;           /* current pos for destination buffer */
@@ -636,6 +653,13 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
   nbytes = sw32(((uint32_t *)_src)[0]);      /* buffer size */
   blocksize = sw32(((uint32_t *)_src)[1]);   /* block size */
   ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
+
+  /* Check whether this buffer is memcpy'ed */
+  if (flags == 0x2) {
+    memcpy(dest, src+16, nbytes);
+    return nbytes;
+  }
+
   _src += sizeof(int32_t)*3;
   bstarts = (uint32_t *)_src;
   /* Compute some params */
@@ -646,13 +670,12 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
   _src += sizeof(int32_t)*nblocks;
 
   /* Check zero typesizes.  From Blosc version format 2 on, this value
-   has been reserved for future use (most probably to indicate
-   uncompressible buffers). */
+   has been reserved for future use. */
   if ((version == 1) && (typesize == 0)) {
     typesize = 256;             /* 0 means 256 in format version 1 */
   }
 
-  if (nbytes > dest_size) {
+  if (nbytes > destsize) {
     /* This should never happen but just in case */
     return -1;
   }
@@ -679,7 +702,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
   /* Do the actual decompression */
   ntbytes = do_job();
 
-  assert(ntbytes <= (int32_t)dest_size);
+  assert(ntbytes <= (int32_t)destsize);
   return ntbytes;
 }
 
@@ -763,7 +786,7 @@ void *t_blosc(void *tids)
   size_t blocksize;
   size_t ebsize;
   int32_t compress;
-  uint32_t nbytes;
+  uint32_t maxbytes;
   uint32_t ntbytes;
   uint32_t nblocks;
   uint32_t leftover;
@@ -814,7 +837,7 @@ void *t_blosc(void *tids)
     blocksize = params.blocksize;
     ebsize = blocksize + params.typesize*sizeof(int32_t);
     compress = params.compress;
-    nbytes = params.nbytes;
+    maxbytes = params.maxbytes;
     nblocks = params.nblocks;
     leftover = params.leftover;
     bstarts = params.bstarts;
@@ -886,7 +909,7 @@ void *t_blosc(void *tids)
         pthread_mutex_lock(&count_mutex);
         ntdest = params.ntbytes;
         bstarts[nblock_] = sw32(ntdest);    /* update block start counter */
-        if ( (cbytes == 0) || (ntdest+cbytes > (int32_t)nbytes) ) {
+        if ( (cbytes == 0) || (ntdest+cbytes > (int32_t)maxbytes) ) {
           giveup_code = 0;                  /* uncompressible buffer */
           pthread_mutex_unlock(&count_mutex);
           break;

@@ -1,13 +1,20 @@
 CC=gcc
 CFLAGS=-O3 -msse2 -Wall
 LDFLAGS=-lpthread
-SOURCES=test_api.c ../src/blosc.c ../src/blosclz.c ../src/shuffle.c
-EXECUTABLE=test_api
+BLOSC_LIB= ../src/blosc.c ../src/blosclz.c ../src/shuffle.c
 
-all: $(SOURCES) $(EXECUTABLE)
+# The list of executables
+# Generated PNG (intermediate) files
+SOURCES := $(wildcard *.c)
+EXECUTABLES := $(patsubst %.c, %.exe, $(SOURCES))
 
-$(EXECUTABLE): $(SOURCES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o $@
+.PHONY: all
+all: test
+
+test: $(EXECUTABLES)
+
+%.exe: %.c $(BLOSC_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) "$<" $(BLOSC_LIB) -o "$@"
 
 clean:
-	rm -rf test_api
+	rm -rf $(EXECUTABLES)

@@ -56,26 +56,29 @@ int blosc_set_nthreads(int nthreads);
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
   Only a typesize > 1 will allow the shuffle to work.
 
-  The `dest` buffer must have at least the size of the `src` buffer.
-  The `src` buffer and the `dest` buffer can not overlap.
+  The `dest` buffer must have at least the size of `maxbytes`.  Blosc
+  guarantees that if you set `maxbytes` at least to `nbytes` + 16, the
+  compression will always succeed.  The `src` buffer and the `dest`
+  buffer can not overlap.
 
-  If `src` buffer is not compressible (len(`dest`) >= len(`src`)), the
-  return value is zero and you should discard the contents of the
-  `dest` buffer.
+  If `src` buffer cannot be compressed into `maxbytes`, the return
+  value is zero and you should discard the contents of the `dest`
+  buffer.
 
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report it back
   together with the buffer data causing this and compression settings.
 
   Compression is memory safe and guaranteed not to write the `dest`
-  buffer more than what is specified in `nbytes`.  However, it is not
-  re-entrant and not thread-safe (despite the fact that it uses
+  buffer more than what is specified in `maxbytes`.  However, it is
+  not re-entrant and not thread-safe (despite the fact that it uses
   threads internally ;-)
 
  */
 
 unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
-                            size_t nbytes, const void *src, void *dest);
+                            size_t nbytes, const void *src, void *dest,
+                            size_t maxbytes);
 
 
 /**
@@ -95,7 +98,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
 
 */
 
-unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size);
+unsigned int blosc_decompress(const void *src, void *dest, size_t destsize);
 
 
 /**

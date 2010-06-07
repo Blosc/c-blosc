@@ -142,10 +142,10 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
+void do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   void *src, *srccpy;
   void **dest[NCHUNKS], *dest2;
-  int nbytes, cbytes;
+  int nbytes = 0, cbytes = 0;
   size_t i, j;
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
@@ -163,7 +163,8 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < nchunks; j++) {
-    dest[j] = malloc(size);
+    /* 16 additional bytes should be enough for encoding everything */
+    dest[j] = malloc(size+16);
   }
 
   /* Warm destination memory (memcpy() will go a bit faster later on) */
@@ -209,7 +210,8 @@ do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     gettimeofday(&last, NULL);
     for (i = 0; i < niter; i++) {
       for (j = 0; j < nchunks; j++) {
-        cbytes = blosc_compress(clevel, doshuffle, elsize, size, src, dest[j]);
+        cbytes = blosc_compress(clevel, doshuffle, elsize, size, src,
+                                dest[j], size);
       }
     }
     gettimeofday(&current, NULL);
@@ -306,6 +308,11 @@ int main(int argc, char *argv[]) {
   float totaltime;
   char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
+
+  if (argc == 1) {
+    printf("%s\n", usage);
+    exit(1);
+  }
 
   if (strcmp(argv[1], "single") == 0) {
     single = 1;

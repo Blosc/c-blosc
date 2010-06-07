@@ -9,9 +9,11 @@
 Changes from 0.9.4 to 0.9.5
 ===========================
 
+- Supported a new parameter `maxbytes` for ``blosc_compress()``.  It
+  represents a maximum of bytes for output.  Tests unit added too.
+
 - Added 3 new functions for querying different metadata on compressed
   buffers.  A test suite for testing the new API has been added too.
-
 
 Changes from 0.9.3 to 0.9.4
 ===========================

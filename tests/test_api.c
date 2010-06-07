@@ -9,34 +9,9 @@
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#if defined(_WIN32) && !defined(__MINGW32__)
-  #include <time.h>
-#else
-  #include <unistd.h>
-  #include <sys/time.h>
-#endif
-#include <math.h>
-#include "../src/blosc.h"
-
-
-/* This is MinUnit in action (http://www.jera.com/techinfo/jtns/jtn002.html) */
-#define mu_assert(message, test) do { if (!(test)) return message; } while (0)
-#define mu_run_test(test) do \
-    { char *message = test(); tests_run++;                          \
-      if (message) { printf("%c", 'F'); return message;}            \
-      else printf("%c", '.'); } while (0)
+#include "tests_blosc.h"
 
 int tests_run = 0;
-
-#define KB  1024
-#define MB  (1024*KB)
-#define GB  (1024*MB)
 
 /* Global vars */
 void *src, *srccpy, *dest, *dest2;
@@ -100,7 +75,7 @@ int main(int argc, char **argv) {
   memcpy(srccpy, src, size);
 
   /* Get a compressed buffer */
-  cbytes = blosc_compress(clevel, doshuffle, typesize, size, src, dest);
+  cbytes = blosc_compress(clevel, doshuffle, typesize, size, src, dest, size);
 
   /* Get a decompressed buffer */
   nbytes = blosc_decompress(dest, dest2, size);
@@ -111,10 +86,11 @@ int main(int argc, char **argv) {
     printf(" (%s)\n", result);
   }
   else {
-    printf("\nALL TESTS PASSED\n");
+    printf("\nALL TESTS PASSED for %s", argv[0]);
   }
-  printf("\nTests run: %d\n", tests_run);
+  printf("\tTests run: %d\n", tests_run);
 
+  free(src); free(srccpy); free(dest); free(dest2);
   return result != 0;
 }
 
