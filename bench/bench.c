@@ -295,6 +295,7 @@ int main(int argc, char *argv[]) {
   int suite = 0;
   int hard_suite = 0;
   int extreme_suite = 0;
+  int debug_suite = 0;
   int nthreads = 1;                     /* The number of threads */
   int size = 2*MB;                      /* Buffer size */
   int elsize = 8;                       /* Datatype size */
@@ -303,7 +304,7 @@ int main(int argc, char *argv[]) {
   int nthreads_, size_, elsize_, rshift_, i;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
   if (strcmp(argv[1], "single") == 0) {
@@ -323,6 +324,16 @@ int main(int argc, char *argv[]) {
   }
   else if (strcmp(argv[1], "extremesuite") == 0) {
     extreme_suite = 1;
+    workingset = 32*MB;
+    niter = 1;
+    /* Values here are ending points for loops */
+    nthreads = 4;
+    size = 16*MB;
+    elsize = 32;
+    rshift = 32;
+  }
+  else if (strcmp(argv[1], "debugsuite") == 0) {
+    debug_suite = 1;
     workingset = 32*MB;
     niter = 1;
     /* Warning: values here are starting points for loops.  This is
@@ -364,7 +375,7 @@ int main(int argc, char *argv[]) {
     }
   }
   else if (hard_suite) {
-    for (rshift_ = 0; rshift_ < rshift; rshift_ += 5) {
+    for (rshift_ = 0; rshift_ <= rshift; rshift_ += 5) {
       for (elsize_ = 1; elsize_ <= elsize; elsize_ *= 2) {
         /* The next loop is for getting sizes that are not power of 2 */
         for (i = -elsize_; i <= elsize_; i += elsize_) {
@@ -373,10 +384,10 @@ int main(int argc, char *argv[]) {
     	    niter = 1;
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
               do_bench(nthreads_, size_+i, elsize_, rshift_);
-	      gettimeofday(&current, NULL);
-	      totaltime = getseconds(last, current);
-	      printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
-  	             totaltime, totalsize / GB);
+              gettimeofday(&current, NULL);
+              totaltime = getseconds(last, current);
+              printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
+                     totaltime, totalsize / GB);
             }
           }
         }
@@ -384,6 +395,25 @@ int main(int argc, char *argv[]) {
     }
   }
   else if (extreme_suite) {
+    for (rshift_ = 0; rshift_ <= rshift; rshift_++) {
+      for (elsize_ = 1; elsize_ <= elsize; elsize_++) {
+        /* The next loop is for getting sizes that are not power of 2 */
+        for (i = -elsize_*2; i <= elsize_*2; i += elsize_) {
+          for (size_ = 32*KB; size_ <= size; size_ *= 2) {
+            nchunks = get_nchunks(size_+i, workingset);
+            for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
+              do_bench(nthreads_, size_+i, elsize_, rshift_);
+              gettimeofday(&current, NULL);
+              totaltime = getseconds(last, current);
+              printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
+                     totaltime, totalsize / GB);
+            }
+          }
+        }
+      }
+    }
+  }
+  else if (debug_suite) {
     for (rshift_ = rshift; rshift_ <= 32; rshift_++) {
       for (elsize_ = elsize; elsize_ <= 32; elsize_++) {
         /* The next loop is for getting sizes that are not power of 2 */
@@ -392,10 +422,10 @@ int main(int argc, char *argv[]) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = nthreads; nthreads_ <= 4; nthreads_++) {
               do_bench(nthreads_, size_+i, elsize_, rshift_);
-	      gettimeofday(&current, NULL);
-	      totaltime = getseconds(last, current);
-	      printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
-  	             totaltime, totalsize / GB);
+              gettimeofday(&current, NULL);
+              totaltime = getseconds(last, current);
+              printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
+                     totaltime, totalsize / GB);
             }
           }
         }

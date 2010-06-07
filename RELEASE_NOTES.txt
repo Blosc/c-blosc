@@ -15,6 +15,10 @@ Changes from 0.9.3 to 0.9.4
 - Fixed several failures exposed by the extremesuite.  The problem was a
   bad check for limits in the buffer size while compressing.
 
+- Added a new suite in bench.c called ``debugsuite`` that is
+  appropriate for debugging purposes.  Now, the ``extremesuite`` can be
+  used for running the complete (and extremely long) suite.
+
 
 Changes from 0.9.0 to 0.9.3
 ===========================
