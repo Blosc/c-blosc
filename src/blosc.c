@@ -684,6 +684,70 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size)
 }
 
 
+/* Return information about a compressed buffer, namely the number of
+   uncompressed bytes (`nbytes`) and compressed (`cbytes`).  This
+   function should always succeed. */
+void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
+                         size_t *cbytes)
+{
+  uint8_t *_src = (uint8_t *)(cbuffer);    /* current pos for source buffer */
+  uint8_t version, versionlz;              /* versions for compressed header */
+
+  /* Read the version info (could be useful in the future) */
+  version = _src[0];                         /* blosc format version */
+  versionlz = _src[1];                       /* blosclz format version */
+
+  /* Read the interesting values */
+  _src += 4;
+  *nbytes = (size_t)sw32(((uint32_t *)_src)[0]);   /* buffer size */
+  *cbytes = (size_t)sw32(((uint32_t *)_src)[2]);   /* compressed buffer size */
+}
+
+
+/* Return information about a compressed buffer, namely the type size
+   (`typesize`), and whether the shuffle filter has been applied or
+   not (`shuffle`).  This function should always succeed. */
+void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
+                            int *shuffle)
+{
+  uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
+  uint8_t version, versionlz;            /* versions for compressed header */
+  uint8_t flags;                         /* flags for header */
+
+  /* Read the version info (could be useful in the future) */
+  version = _src[0];                     /* blosc format version */
+  versionlz = _src[1];                   /* blosclz format version */
+
+  /* Read the interesting values */
+  flags = _src[2];                       /* flags */
+  *typesize = (size_t)_src[3];           /* typesize */
+
+  /* Shuffle info */
+  if ((flags & 0x1) == 1) {
+    /* Input is shuffled.  Unshuffle it. */
+    *shuffle = 1;
+  }
+  else {
+    *shuffle = 0;
+  }
+}
+
+
+/* Return information about a compressed buffer, namely the internal
+   Blosc format version (`version`) and the format for the internal
+   Lempel-Ziv algorithm (`versionlz`).  This function should always
+   succeed. */
+void blosc_cbuffer_versions(const void *cbuffer, int *version,
+                            int *versionlz)
+{
+  uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
+
+  /* Read the version info */
+  *version = (int)(_src[0]);             /* blosc format version */
+  *versionlz = (int)(_src[1]);           /* blosclz format version */
+}
+
+
 /* Decompress & unshuffle several blocks in a single thread */
 void *t_blosc(void *tids)
 {

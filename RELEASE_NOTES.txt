@@ -9,7 +9,8 @@
 Changes from 0.9.4 to 0.9.5
 ===========================
 
-- None yet.
+- Added 3 new functions for querying different metadata on compressed
+  buffers.  A test suite for testing the new API has been added too.
 
 
 Changes from 0.9.3 to 0.9.4

@@ -108,6 +108,43 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t dest_size);
 void blosc_free_resources(void);
 
 
+/**
+
+  Return information about a compressed buffer, namely the number of
+  uncompressed bytes (`nbytes`) and compressed (`cbytes`).  This
+  function should always succeed.
+
+*/
+
+void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
+                         size_t *cbytes);
+
+
+/**
+
+  Return information about a compressed buffer, namely the type size
+  (`typesize`), and whether the shuffle filter has been applied or not
+  (`shuffle`).  This function should always succeed.
+
+*/
+
+void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
+                            int *shuffle);
+
+
+/**
+
+  Return information about a compressed buffer, namely the internal
+  Blosc format version (`version`) and the format for the internal
+  Lempel-Ziv algorithm (`versionlz`).  This function should always
+  succeed.
+
+*/
+
+void blosc_cbuffer_versions(const void *cbuffer, int *version,
+                            int *versionlz);
+
+
 
 /*********************************************************************
 
