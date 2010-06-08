@@ -129,12 +129,12 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 
   Return information about a compressed buffer, namely the type size
   (`typesize`), and whether the shuffle filter has been applied or not
-  (`shuffle`).  This function should always succeed.
+  (`doshuffle`).  This function should always succeed.
 
 */
 
 void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
-                            int *shuffle);
+                            int *doshuffle);
 
 
 /**

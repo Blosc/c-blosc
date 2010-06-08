@@ -29,6 +29,10 @@
 #endif  /* _WIN32 */
 
 
+/* Codes for flags */
+#define DOSHUFFLE 0x1
+#define MEMCPYED  0x2
+
 
 /* Minimal buffer size to be compressed */
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
@@ -83,7 +87,8 @@ struct thread_data {
   size_t blocksize;
   int32_t compress;
   int32_t clevel;
-  int32_t shuffle;
+  int32_t doshuffle;
+  int32_t memcpyed;
   int32_t ntbytes;
   uint32_t nbytes;
   uint32_t maxbytes;
@@ -143,7 +148,7 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
   uint8_t *_tmp;
   size_t typesize = params.typesize;
 
-  if (params.shuffle && (typesize > 1)) {
+  if (params.doshuffle && (typesize > 1)) {
     /* Shuffle this block (this makes sense only if typesize > 1) */
     shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
@@ -215,9 +220,8 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp;
   size_t typesize = params.typesize;
-  size_t shuffle = params.shuffle;
 
-  if (shuffle && (typesize > 1)) {
+  if (params.doshuffle && (typesize > 1)) {
     _tmp = tmp;
   }
   else {
@@ -254,7 +258,7 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if (shuffle && (typesize > 1)) {
+  if (params.doshuffle && (typesize > 1)) {
     if ((uintptr_t)dest % 16 == 0) {
       /* 16-bytes aligned dest.  SSE2 unshuffle will work. */
       unshuffle(typesize, blocksize, tmp, dest);
@@ -521,7 +525,7 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
 
 
 /* The public routine for compression.  See blosc.h for docstrings. */
-unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
+unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
                             size_t nbytes, const void *src, void *dest,
                             size_t maxbytes)
 {
@@ -552,7 +556,7 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
   }
 
   /* Shuffle */
-  if (shuffle != 0 && shuffle != 1) {
+  if (doshuffle != 0 && doshuffle != 1) {
     fprintf(stderr, "`shuffle` parameter must be either 0 or 1!\n");
     return -10;
   }
@@ -587,15 +591,15 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
   _dest += sizeof(int32_t)*nblocks;        /* space for pointers to blocks */
   ntbytes = _dest - (uint8_t *)dest;
 
-  if (shuffle == 1) {
+  if (doshuffle == 1) {
     /* Shuffle is active */
-    *flags |= 0x1;                         /* bit 0 set to one in flags */
+    *flags |= DOSHUFFLE;                   /* bit 0 set to one in flags */
   }
 
   /* Populate parameters for compression routines */
   params.compress = 1;
   params.clevel = clevel;
-  params.shuffle = shuffle;
+  params.doshuffle = doshuffle;
   params.typesize = typesize;
   params.blocksize = blocksize;
   params.ntbytes = ntbytes;
@@ -612,9 +616,9 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
 
   /* Last chance for fitting `src` buffer in `dest` */
   if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
-    /* Specify that this buffer is memcpy'ed (bit 2 set to 1 in flags) */
     _dest = (uint8_t *)(dest);
-    _dest[2] = 0x2;
+    /* Specify that this buffer is memcpy'ed */
+    _dest[2] |= MEMCPYED;
     memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
     ntbytes = nbytes+BLOSC_MAX_OVERHEAD;
   }
@@ -634,7 +638,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   uint8_t *_dest=NULL;           /* current pos for destination buffer */
   uint8_t version, versionlz;    /* versions for compressed header */
   uint8_t flags;                 /* flags for header */
-  int32_t shuffle = 0;           /* do unshuffle? */
+  int32_t doshuffle = 0;         /* do unshuffle? */
   int32_t ntbytes;               /* the number of uncompressed bytes */
   uint32_t nblocks;              /* number of total blocks in buffer */
   uint32_t leftover;             /* extra bytes at end of buffer */
@@ -655,7 +659,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
 
   /* Check whether this buffer is memcpy'ed */
-  if (flags == 0x2) {
+  if (flags & MEMCPYED) {
     memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
     return nbytes;
   }
@@ -680,15 +684,15 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
     return -1;
   }
 
-  if ((flags & 0x1) == 1) {
+  if (flags & DOSHUFFLE) {
     /* Input is shuffled.  Unshuffle it. */
-    shuffle = 1;
+    doshuffle = 1;
   }
 
   /* Populate parameters for decompression routines */
   params.compress = 0;
   params.clevel = 0;            /* specific for compression */
-  params.shuffle = shuffle;
+  params.doshuffle = doshuffle;
   params.typesize = typesize;
   params.blocksize = blocksize;
   params.ntbytes = 0;
@@ -729,9 +733,9 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 
 /* Return information about a compressed buffer, namely the type size
    (`typesize`), and whether the shuffle filter has been applied or
-   not (`shuffle`).  This function should always succeed. */
+   not (`doshuffle`).  This function should always succeed. */
 void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
-                            int *shuffle)
+                            int *doshuffle)
 {
   uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
   uint8_t version, versionlz;            /* versions for compressed header */
@@ -746,12 +750,12 @@ void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
   *typesize = (size_t)_src[3];           /* typesize */
 
   /* Shuffle info */
-  if ((flags & 0x1) == 1) {
+  if (flags & DOSHUFFLE) {
     /* Input is shuffled.  Unshuffle it. */
-    *shuffle = 1;
+    *doshuffle = 1;
   }
   else {
-    *shuffle = 0;
+    *doshuffle = 0;
   }
 }
 
