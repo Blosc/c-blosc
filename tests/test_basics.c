@@ -75,6 +75,8 @@ int main(int argc, char **argv) {
   int i;
   int32_t *_src;
 
+  printf("STARTING TESTS for %s", argv[0]);
+
   blosc_set_nthreads(1);
 
   /* Initialize buffers */
@@ -94,7 +96,7 @@ int main(int argc, char **argv) {
     printf(" (%s)\n", result);
   }
   else {
-    printf("\nALL TESTS PASSED for %s", argv[0]);
+    printf("ALL TESTS PASSED");
   }
   printf("\tTests run: %d\n", tests_run);
 

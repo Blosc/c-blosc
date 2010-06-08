@@ -64,6 +64,8 @@ static char *all_tests() {
 
 int main(int argc, char **argv) {
 
+  printf("STARTING TESTS for %s", argv[0]);
+
   blosc_set_nthreads(1);
 
   /* Initialize buffers */
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
     printf(" (%s)\n", result);
   }
   else {
-    printf("\nALL TESTS PASSED for %s", argv[0]);
+    printf("ALL TESTS PASSED");
   }
   printf("\tTests run: %d\n", tests_run);
 

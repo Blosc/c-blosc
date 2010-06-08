@@ -30,22 +30,19 @@
 #define BLOSC_MAX_OVERHEAD 16
 
 /**
-
   Initialize a pool of threads for compression/decompression.  If
   `nthreads` is 1, then the serial version is chosen and a possible
   previous existing pool is ended.  Returns the previous number of
   threads.  If this is not called, `nthreads` is set to 1 internally.
-
 */
 
 int blosc_set_nthreads(int nthreads);
 
 
 /**
-
   Compress a block of data in the `src` buffer and returns the size of
   compressed block.  The size of `src` buffer is specified by
-  `nbytes`.  There is not a minimum `src` buffer size (`nbytes`).
+  `nbytes`.  There is not a minimum for `src` buffer size (`nbytes`).
 
   `clevel` is the desired compression level and must be a number
   between 0 (no compression) and 9 (maximum compression).
@@ -75,7 +72,6 @@ int blosc_set_nthreads(int nthreads);
   buffer more than what is specified in `maxbytes`.  However, it is
   not re-entrant and not thread-safe (despite the fact that it uses
   threads internally ;-)
-
  */
 
 unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
@@ -84,7 +80,6 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
 
 
 /**
-
   Decompress a block of compressed data in `src`, put the result in
   `dest` and returns the size of the decompressed block. If error
   occurs, e.g. the compressed data is corrupted or the output buffer
@@ -97,28 +92,23 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   buffer more than what is specified in `dest_size`.  However, it is
   not re-entrant and not thread-safe (despite the fact that it uses
   threads internally ;-)
-
 */
 
 unsigned int blosc_decompress(const void *src, void *dest, size_t destsize);
 
 
 /**
-
   Free possible memory temporaries and thread resources.  Use this
   when you are not going to use Blosc for a long while.
-
 */
 
 void blosc_free_resources(void);
 
 
 /**
-
   Return information about a compressed buffer, namely the number of
   uncompressed bytes (`nbytes`) and compressed (`cbytes`).  This
   function should always succeed.
-
 */
 
 void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
@@ -126,11 +116,9 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 
 
 /**
-
   Return information about a compressed buffer, namely the type size
   (`typesize`), and whether the shuffle filter has been applied or not
   (`doshuffle`).  This function should always succeed.
-
 */
 
 void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
@@ -138,12 +126,10 @@ void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
 
 
 /**
-
   Return information about a compressed buffer, namely the internal
   Blosc format version (`version`) and the format for the internal
   Lempel-Ziv algorithm (`versionlz`).  This function should always
   succeed.
-
 */
 
 void blosc_cbuffer_versions(const void *cbuffer, int *version,

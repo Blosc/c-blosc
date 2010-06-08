@@ -9,9 +9,10 @@ SOURCES := $(wildcard *.c)
 EXECUTABLES := $(patsubst %.c, %.exe, $(SOURCES))
 
 .PHONY: all
-all: test
+all: $(EXECUTABLES)
 
 test: $(EXECUTABLES)
+	sh test_all.sh
 
 %.exe: %.c $(BLOSC_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) "$<" $(BLOSC_LIB) -o "$@"

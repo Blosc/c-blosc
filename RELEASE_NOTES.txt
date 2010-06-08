@@ -9,6 +9,11 @@
 Changes from 0.9.4 to 0.9.5
 ===========================
 
+- Now, compression level 0 is allowed, meaning not compression at all.
+  The overhead of this mode will be always BLOSC_MAX_OVERHEAD (16)
+  bytes.  This mode actually represents using Blosc as a basic memory
+  container.
+
 - Supported a new parameter `maxbytes` for ``blosc_compress()``.  It
   represents a maximum of bytes for output.  Tests unit added too.
 

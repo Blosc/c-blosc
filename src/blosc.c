@@ -283,6 +283,7 @@ int serial_blosc(void)
   int32_t compress = params.compress;
   size_t blocksize = params.blocksize;
   int32_t ntbytes = params.ntbytes;
+  int32_t flags = params.flags;
   uint32_t maxbytes = params.maxbytes;
   uint32_t nblocks = params.nblocks;
   int32_t leftover = params.nbytes % params.blocksize;
@@ -303,16 +304,32 @@ int serial_blosc(void)
       leftoverblock = 1;
     }
     if (compress) {
-      cbytes = blosc_c(bsize, leftoverblock, ntbytes, maxbytes,
-                       src+j*blocksize, dest+ntbytes, tmp);
-      if (cbytes == 0) {
-        ntbytes = 0;              /* uncompressible data */
-        break;
+      if (flags & MEMCPYED) {
+        /* We want to memcpy only */
+        memcpy(dest+BLOSC_MAX_OVERHEAD+j*blocksize, src+j*blocksize, bsize);
+        cbytes = bsize;
+      }
+      else {
+        /* Regular compression */
+        cbytes = blosc_c(bsize, leftoverblock, ntbytes, maxbytes,
+                         src+j*blocksize, dest+ntbytes, tmp);
+        if (cbytes == 0) {
+          ntbytes = 0;              /* uncompressible data */
+          break;
+        }
       }
     }
     else {
-      cbytes = blosc_d(bsize, leftoverblock,
-                       src+sw32(bstarts[j]), dest+j*blocksize, tmp, tmp2);
+      if (flags & MEMCPYED) {
+        /* We want to memcpy only */
+        memcpy(dest+j*blocksize, src+BLOSC_MAX_OVERHEAD+j*blocksize, bsize);
+        cbytes = bsize;
+      }
+      else {
+        /* Regular decompression */
+        cbytes = blosc_d(bsize, leftoverblock,
+                         src+sw32(bstarts[j]), dest+j*blocksize, tmp, tmp2);
+      }
     }
     if (cbytes < 0) {
       ntbytes = cbytes;         /* error in blosc_c or blosc_d */
@@ -320,17 +337,6 @@ int serial_blosc(void)
     }
     ntbytes += cbytes;
   }
-
-  /* Final check for ntbytes (only in compression mode) */
-  if (compress) {
-    if (ntbytes == maxbytes) {
-      ntbytes = 0;               /* non-compressible data */
-    }
-    else if (ntbytes > maxbytes) {
-      fprintf(stderr, "The impossible happened: buffer overflow!\n");
-      ntbytes = -5;               /* too large buffer */
-    }
-  }  /* Close j < nblocks */
 
   return ntbytes;
 }
@@ -546,14 +552,6 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
     fprintf(stderr, "`clevel` parameter must be between 0 and 9!\n");
     return -10;
   }
-  else if (clevel == 0) {
-    /* No compression wanted.  Just return without doing anything else. */
-    return 0;
-  }
-  else if (nbytes < MIN_BUFFERSIZE) {
-    /* Buffer too small.  Just return without doing anything else. */
-    return 0;
-  }
 
   /* Shuffle */
   if (doshuffle != 0 && doshuffle != 1) {
@@ -591,6 +589,16 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   _dest += sizeof(int32_t)*nblocks;        /* space for pointers to blocks */
   ntbytes = _dest - (uint8_t *)dest;
 
+  if (clevel == 0) {
+    /* Compression level 0 means buffer to be memcpy'ed */
+    *flags |= MEMCPYED;
+  }
+
+  if (nbytes < MIN_BUFFERSIZE) {
+    /* Buffer is too small.  Try memcpy'ing. */
+    *flags |= MEMCPYED;
+  }
+
   if (doshuffle == 1) {
     /* Shuffle is active */
     *flags |= DOSHUFFLE;                   /* bit 0 set to one in flags */
@@ -611,16 +619,23 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   params.src = (uint8_t *)src;
   params.dest = (uint8_t *)dest;
 
-  /* Do the actual compression */
-  ntbytes = do_job();
+  if ((*flags & MEMCPYED) == 0) {
+    /* Do the actual compression */
+    ntbytes = do_job();
+    if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
+      /* Last chance for fitting `src` buffer in `dest`.  Update flags
+       and do a memcpy later on. */
+      *flags |= MEMCPYED;
+      params.flags |= MEMCPYED;
+    }
+  }
 
-  /* Last chance for fitting `src` buffer in `dest` */
-  if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
-    _dest = (uint8_t *)(dest);
-    /* Specify that this buffer is memcpy'ed */
-    _dest[2] |= MEMCPYED;
-    memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
-    ntbytes = nbytes+BLOSC_MAX_OVERHEAD;
+  if (*flags & MEMCPYED) {
+    params.ntbytes = BLOSC_MAX_OVERHEAD;
+    ntbytes = do_job();
+    /* The next is more effective? */
+    /* memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes); */
+    /* ntbytes = nbytes; */
   }
 
   /* Set the number of compressed bytes in header */
@@ -657,12 +672,6 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   nbytes = sw32(((uint32_t *)_src)[0]);      /* buffer size */
   blocksize = sw32(((uint32_t *)_src)[1]);   /* block size */
   ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
-
-  /* Check whether this buffer is memcpy'ed */
-  if (flags & MEMCPYED) {
-    memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
-    return nbytes;
-  }
 
   _src += sizeof(int32_t)*3;
   bstarts = (uint32_t *)_src;
@@ -703,8 +712,18 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   params.src = (uint8_t *)src;
   params.dest = (uint8_t *)dest;
 
-  /* Do the actual decompression */
-  ntbytes = do_job();
+  /* Check whether this buffer is memcpy'ed */
+  if (flags & MEMCPYED) {
+    ntbytes = do_job();
+    /* The next is more effective? */
+    /* memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes); */
+    /* ntbytes = nbytes; */
+  }
+  else {
+    /* Do the actual decompression */
+    ntbytes = do_job();
+  }
+
 
   assert(ntbytes <= (int32_t)destsize);
   return ntbytes;
@@ -792,6 +811,7 @@ void *t_blosc(void *tids)
   int32_t compress;
   uint32_t maxbytes;
   uint32_t ntbytes;
+  uint32_t flags;
   uint32_t nblocks;
   uint32_t leftover;
   uint32_t *bstarts;
@@ -841,6 +861,7 @@ void *t_blosc(void *tids)
     blocksize = params.blocksize;
     ebsize = blocksize + params.typesize*sizeof(int32_t);
     compress = params.compress;
+    flags = params.flags;
     maxbytes = params.maxbytes;
     nblocks = params.nblocks;
     leftover = params.leftover;
@@ -852,7 +873,7 @@ void *t_blosc(void *tids)
 
     ntbytes = 0;                /* only useful for decompression */
 
-    if (compress) {
+    if (compress && !(flags & MEMCPYED)) {
       /* Compression always has to follow the block order */
       pthread_mutex_lock(&count_mutex);
       nblock++;
@@ -885,13 +906,30 @@ void *t_blosc(void *tids)
         leftoverblock = 1;
       }
       if (compress) {
-        cbytes = blosc_c(bsize, leftoverblock, 0, ebsize,
-                         src+nblock_*blocksize, tmp2, tmp);
+        if (flags & MEMCPYED) {
+          /* We want to memcpy only */
+          memcpy(dest+BLOSC_MAX_OVERHEAD+nblock_*blocksize,
+                 src+nblock_*blocksize, bsize);
+          cbytes = bsize;
+        }
+        else {
+          /* Regular compression */
+          cbytes = blosc_c(bsize, leftoverblock, 0, ebsize,
+                           src+nblock_*blocksize, tmp2, tmp);
+        }
       }
       else {
-        cbytes = blosc_d(bsize, leftoverblock,
-                         src+sw32(bstarts[nblock_]), dest+nblock_*blocksize,
-                         tmp, tmp2);
+        if (flags & MEMCPYED) {
+          /* We want to memcpy only */
+          memcpy(dest+nblock_*blocksize,
+                 src+BLOSC_MAX_OVERHEAD+nblock_*blocksize, bsize);
+          cbytes = bsize;
+        }
+        else {
+          cbytes = blosc_d(bsize, leftoverblock,
+                           src+sw32(bstarts[nblock_]), dest+nblock_*blocksize,
+                           tmp, tmp2);
+        }
       }
 
       /* Check whether current thread has to giveup */
@@ -908,7 +946,7 @@ void *t_blosc(void *tids)
         break;
       }
 
-      if (compress) {
+      if (compress && !(flags & MEMCPYED)) {
         /* Start critical section */
         pthread_mutex_lock(&count_mutex);
         ntdest = params.ntbytes;
@@ -936,7 +974,7 @@ void *t_blosc(void *tids)
     } /* closes while (nblock_) */
 
     /* Sum up all the bytes decompressed */
-    if (!compress && giveup_code > 0) {
+    if ((!compress || (flags & MEMCPYED)) && giveup_code > 0) {
       /* Update global counter for all threads (decompression only) */
       pthread_mutex_lock(&count_mutex);
       params.ntbytes += ntbytes;
