@@ -41,8 +41,12 @@
 /* The maximum number of threads (for some static arrays) */
 #define MAX_THREADS 64
 
+/* Some useful units */
+#define KB 1024
+#define MB (1024*KB)
+
 /* The size of L1 cache.  32 KB is quite common nowadays. */
-#define L1 (32*1024)
+#define L1 (32*KB)
 
 
 /* Global variables for main logic */
@@ -496,7 +500,10 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
   }
   else if (nbytes >= L1*4) {
     blocksize = L1 * 4;
-    if (clevel <= 3) {
+    if (clevel == 0) {
+      blocksize /= 16;
+    }
+    else if (clevel <= 3) {
       blocksize /= 8;
     }
     else if (clevel <= 5) {
@@ -626,13 +633,16 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   }
 
   if (*flags & BLOSC_MEMCPYED) {
-    params.ntbytes = BLOSC_MAX_OVERHEAD;
-    ntbytes = do_job();
-    /* The next is more effective?  It does not seem so on platforms
-       where memcpy is not well optimized for transmitting long chunks.
-       Also, using multicores benefits speed, specially on Windows. */
-    /* memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
-    ntbytes = nbytes + BLOSC_MAX_OVERHEAD; */
+    if ((nbytes > 64*KB) || (nthreads > 1)) {
+      /* More effective in multi-core processors or large buffers */
+      params.ntbytes = BLOSC_MAX_OVERHEAD;
+      ntbytes = do_job();
+    }
+    else {
+      /* More effective in single-core processors or small buffers */
+      memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
+      ntbytes = nbytes + BLOSC_MAX_OVERHEAD;
+    }
   }
 
   /* Set the number of compressed bytes in header */
@@ -711,12 +721,15 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
 
   /* Check whether this buffer is memcpy'ed */
   if (flags & BLOSC_MEMCPYED) {
-    ntbytes = do_job();
-     /* The next is more effective?  It does not seem so on platforms
-       where memcpy is not well optimized for transmitting long chunks.
-       Also, using multicores benefits speed, specially on Windows. */
-    /* memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
-    ntbytes = nbytes; */
+    if ((nbytes > 64*KB) || (nthreads > 1)) {
+      /* More effective in multi-core processors or large buffers */
+      ntbytes = do_job();
+    }
+    else {
+      /* More effective in single-core processors or small buffers */
+      memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
+      ntbytes = nbytes;
+    }
   }
   else {
     /* Do the actual decompression */
