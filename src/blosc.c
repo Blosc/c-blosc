@@ -289,7 +289,7 @@ int serial_blosc(void)
   uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
 
   for (j = 0; j < nblocks; j++) {
-    if (compress) {
+    if (compress && (flags & BLOSC_MEMCPYED == 0)) {
       bstarts[j] = sw32(ntbytes);
     }
     bsize = blocksize;
@@ -628,9 +628,11 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   if (*flags & BLOSC_MEMCPYED) {
     params.ntbytes = BLOSC_MAX_OVERHEAD;
     ntbytes = do_job();
-    /* The next is more effective? */
-    /* memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes); */
-    /* ntbytes = nbytes; */
+    /* The next is more effective?  It does not seem so on platforms
+       where memcpy is not well optimized for transmitting long chunks.
+       Also, using multicores benefits speed, specially on Windows. */
+    /* memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
+    ntbytes = nbytes + BLOSC_MAX_OVERHEAD; */
   }
 
   /* Set the number of compressed bytes in header */
@@ -710,9 +712,11 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   /* Check whether this buffer is memcpy'ed */
   if (flags & BLOSC_MEMCPYED) {
     ntbytes = do_job();
-    /* The next is more effective? */
-    /* memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes); */
-    /* ntbytes = nbytes; */
+     /* The next is more effective?  It does not seem so on platforms
+       where memcpy is not well optimized for transmitting long chunks.
+       Also, using multicores benefits speed, specially on Windows. */
+    /* memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
+    ntbytes = nbytes; */
   }
   else {
     /* Do the actual decompression */
