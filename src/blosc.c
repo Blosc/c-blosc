@@ -29,11 +29,6 @@
 #endif  /* _WIN32 */
 
 
-/* Codes for flags */
-#define DOSHUFFLE 0x1
-#define MEMCPYED  0x2
-
-
 /* Minimal buffer size to be compressed */
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
 
@@ -148,7 +143,7 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
   uint8_t *_tmp;
   size_t typesize = params.typesize;
 
-  if ((params.flags & DOSHUFFLE) && (typesize > 1)) {
+  if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
     /* Shuffle this block (this makes sense only if typesize > 1) */
     shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
@@ -221,7 +216,7 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
   uint8_t *_tmp;
   size_t typesize = params.typesize;
 
-  if ((params.flags & DOSHUFFLE) && (typesize > 1)) {
+  if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
     _tmp = tmp;
   }
   else {
@@ -258,7 +253,7 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if ((params.flags & DOSHUFFLE) && (typesize > 1)) {
+  if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
     if ((uintptr_t)dest % 16 == 0) {
       /* 16-bytes aligned dest.  SSE2 unshuffle will work. */
       unshuffle(typesize, blocksize, tmp, dest);
@@ -304,7 +299,7 @@ int serial_blosc(void)
       leftoverblock = 1;
     }
     if (compress) {
-      if (flags & MEMCPYED) {
+      if (flags & BLOSC_MEMCPYED) {
         /* We want to memcpy only */
         memcpy(dest+BLOSC_MAX_OVERHEAD+j*blocksize, src+j*blocksize, bsize);
         cbytes = bsize;
@@ -320,7 +315,7 @@ int serial_blosc(void)
       }
     }
     else {
-      if (flags & MEMCPYED) {
+      if (flags & BLOSC_MEMCPYED) {
         /* We want to memcpy only */
         memcpy(dest+j*blocksize, src+BLOSC_MAX_OVERHEAD+j*blocksize, bsize);
         cbytes = bsize;
@@ -591,17 +586,17 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
 
   if (clevel == 0) {
     /* Compression level 0 means buffer to be memcpy'ed */
-    *flags |= MEMCPYED;
+    *flags |= BLOSC_MEMCPYED;
   }
 
   if (nbytes < MIN_BUFFERSIZE) {
     /* Buffer is too small.  Try memcpy'ing. */
-    *flags |= MEMCPYED;
+    *flags |= BLOSC_MEMCPYED;
   }
 
   if (doshuffle == 1) {
     /* Shuffle is active */
-    *flags |= DOSHUFFLE;                   /* bit 0 set to one in flags */
+    *flags |= BLOSC_DOSHUFFLE;              /* bit 0 set to one in flags */
   }
 
   /* Populate parameters for compression routines */
@@ -619,18 +614,18 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   params.src = (uint8_t *)src;
   params.dest = (uint8_t *)dest;
 
-  if ((*flags & MEMCPYED) == 0) {
+  if ((*flags & BLOSC_MEMCPYED) == 0) {
     /* Do the actual compression */
     ntbytes = do_job();
     if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
       /* Last chance for fitting `src` buffer in `dest`.  Update flags
        and do a memcpy later on. */
-      *flags |= MEMCPYED;
-      params.flags |= MEMCPYED;
+      *flags |= BLOSC_MEMCPYED;
+      params.flags |= BLOSC_MEMCPYED;
     }
   }
 
-  if (*flags & MEMCPYED) {
+  if (*flags & BLOSC_MEMCPYED) {
     params.ntbytes = BLOSC_MAX_OVERHEAD;
     ntbytes = do_job();
     /* The next is more effective? */
@@ -693,7 +688,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
     return -1;
   }
 
-  if (flags & DOSHUFFLE) {
+  if (flags & BLOSC_DOSHUFFLE) {
     /* Input is shuffled.  Unshuffle it. */
     doshuffle = 1;
   }
@@ -713,7 +708,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   params.dest = (uint8_t *)dest;
 
   /* Check whether this buffer is memcpy'ed */
-  if (flags & MEMCPYED) {
+  if (flags & BLOSC_MEMCPYED) {
     ntbytes = do_job();
     /* The next is more effective? */
     /* memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes); */
@@ -727,70 +722,6 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
 
   assert(ntbytes <= (int32_t)destsize);
   return ntbytes;
-}
-
-
-/* Return information about a compressed buffer, namely the number of
-   uncompressed bytes (`nbytes`) and compressed (`cbytes`).  This
-   function should always succeed. */
-void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
-                         size_t *cbytes)
-{
-  uint8_t *_src = (uint8_t *)(cbuffer);    /* current pos for source buffer */
-  uint8_t version, versionlz;              /* versions for compressed header */
-
-  /* Read the version info (could be useful in the future) */
-  version = _src[0];                         /* blosc format version */
-  versionlz = _src[1];                       /* blosclz format version */
-
-  /* Read the interesting values */
-  _src += 4;
-  *nbytes = (size_t)sw32(((uint32_t *)_src)[0]);   /* buffer size */
-  *cbytes = (size_t)sw32(((uint32_t *)_src)[2]);   /* compressed buffer size */
-}
-
-
-/* Return information about a compressed buffer, namely the type size
-   (`typesize`), and whether the shuffle filter has been applied or
-   not (`doshuffle`).  This function should always succeed. */
-void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
-                            int *doshuffle)
-{
-  uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
-  uint8_t version, versionlz;            /* versions for compressed header */
-  uint8_t flags;                         /* flags for header */
-
-  /* Read the version info (could be useful in the future) */
-  version = _src[0];                     /* blosc format version */
-  versionlz = _src[1];                   /* blosclz format version */
-
-  /* Read the interesting values */
-  flags = _src[2];                       /* flags */
-  *typesize = (size_t)_src[3];           /* typesize */
-
-  /* Shuffle info */
-  if (flags & DOSHUFFLE) {
-    /* Input is shuffled.  Unshuffle it. */
-    *doshuffle = 1;
-  }
-  else {
-    *doshuffle = 0;
-  }
-}
-
-
-/* Return information about a compressed buffer, namely the internal
-   Blosc format version (`version`) and the format for the internal
-   Lempel-Ziv algorithm (`versionlz`).  This function should always
-   succeed. */
-void blosc_cbuffer_versions(const void *cbuffer, int *version,
-                            int *versionlz)
-{
-  uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
-
-  /* Read the version info */
-  *version = (int)(_src[0]);             /* blosc format version */
-  *versionlz = (int)(_src[1]);           /* blosclz format version */
 }
 
 
@@ -873,7 +804,7 @@ void *t_blosc(void *tids)
 
     ntbytes = 0;                /* only useful for decompression */
 
-    if (compress && !(flags & MEMCPYED)) {
+    if (compress && !(flags & BLOSC_MEMCPYED)) {
       /* Compression always has to follow the block order */
       pthread_mutex_lock(&count_mutex);
       nblock++;
@@ -906,7 +837,7 @@ void *t_blosc(void *tids)
         leftoverblock = 1;
       }
       if (compress) {
-        if (flags & MEMCPYED) {
+        if (flags & BLOSC_MEMCPYED) {
           /* We want to memcpy only */
           memcpy(dest+BLOSC_MAX_OVERHEAD+nblock_*blocksize,
                  src+nblock_*blocksize, bsize);
@@ -919,7 +850,7 @@ void *t_blosc(void *tids)
         }
       }
       else {
-        if (flags & MEMCPYED) {
+        if (flags & BLOSC_MEMCPYED) {
           /* We want to memcpy only */
           memcpy(dest+nblock_*blocksize,
                  src+BLOSC_MAX_OVERHEAD+nblock_*blocksize, bsize);
@@ -946,7 +877,7 @@ void *t_blosc(void *tids)
         break;
       }
 
-      if (compress && !(flags & MEMCPYED)) {
+      if (compress && !(flags & BLOSC_MEMCPYED)) {
         /* Start critical section */
         pthread_mutex_lock(&count_mutex);
         ntdest = params.ntbytes;
@@ -974,7 +905,7 @@ void *t_blosc(void *tids)
     } /* closes while (nblock_) */
 
     /* Sum up all the bytes decompressed */
-    if ((!compress || (flags & MEMCPYED)) && giveup_code > 0) {
+    if ((!compress || (flags & BLOSC_MEMCPYED)) && giveup_code > 0) {
       /* Update global counter for all threads (decompression only) */
       pthread_mutex_lock(&count_mutex);
       params.ntbytes += ntbytes;
@@ -1165,6 +1096,54 @@ void blosc_free_resources(void)
     init_threads_done = 0;
     end_threads = 0;
   }
+}
+
+
+/* Return `nbytes`, `cbytes` and `blocksize` from a compressed buffer. */
+void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
+                         size_t *cbytes, size_t *blocksize)
+{
+  uint8_t *_src = (uint8_t *)(cbuffer);    /* current pos for source buffer */
+  uint8_t version, versionlz;              /* versions for compressed header */
+
+  /* Read the version info (could be useful in the future) */
+  version = _src[0];                         /* blosc format version */
+  versionlz = _src[1];                       /* blosclz format version */
+
+  /* Read the interesting values */
+  _src += 4;
+  *nbytes = (size_t)sw32(((uint32_t *)_src)[0]);  /* uncompressed buffer size */
+  *blocksize = (size_t)sw32(((uint32_t *)_src)[1]);   /* block size */
+  *cbytes = (size_t)sw32(((uint32_t *)_src)[2]);  /* compressed buffer size */
+}
+
+
+/* Return `typesize` and `flags` from a compressed buffer. */
+void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
+                            int *flags)
+{
+  uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
+  uint8_t version, versionlz;            /* versions for compressed header */
+
+  /* Read the version info (could be useful in the future) */
+  version = _src[0];                     /* blosc format version */
+  versionlz = _src[1];                   /* blosclz format version */
+
+  /* Read the interesting values */
+  *flags = (int)_src[2];                 /* flags */
+  *typesize = (size_t)_src[3];           /* typesize */
+}
+
+
+/* Return version information from a compressed buffer. */
+void blosc_cbuffer_versions(const void *cbuffer, int *version,
+                            int *versionlz)
+{
+  uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
+
+  /* Read the version info */
+  *version = (int)_src[0];             /* blosc format version */
+  *versionlz = (int)_src[1];           /* blosclz format version */
 }
 
 

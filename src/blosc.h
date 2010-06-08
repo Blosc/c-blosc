@@ -29,6 +29,13 @@
 /* The maximum overhead during compression in bytes */
 #define BLOSC_MAX_OVERHEAD 16
 
+
+/* Codes for internal flags */
+#define BLOSC_DOSHUFFLE 0x1
+#define BLOSC_MEMCPYED  0x2
+
+
+
 /**
   Initialize a pool of threads for compression/decompression.  If
   `nthreads` is 1, then the serial version is chosen and a possible
@@ -107,22 +114,32 @@ void blosc_free_resources(void);
 
 /**
   Return information about a compressed buffer, namely the number of
-  uncompressed bytes (`nbytes`) and compressed (`cbytes`).  This
-  function should always succeed.
+  uncompressed bytes (`nbytes`) and compressed (`cbytes`).  It also
+  returns the `blocksize` (which is used internally for doing the
+  compression by blocks).  This function should always succeed.
 */
 
 void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
-                         size_t *cbytes);
+                         size_t *cbytes, size_t *blocksize);
 
 
 /**
   Return information about a compressed buffer, namely the type size
-  (`typesize`), and whether the shuffle filter has been applied or not
-  (`doshuffle`).  This function should always succeed.
+  (`typesize`), as well as some internal `flags`.
+
+  The `flags` is a set of bits, where the currently used ones are::
+    * bit 0: whether the shuffle filter has been applied or not
+    * bit 1: whether the internal buffer is a pure memcpy or not
+
+  You can use the `BLOSC_DOSHUFFLE` and `BLOSC_MEMCPYED` symbols for
+  extracting the interesting bits (e.g. ``flags & BLOSC_DOSHUFFLE``
+  says whether the buffer is shuffled or not).
+
+  This function should always succeed.
 */
 
 void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
-                            int *doshuffle);
+                            int *flags);
 
 
 /**

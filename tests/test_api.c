@@ -24,22 +24,23 @@ size_t size = 1*MB;
 
 
 static char *test_cbuffer_sizes() {
-  size_t nbytes_, cbytes_;
+  size_t nbytes_, cbytes_, blocksize;
 
-  blosc_cbuffer_sizes(dest, &nbytes_, &cbytes_);
+  blosc_cbuffer_sizes(dest, &nbytes_, &cbytes_, &blocksize);
   mu_assert("ERROR: nbytes incorrect(1)", nbytes == size);
   mu_assert("ERROR: nbytes incorrect(2)", nbytes_ == nbytes);
   mu_assert("ERROR: cbytes incorrect", cbytes == cbytes_);
+  mu_assert("ERROR: blocksize incorrect", blocksize >= 128);
   return 0;
 }
 
 static char *test_cbuffer_metainfo() {
   size_t typesize_;
-  int doshuffle_;
+  int flags;
 
-  blosc_cbuffer_metainfo(dest, &typesize_, &doshuffle_);
+  blosc_cbuffer_metainfo(dest, &typesize_, &flags);
   mu_assert("ERROR: typesize incorrect", typesize_ == typesize);
-  mu_assert("ERROR: shuffle incorrect", doshuffle_ == doshuffle);
+  mu_assert("ERROR: shuffle incorrect", (flags & BLOSC_DOSHUFFLE) == doshuffle);
   return 0;
 }
 
