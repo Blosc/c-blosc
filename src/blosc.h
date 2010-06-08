@@ -26,6 +26,8 @@
 /* The combined blosc and blosclz formats */
 #define BLOSC_VERSION_CFORMAT (BLOSC_VERSION_FORMAT << 8) & (BLOSCLZ_VERSION_FORMAT)
 
+/* The maximum overhead during compression in bytes */
+#define BLOSC_MAX_OVERHEAD 16
 
 /**
 
@@ -57,9 +59,9 @@ int blosc_set_nthreads(int nthreads);
   Only a typesize > 1 will allow the shuffle to work.
 
   The `dest` buffer must have at least the size of `maxbytes`.  Blosc
-  guarantees that if you set `maxbytes` at least to `nbytes` + 16, the
-  compression will always succeed.  The `src` buffer and the `dest`
-  buffer can not overlap.
+  guarantees that if you set `maxbytes` to, at least,
+  (`nbytes`+BLOSC_MAX_OVERHEAD), the compression will always succeed.
+  The `src` buffer and the `dest` buffer can not overlap.
 
   If `src` buffer cannot be compressed into `maxbytes`, the return
   value is zero and you should discard the contents of the `dest`

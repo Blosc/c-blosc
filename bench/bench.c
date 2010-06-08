@@ -163,8 +163,7 @@ void do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < nchunks; j++) {
-    /* 16 additional bytes should be enough for encoding everything */
-    dest[j] = malloc(size+16);
+    dest[j] = malloc(size+BLOSC_MAX_OVERHEAD);
   }
 
   /* Warm destination memory (memcpy() will go a bit faster later on) */
@@ -211,7 +210,7 @@ void do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
     for (i = 0; i < niter; i++) {
       for (j = 0; j < nchunks; j++) {
         cbytes = blosc_compress(clevel, doshuffle, elsize, size, src,
-                                dest[j], size);
+                                dest[j], size+BLOSC_MAX_OVERHEAD);
       }
     }
     gettimeofday(&current, NULL);

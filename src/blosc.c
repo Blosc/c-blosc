@@ -611,12 +611,12 @@ unsigned int blosc_compress(int clevel, int shuffle, size_t typesize,
   ntbytes = do_job();
 
   /* Last chance for fitting `src` buffer in `dest` */
-  if ((ntbytes == 0) && (nbytes+16 <= maxbytes)) {
+  if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
     /* Specify that this buffer is memcpy'ed (bit 2 set to 1 in flags) */
     _dest = (uint8_t *)(dest);
     _dest[2] = 0x2;
-    memcpy(dest+16, src, nbytes);
-    ntbytes = nbytes+16;
+    memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
+    ntbytes = nbytes+BLOSC_MAX_OVERHEAD;
   }
 
   /* Set the number of compressed bytes in header */
@@ -656,7 +656,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
 
   /* Check whether this buffer is memcpy'ed */
   if (flags == 0x2) {
-    memcpy(dest, src+16, nbytes);
+    memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
     return nbytes;
   }
 
