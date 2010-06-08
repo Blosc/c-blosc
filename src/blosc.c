@@ -87,7 +87,7 @@ struct thread_data {
   size_t blocksize;
   int32_t compress;
   int32_t clevel;
-  int32_t doshuffle;
+  int32_t flags;
   int32_t memcpyed;
   int32_t ntbytes;
   uint32_t nbytes;
@@ -148,7 +148,7 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
   uint8_t *_tmp;
   size_t typesize = params.typesize;
 
-  if (params.doshuffle && (typesize > 1)) {
+  if ((params.flags & DOSHUFFLE) && (typesize > 1)) {
     /* Shuffle this block (this makes sense only if typesize > 1) */
     shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
@@ -221,7 +221,7 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
   uint8_t *_tmp;
   size_t typesize = params.typesize;
 
-  if (params.doshuffle && (typesize > 1)) {
+  if ((params.flags & DOSHUFFLE) && (typesize > 1)) {
     _tmp = tmp;
   }
   else {
@@ -258,7 +258,7 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if (params.doshuffle && (typesize > 1)) {
+  if ((params.flags & DOSHUFFLE) && (typesize > 1)) {
     if ((uintptr_t)dest % 16 == 0) {
       /* 16-bytes aligned dest.  SSE2 unshuffle will work. */
       unshuffle(typesize, blocksize, tmp, dest);
@@ -599,7 +599,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   /* Populate parameters for compression routines */
   params.compress = 1;
   params.clevel = clevel;
-  params.doshuffle = doshuffle;
+  params.flags = (int32_t)*flags;
   params.typesize = typesize;
   params.blocksize = blocksize;
   params.ntbytes = ntbytes;
@@ -692,7 +692,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   /* Populate parameters for decompression routines */
   params.compress = 0;
   params.clevel = 0;            /* specific for compression */
-  params.doshuffle = doshuffle;
+  params.flags = (int32_t)flags;
   params.typesize = typesize;
   params.blocksize = blocksize;
   params.ntbytes = 0;
