@@ -289,7 +289,7 @@ int serial_blosc(void)
   uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
 
   for (j = 0; j < nblocks; j++) {
-    if (compress && (flags & BLOSC_MEMCPYED == 0)) {
+    if (compress && !(flags & BLOSC_MEMCPYED)) {
       bstarts[j] = sw32(ntbytes);
     }
     bsize = blocksize;
@@ -614,7 +614,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   params.src = (uint8_t *)src;
   params.dest = (uint8_t *)dest;
 
-  if ((*flags & BLOSC_MEMCPYED) == 0) {
+  if (!(*flags & BLOSC_MEMCPYED)) {
     /* Do the actual compression */
     ntbytes = do_job();
     if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
