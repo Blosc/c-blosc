@@ -633,13 +633,13 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   }
 
   if (*flags & BLOSC_MEMCPYED) {
-    if ((nbytes > 64*KB) || (nthreads > 1)) {
-      /* More effective in multi-core processors or large buffers */
+    if (((nbytes % L1) == 0) || (nthreads > 1)) {
+      /* More effective with large buffers that are multiples of the
+       cache size or multi-cores */
       params.ntbytes = BLOSC_MAX_OVERHEAD;
       ntbytes = do_job();
     }
     else {
-      /* More effective in single-core processors or small buffers */
       memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
       ntbytes = nbytes + BLOSC_MAX_OVERHEAD;
     }
@@ -721,12 +721,12 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
 
   /* Check whether this buffer is memcpy'ed */
   if (flags & BLOSC_MEMCPYED) {
-    if ((nbytes > 64*KB) || (nthreads > 1)) {
-      /* More effective in multi-core processors or large buffers */
+    if (((nbytes % L1) == 0) || (nthreads > 1)) {
+      /* More effective with large buffers that are multiples of the
+       cache size or multi-cores */
       ntbytes = do_job();
     }
     else {
-      /* More effective in single-core processors or small buffers */
       memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
       ntbytes = nbytes;
     }
