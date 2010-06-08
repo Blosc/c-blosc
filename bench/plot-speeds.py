@@ -8,7 +8,9 @@ Invoke without parameters for usage hints.
 import matplotlib as mpl
 from pylab import *
 
-MB_ = 1024*1024
+KB_ = 1024
+MB_ = 1024*KB_
+GB_ = 1024*MB_
 NCHUNKS = 128    # keep in sync with bench.c
 
 linewidth=2
@@ -62,6 +64,7 @@ def show_plot(plots, yaxis, legends, gtitle):
     xlabel('Compresssion ratio')
     ylabel('Speed (MB/s)')
     title(gtitle)
+    xlim(0, None)
     #ylim(0, 10000)
     ylim(0, None)
     grid(True)
@@ -166,7 +169,7 @@ if __name__ == '__main__':
         mean = sum(values["memcpyr"]) / nthreads
         message = "memcpy (read from memory)"
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
-    text(8.0, mean+100, message)
+    text(4.0, mean+50, message)
     plots.append(plot_)
     show_plot(plots, yaxis, legends, gtitle)
 
