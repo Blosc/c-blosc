@@ -640,7 +640,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
       ntbytes = do_job();
     }
     else {
-      memcpy(dest+BLOSC_MAX_OVERHEAD, src, nbytes);
+      memcpy((uint8_t *)dest+BLOSC_MAX_OVERHEAD, src, nbytes);
       ntbytes = nbytes + BLOSC_MAX_OVERHEAD;
     }
   }
@@ -727,7 +727,7 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
       ntbytes = do_job();
     }
     else {
-      memcpy(dest, src+BLOSC_MAX_OVERHEAD, nbytes);
+      memcpy(dest, (uint8_t *)src+BLOSC_MAX_OVERHEAD, nbytes);
       ntbytes = nbytes;
     }
   }
