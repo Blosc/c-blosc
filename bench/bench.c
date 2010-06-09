@@ -381,7 +381,10 @@ int main(int argc, char *argv[]) {
     }
   }
   else if (hard_suite) {
-    for (rshift_ = 0; rshift_ <= rshift; rshift_ += 5) {
+    /* Let's start the rshift loop by 4 so that 19 is visited.  This
+       is to allow a direct comparison with the plain suite, that runs
+       precisely at 19 significant bits. */
+    for (rshift_ = 4; rshift_ <= rshift; rshift_ += 5) {
       for (elsize_ = 1; elsize_ <= elsize; elsize_ *= 2) {
         /* The next loop is for getting sizes that are not power of 2 */
         for (i = -elsize_; i <= elsize_; i += elsize_) {
