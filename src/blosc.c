@@ -39,7 +39,7 @@
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
 
 /* The maximum number of threads (for some static arrays) */
-#define MAX_THREADS 64
+#define MAX_THREADS 256
 
 /* Some useful units */
 #define KB 1024
