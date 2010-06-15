@@ -429,7 +429,7 @@ int main(int argc, char *argv[]) {
         for (i = -elsize_*2; i <= elsize_*2; i += elsize_) {
           for (size_ = size; size_ <= 16*MB; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
-            for (nthreads_ = nthreads; nthreads_ <= 4; nthreads_++) {
+            for (nthreads_ = nthreads; nthreads_ <= 6; nthreads_++) {
               do_bench(nthreads_, size_+i, elsize_, rshift_);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
