@@ -1,12 +1,6 @@
 Blosc: A blocking, shuffling and lossless compression library
 =============================================================
 
-.. #########################################################
-.. ################### W A R N I N G ! #####################
-.. #########################################################
-.. ### This is BETA software.  Use it at your own risk! ###
-.. #########################################################
-
 Author: Francesc Alted
 Official website: http://blosc.pytables.org
 
@@ -39,7 +33,8 @@ variables to pthread-win32 directories first):
 
 A simple usage example is the benchmark in the bench/bench.c file.
 
-I have not tried to compile this with other compilers than GCC, MINGW
-and MSVC yet.  Please report your experiences with your own platforms.
+I have not tried to compile this with other compilers than GCC, MINGW,
+Intel ICC or MSVC yet. Please report your experiences with your own
+platforms.
 
 Thank you!
