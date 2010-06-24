@@ -406,6 +406,7 @@ void create_temporaries(void)
    hurt other modes either. */
   size_t ebsize = blocksize + typesize*sizeof(int32_t);
   uint8_t *tmp, *tmp2;
+  int result1 = 0, result2 = 0;
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
@@ -417,11 +418,16 @@ void create_temporaries(void)
     tmp = (uint8_t *)malloc(blocksize);
     tmp2 = (uint8_t *)malloc(ebsize);
 #else
-    posix_memalign((void **)&tmp, 16, blocksize);
-    posix_memalign((void **)&tmp2, 16, ebsize);
+    result1 = posix_memalign((void **)&tmp, 16, blocksize);
+    result2 = posix_memalign((void **)&tmp2, 16, ebsize);
 #endif  /* _WIN32 */
     params.tmp[tid] = tmp;
     params.tmp2[tid] = tmp2;
+  }
+
+  if (tmp == NULL || tmp2 == NULL || result1 != 0 || result2 != 0) {
+    printf("Error allocating memory!");
+    exit(1);
   }
 
   init_temps_done = 1;
