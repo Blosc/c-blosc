@@ -405,7 +405,7 @@ void create_temporaries(void)
    is only useful for compression in parallel mode, but it doesn't
    hurt other modes either. */
   size_t ebsize = blocksize + typesize*sizeof(int32_t);
-  uint8_t *tmp, *tmp2;
+  uint8_t *tmp = NULL, *tmp2 = NULL;
   int result1 = 0, result2 = 0;
 
   /* Create temporary area for each thread */
