@@ -29,7 +29,14 @@
 #endif  /* _WIN32 */
 
 
-/* Minimal buffer size to be compressed */
+/* Some useful units */
+#define KB 1024
+#define MB (1024*KB)
+
+/* Maximum buffer size to be compressed */
+#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
+
+/* Minimum buffer size to be compressed */
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
 
 /* Maximum typesize before considering buffer as a stream of bytes. */
@@ -40,10 +47,6 @@
 
 /* The maximum number of threads (for some static arrays) */
 #define MAX_THREADS 256
-
-/* Some useful units */
-#define KB 1024
-#define MB (1024*KB)
 
 /* The size of L1 cache.  32 KB is quite common nowadays. */
 #define L1 (32*KB)
@@ -553,6 +556,13 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   size_t blocksize;            /* length of the block in bytes */
   uint32_t ntbytes = 0;        /* the number of compressed bytes */
   uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
+
+  /* Check buffer size limits */
+  if (nbytes > MAX_BUFFERSIZE) {
+    /* If buffer is too large, give up. */
+    printf("Input buffer size cannot exceed %d MB\n", MAX_BUFFERSIZE / MB);
+    exit(1);
+  }
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
