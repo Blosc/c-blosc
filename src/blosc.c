@@ -550,6 +550,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   uint8_t *flags;              /* flags for header.  Currently booked:
                                   - 0: shuffled?
                                   - 1: memcpy'ed? */
+  uint32_t nbytes_;            /* number of bytes in source buffer */
   uint32_t nblocks;            /* number of total blocks in buffer */
   uint32_t leftover;           /* extra bytes at end of buffer */
   uint32_t *bstarts;           /* start pointers for each block */
@@ -557,12 +558,15 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   uint32_t ntbytes = 0;        /* the number of compressed bytes */
   uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
 
+
   /* Check buffer size limits */
   if (nbytes > MAX_BUFFERSIZE) {
     /* If buffer is too large, give up. */
     printf("Input buffer size cannot exceed %d MB\n", MAX_BUFFERSIZE / MB);
     exit(1);
   }
+  /* We can safely do this assignation now */
+  nbytes_ = nbytes;
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
@@ -578,11 +582,11 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   }
 
   /* Get the blocksize */
-  blocksize = compute_blocksize(clevel, typesize, nbytes);
+  blocksize = compute_blocksize(clevel, typesize, nbytes_);
 
   /* Compute number of blocks in buffer */
-  nblocks = nbytes / blocksize;
-  leftover = nbytes % blocksize;
+  nblocks = nbytes_ / blocksize;
+  leftover = nbytes_ % blocksize;
   nblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Check typesize limits */
@@ -599,7 +603,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   _dest[2] = 0;                            /* zeroes flags */
   _dest[3] = (uint8_t)typesize;            /* type size */
   _dest += 4;
-  ((uint32_t *)_dest)[0] = sw32(nbytes);   /* size of the buffer */
+  ((uint32_t *)_dest)[0] = sw32(nbytes_);  /* size of the buffer */
   ((uint32_t *)_dest)[1] = sw32(blocksize);/* block size */
   ntbytes_ = (uint32_t *)(_dest+8);        /* compressed buffer size */
   _dest += sizeof(int32_t)*3;
@@ -612,7 +616,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
     *flags |= BLOSC_MEMCPYED;
   }
 
-  if (nbytes < MIN_BUFFERSIZE) {
+  if (nbytes_ < MIN_BUFFERSIZE) {
     /* Buffer is too small.  Try memcpy'ing. */
     *flags |= BLOSC_MEMCPYED;
   }
@@ -629,7 +633,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   params.typesize = typesize;
   params.blocksize = blocksize;
   params.ntbytes = ntbytes;
-  params.nbytes = nbytes;
+  params.nbytes = nbytes_;
   params.maxbytes = maxbytes;
   params.nblocks = nblocks;
   params.leftover = leftover;
@@ -640,7 +644,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   if (!(*flags & BLOSC_MEMCPYED)) {
     /* Do the actual compression */
     ntbytes = do_job();
-    if ((ntbytes == 0) && (nbytes+BLOSC_MAX_OVERHEAD <= maxbytes)) {
+    if ((ntbytes == 0) && (nbytes_+BLOSC_MAX_OVERHEAD <= maxbytes)) {
       /* Last chance for fitting `src` buffer in `dest`.  Update flags
        and do a memcpy later on. */
       *flags |= BLOSC_MEMCPYED;
@@ -649,15 +653,15 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   }
 
   if (*flags & BLOSC_MEMCPYED) {
-    if (((nbytes % L1) == 0) || (nthreads > 1)) {
+    if (((nbytes_ % L1) == 0) || (nthreads > 1)) {
       /* More effective with large buffers that are multiples of the
        cache size or multi-cores */
       params.ntbytes = BLOSC_MAX_OVERHEAD;
       ntbytes = do_job();
     }
     else {
-      memcpy((uint8_t *)dest+BLOSC_MAX_OVERHEAD, src, nbytes);
-      ntbytes = nbytes + BLOSC_MAX_OVERHEAD;
+      memcpy((uint8_t *)dest+BLOSC_MAX_OVERHEAD, src, nbytes_);
+      ntbytes = nbytes_ + BLOSC_MAX_OVERHEAD;
     }
   }
 
@@ -711,8 +715,8 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
     typesize = 256;             /* 0 means 256 in format version 1 */
   }
 
+  /* Check that we have enough space to decompress */
   if (nbytes > destsize) {
-    /* This should never happen but just in case */
     return -1;
   }
 
