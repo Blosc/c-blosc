@@ -16,13 +16,13 @@
         (H5_VERS_MINOR == 8 && H5_VERS_RELEASE >= 3)))))
 /* 1.6.x */
 #define BLOSC_16API 1
-#define PUSH_ERR(func, minor, str)  H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+#define PUSH_ERR(func, minor, str) H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
 #define GET_FILTER H5Pget_filter_by_id
 
 #else
 /* 1.8.x where x < 3 */
 #define BLOSC_16API 0
-#define PUSH_ERR(func, minor, str)  H5Epush1(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+#define PUSH_ERR(func, minor, str) H5Epush1(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
 #define GET_FILTER(a,b,c,d,e,f,g) H5Pget_filter_by_id2(a,b,c,d,e,f,g,NULL)
 
 #endif
@@ -100,7 +100,7 @@ herr_t blosc_set_local(hid_t dcpl, hid_t type, hid_t space){
     /* It seems the H5Z_FLAG_REVERSE flag doesn't work here, so we have to be
        careful not to clobber any existing version info */
     if(values[0]==0) values[0] = FILTER_BLOSC_VERSION;
-    if(values[1]==0) values[1] = BLOSC_VERSION_CFORMAT;
+    if(values[1]==0) values[1] = BLOSC_VERSION_FORMAT;
 
     ndims = H5Pget_chunk(dcpl, 32, chunkdims);
     if(ndims<0) return -1;
@@ -143,9 +143,10 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     int status = 0;              /* Return code from blosc routines */
 
     if (cd_nelmts>=5) {
-        typesize = cd_values[2];    /* The datatype size */
-        clevel = cd_values[4];      /* The compression level */
-        doshuffle = cd_values[5];   /* Shuffle? */
+        typesize = cd_values[2];      /* The datatype size */
+        outbuf_size = cd_values[3];   /* Precomputed buffer guess */
+        clevel = cd_values[4];        /* The compression level */
+        doshuffle = cd_values[5];     /* Shuffle? */
     }
 
     /* We're compressing */
@@ -168,7 +169,6 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
 
         status = blosc_compress(clevel, doshuffle, typesize, nbytes,
                                 *buf, outbuf, nbytes);
-        /* printf("compress status: %d, %zd\n", status, nbytes); */
         if (status < 0) {
           PUSH_ERR("blosc_filter", H5E_CALLBACK, "BLOSC compression error");
           goto failed;
@@ -177,15 +177,9 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     /* We're decompressing */
     } else {
 
-        if((cd_nelmts>=4)&&(cd_values[3]!=0)){
-            outbuf_size = cd_values[3];   /* Precomputed buffer guess */
-        }else{
-            outbuf_size = (*buf_size);
-        }
-
 
 #ifdef BLOSC_DEBUG
-        fprintf(stderr, "Decompress %zd chunk w/buffer %zd\n", nbytes, outbuf_size);
+        fprintf(stderr, "BLOSC: Decompress %zd chunk w/buffer %zd\n", nbytes, outbuf_size);
 #endif
 
         free(outbuf);
@@ -197,7 +191,6 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
         }
 
         status = blosc_decompress(*buf, outbuf, outbuf_size);
-        /* printf("decompress status: %d, %zd\n", status, nbytes); */
 
         if(status <= 0){    /* decompression failed */
           PUSH_ERR("blosc_filter", H5E_CALLBACK, "BLOSC decompression error");
