@@ -31,12 +31,13 @@ special flags and libraries to make sure that these features are used.
 
 To compile using GCC/MINGW (4.4 or higher recommended):
 
-  gcc -O3 -msse2 -lhdf5 ../src/*.c blosc_filter.c myprog.c -o myprog -lpthread
+  gcc -O3 -msse2 -lhdf5 ../blosc/*.c blosc_filter.c myprog.c \
+      -o myprog -lpthread
 
 Using Windows and MSVC (remember to set the LIB and INCLUDE environment
 variables to pthread-win32 directories first):
 
-  cl /Ox /Femyprog.exe myprog.c src\*.c blosc_filter.c \
+  cl /Ox /Femyprog.exe myprog.c blosc\*.c blosc_filter.c \
          /link pthreadvc2.lib /link hdf5dll.lib
 
 [remember to set the LIB and INCLUDE environment variables to

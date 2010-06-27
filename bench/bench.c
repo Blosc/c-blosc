@@ -7,8 +7,11 @@
 
   To compile using GCC, stay in this directory and do:
 
-    gcc -O3 -msse2 -o bench bench.c \
-        ../src/blosc.c ../src/blosclz.c ../src/shuffle.c -lpthread
+    gcc -O3 -msse2 -o bench bench.c ../blosc/*.c -lpthread
+
+  Using Windows and MSVC (2008 or higher recommended):
+
+    cl /Ox /Febench.exe bench.c blosc\*.c  /link pthreadvc2.lib
 
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!
@@ -31,7 +34,7 @@
   #include <sys/time.h>
 #endif
 #include <math.h>
-#include "../src/blosc.h"
+#include "../blosc/blosc.h"
 
 #define KB  1024
 #define MB  (1024*KB)

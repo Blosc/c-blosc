@@ -34,7 +34,7 @@ directory for details.
 Compiling your application with Blosc
 =====================================
 
-Blosc consists of the next files (in src/ directory):
+Blosc consists of the next files (in blosc/ directory):
 blosc.h and blosc.c      -- the main routines
 blosclz.h and blosclz.c  -- the actual compressor
 shuffle.h and shuffle.c  -- the shuffle code
@@ -44,11 +44,11 @@ information on compression and decompression routines, see blosc.h.
 
 To compile using GCC/MINGW (4.4 or higher recommended):
 
-  gcc -O3 -msse2 -o myprog myprog.c src/*.c -lpthread
+  gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
 
 Using Windows and MSVC (2008 or higher recommended):
 
-  cl /Ox /Femyprog.exe myprog.c src\*.c  /link pthreadvc2.lib
+  cl /Ox /Femyprog.exe myprog.c blosc\*.c  /link pthreadvc2.lib
 
 [remember to set the LIB and INCLUDE environment variables to
 pthread-win32 directories first]

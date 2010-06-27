@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include "hdf5.h"
-#include "../src/blosc.h"
+#include "../blosc/blosc.h"
 #include "blosc_filter.h"
 
 

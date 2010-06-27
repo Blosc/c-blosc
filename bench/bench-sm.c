@@ -5,9 +5,13 @@
   well as external datafiles (uncomment the lines after "For data
   coming from a file" comment).
 
-  To compile using GCC:
+  To compile using GCC, stay in this directory and do:
 
-    gcc -O3 -msse2 -o bench bench.c blosc.c blosclz.c shuffle.c
+    gcc -O3 -msse2 -o bench-sm bench-sm.c ../blosc/*.c -lpthread
+
+  Using Windows and MSVC (2008 or higher recommended):
+
+    cl /Ox /Febench.exe bench.c blosc\*.c  /link pthreadvc2.lib
 
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!
@@ -30,7 +34,7 @@
   #include <sys/time.h>
 #endif
 #include <math.h>
-#include "blosc.h"
+#include "../blosc/blosc.h"
 
 #define MB  (1024*1024)
 
@@ -172,7 +176,8 @@ int main(void) {
 
     gettimeofday(&last, NULL);
     for (i = 0; i < NITER; i++) {
-      cbytes = blosc_compress(clevel, doshuffle, elsize, size, src, dest);
+      cbytes = blosc_compress(clevel, doshuffle, elsize, size, src, dest,
+                              size+BLOSC_MAX_OVERHEAD);
     }
     gettimeofday(&current, NULL);
     tshuf = getseconds(last, current);
