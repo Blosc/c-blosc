@@ -30,8 +30,39 @@ You can see some recent benchmarks about Blosc performance in [2]_
 Blosc is distributed using the MIT license, see file LICENSES
 directory for details.
 
-..[1] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
-..[2] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+.. [1] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
+.. [2] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+
+
+Meta-compresion and advantages over other existing compressors
+==============================================================
+
+Blosc is not like many other compressors: it can be called a
+meta-compressor.  It can use different compressors and
+pre-conditioners (programs that generally improve compression ratio)
+so as to compress binary data effectively.
+
+Currently it uses BloscLZ (a compresssor heavily based on FastLZ [3]_)
+and a highly optimized (it uses SSE2 instructions, if available)
+"shuffle" pre-conditioner.  But different compressors or
+pre-conditioners can be added in the future.
+
+The use of the blocking technique described above as well as
+multi-threading, makes that every compressor and pre-conditioner works
+at very high speeds in CPU caches, achieving optimal speeds.
+
+Other advantages of Blosc are:
+
+  * Meant for binary data: can take advantage of the type size
+    meta-information for improved compression ratio.
+
+  * Small overhead on non-compressible data: only 16 additional bytes
+    over the source buffer length are needed to compress *every*
+    input.
+
+  * ... ens hem quedat aci...
+
+.. [3] http://fastlz.org/
 
 
 Compiling your application with Blosc
