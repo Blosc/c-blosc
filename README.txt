@@ -1,11 +1,38 @@
+=============================================================
 Blosc: A blocking, shuffling and lossless compression library
 =============================================================
 
 Author: Francesc Alted
 Official website: http://blosc.pytables.org
 
+Blosc is a high performance compressor optimized for binary data. It
+has been designed to transmit data to the processor cache faster than
+the traditional, non-compressed, direct memory fetch approach via a
+memcpy() OS call. Blosc is the first compressor (that I'm aware of)
+that is meant not only to reduce the size of large datasets on-disk or
+in-memory, but also to accelerate memory-bound computations (which is
+typical in vector-vector operations).
+
+It uses the blocking technique (as described in [1]_) to reduce
+activity on the memory bus as much as possible. In short, the blocking
+technique works by dividing datasets in blocks that are small enough
+to fit in L1 cache of modern processor and perform
+compression/decompression there.  It also leverages SIMD instructions
+(SSE2) and multi-threading capabilities present in nowadays multicore
+processors so as to accelerate the compression/decompression process
+to a maximum.
+
+You can see some recent bencharks about Blosc performance in [2]_
+
 Blosc is distributed using the MIT license, see file LICENSES
 directory for details.
+
+..[1] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
+..[2] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+
+
+Compiling your application with Blosc
+=====================================
 
 Blosc consists of the next files (in src/ directory):
 blosc.h and blosc.c      -- the main routines
@@ -14,10 +41,6 @@ shuffle.h and shuffle.c  -- the shuffle code
 
 Just add these files to your project in order to use Blosc. For
 information on compression and decompression routines, see blosc.h.
-
-Blosc is a compressor for binary data, that can use threads and SSE2
-and that gets best results if you can provide the size of the data
-type that originated the data file.
 
 To compile using GCC/MINGW:
 
