@@ -44,3 +44,10 @@ variables to pthread-win32 directories first):
 pthread-win32 directories first]
 
 MinGW and Intel ICC compilers have been reported to work too.
+
+
+Acknowledgments
+===============
+
+This HDF5 filter interface and its example is base the LZF interface
+(http://h5py.alfven.org) by Andrew Collette.

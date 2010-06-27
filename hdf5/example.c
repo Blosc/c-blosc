@@ -15,6 +15,7 @@
     To run:
 
     $ ./example
+    Blosc version info: 0.9.8.dev (2010-06-27)
     Success!
     $ h5ls -v example.h5
     Opened "example.h5" with sec2 driver.
@@ -23,8 +24,9 @@
         Links:     1
         Chunks:    {1, 100, 100} 40000 bytes
         Storage:   4000000 logical bytes, 142097 allocated bytes, 2814.98% utilization
-        Filter-0:  blosc-32001 OPT {1, 0, 4, 40000, 5, 1}
+        Filter-0:  blosc-32001 OPT {1, 2, 4, 40000, 5, 1}
         Type:      native float
+
 */
 
 #include <stdio.h>
@@ -54,6 +56,8 @@ int main(){
 
     /* Register the filter with the library */
     r = register_blosc(&version, &date);
+    printf("Blosc version info: %s (%s)\n", version, date);
+
     if(r<0) goto failed;
 
     sid = H5Screate_simple(3, shape, NULL);
@@ -69,9 +73,11 @@ int main(){
     r = H5Pset_chunk(plist, 3, chunkshape);
     if(r<0) goto failed;
 
-    /* Note the "optional" flag is necessary, as with the DEFLATE filter */
-    cd_values[4] = 5;           /* BloscLZ compression level */
+    /* Fill the values for filter. 0 to 3 (inclusive) slots are reserved. */
+    cd_values[4] = 5;           /* Blosc compression level */
     cd_values[5] = 1;           /* Shuffle active or not */
+
+    /* The "optional" flag is necessary, as with the DEFLATE filter */
     r = H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 6, cd_values);
     if(r<0) goto failed;
 

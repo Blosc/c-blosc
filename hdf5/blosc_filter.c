@@ -1,3 +1,15 @@
+/*
+    Copyright (C) 2010  Francesc Alted
+    http://blosc.pytables.org
+    License: MIT (see LICENSE.txt)
+
+    Filter program that allows the use of the Blosc filter in HDF5.
+    This is based on the LZF filter interface (http://h5py.alfven.org)
+    by Andrew Collette.
+
+*/
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,23 +19,20 @@
 #include "blosc_filter.h"
 
 
-/* The conditional below is somewhat messy, but it is necessary because
-  the THG team has decided to fix an API inconsistency in the definition
-  of the H5Z_class_t structure in version 1.8.3 */
-#if (H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7) || \
-    (H5_USE_16_API && (H5_VERS_MAJOR > 1 || \
-      (H5_VERS_MAJOR == 1 && (H5_VERS_MINOR > 8 || \
-        (H5_VERS_MINOR == 8 && H5_VERS_RELEASE >= 3)))))
-/* 1.6.x */
-#define BLOSC_16API 1
-#define PUSH_ERR(func, minor, str) H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
-#define GET_FILTER H5Pget_filter_by_id
-
-#else
-/* 1.8.x where x < 3 */
-#define BLOSC_16API 0
+/* The conditional below is necessary because the THG team has decided
+  to fix an API inconsistency in the definition of the H5Z_class_t
+  structure in version 1.8.3 */
+#if H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 8 && (H5_VERS_RELEASE < 3 || !H5_USE_16_API)
+/* 1.8.x where x >= 3 */
+#define H5Z_16API 0
 #define PUSH_ERR(func, minor, str) H5Epush1(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
 #define GET_FILTER(a,b,c,d,e,f,g) H5Pget_filter_by_id2(a,b,c,d,e,f,g,NULL)
+
+#else
+/* 1.6.x */
+#define H5Z_16API 1
+#define PUSH_ERR(func, minor, str) H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+#define GET_FILTER H5Pget_filter_by_id
 
 #endif
 
@@ -39,7 +48,7 @@ int register_blosc(char **version, char **date){
 
     int retval;
 
-#if BLOSC_16API
+#if H5Z_16API
     H5Z_class_t filter_class = {
         (H5Z_filter_t)(FILTER_BLOSC),
         "blosc",
@@ -61,7 +70,7 @@ int register_blosc(char **version, char **date){
 
     retval = H5Zregister(&filter_class);
     if(retval<0){
-        PUSH_ERR("register_blosc", H5E_CANTREGISTER, "Can't register BLOSC filter");
+        PUSH_ERR("register_blosc", H5E_CANTREGISTER, "Can't register Blosc filter");
     }
     *version = strdup(BLOSC_VERSION_STRING);
     *date = strdup(BLOSC_VERSION_DATE);
@@ -71,7 +80,7 @@ int register_blosc(char **version, char **date){
 /*  Filter setup.  Records the following inside the DCPL:
 
     1. If version information is not present, set slots 0 and 1 to the filter
-       revision and BLOSC version, respectively.
+       revision and Blosc version, respectively.
 
     2. Compute the type size in bytes and store it in slot 2.
 
@@ -120,7 +129,7 @@ herr_t blosc_set_local(hid_t dcpl, hid_t type, hid_t space){
     values[3] = bufsize;
 
 #ifdef BLOSC_DEBUG
-    fprintf(stderr, "BLOSC: Computed buffer size %d\n", bufsize);
+    fprintf(stderr, "Blosc: Computed buffer size %d\n", bufsize);
 #endif
 
     r = H5Pmodify_filter(dcpl, FILTER_BLOSC, flags, nelements, values);
@@ -140,7 +149,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     int doshuffle = 1;
     size_t typesize = 4;
     size_t outbuf_size = 0;
-    int status = 0;              /* Return code from blosc routines */
+    int status = 0;              /* Return code from Blosc routines */
 
     if (cd_nelmts>=5) {
         typesize = cd_values[2];      /* The datatype size */
@@ -170,7 +179,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
         status = blosc_compress(clevel, doshuffle, typesize, nbytes,
                                 *buf, outbuf, nbytes);
         if (status < 0) {
-          PUSH_ERR("blosc_filter", H5E_CALLBACK, "BLOSC compression error");
+          PUSH_ERR("blosc_filter", H5E_CALLBACK, "Blosc compression error");
           goto failed;
         }
 
@@ -179,7 +188,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
 
 
 #ifdef BLOSC_DEBUG
-        fprintf(stderr, "BLOSC: Decompress %zd chunk w/buffer %zd\n", nbytes, outbuf_size);
+        fprintf(stderr, "Blosc: Decompress %zd chunk w/buffer %zd\n", nbytes, outbuf_size);
 #endif
 
         free(outbuf);
@@ -193,7 +202,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
         status = blosc_decompress(*buf, outbuf, outbuf_size);
 
         if(status <= 0){    /* decompression failed */
-          PUSH_ERR("blosc_filter", H5E_CALLBACK, "BLOSC decompression error");
+          PUSH_ERR("blosc_filter", H5E_CALLBACK, "Blosc decompression error");
           goto failed;
         } /* if !status */
 
