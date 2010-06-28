@@ -4,6 +4,7 @@
     License: MIT (see LICENSE.txt)
 
     Filter program that allows the use of the Blosc filter in HDF5.
+
     This is based on the LZF filter interface (http://h5py.alfven.org)
     by Andrew Collette.
 
@@ -103,13 +104,11 @@ herr_t blosc_set_local(hid_t dcpl, hid_t type, hid_t space){
     r = GET_FILTER(dcpl, FILTER_BLOSC, &flags, &nelements, values, 0, NULL);
     if(r<0) return -1;
 
-    if(nelements < 4) nelements = 4;  /* First 4 slots reserved.  If any higher
-                                      slots are used, preserve the contents. */
+    if(nelements < 4) nelements = 4;  /* First 4 slots reserved. */
 
-    /* It seems the H5Z_FLAG_REVERSE flag doesn't work here, so we have to be
-       careful not to clobber any existing version info */
-    if(values[0]==0) values[0] = FILTER_BLOSC_VERSION;
-    if(values[1]==0) values[1] = BLOSC_VERSION_FORMAT;
+    /* Set Blosc info in first two slots */
+    values[0] = FILTER_BLOSC_VERSION;
+    values[1] = BLOSC_VERSION_FORMAT;
 
     ndims = H5Pget_chunk(dcpl, 32, chunkdims);
     if(ndims<0) return -1;
@@ -145,16 +144,21 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
                     size_t *buf_size, void **buf){
 
     void* outbuf = NULL;
-    int clevel = 6;
-    int doshuffle = 1;
-    size_t typesize = 4;
-    size_t outbuf_size = 0;
     int status = 0;              /* Return code from Blosc routines */
+    size_t typesize;
+    size_t outbuf_size;
+    int clevel = 5;              /* Compression level default */
+    int doshuffle = 1;           /* Shuffle default */
 
-    if (cd_nelmts>=5) {
-        typesize = cd_values[2];      /* The datatype size */
-        outbuf_size = cd_values[3];   /* Precomputed buffer guess */
+
+    /* Filter params that are always set */
+    typesize = cd_values[2];      /* The datatype size */
+    outbuf_size = cd_values[3];   /* Precomputed buffer guess */
+    /* Optional params */
+    if (cd_nelmts >= 5) {
         clevel = cd_values[4];        /* The compression level */
+    }
+    if (cd_nelmts >= 6) {
         doshuffle = cd_values[5];     /* Shuffle? */
     }
 

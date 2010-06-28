@@ -15,7 +15,7 @@
     To run:
 
     $ ./example
-    Blosc version info: 0.9.8.dev (2010-06-27)
+    Blosc version info: 0.9.9.dev (2010-06-27)
     Success!
     $ h5ls -v example.h5
     Opened "example.h5" with sec2 driver.
@@ -24,7 +24,7 @@
         Links:     1
         Chunks:    {1, 100, 100} 40000 bytes
         Storage:   4000000 logical bytes, 142097 allocated bytes, 2814.98% utilization
-        Filter-0:  blosc-32001 OPT {1, 2, 4, 40000, 5, 1}
+        Filter-0:  blosc-32001 OPT {1, 2, 4, 40000, 4, 1}
         Type:      native float
 
 */
@@ -73,12 +73,18 @@ int main(){
     r = H5Pset_chunk(plist, 3, chunkshape);
     if(r<0) goto failed;
 
-    /* Fill the values for filter. 0 to 3 (inclusive) slots are reserved. */
-    cd_values[4] = 5;           /* Blosc compression level */
-    cd_values[5] = 1;           /* Shuffle active or not */
+    /* This is the easiest way to call Blosc with default values: 5
+     for BloscLZ and shuffle active. */
+    /* r = H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 0, NULL);  */
 
-    /* The "optional" flag is necessary, as with the DEFLATE filter */
+    /* But you can also taylor Blosc parameters to your needs */
+    /* 0 to 3 (inclusive) param slots are reserved. */
+    cd_values[4] = 4;       /* compression level for BloscLZ */
+    cd_values[5] = 1;       /* 0: shuffle not active, 1: shuffle active */
+
+    /* Set the filter with 6 params */
     r = H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 6, cd_values);
+
     if(r<0) goto failed;
 
     dset = H5Dcreate(fid, "dset", H5T_NATIVE_FLOAT, sid, plist);
