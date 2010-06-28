@@ -653,7 +653,11 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   }
 
   if (*flags & BLOSC_MEMCPYED) {
-    if (((nbytes_ % L1) == 0) || (nthreads > 1)) {
+    if (nbytes_+BLOSC_MAX_OVERHEAD > maxbytes) {
+      /* We are exceeding maximum output size */
+      ntbytes = 0;
+    }
+    else if (((nbytes_ % L1) == 0) || (nthreads > 1)) {
       /* More effective with large buffers that are multiples of the
        cache size or multi-cores */
       params.ntbytes = BLOSC_MAX_OVERHEAD;
