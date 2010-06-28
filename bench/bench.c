@@ -13,6 +13,10 @@
 
     cl /Ox /Febench.exe bench.c ..\blosc\*.c  /link pthreadvc2.lib
 
+  For usage instructions of this benchmark, please see:
+  
+    http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+    
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!
 
