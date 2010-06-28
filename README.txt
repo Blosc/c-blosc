@@ -10,14 +10,14 @@
 What is it?
 ===========
 
-Blosc is a high performance compressor optimized for binary data.  It
-has been designed to transmit data to the processor cache faster than
-the traditional, non-compressed, direct memory fetch approach via a
-memcpy() OS call.  Blosc is the first compressor (that I'm aware of)
+Blosc [1]_ is a high performance compressor optimized for binary data.
+It has been designed to transmit data to the processor cache faster
+than the traditional, non-compressed, direct memory fetch approach via
+a memcpy() OS call.  Blosc is the first compressor (that I'm aware of)
 that is meant not only to reduce the size of large datasets on-disk or
 in-memory, but also to accelerate memory-bound computations.
 
-It uses the blocking technique (as described in [1]_) to reduce
+It uses the blocking technique (as described in [2]_) to reduce
 activity on the memory bus as much as possible.  In short, this
 technique works by dividing datasets in blocks that are small enough
 to fit in caches of modern processors and perform compression /
@@ -25,51 +25,53 @@ decompression there.  It also leverages, if available, SIMD
 instructions (SSE2) and multi-threading capabilities of CPUs, in order
 to accelerate the compression / decompression process to a maximum.
 
-You can see some recent benchmarks about Blosc performance in [2]_
+You can see some recent benchmarks about Blosc performance in [3]_
 
 Blosc is distributed using the MIT license, see file LICENSES
 directory for details.
 
-.. [1] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
-.. [2] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+.. [1] http://blosc.pytables.org
+.. [2] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
+.. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
 
 
 Meta-compression and other advantages over other existing compressors
 ====================================================================
 
 Blosc is not like other compressors: it should rather be called a
-*meta-compressor*.  This is so because it can use different
-compressors and pre-conditioners (programs that generally improve
-compression ratio).
+meta-compressor.  This is so because it can use different compressors
+and pre-conditioners (programs that generally improve compression
+ratio).  And it happens that it already supports one compressor and
+one pre-conditioner.
 
 Currently it uses BloscLZ, a compressor heavily based on FastLZ
 (http://fastlz.org/), and a highly optimized (it can use SSE2
-instructions, if available) "shuffle" pre-conditioner.  However,
+instructions, if available) Shuffle pre-conditioner. However,
 different compressors or pre-conditioners may be added in the future.
 
 Blosc is in charge of coordinating the compressor and pre-conditioners
 so that they run via the blocking technique (described above)
 automatically as well as using multi-threading (if several cores are
-available).  That makes that every compressor and pre-conditioner
-works at very high speeds, achieving optimal speeds, even if they were
-not initially designed for doing blocking or multi-threading.
+available). That makes that every compressor and pre-conditioner could
+work at very high speeds, even if it was not initially designed for
+doing blocking or multi-threading.
 
 Other advantages of Blosc are:
 
-  * Meant for binary data: can take advantage of the type size
-    meta-information for improved compression ratio (using the
-    integrated shuffle pre-conditioner).
+    * Meant for binary data: can take advantage of the type size
+      meta-information for improved compression ratio (using the
+      integrated shuffle pre-conditioner).
 
-  * Small overhead on non-compressible data: only a maximum of 16
-    additional bytes over the source buffer length are needed to
-    compress *every* input.
+    * Small overhead on non-compressible data: only a maximum of 16
+      additional bytes over the source buffer length are needed to
+      compress *every* input.
 
-  * Contrarily to many other compressors, both compression and
-    decompression routines have support for maximum size lengths for
-    the destination buffer, so that if the buffer does not have
-    capacity for keeping the output of the compress / decompress
-    routines, they will return (with 0 code) without any further
-    side-effects.  This turns out to be very useful in many scenarios.
+    * Maximum destination length: contrarily to many other
+      compressors, both compression and decompression routines have
+      support for maximum size lengths for the destination buffer.
+
+When taken together, all these features set Blosc apart from other
+similar solutions.
 
 
 Compiling your application with Blosc
