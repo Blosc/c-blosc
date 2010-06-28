@@ -4,6 +4,7 @@
 
 :Author: Francesc Alted i Abad
 :Contact: faltet@pytables.org
+:URL: http://blosc.pytables.org
 
 
 Changes from 0.9.5 to 1.0
@@ -19,6 +20,13 @@ Changes from 0.9.5 to 1.0
 - Added more protection for large buffers or in allocation memory
   routines.
 
+- The src/ directory has been renamed to blosc/.
+
+- The `maxbytes` parameter in `blosc_compress()` has been renamed to
+  `destsize`.  This is for consistency with the `blosc_decompress()`
+  parameters.
+
+
 Changes from 0.9.4 to 0.9.5
 ===========================
 
@@ -32,6 +40,7 @@ Changes from 0.9.4 to 0.9.5
 
 - Added 3 new functions for querying different metadata on compressed
   buffers.  A test suite for testing the new API has been added too.
+
 
 Changes from 0.9.3 to 0.9.4
 ===========================
