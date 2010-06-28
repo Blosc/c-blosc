@@ -54,7 +54,7 @@ Blosc is in charge of coordinating the compressor and pre-conditioners
 so that they can leverage the blocking technique (described above) as
 well as multi-threaded execution (if several cores are available)
 automatically. That makes that every compressor and pre-conditioner
-could work at very high speeds, even if it was not initially designed
+will work at very high speeds, even if it was not initially designed
 for doing blocking or multi-threading.
 
 Other advantages of Blosc are:
