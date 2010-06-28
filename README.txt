@@ -41,8 +41,9 @@ Meta-compression and other advantages over other existing compressors
 Blosc is not like other compressors: it should rather be called a
 meta-compressor.  This is so because it can use different compressors
 and pre-conditioners (programs that generally improve compression
-ratio).  And it happens that it already supports one compressor and
-one pre-conditioner.
+ratio).  Anyway, it can also be called a compressor because it happens
+that it already integrates one compressor and one pre-conditioner, so
+it can actually work like so.
 
 Currently it uses BloscLZ, a compressor heavily based on FastLZ
 (http://fastlz.org/), and a highly optimized (it can use SSE2
@@ -50,11 +51,11 @@ instructions, if available) Shuffle pre-conditioner. However,
 different compressors or pre-conditioners may be added in the future.
 
 Blosc is in charge of coordinating the compressor and pre-conditioners
-so that they run via the blocking technique (described above)
-automatically as well as using multi-threading (if several cores are
-available). That makes that every compressor and pre-conditioner could
-work at very high speeds, even if it was not initially designed for
-doing blocking or multi-threading.
+so that they can leverage the blocking technique (described above) as
+well as multi-threaded execution (if several cores are available)
+automatically. That makes that every compressor and pre-conditioner
+could work at very high speeds, even if it was not initially designed
+for doing blocking or multi-threading.
 
 Other advantages of Blosc are:
 
