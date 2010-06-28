@@ -11,7 +11,7 @@
 
   Using Windows and MSVC (2008 or higher recommended):
 
-    cl /Ox /Febench.exe bench.c blosc\*.c  /link pthreadvc2.lib
+    cl /Ox /Febench.exe bench.c ..\blosc\*.c  /link pthreadvc2.lib
 
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!
