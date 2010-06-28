@@ -1,7 +1,8 @@
 CC=gcc
 CFLAGS=-O3 -g -msse2 -Wall
 LDFLAGS=-lpthread
-SOURCES=bench.c ../src/blosc.c ../src/blosclz.c ../src/shuffle.c
+BLOSC_LIB= $(wildcard ../blosc/*.c)
+SOURCES=bench.c $(BLOSC_LIB)
 EXECUTABLE=bench
 
 all: $(SOURCES) $(EXECUTABLE)
