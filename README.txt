@@ -27,8 +27,8 @@ to accelerate the compression / decompression process to a maximum.
 
 You can see some recent benchmarks about Blosc performance in [3]_
 
-Blosc is distributed using the MIT license, see file LICENSES
-directory for details.
+Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
+details.
 
 .. [1] http://blosc.pytables.org
 .. [2] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf

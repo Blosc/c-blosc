@@ -40,9 +40,6 @@ to accelerate the compression / decompression process to a maximum.
 
 You can see some recent benchmarks about Blosc performance in [3]_
 
-Blosc is distributed using the MIT license, see file LICENSES
-directory for details.
-
 .. [1] http://blosc.pytables.org
 .. [2] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
 .. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
@@ -56,6 +53,9 @@ Please go to:
 http://blosc.pytables.org/sources/
 
 and download the stable release from here.
+
+Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
+details.
 
 
 ----
