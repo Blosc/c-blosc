@@ -165,6 +165,10 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     /* We're compressing */
     if(!(flags & H5Z_FLAG_REVERSE)){
 
+#ifdef BLOSC_DEBUG
+        fprintf(stderr, "Blosc: Compress %zd chunk w/buffer %zd\n", nbytes, outbuf_size);
+#endif
+
         /* Allocate an output buffer exactly as long as the input data; if
            the result is larger, we simply return 0.  The filter is flagged
            as optional, so HDF5 marks the chunk as uncompressed and
