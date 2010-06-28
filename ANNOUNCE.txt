@@ -48,6 +48,16 @@ directory for details.
 .. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
 
 
+Download sources
+================
+
+Please go to:
+
+http://blosc.pytables.org/sources/
+
+and download the stable release from here.
+
+
 ----
 
   **Enjoy data!**
