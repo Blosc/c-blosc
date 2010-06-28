@@ -34,35 +34,42 @@ directory for details.
 .. [2] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
 
 
-Meta-compresion and advantages over other existing compressors
-==============================================================
+Meta-compression and other advantages over other existing compressors
+====================================================================
 
-Blosc is not like many other compressors: it can be called a
-meta-compressor.  It can use different compressors and
-pre-conditioners (programs that generally improve compression ratio)
-so as to compress binary data effectively.
+Blosc is not like other compressors: it should rather be called a
+*meta-compressor*.  This is so because it can use different
+compressors and pre-conditioners (programs that generally improve
+compression ratio).
 
-Currently it uses BloscLZ (a compresssor heavily based on FastLZ [3]_)
-and a highly optimized (it uses SSE2 instructions, if available)
-"shuffle" pre-conditioner.  But different compressors or
-pre-conditioners can be added in the future.
+Currently it uses BloscLZ, a compressor heavily based on FastLZ
+(http://fastlz.org/), and a highly optimized (it can use SSE2
+instructions, if available) "shuffle" pre-conditioner.  However,
+different compressors or pre-conditioners may be added in the future.
 
-The use of the blocking technique described above as well as
-multi-threading, makes that every compressor and pre-conditioner works
-at very high speeds in CPU caches, achieving optimal speeds.
+Blosc is in charge of coordinating the compressor and pre-conditioners
+so that they run via the blocking technique (described above)
+automatically as well as using multi-threading (if several cores are
+available).  That makes that every compressor and pre-conditioner
+works at very high speeds, achieving optimal speeds, even if they were
+not initially designed for doing blocking or multi-threading.
 
 Other advantages of Blosc are:
 
   * Meant for binary data: can take advantage of the type size
-    meta-information for improved compression ratio.
+    meta-information for improved compression ratio (using the
+    integrated shuffle pre-conditioner).
 
-  * Small overhead on non-compressible data: only 16 additional bytes
-    over the source buffer length are needed to compress *every*
-    input.
+  * Small overhead on non-compressible data: only a maximum of 16
+    additional bytes over the source buffer length are needed to
+    compress *every* input.
 
-  * ... ens hem quedat aci...
-
-.. [3] http://fastlz.org/
+  * Contrarily to many other compressors, both compression and
+    decompression routines have support for maximum size lengths for
+    the destination buffer, so that if the buffer does not have
+    capacity for keeping the output of the compress / decompress
+    routines, they will return (with 0 code) without any further
+    side-effects.  This turns out to be very useful in many scenarios.
 
 
 Compiling your application with Blosc
@@ -97,6 +104,24 @@ Intel ICC or MSVC yet. Please report your experiences with your own
 platforms.
 
 
+Testing Blosc
+=============
+
+Go to the test/ directory and issue:
+
+$ make test
+
+These tests are very basic, and only valid for platforms where GNU
+make/gcc tools are available.  If you really want to test Blosc the
+hard way, look at:
+
+http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+
+where instructions on how to intensively test (and benchmark) Blosc
+are given.  If while running these tests you get some error, please
+report it back!
+
+
 Filter for HDF5
 ===============
 
@@ -110,7 +135,7 @@ Acknowledgments
 I'd like to thank the PyTables community that have collaborated in the
 exhaustive testing of Blosc.  With an aggregate amount of more than
 300 TB of different datasets compressed *and* decompressed
-successfully, I can say that Blosc is pretty safe by now and ready for
+successfully, I can say that Blosc is pretty safe now and ready for
 production purposes.
 
 

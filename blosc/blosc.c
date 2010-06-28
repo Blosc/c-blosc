@@ -544,7 +544,7 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
 /* The public routine for compression.  See blosc.h for docstrings. */
 unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
                             size_t nbytes, const void *src, void *dest,
-                            size_t maxbytes)
+                            size_t destsize)
 {
   uint8_t *_dest=NULL;         /* current pos for destination buffer */
   uint8_t *flags;              /* flags for header.  Currently booked:
@@ -557,6 +557,7 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   size_t blocksize;            /* length of the block in bytes */
   uint32_t ntbytes = 0;        /* the number of compressed bytes */
   uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
+  size_t maxbytes = destsize;  /* maximum size for dest buffer */
 
 
   /* Check buffer size limits */
