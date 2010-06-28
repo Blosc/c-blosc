@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-O3 -msse2 -Wall
 LDFLAGS=-lpthread
-BLOSC_LIB= ../src/blosc.c ../src/blosclz.c ../src/shuffle.c
+BLOSC_LIB= $(wildcard ../blosc/*.c)
 
 # The list of executables
 # Generated PNG (intermediate) files

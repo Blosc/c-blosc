@@ -9,7 +9,7 @@
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
 
-#include "tests_blosc.h"
+#include "test_common.h"
 
 int tests_run = 0;
 
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     printf(" (%s)\n", result);
   }
   else {
-    printf("ALL TESTS PASSED");
+    printf(" ALL TESTS PASSED");
   }
   printf("\tTests run: %d\n", tests_run);
 
