@@ -35,15 +35,15 @@ details.
 .. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
 
 
-Meta-compression and other advantages over other existing compressors
-====================================================================
+Meta-compression and other advantages over existing compressors
+===============================================================
 
 Blosc is not like other compressors: it should rather be called a
 meta-compressor.  This is so because it can use different compressors
 and pre-conditioners (programs that generally improve compression
-ratio).  Anyway, it can also be called a compressor because it happens
-that it already integrates one compressor and one pre-conditioner, so
-it can actually work like so.
+ratio).  At any rate, it can also be called a compressor because it
+happens that it already integrates one compressor and one
+pre-conditioner, so it can actually work like so.
 
 Currently it uses BloscLZ, a compressor heavily based on FastLZ
 (http://fastlz.org/), and a highly optimized (it can use SSE2
@@ -70,6 +70,11 @@ Other advantages of Blosc are:
     * Maximum destination length: contrarily to many other
       compressors, both compression and decompression routines have
       support for maximum size lengths for the destination buffer.
+
+    * Replacement for memcpy(): it supports a 0 compression level that
+      does not compress at all, and only adds 16 bytes of overhead.
+      This mode can copy memory usually faster than a plain memcpy().
+
 
 When taken together, all these features set Blosc apart from other
 similar solutions.
