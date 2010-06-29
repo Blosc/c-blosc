@@ -72,9 +72,9 @@ Other advantages of Blosc are:
       support for maximum size lengths for the destination buffer.
 
     * Replacement for memcpy(): it supports a 0 compression level that
-      does not compress at all, and only adds 16 bytes of overhead.
-      This mode can copy memory usually faster than a plain memcpy().
-
+      does not compress at all and only adds 16 bytes of overhead. In
+      this mode Blosc can copy memory usually faster than a plain
+      memcpy().
 
 When taken together, all these features set Blosc apart from other
 similar solutions.
