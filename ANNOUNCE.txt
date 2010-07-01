@@ -14,10 +14,12 @@ What is new?
 Everything :-) This is the first public release of a project that
 started more than a year ago and that, after very intensive testing
 (several hundreds of TB compressed and decompressed without a glitch),
-it is finally getting ready for public consumption.
+it is finally ready for public consumption.
 
-This is Release Candidate 1 for Blosc 1.0 release, so please test it
-and report back any problem you may have with it.
+So, I'm proud to announce the availability of Blosc 1.0 (final)
+release.  It has been declared stable for production purposes, and I
+hope it will serve well those of you needing a high-performance
+compressor.
 
 
 What is it?
@@ -38,11 +40,15 @@ decompression there.  It also leverages, if available, SIMD
 instructions (SSE2) and multi-threading capabilities of CPUs, in order
 to accelerate the compression / decompression process to a maximum.
 
-You can see some recent benchmarks about Blosc performance in [3]_
+You can see some recent benchmarks about Blosc performance in [3]_,
+and in combination with PyTables in [4]_, [5]_ and [6]_.
 
 .. [1] http://blosc.pytables.org
 .. [2] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
 .. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+.. [4] http://www.pytables.org/docs/manual/ch05.html#chunksizeFineTune
+.. [5] http://pytables.org/moin/ComputingKernel
+.. [6] http://pytables.org/moin/PyTablesPro
 
 
 Download sources
