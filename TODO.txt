@@ -1,6 +1,0 @@
-* Create test units
-* Document how to link with HDF5
-* Create decent Makefiles
-* Document the Blosc format
-* Test it against many different datasets!
-
