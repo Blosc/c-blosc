@@ -13,9 +13,9 @@
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
 #define BLOSC_VERSION_MINOR    0    /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_RELEASE  1    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.0"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.0.1.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
 #define BLOSC_VERSION_DATE     "2010-07-01"    /* date version */
 
