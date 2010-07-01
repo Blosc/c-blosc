@@ -11,15 +11,7 @@
 What is new?
 ============
 
-Everything :-) This is the first public release of a project that
-started more than a year ago and that, after very intensive testing
-(several hundreds of TB compressed and decompressed without a glitch),
-it is finally ready for public consumption.
-
-So, I'm proud to announce the availability of Blosc 1.0 (final)
-release.  It has been declared stable for production purposes, and I
-hope it will serve well those of you needing a high-performance
-compressor.
+*** Add blurb here ***
 
 
 What is it?
