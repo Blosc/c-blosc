@@ -1,11 +1,10 @@
-Blosc supports threads now
-==========================
+Blosc supports threading
+========================
 
-It just happened: Blosc can be run in threaded mode for both
-compressing and decompressing.  However, threaded Blosc doesn't work
-better than the serial version in all cases and the reason is that
-threads do add a non-negligible overhead (most specially, the cost of
-synchronization between them).
+Threads are the most efficient way to program parallel code for
+multi-core processors, but also the more difficult to program well.
+Also, they has a non-negligible start-up time that does not fit well
+with a high-performance compressor as Blosc tries to be.
 
 In order to reduce the overhead of threads as much as possible, I've
 decided to implement a pool of threads (the workers) that are waiting
@@ -21,8 +20,9 @@ will vary!) for other processors / operating systems.
 In contrast, for buffers larger than 64/128 KB, the threaded version
 starts to perform significantly better, being the sweet point at 1 MB
 (again, this is with my setup).  For larger buffer sizes than 1 MB,
-the threaded code slows down, but it is still considerably faster than
-serial code.
+the threaded code slows down again, but it is probably due to a cache
+size issue and besides, it is still considerably faster than serial
+code.
 
 This is why Blosc falls back to use the serial version for such a
 'small' buffers.  So, you don't have to worry too much about deciding
@@ -31,4 +31,4 @@ whether you should set the number of threads to 1 (serial) or more
 your are done!
 
 Francesc Alted
-2010-05-03
+2010-07-01
