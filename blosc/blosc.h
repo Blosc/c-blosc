@@ -29,8 +29,11 @@
 /* The maximum overhead during compression in bytes */
 #define BLOSC_MAX_OVERHEAD 16
 
-/* Maximum typesize before considering buffer as a stream of bytes. */
-#define BLOSC_MAX_TYPESIZE 255       /* Cannot be larger than 255 */
+/* Maximum typesize before considering buffer as a stream of bytes.
+   It cannot be larger than 256, and due to the limitations in
+   MIN_BUFFERSIZE (blosc.c), this must be a power of 2 and cannot be
+   smaller than 66.  So only 2 values are allowed: 128 or 256. */
+#define BLOSC_MAX_TYPESIZE 256
 
 
 /* Codes for internal flags */
