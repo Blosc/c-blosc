@@ -34,13 +34,10 @@
 #define MB (1024*KB)
 
 /* Maximum buffer size to be compressed */
-#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
+#define MAX_BUFFERSIZE INT32_MAX      /* Signed 32-bit internal counters */
 
 /* Minimum buffer size to be compressed */
-#define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
-
-/* Maximum typesize before considering buffer as a stream of bytes. */
-#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
+#define MIN_BUFFERSIZE BLOSC_MAX_TYPESIZE   /* Cannot be smaller than 66 */
 
 /* The maximum number of splits in a block for compression */
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
@@ -582,6 +579,13 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
     return -10;
   }
 
+  /* Check typesize limits.  This *must* be checked before blocksize
+     computation. See http://www.pytables.org/trac/ticket/288 */
+  if (typesize > BLOSC_MAX_TYPESIZE) {
+    /* If typesize is too large, treat buffer as an 1-byte stream. */
+    typesize = 1;
+  }
+
   /* Get the blocksize */
   blocksize = compute_blocksize(clevel, typesize, nbytes_);
 
@@ -589,12 +593,6 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   nblocks = nbytes_ / blocksize;
   leftover = nbytes_ % blocksize;
   nblocks = (leftover>0)? nblocks+1: nblocks;
-
-  /* Check typesize limits */
-  if (typesize > MAX_TYPESIZE) {
-    /* If typesize is too large, treat buffer as an 1-byte stream. */
-    typesize = 1;
-  }
 
   _dest = (uint8_t *)(dest);
   /* Write header for this block */

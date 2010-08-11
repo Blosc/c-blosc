@@ -119,6 +119,10 @@ herr_t blosc_set_local(hid_t dcpl, hid_t type, hid_t space){
 
     typesize = H5Tget_size(type);
     if (typesize==0) return -1;
+    /* Limit large typesizes (they are pretty inneficient to shuffle
+       and, in addition, Blosc does not handle typesizes larger than
+       blocksizes) */
+    if (typesize>BLOSC_MAX_TYPESIZE) typesize = 1;
     values[2] = typesize;
 
     bufsize = typesize;
