@@ -17,7 +17,7 @@
 
 #define BLOSC_VERSION_STRING   "1.1.a1.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "2010-08-11"    /* date version */
+#define BLOSC_VERSION_DATE     "2010-08-05"    /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
@@ -28,12 +28,6 @@
 
 /* The maximum overhead during compression in bytes */
 #define BLOSC_MAX_OVERHEAD 16
-
-/* Maximum typesize before considering buffer as a stream of bytes.
-   It cannot be larger than 256, and due to the limitations in
-   MIN_BUFFERSIZE (blosc.c), this must be a power of 2 and cannot be
-   smaller than 66.  So only 2 values are allowed: 128 or 256. */
-#define BLOSC_MAX_TYPESIZE 256
 
 
 /* Codes for internal flags */
@@ -87,9 +81,8 @@ int blosc_set_nthreads(int nthreads);
   threads internally).
  */
 
-unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
-                            size_t nbytes, const void *src, void *dest,
-                            size_t destsize);
+int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
+		   const void *src, void *dest, size_t destsize);
 
 
 /**
@@ -107,7 +100,17 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   threads internally).
 */
 
-unsigned int blosc_decompress(const void *src, void *dest, size_t destsize);
+int blosc_decompress(const void *src, void *dest, size_t destsize);
+
+
+/**
+  Get `nitems` (of typesize size) in `src` buffer starting in `start`.
+  The items are returned in `dest` buffer, which has to have enough
+  space for storing all items.  Returns the number of bytes copied to
+  `dest` or a negative value if some error happens.
+ */
+
+int blosc_getitem(const void *src, int start, int nitems, void *dest);
 
 
 /**

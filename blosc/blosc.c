@@ -34,11 +34,13 @@
 #define MB (1024*KB)
 
 /* Maximum buffer size to be compressed */
-#define MAX_BUFFERSIZE INT32_MAX      /* Signed 32-bit internal counters */
+#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
 
-/* Minimum buffer size to be compressed.  This must be a power of 2
-   and cannot be smaller than 66. */
-#define MIN_BUFFERSIZE BLOSC_MAX_TYPESIZE
+/* Minimum buffer size to be compressed */
+#define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
+
+/* Maximum typesize before considering buffer as a stream of bytes. */
+#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
 
 /* The maximum number of splits in a block for compression */
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
@@ -109,6 +111,38 @@ struct temp_data {
   size_t blocksize;
 } current_temp;
 
+
+uint8_t *my_malloc(size_t size)
+{
+  void *block = NULL;
+  int res = 0;
+
+#if defined(_WIN32)
+  block = _aligned_malloc(size, 16);
+#elif defined __APPLE__
+  /* Mac OS X guarantees 16-byte alignment in small allocs */
+  block = malloc(size);
+#else
+  res = posix_memalign(&block, 16, size);
+#endif  /* _WIN32 */
+
+  if (block == NULL || res != 0) {
+    printf("Error allocating memory!");
+    exit(1);
+  }
+
+  return (uint8_t *)block;
+}
+
+
+void my_free(void *block)
+{
+#if defined(_WIN32)
+    _aligned_free(block);
+#else
+    free(block);
+#endif  /* _WIN32 */
+}
 
 
 /* If `a` is little-endian, return it as-is.  If not, return a copy,
@@ -266,7 +300,10 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
     else {
       /* dest is not aligned.  Use tmp2, which is aligned, and copy. */
       unshuffle(typesize, blocksize, tmp, tmp2);
-      memcpy(dest, tmp2, blocksize);
+      if (tmp2 != dest) {
+        /* Copy only when dest is not tmp2 (e.g. not blosc_getitem())  */
+        memcpy(dest, tmp2, blocksize);
+      }
     }
   }
 
@@ -404,31 +441,13 @@ void create_temporaries(void)
   size_t blocksize = params.blocksize;
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
-   hurt other modes either. */
+   hurt serial mode either. */
   size_t ebsize = blocksize + typesize*sizeof(int32_t);
-  uint8_t *tmp = NULL, *tmp2 = NULL;
-  int result1 = 0, result2 = 0;
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
-#if defined(_WIN32)
-    tmp = (uint8_t *)_aligned_malloc(blocksize, 16);
-    tmp2 = (uint8_t *)_aligned_malloc(ebsize, 16);
-#elif defined __APPLE__
-    /* Mac OS X guarantees 16-byte alignment in small allocs */
-    tmp = (uint8_t *)malloc(blocksize);
-    tmp2 = (uint8_t *)malloc(ebsize);
-#else
-    result1 = posix_memalign((void **)&tmp, 16, blocksize);
-    result2 = posix_memalign((void **)&tmp2, 16, ebsize);
-#endif  /* _WIN32 */
-    params.tmp[tid] = tmp;
-    params.tmp2[tid] = tmp2;
-  }
-
-  if (tmp == NULL || tmp2 == NULL || result1 != 0 || result2 != 0) {
-    printf("Error allocating memory!");
-    exit(1);
+    params.tmp[tid] = my_malloc(blocksize);
+    params.tmp2[tid] = my_malloc(ebsize);
   }
 
   init_temps_done = 1;
@@ -436,30 +455,20 @@ void create_temporaries(void)
   current_temp.nthreads = nthreads;
   current_temp.typesize = typesize;
   current_temp.blocksize = blocksize;
-
 }
 
 
 void release_temporaries(void)
 {
   int32_t tid;
-  uint8_t *tmp, *tmp2;
 
   /* Release buffers */
   for (tid = 0; tid < nthreads; tid++) {
-    tmp = params.tmp[tid];
-    tmp2 = params.tmp2[tid];
-#if defined(_WIN32)
-    _aligned_free(tmp);
-    _aligned_free(tmp2);
-#else
-    free(tmp);
-    free(tmp2);
-#endif  /* _WIN32 */
+    my_free(params.tmp[tid]);
+    my_free(params.tmp2[tid]);
   }
 
   init_temps_done = 0;
-
 }
 
 
@@ -540,9 +549,8 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
 
 
 /* The public routine for compression.  See blosc.h for docstrings. */
-unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
-                            size_t nbytes, const void *src, void *dest,
-                            size_t destsize)
+int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
+		   const void *src, void *dest, size_t destsize)
 {
   uint8_t *_dest=NULL;         /* current pos for destination buffer */
   uint8_t *flags;              /* flags for header.  Currently booked:
@@ -556,7 +564,6 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   uint32_t ntbytes = 0;        /* the number of compressed bytes */
   uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
   size_t maxbytes = destsize;  /* maximum size for dest buffer */
-
 
   /* Check buffer size limits */
   if (nbytes > MAX_BUFFERSIZE) {
@@ -580,13 +587,6 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
     return -10;
   }
 
-  /* Check typesize limits.  This *must* be checked before blocksize
-     computation. See http://www.pytables.org/trac/ticket/288 */
-  if (typesize >= BLOSC_MAX_TYPESIZE) {
-    /* If typesize is too large, treat buffer as an 1-byte stream. */
-    typesize = 1;
-  }
-
   /* Get the blocksize */
   blocksize = compute_blocksize(clevel, typesize, nbytes_);
 
@@ -594,6 +594,12 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
   nblocks = nbytes_ / blocksize;
   leftover = nbytes_ % blocksize;
   nblocks = (leftover>0)? nblocks+1: nblocks;
+
+  /* Check typesize limits */
+  if (typesize > MAX_TYPESIZE) {
+    /* If typesize is too large, treat buffer as an 1-byte stream. */
+    typesize = 1;
+  }
 
   _dest = (uint8_t *)(dest);
   /* Write header for this block */
@@ -678,13 +684,12 @@ unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
 
 
 /* The public routine for decompression.  See blosc.h for docstrings. */
-unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
+int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   uint8_t *_src=NULL;            /* current pos for source buffer */
   uint8_t *_dest=NULL;           /* current pos for destination buffer */
   uint8_t version, versionlz;    /* versions for compressed header */
   uint8_t flags;                 /* flags for header */
-  int32_t doshuffle = 0;         /* do unshuffle? */
   int32_t ntbytes;               /* the number of uncompressed bytes */
   uint32_t nblocks;              /* number of total blocks in buffer */
   uint32_t leftover;             /* extra bytes at end of buffer */
@@ -713,20 +718,9 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
   nblocks = (leftover>0)? nblocks+1: nblocks;
   _src += sizeof(int32_t)*nblocks;
 
-  /* Check zero typesizes.  From Blosc version format 2 on, this value
-   has been reserved for future use. */
-  if ((version == 1) && (typesize == 0)) {
-    typesize = 256;             /* 0 means 256 in format version 1 */
-  }
-
   /* Check that we have enough space to decompress */
   if (nbytes > destsize) {
     return -1;
-  }
-
-  if (flags & BLOSC_DOSHUFFLE) {
-    /* Input is shuffled.  Unshuffle it. */
-    doshuffle = 1;
   }
 
   /* Populate parameters for decompression routines */
@@ -760,8 +754,111 @@ unsigned int blosc_decompress(const void *src, void *dest, size_t destsize)
     ntbytes = do_job();
   }
 
-
   assert(ntbytes <= (int32_t)destsize);
+  return ntbytes;
+}
+
+
+/* Specific routine optimized for decompression a small number of
+   items out of a compressed chunk.  This does not use threads because
+   it would affect negatively to performance. */
+int blosc_getitem(const void *src, int start, int nitems, void *dest)
+{
+  uint8_t *_src=NULL;               /* current pos for source buffer */
+  uint8_t version, versionlz;       /* versions for compressed header */
+  uint8_t flags;                    /* flags for header */
+  int32_t ntbytes = 0;              /* the number of uncompressed bytes */
+  uint32_t nblocks;                 /* number of total blocks in buffer */
+  uint32_t leftover;                /* extra bytes at end of buffer */
+  uint32_t *bstarts;                /* start pointers for each block */
+  uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
+  uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
+  int tmp_init = 0;
+  uint32_t typesize, blocksize, nbytes, ctbytes;
+  uint32_t j, bsize, bsize2, leftoverblock;
+  int32_t cbytes, startb, stopb;
+  int stop = start + nitems;
+
+  _src = (uint8_t *)(src);
+
+  /* Read the header block */
+  version = _src[0];                         /* blosc format version */
+  versionlz = _src[1];                       /* blosclz format version */
+  flags = _src[2];                           /* flags */
+  typesize = (uint32_t)_src[3];              /* typesize */
+  _src += 4;
+  nbytes = sw32(((uint32_t *)_src)[0]);      /* buffer size */
+  blocksize = sw32(((uint32_t *)_src)[1]);   /* block size */
+  ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
+
+  _src += sizeof(int32_t)*3;
+  bstarts = (uint32_t *)_src;
+  /* Compute some params */
+  /* Total blocks */
+  nblocks = nbytes / blocksize;
+  leftover = nbytes % blocksize;
+  nblocks = (leftover>0)? nblocks+1: nblocks;
+  _src += sizeof(int32_t)*nblocks;
+
+  /* Parameters needed by blosc_d */
+  params.typesize = typesize;
+  params.flags = flags;
+
+  /* Initialize temporaries if needed */
+  if (tmp == NULL || tmp2 == NULL || current_temp.blocksize < blocksize) {
+    tmp = my_malloc(blocksize);
+    tmp2 = my_malloc(blocksize);
+    tmp_init = 1;
+  }
+
+  for (j = 0; j < nblocks; j++) {
+    bsize = blocksize;
+    leftoverblock = 0;
+    if ((j == nblocks - 1) && (leftover > 0)) {
+      bsize = leftover;
+      leftoverblock = 1;
+    }
+
+    /* Compute start & stop for each block */
+    startb = start * typesize - j * blocksize;
+    stopb = stop * typesize - j * blocksize;
+    if ((startb >= (int)blocksize) || (stopb <= 0)) {
+      continue;
+    }
+    if (startb < 0) {
+      startb = 0;
+    }
+    if (stopb > (int)blocksize) {
+      stopb = blocksize;
+    }
+    bsize2 = stopb - startb;
+
+    /* Do the actual data copy */
+    if (flags & BLOSC_MEMCPYED) {
+      /* We want to memcpy only */
+      memcpy(dest+ntbytes, src+BLOSC_MAX_OVERHEAD+j*blocksize+startb, bsize2);
+      cbytes = bsize2;
+    }
+    else {
+      /* Regular decompression.  Put results in tmp2. */
+      cbytes = blosc_d(bsize, leftoverblock,
+                       (uint8_t *)src+sw32(bstarts[j]), tmp2, tmp, tmp2);
+      if (cbytes < 0) {
+        ntbytes = cbytes;
+        break;
+      }
+      /* Copy to destination */
+      memcpy(dest+ntbytes, tmp2+startb, bsize2);
+      cbytes = bsize2;
+    }
+    ntbytes += cbytes;
+  }
+
+  if (tmp_init) {
+    my_free(tmp);
+    my_free(tmp2);
+  }
+
   return ntbytes;
 }
 
