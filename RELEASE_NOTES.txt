@@ -13,6 +13,9 @@ Changes from 1.0 to 1.1.a1
 - Fixed a problem with large datatypes.
   See http://www.pytables.org/trac/ticket/288 for more info.
 
+- Fixed a problem with the computation of the blocksize in
+  the Blosc filter for HDF5.
+
 - Added a new `blosc_getitem()` call to allow the retrieval of
   items in sizes smaller than the complete buffer.  That was useful
   for the carray project, but certainly for others too.
