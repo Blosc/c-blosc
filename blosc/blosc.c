@@ -14,7 +14,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
-#include <pthread.h>
 #include "blosc.h"
 #include "blosclz.h"
 #include "shuffle.h"
@@ -27,6 +26,12 @@
   #include <unistd.h>
   #include <inttypes.h>
 #endif  /* _WIN32 */
+
+#if defined(_WIN32)
+  #include "win32/pthread.h"
+#else
+  #include <pthread.h>
+#endif
 
 
 /* Some useful units */

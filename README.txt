@@ -98,7 +98,7 @@ To compile using GCC/MINGW (4.4 or higher recommended):
 
 Using Windows and MSVC (2008 or higher recommended):
 
-  cl /Ox /Femyprog.exe myprog.c blosc\*.c  /link pthreadvc2.lib
+  cl /Ox /Femyprog.exe myprog.c blosc\*.c 
 
 [remember to set the LIB and INCLUDE environment variables to
 pthread-win32 directories first]

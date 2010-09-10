@@ -20,6 +20,9 @@ Changes from 1.0 to 1.1.a1
   items in sizes smaller than the complete buffer.  That was useful
   for the carray project, but certainly for others too.
 
+- Added code for simulating pthreads API on Windows.  No need to link
+  explicitly with pthreads lib on Windows anymore.
+
 Changes from 0.9.5 to 1.0
 =========================
 

@@ -15,9 +15,9 @@
 #define BLOSC_VERSION_MINOR    1    /* for minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.1.a1.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.1.b1.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "2010-08-05"    /* date version */
+#define BLOSC_VERSION_DATE     "2010-09-10"    /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
