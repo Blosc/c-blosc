@@ -805,6 +805,17 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   nblocks = (leftover>0)? nblocks+1: nblocks;
   _src += sizeof(int32_t)*nblocks;
 
+  /* Check region boundaries */
+  if ((start < 0) || (start*typesize > nbytes)) {
+    fprintf(stderr, "`start` out of bounds");
+    return (-1);
+  }
+
+  if ((stop < 0) || (stop*typesize > nbytes)) {
+    fprintf(stderr, "`start`+`nitems` out of bounds");
+    return (-1);
+  }
+
   /* Parameters needed by blosc_d */
   params.typesize = typesize;
   params.flags = flags;
