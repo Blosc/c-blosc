@@ -13,7 +13,7 @@
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
-  #include "stdint-windows.h"
+  #include "win32/stdint-windows.h"
   #define __SSE2__          /* Windows does not define this by default */
 #else
   #include <stdint.h>

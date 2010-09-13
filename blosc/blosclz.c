@@ -20,7 +20,7 @@
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
-  #include "stdint-windows.h"
+  #include "win32/stdint-windows.h"
 #else
   #include <stdint.h>
 #endif  /* _WIN32 */

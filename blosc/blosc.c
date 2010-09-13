@@ -20,7 +20,7 @@
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
-  #include "stdint-windows.h"
+  #include "win32/stdint-windows.h"
 #else
   #include <stdint.h>
   #include <unistd.h>
@@ -70,7 +70,9 @@ int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
 pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
 int32_t tids[MAX_THREADS];       /* ID per each thread */
+#if !defined(_WIN32)
 pthread_attr_t ct_attr;          /* creation time attributes for threads */
+#endif
 
 #if defined(_POSIX_BARRIERS) && (_POSIX_BARRIERS - 20012L) >= 0
 #define _POSIX_BARRIERS_MINE
@@ -387,10 +389,10 @@ int serial_blosc(void)
 /* Threaded version for compression/decompression */
 int parallel_blosc(void)
 {
-  int32_t rc;
 
   /* Synchronization point for all threads (wait for initialization) */
 #ifdef _POSIX_BARRIERS_MINE
+  int32_t rc;
   rc = pthread_barrier_wait(&barr_init);
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
     printf("Could not wait on barrier (init)\n");
@@ -852,7 +854,9 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
     /* Do the actual data copy */
     if (flags & BLOSC_MEMCPYED) {
       /* We want to memcpy only */
-      memcpy(dest+ntbytes, src+BLOSC_MAX_OVERHEAD+j*blocksize+startb, bsize2);
+      memcpy((uint8_t *)dest + ntbytes,
+	     (uint8_t *)src + BLOSC_MAX_OVERHEAD + j*blocksize + startb,
+             bsize2);
       cbytes = bsize2;
     }
     else {
@@ -864,7 +868,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
         break;
       }
       /* Copy to destination */
-      memcpy(dest+ntbytes, tmp2+startb, bsize2);
+      memcpy((uint8_t *)dest + ntbytes, tmp2 + startb, bsize2);
       cbytes = bsize2;
     }
     ntbytes += cbytes;
@@ -1109,14 +1113,20 @@ int init_threads(void)
   count_threads = 0;      /* Reset threads counter */
 #endif
 
+#if !defined(_WIN32)
   /* Initialize and set thread detached attribute */
   pthread_attr_init(&ct_attr);
   pthread_attr_setdetachstate(&ct_attr, PTHREAD_CREATE_JOINABLE);
+#endif
 
   /* Finally, create the threads in detached state */
   for (tid = 0; tid < nthreads; tid++) {
     tids[tid] = tid;
+#if !defined(_WIN32)
     rc = pthread_create(&threads[tid], &ct_attr, t_blosc, (void *)&tids[tid]);
+#else
+    rc = pthread_create(&threads[tid], NULL, t_blosc, (void *)&tids[tid]);
+#endif
     if (rc) {
       fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
       fprintf(stderr, "\tError detail: %s\n", strerror(rc));
@@ -1245,7 +1255,9 @@ void blosc_free_resources(void)
 #endif
 
     /* Thread attributes */
+#if !defined(_WIN32)
     pthread_attr_destroy(&ct_attr);
+#endif
 
     init_threads_done = 0;
     end_threads = 0;
