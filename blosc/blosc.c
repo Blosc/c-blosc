@@ -59,8 +59,8 @@ int32_t end_threads = 0;         /* should exisiting threads end? */
 int32_t init_sentinels_done = 0; /* sentinels initialized? */
 int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
-pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
-int32_t tids[MAX_THREADS];       /* ID per each thread */
+pthread_t threads[BLOSC_MAX_THREADS];  /* opaque structure for threads */
+int32_t tids[BLOSC_MAX_THREADS];       /* ID per each thread */
 #if !defined(_WIN32)
 pthread_attr_t ct_attr;          /* creation time attributes for threads */
 #endif
@@ -97,8 +97,8 @@ struct thread_data {
   uint32_t *bstarts;             /* start pointers for each block */
   uint8_t *src;
   uint8_t *dest;
-  uint8_t *tmp[MAX_THREADS];
-  uint8_t *tmp2[MAX_THREADS];
+  uint8_t *tmp[BLOSC_MAX_THREADS];
+  uint8_t *tmp2[BLOSC_MAX_THREADS];
 } params;
 
 
@@ -580,9 +580,10 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   uint32_t maxbytes = (uint32_t)destsize;  /* maximum size for dest buffer */
 
   /* Check buffer size limits */
-  if (nbytes > MAX_BUFFERSIZE) {
+  if (nbytes > BLOSC_MAX_BUFFERSIZE) {
     /* If buffer is too large, give up. */
-    printf("Input buffer size cannot exceed %d MB\n", MAX_BUFFERSIZE / MB);
+    printf("Input buffer size cannot exceed %d MB\n", \
+           BLOSC_MAX_BUFFERSIZE / MB);
     exit(1);
   }
   /* We can safely do this assignation now */
@@ -610,7 +611,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   nblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Check typesize limits */
-  if (typesize > MAX_TYPESIZE) {
+  if (typesize > BLOSC_MAX_TYPESIZE) {
     /* If typesize is too large, treat buffer as an 1-byte stream. */
     typesize = 1;
   }
@@ -1120,9 +1121,10 @@ int blosc_set_nthreads(int nthreads_new)
   int32_t t;
   void *status;
 
-  if (nthreads_new > MAX_THREADS) {
-    fprintf(stderr, "Error.  nthreads cannot be larger than MAX_THREADS (%d)",
-            MAX_THREADS);
+  if (nthreads_new > BLOSC_MAX_THREADS) {
+    fprintf(stderr,
+            "Error.  nthreads cannot be larger than BLOSC_MAX_THREADS (%d)",
+            BLOSC_MAX_THREADS);
     return -1;
   }
   else if (nthreads_new <= 0) {

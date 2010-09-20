@@ -12,10 +12,12 @@
     h5cc -DH5_USE_16_API -msse2 ../blosc/*.c blosc_filter.c example.c \
          -o example -lpthread
 
+    [add ..\blosc\win32\*.c to the list of files if you are on Windows]
+
     To run:
 
     $ ./example
-    Blosc version info: 1.0rc1 (2010-06-28)
+    Blosc version info: 1.1.b3.dev (2010-09-20)
     Success!
     $ h5ls -v example.h5
     Opened "example.h5" with sec2 driver.

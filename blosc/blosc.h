@@ -30,13 +30,13 @@
 #define BLOSC_MAX_OVERHEAD 16
 
 /* Maximum buffer size to be compressed */
-#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
+#define BLOSC_MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
 
 /* Maximum typesize before considering buffer as a stream of bytes */
-#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
+#define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
 
 /* The maximum number of threads (for some static arrays) */
-#define MAX_THREADS 256
+#define BLOSC_MAX_THREADS 256
 
 /* Codes for internal flags (see blosc_cbuffer_metainfo) */
 #define BLOSC_DOSHUFFLE 0x1
