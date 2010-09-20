@@ -110,6 +110,54 @@ struct temp_data {
 } current_temp;
 
 
+/* Macros for synchronization */
+int32_t rc = 0;
+
+/* Wait until all threads are initialized */
+#ifdef _POSIX_BARRIERS_MINE
+#define WAIT_INIT \
+  int32_t rc; \
+  rc = pthread_barrier_wait(&barr_init); \
+  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
+    printf("Could not wait on barrier (init)\n"); \
+    exit(-1); \
+  }
+#else
+#define WAIT_INIT \
+  pthread_mutex_lock(&count_threads_mutex); \
+  if (count_threads < nthreads) { \
+    count_threads++; \
+    pthread_cond_wait(&count_threads_cv, &count_threads_mutex); \
+  } \
+  else { \
+    pthread_cond_broadcast(&count_threads_cv); \
+  } \
+  pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
+/* Wait for all threads to finish */
+#ifdef _POSIX_BARRIERS_MINE
+#define WAIT_FINISH \
+  rc = pthread_barrier_wait(&barr_finish); \
+  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
+    printf("Could not wait on barrier (finish)\n"); \
+    exit(-1);                                       \
+  }
+#else
+#define WAIT_FINISH \
+  pthread_mutex_lock(&count_threads_mutex); \
+  if (count_threads > 0) { \
+    count_threads--; \
+    pthread_cond_wait(&count_threads_cv, &count_threads_mutex); \
+  } \
+  else { \
+    pthread_cond_broadcast(&count_threads_cv); \
+  } \
+  pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
+
+/* A function for aligned malloc that is portable */
 uint8_t *my_malloc(size_t size)
 {
   void *block = NULL;
@@ -134,6 +182,7 @@ uint8_t *my_malloc(size_t size)
 }
 
 
+/* Release memory booked by my_malloc */
 void my_free(void *block)
 {
 #if defined(_WIN32)
@@ -383,43 +432,9 @@ int parallel_blosc(void)
 {
 
   /* Synchronization point for all threads (wait for initialization) */
-#ifdef _POSIX_BARRIERS_MINE
-  int32_t rc;
-  rc = pthread_barrier_wait(&barr_init);
-  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-    printf("Could not wait on barrier (init)\n");
-    exit(-1);
-  }
-#else
-  pthread_mutex_lock(&count_threads_mutex);
-  if (count_threads < nthreads) {
-    count_threads++;
-    pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-  }
-  else {
-    pthread_cond_broadcast(&count_threads_cv);
-  }
-  pthread_mutex_unlock(&count_threads_mutex);
-#endif
-
+  WAIT_INIT;
   /* Synchronization point for all threads (wait for finalization) */
-#ifdef _POSIX_BARRIERS_MINE
-  rc = pthread_barrier_wait(&barr_finish);
-  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-    printf("Could not wait on barrier (finish)\n");
-    exit(-1);
-  }
-#else
-  pthread_mutex_lock(&count_threads_mutex);
-  if (count_threads > 0) {
-    count_threads--;
-    pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-  }
-  else {
-    pthread_cond_broadcast(&count_threads_cv);
-  }
-  pthread_mutex_unlock(&count_threads_mutex);
-#endif
+  WAIT_FINISH;
 
   if (giveup_code > 0) {
     /* Return the total bytes (de-)compressed in threads */
@@ -884,7 +899,6 @@ void *t_blosc(void *tids)
   uint32_t leftover2;
   uint32_t tblock;               /* limit block on a thread */
   uint32_t nblock_;              /* private copy of nblock */
-  int32_t rc = 0;
   uint32_t bsize, leftoverblock;
   /* Parameters for threads */
   uint32_t blocksize;
@@ -905,24 +919,8 @@ void *t_blosc(void *tids)
 
     init_sentinels_done = 0;     /* sentinels have to be initialised yet */
 
-    /* Meeting point for all threads (wait for initialization) */
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr_init);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-      printf("Could not wait on barrier (init)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count_threads_mutex);
-    if (count_threads < nthreads) {
-      count_threads++;
-      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count_threads_cv);
-    }
-    pthread_mutex_unlock(&count_threads_mutex);
-#endif
+    /* Synchronization point for all threads (wait for initialization) */
+    WAIT_INIT;
 
     /* Check if thread has been asked to return */
     if (end_threads) {
@@ -1063,23 +1061,7 @@ void *t_blosc(void *tids)
     }
 
     /* Meeting point for all threads (wait for finalization) */
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr_finish);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-      printf("Could not wait on barrier (finish)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count_threads_mutex);
-    if (count_threads > 0) {
-      count_threads--;
-      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count_threads_cv);
-    }
-    pthread_mutex_unlock(&count_threads_mutex);
-#endif
+    WAIT_FINISH;
 
   }  /* closes while(1) */
 
@@ -1135,7 +1117,7 @@ int init_threads(void)
 int blosc_set_nthreads(int nthreads_new)
 {
   int32_t nthreads_old = nthreads;
-  int32_t t, rc;
+  int32_t t;
   void *status;
 
   if (nthreads_new > MAX_THREADS) {
@@ -1151,24 +1133,8 @@ int blosc_set_nthreads(int nthreads_new)
     if (nthreads > 1 && init_threads_done) {
       /* Tell all existing threads to finish */
       end_threads = 1;
-#ifdef _POSIX_BARRIERS_MINE
-      rc = pthread_barrier_wait(&barr_init);
-      if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-        printf("Could not wait on barrier (init)\n");
-        exit(-1);
-      }
-#else
-      pthread_mutex_lock(&count_threads_mutex);
-      if (count_threads < nthreads) {
-        count_threads++;
-        pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-      }
-      else {
-        pthread_cond_broadcast(&count_threads_cv);
-      }
-      pthread_mutex_unlock(&count_threads_mutex);
-#endif
-
+      /* Synchronization point for all threads (wait for initialization) */
+      WAIT_INIT;
       /* Join exiting threads */
       for (t=0; t<nthreads; t++) {
         rc = pthread_join(threads[t], &status);
@@ -1194,7 +1160,7 @@ int blosc_set_nthreads(int nthreads_new)
 /* Free possible memory temporaries and thread resources */
 void blosc_free_resources(void)
 {
-  int32_t t, rc;
+  int32_t t;
   void *status;
 
   /* Release temporaries */
@@ -1206,24 +1172,8 @@ void blosc_free_resources(void)
   if (nthreads > 1 && init_threads_done) {
     /* Tell all existing threads to finish */
     end_threads = 1;
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr_init);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-        printf("Could not wait on barrier (init)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count_threads_mutex);
-    if (count_threads < nthreads) {
-      count_threads++;
-      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count_threads_cv);
-    }
-    pthread_mutex_unlock(&count_threads_mutex);
-#endif
-
+    /* Synchronization point for all threads (wait for initialization) */
+    WAIT_INIT;
     /* Join exiting threads */
     for (t=0; t<nthreads; t++) {
       rc = pthread_join(threads[t], &status);
