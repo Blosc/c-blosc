@@ -5,18 +5,10 @@
   well as external datafiles (uncomment the lines after "For data
   coming from a file" comment).
 
-  To compile using GCC, stay in this directory and do:
-
-    gcc -O3 -msse2 -o bench bench.c ../blosc/*.c -lpthread
-
-  Using Windows and MSVC (2008 or higher recommended):
-
-    cl /Ox /Febench.exe bench.c ..\blosc\*.c  /link pthreadvc2.lib
-
   For usage instructions of this benchmark, please see:
-  
+
     http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
-    
+
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!
 
@@ -49,7 +41,7 @@
 
 int nchunks = NCHUNKS;
 int niter = 3;                  /* default number of iterations */
-float totalsize = 0.;           /* total compressed/decompressed size */
+double totalsize = 0.;          /* total compressed/decompressed size */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
 #include <windows.h>
@@ -149,11 +141,11 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-void do_bench(int nthreads, unsigned int size, int elsize, int rshift) {
+void do_bench(int nthreads, int size, int elsize, int rshift) {
   void *src, *srccpy;
   void **dest[NCHUNKS], *dest2;
   int nbytes = 0, cbytes = 0;
-  size_t i, j;
+  int i, j;
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
   int clevel, doshuffle=1;
