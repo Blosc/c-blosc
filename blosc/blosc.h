@@ -26,8 +26,13 @@
 /* The combined blosc and blosclz formats */
 #define BLOSC_VERSION_CFORMAT (BLOSC_VERSION_FORMAT << 8) & (BLOSCLZ_VERSION_FORMAT)
 
-/* The maximum overhead during compression in bytes */
-#define BLOSC_MAX_OVERHEAD 16
+/* Minimum header length */
+#define BLOSC_MIN_HEADER_LENGTH 16
+
+/* The maximum overhead during compression in bytes.  This equals to
+   BLOSC_MIN_HEADER_LENGTH now, but can be higher in future
+   implementations */
+#define BLOSC_MAX_OVERHEAD BLOSC_MIN_HEADER_LENGTH
 
 /* Maximum buffer size to be compressed */
 #define BLOSC_MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
@@ -133,7 +138,12 @@ void blosc_free_resources(void);
   Return information about a compressed buffer, namely the number of
   uncompressed bytes (`nbytes`) and compressed (`cbytes`).  It also
   returns the `blocksize` (which is used internally for doing the
-  compression by blocks).  This function should always succeed.
+  compression by blocks).
+
+  You only need to pass the first BLOSC_MIN_HEADER_LENGTH bytes of a
+  compressed buffer for this call to work.
+
+  This function should always succeed.
 */
 
 void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,

@@ -27,9 +27,14 @@ Changes from 1.0 to 1.1
   sizes smaller than the complete buffer.  That is useful for the carray
   project, but certainly for others too.
 
-- New MAX_BUFFERSIZE, MAX_TYPESIZE and MAX_THREADS symbols are available
-  in blosc.h.  These can be useful for validating parameters in clients.
-  Thanks to Robert Smallshire for suggesting that.
+- New BLOSC_MAX_BUFFERSIZE, BLOSC_MAX_TYPESIZE and BLOSC_MAX_THREADS
+  symbols are available in blosc.h.  These can be useful for validating
+  parameters in clients.  Thanks to Robert Smallshire for suggesting
+  that.
+
+- A new BLOSC_MIN_HEADER_LENGTH symbol in blosc.h tells how many bytes
+  long is the minimum length of a Blosc header.  `blosc_cbuffer_sizes()`
+  only needs these bytes to be passed to work correctly.
 
 - Removed many warnings (related with potentially dangerous type-casting
   code) issued by MSVC 2008 in 64-bit mode.
