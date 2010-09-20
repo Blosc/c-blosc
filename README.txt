@@ -92,16 +92,17 @@ shuffle.h and shuffle.c  -- the shuffle code
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
 
-To compile using GCC/MINGW (4.4 or higher recommended):
+To compile using GCC (4.4 or higher recommended) on Unix:
 
   gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
 
+Using Windows and MINGW:
+
+  gcc -O3 -msse2 -o myprog myprog.c blosc\*.c blosc\win32\*.c
+
 Using Windows and MSVC (2008 or higher recommended):
 
-  cl /Ox /Femyprog.exe myprog.c blosc\*.c 
-
-[remember to set the LIB and INCLUDE environment variables to
-pthread-win32 directories first]
+  cl /Ox /Femyprog.exe myprog.c blosc\*.c blosc\win32\*.c
 
 A simple usage example is the benchmark in the bench/bench.c file.
 Also, another example for using Blosc as a generic HDF5 filter is in

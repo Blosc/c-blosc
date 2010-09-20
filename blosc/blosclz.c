@@ -119,7 +119,7 @@ int blosclz_compress(int opt_level, const void* input,
   size_t hval;
   size_t copy;
 
-  float maxlength_[10] = {-1, .1, .15, .2, .5, .7, .85, .925, .975, 1.0};
+  double maxlength_[10] = {-1, .1, .15, .2, .5, .7, .85, .925, .975, 1.0};
   size_t maxlength = (size_t) (length * maxlength_[opt_level]);
   if (maxlength > (size_t) maxout) {
     maxlength = (size_t) maxout;

@@ -38,20 +38,11 @@
 #define KB 1024
 #define MB (1024*KB)
 
-/* Maximum buffer size to be compressed */
-#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
-
 /* Minimum buffer size to be compressed */
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
 
-/* Maximum typesize before considering buffer as a stream of bytes. */
-#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
-
 /* The maximum number of splits in a block for compression */
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
-
-/* The maximum number of threads (for some static arrays) */
-#define MAX_THREADS 256
 
 /* The size of L1 cache.  32 KB is quite common nowadays. */
 #define L1 (32*KB)
