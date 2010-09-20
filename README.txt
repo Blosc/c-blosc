@@ -98,11 +98,11 @@ To compile using GCC (4.4 or higher recommended) on Unix:
 
 Using Windows and MINGW:
 
-  gcc -O3 -msse2 -o myprog myprog.c blosc\*.c blosc\win32\*.c
+  gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
 
 Using Windows and MSVC (2008 or higher recommended):
 
-  cl /Ox /Femyprog.exe myprog.c blosc\*.c blosc\win32\*.c
+  cl /Ox /Femyprog.exe myprog.c blosc\*.c
 
 A simple usage example is the benchmark in the bench/bench.c file.
 Also, another example for using Blosc as a generic HDF5 filter is in
@@ -135,7 +135,7 @@ Filter for HDF5
 ===============
 
 For those that want to use Blosc as a filter in the HDF5 library,
-there is an implementation in the hdf5/ directory.
+there is a sample implementation in the hdf5/ directory.
 
 
 Acknowledgments

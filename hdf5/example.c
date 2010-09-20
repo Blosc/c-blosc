@@ -12,8 +12,6 @@
     h5cc -DH5_USE_16_API -msse2 ../blosc/*.c blosc_filter.c example.c \
          -o example -lpthread
 
-    [add ..\blosc\win32\*.c to the list of files if you are on Windows]
-
     To run:
 
     $ ./example

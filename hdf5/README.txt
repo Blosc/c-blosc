@@ -31,18 +31,16 @@ special flags and libraries to make sure that these features are used.
 
 To compile using GCC on UNIX:
 
-  gcc -O3 -msse2 -lhdf5 ../blosc/*.c \
-      blosc_filter.c myprog.c -o myprog -lpthread
+  gcc -O3 -msse2 -lhdf5 ../blosc/*.c blosc_filter.c \
+        myprog.c -o myprog -lpthread
 
 To compile using MINGW on Windows:
 
-  gcc -O3 -msse2 -lhdf5 ..\blosc\*.c ..\blosc\win32\*.c \
-      blosc_filter.c myprog.c -o myprog -lpthread
+  gcc -O3 -msse2 -lhdf5 ..\blosc\*.c blosc_filter.c myprog.c -o myprog
 
 Using Windows and MSVC (2008 or higher recommended):
 
-  cl /Ox /Femyprog.exe myprog.c ..\blosc\*.c ..\blosc\win32\*.c \
-      blosc_filter.c
+  cl /Ox /Femyprog.exe myprog.c ..\blosc\*.c blosc_filter.c
 
 Intel ICC compilers should work too.
 
