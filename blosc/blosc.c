@@ -125,7 +125,8 @@ uint8_t *my_malloc(size_t size)
   int res = 0;
 
 #if defined(_WIN32)
-  block = _aligned_malloc(size, 16);
+  /* A (void *) cast needed for avoiding a warning with MINGW :-/ */
+  block	=   (void *)_aligned_malloc(size, 16);
 #elif defined __APPLE__
   /* Mac OS X guarantees 16-byte alignment in small allocs */
   block = malloc(size);
