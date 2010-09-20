@@ -1,31 +1,38 @@
-=============================
- Release notes for Blosc 1.0
-=============================
+===========================
+ Release notes for Blosc 1.1
+===========================
 
 :Author: Francesc Alted i Abad
 :Contact: faltet@pytables.org
 :URL: http://blosc.pytables.org
 
 
-Changes from 1.0 to 1.1.a1
-==========================
+Changes from 1.0 to 1.1
+=======================
 
-- Fixed a problem with large datatypes.
-  See http://www.pytables.org/trac/ticket/288 for more info.
+- Fixed a problem with large datatypes.  See
+  http://www.pytables.org/trac/ticket/288 for more info.
 
-- Fixed a problem with the computation of the blocksize in
-  the Blosc filter for HDF5.
+- Fixed a problem with the computation of the blocksize in the Blosc
+  filter for HDF5.
 
-- Added a new `blosc_getitem()` call to allow the retrieval of
-  items in sizes smaller than the complete buffer.  That was useful
-  for the carray project, but certainly for others too.
+- Added a new `blosc_getitem()` call to allow the retrieval of items in
+  sizes smaller than the complete buffer.  That is useful for the carray
+  project, but certainly for others too.
 
 - Added code for simulating pthreads API on Windows.  No need to link
   explicitly with pthreads lib on Windows anymore.
 
 - New MAX_BUFFERSIZE, MAX_TYPESIZE and MAX_THREADS symbols are available
-  in blosc.h.  These can be useful for validating parameters in
-  clients.  Thanks to Robert Smallshire for suggesting that.
+  in blosc.h.  These can be useful for validating parameters in clients.
+  Thanks to Robert Smallshire for suggesting that.
+
+- Removed many warnings (related with potentially dangerous type-casting
+  code) issued by MSVC 2008 in 64-bit mode.
+
+- Synchronization code greatly simplified with new WAIT_INIT and
+  WAIT_FINISH macros.
+
 
 Changes from 0.9.5 to 1.0
 =========================
