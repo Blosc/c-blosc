@@ -170,8 +170,11 @@ uint8_t *my_malloc(size_t size)
 #elif defined __APPLE__
   /* Mac OS X guarantees 16-byte alignment in small allocs */
   block = malloc(size);
-#else
+#elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+  /* Platform does have an implementation of posix_memalign */
   res = posix_memalign(&block, 16, size);
+#else
+  block = malloc(size);
 #endif  /* _WIN32 */
 
   if (block == NULL || res != 0) {
