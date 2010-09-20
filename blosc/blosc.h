@@ -29,8 +29,16 @@
 /* The maximum overhead during compression in bytes */
 #define BLOSC_MAX_OVERHEAD 16
 
+/* Maximum buffer size to be compressed */
+#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
 
-/* Codes for internal flags */
+/* Maximum typesize before considering buffer as a stream of bytes */
+#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
+
+/* The maximum number of threads (for some static arrays) */
+#define MAX_THREADS 256
+
+/* Codes for internal flags (see blosc_cbuffer_metainfo) */
 #define BLOSC_DOSHUFFLE 0x1
 #define BLOSC_MEMCPYED  0x2
 
@@ -136,7 +144,7 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   Return information about a compressed buffer, namely the type size
   (`typesize`), as well as some internal `flags`.
 
-  The `flags` is a set of bits, where the currently used ones are::
+  The `flags` is a set of bits, where the currently used ones are:
     * bit 0: whether the shuffle filter has been applied or not
     * bit 1: whether the internal buffer is a pure memcpy or not
 
@@ -171,10 +179,8 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 
 
 /**
-
   Force the use of a specific blocksize.  If 0, an automatic
   blocksize will be used (the default).
-
 */
 
 void blosc_set_blocksize(size_t blocksize);

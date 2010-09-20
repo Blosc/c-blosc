@@ -23,6 +23,10 @@ Changes from 1.0 to 1.1.a1
 - Added code for simulating pthreads API on Windows.  No need to link
   explicitly with pthreads lib on Windows anymore.
 
+- New MAX_BUFFERSIZE, MAX_TYPESIZE and MAX_THREADS symbols are available
+  in blosc.h.  These can be useful for validating parameters in
+  clients.  Thanks to Robert Smallshire for suggesting that.
+
 Changes from 0.9.5 to 1.0
 =========================
 

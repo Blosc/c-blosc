@@ -12,6 +12,9 @@
 
 #include "pthread.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <process.h>
 #include <errno.h>
 #include <limits.h>
 
