@@ -6,6 +6,7 @@
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
 
+#include <limits.h>
 
 #ifndef BLOSC_H
 #define BLOSC_H
@@ -35,7 +36,7 @@
 #define BLOSC_MAX_OVERHEAD BLOSC_MIN_HEADER_LENGTH
 
 /* Maximum buffer size to be compressed */
-#define BLOSC_MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
+#define BLOSC_MAX_BUFFERSIZE INT_MAX   /* Signed 32-bit internal counters */
 
 /* Maximum typesize before considering buffer as a stream of bytes */
 #define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
