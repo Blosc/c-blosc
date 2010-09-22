@@ -29,10 +29,10 @@ compress(string, typesize[, clevel=5, shuffle=True]])::
 decompress(string)::
     Decompresses a compressed string.
 
-detect_number_of_cores::
+detect_number_of_cores()::
     Returns the number of cores in the system.
 
-set_nthreads::
+set_nthreads(nthreads)::
     Set the number of threads to be used during Blosc operation.
 
 """
