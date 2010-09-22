@@ -16,7 +16,7 @@ using the Blosc library (http://blosc.pytables.org).
 Public variables
 ----------------
 
-* __version__ : the version of carray package
+* __version__ : the version of blosc package
 * blosclib_version : the version of the Blosc C library
 * ncores : the number of detected cores
 

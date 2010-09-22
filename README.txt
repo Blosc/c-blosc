@@ -131,6 +131,13 @@ are given.  If while running these tests you get some error, please
 report it back!
 
 
+Wrapper for Python
+==================
+
+Blosc comes with a simple wrapper for Python.  See python/README.txt
+for more info.
+
+
 Filter for HDF5
 ===============
 
