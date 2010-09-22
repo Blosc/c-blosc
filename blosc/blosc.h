@@ -51,16 +51,6 @@
 
 
 /**
-  Initialize a pool of threads for compression/decompression.  If
-  `nthreads` is 1, then the serial version is chosen and a possible
-  previous existing pool is ended.  Returns the previous number of
-  threads.  If this is not called, `nthreads` is set to 1 internally.
-*/
-
-int blosc_set_nthreads(int nthreads);
-
-
-/**
   Compress a block of data in the `src` buffer and returns the size of
   compressed block.  The size of `src` buffer is specified by
   `nbytes`.  There is not a minimum for `src` buffer size (`nbytes`).
@@ -125,6 +115,16 @@ int blosc_decompress(const void *src, void *dest, size_t destsize);
  */
 
 int blosc_getitem(const void *src, int start, int nitems, void *dest);
+
+
+/**
+  Initialize a pool of threads for compression/decompression.  If
+  `nthreads` is 1, then the serial version is chosen and a possible
+  previous existing pool is ended.  Returns the previous number of
+  threads.  If this is not called, `nthreads` is set to 1 internally.
+*/
+
+int blosc_set_nthreads(int nthreads);
 
 
 /**
