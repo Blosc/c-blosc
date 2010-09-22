@@ -24,7 +24,7 @@ running:
 
 $ PYTHONPATH=.   (or "set PYTHONPATH=." on Win)
 $ export PYTHONPATH=.  (not needed on Win)
-$ python blosc/toplevel.py
+$ python blosc/toplevel.py  (add -v for verbose mode)
 
 Installing
 ----------

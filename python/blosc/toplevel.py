@@ -80,6 +80,31 @@ def set_nthreads(nthreads):
     return _ext.set_nthreads(nthreads)
 
 
+def free_resources():
+    """
+    free_resources()
+
+    Free possible memory temporaries and thread resources.
+
+    Returns
+    -------
+        out : None
+
+    Notes
+    -----
+    Blosc maintain a pool of threads waiting for work as well as some
+    temporary space.  You can use this function to release these
+    resources when you are not going to use Blosc for a long while.
+
+    Examples
+    --------
+
+    >>> free_resources()
+    >>>
+    """
+    _ext.free_resources()
+
+
 def compress(string, typesize, clevel=5, shuffle=True):
     """compress(string, typesize[, clevel=5, shuffle=True]])
 

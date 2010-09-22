@@ -32,6 +32,9 @@ decompress(string)::
 detect_number_of_cores()::
     Returns the number of cores in the system.
 
+free_resources()::
+    Free possible memory temporaries and thread resources.
+
 set_nthreads(nthreads)::
     Set the number of threads to be used during Blosc operation.
 
@@ -40,7 +43,12 @@ set_nthreads(nthreads)::
 from blosc.version import __version__
 
 from blosc.toplevel import (
-    compress, decompress, detect_number_of_cores, set_nthreads)
+    compress,
+    decompress,
+    detect_number_of_cores,
+    free_resources,
+    set_nthreads,
+    )
 
 # Blosc symbols that we want to export
 from blosc.blosc_extension import (

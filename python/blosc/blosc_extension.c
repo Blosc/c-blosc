@@ -42,6 +42,19 @@ PyBlosc_set_nthreads(PyObject *self, PyObject *args)
 }
 
 
+PyDoc_STRVAR(free_resources__doc__,
+"free_resources() -- Free possible memory temporaries and thread resources.\n"
+             );
+
+static PyObject *
+PyBlosc_free_resources(PyObject *self)
+{
+    blosc_free_resources();
+
+    return Py_None;
+}
+
+
 PyDoc_STRVAR(compress__doc__,
 "compress(string[, typesize, clevel, shuffle]) -- Return compressed string.\n"
              );
@@ -138,6 +151,8 @@ static PyMethodDef blosc_methods[] =
                  compress__doc__},
     {"decompress", (PyCFunction)PyBlosc_decompress, METH_VARARGS,
                    decompress__doc__},
+    {"free_resources", (PyCFunction)PyBlosc_free_resources, METH_VARARGS,
+                     free_resources__doc__},
     {"set_nthreads", (PyCFunction)PyBlosc_set_nthreads, METH_VARARGS,
                      set_nthreads__doc__},
     {NULL, NULL, 0, NULL}
