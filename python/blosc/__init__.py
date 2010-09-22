@@ -6,6 +6,19 @@
 #
 ########################################################################
 
+"""
+
+The functions in this module allow compression and decompression using
+the Blosc library (http://blosc.pytables.org).
+
+compress(string, typesize[, clevel, shuffle]])::
+   Compress string, with a given type size.
+
+decompress(string)::
+  Decompresses a compressed string.
+
+"""
+
 from blosc.toplevel import (
     compress, decompress)
 

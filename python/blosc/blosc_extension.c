@@ -124,17 +124,11 @@ static PyMethodDef blosc_methods[] =
 };
 
 
-PyDoc_STRVAR(blosc_extension_documentation,
-"Please refer to the true blosc module.  This extension is for private use."
-             );
-
 PyMODINIT_FUNC
 PyInit_blosc(void)
 {
-    PyObject *m, *ver;
-    m = Py_InitModule4("blosc_extension", blosc_methods,
-		       blosc_extension_documentation,
-		       (PyObject*)NULL,PYTHON_API_VERSION);
+    PyObject *m;
+    m = Py_InitModule("blosc_extension", blosc_methods);
     if (m == NULL)
 	return;
 
@@ -144,34 +138,29 @@ PyInit_blosc(void)
 	PyModule_AddObject(m, "error", BloscError);
     }
 
-    PyModule_AddIntConstant(m, "BLOSC_VERSION_MAJOR", BLOSC_VERSION_MAJOR);
-    PyModule_AddIntConstant(m, "BLOSC_VERSION_MINOR", BLOSC_VERSION_MINOR);
-    PyModule_AddIntConstant(m, "BLOSC_VERSION_RELEASE", BLOSC_VERSION_RELEASE);
+    /* Integer macros */
+    PyModule_AddIntMacro(m, BLOSC_VERSION_MAJOR);
+    PyModule_AddIntMacro(m, BLOSC_VERSION_MINOR);
+    PyModule_AddIntMacro(m, BLOSC_VERSION_RELEASE);
 
-    PyModule_AddIntConstant(m, "BLOSC_VERSION_FORMAT", BLOSC_VERSION_FORMAT);
-    PyModule_AddIntConstant(m, "BLOSCLZ_VERSION_FORMAT", BLOSCLZ_VERSION_FORMAT);
-    PyModule_AddIntConstant(m, "BLOSC_VERSION_CFORMAT", BLOSC_VERSION_CFORMAT);
+    PyModule_AddIntMacro(m, BLOSC_VERSION_FORMAT);
+    PyModule_AddIntMacro(m, BLOSCLZ_VERSION_FORMAT);
+    PyModule_AddIntMacro(m, BLOSC_VERSION_CFORMAT);
 
-    PyModule_AddIntConstant(m, "BLOSC_MIN_HEADER_LENGTH", BLOSC_MIN_HEADER_LENGTH);
-    PyModule_AddIntConstant(m, "BLOSC_MAX_OVERHEAD", BLOSC_MAX_OVERHEAD);
+    PyModule_AddIntMacro(m, BLOSC_MIN_HEADER_LENGTH);
+    PyModule_AddIntMacro(m, BLOSC_MAX_OVERHEAD);
 
-    PyModule_AddIntConstant(m, "BLOSC_MAX_BUFFERSIZE", BLOSC_MAX_BUFFERSIZE);
-    PyModule_AddIntConstant(m, "BLOSC_MAX_TYPESIZE", BLOSC_MAX_TYPESIZE);
-    PyModule_AddIntConstant(m, "BLOSC_MAX_THREADS", BLOSC_MAX_THREADS);
+    PyModule_AddIntMacro(m, BLOSC_MAX_BUFFERSIZE);
+    PyModule_AddIntMacro(m, BLOSC_MAX_TYPESIZE);
+    PyModule_AddIntMacro(m, BLOSC_MAX_THREADS);
 
-    PyModule_AddIntConstant(m, "BLOSC_DOSHUFFLE", BLOSC_DOSHUFFLE);
-    PyModule_AddIntConstant(m, "BLOSC_MEMCPYED", BLOSC_MEMCPYED);
+    PyModule_AddIntMacro(m, BLOSC_DOSHUFFLE);
+    PyModule_AddIntMacro(m, BLOSC_MEMCPYED);
 
-    /* String objects */
-    ver = PyString_FromString(BLOSC_VERSION_STRING);
-    if (ver != NULL)
-	PyModule_AddObject(m, "BLOSC_VERSION_STRING", ver);
-    ver = PyString_FromString(BLOSC_VERSION_REVISION);
-    if (ver != NULL)
-      PyModule_AddObject(m, "BLOSC_VERSION_REVISION", ver);
-    ver = PyString_FromString(BLOSC_VERSION_DATE);
-    if (ver != NULL)
-      PyModule_AddObject(m, "BLOSC_VERSION_DATE", ver);
+    /* String macros */
+    PyModule_AddStringMacro(m, BLOSC_VERSION_STRING);
+    PyModule_AddStringMacro(m, BLOSC_VERSION_REVISION);
+    PyModule_AddStringMacro(m, BLOSC_VERSION_DATE);
 
 }
 
