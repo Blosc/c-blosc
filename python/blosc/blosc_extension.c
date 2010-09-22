@@ -13,8 +13,6 @@
 #include "blosc.h"
 
 
-#define PyInit_blosc initblosc_extension
-
 static PyObject *BloscError;
 
 static void
@@ -93,7 +91,7 @@ PyBlosc_compress(PyObject *self, PyObject *args)
     }
 
     /* This forces a copy of the output, but anyway */
-    result_str = PyString_FromStringAndSize((char *)output, cbytes);
+    result_str = PyBytes_FromStringAndSize((char *)output, cbytes);
 
     /* Free the initial buffer */
     free(output);
@@ -125,9 +123,9 @@ PyBlosc_decompress(PyObject *self, PyObject *args)
     }
 
     /* Book memory for the result */
-    if (!(result_str = PyString_FromStringAndSize(NULL, nbytes)))
+    if (!(result_str = PyBytes_FromStringAndSize(NULL, nbytes)))
       return NULL;
-    output = PyString_AS_STRING(result_str);
+    output = PyBytes_AS_STRING(result_str);
 
     /* Do the decompression */
     Py_BEGIN_ALLOW_THREADS;
@@ -147,55 +145,69 @@ PyBlosc_decompress(PyObject *self, PyObject *args)
 
 static PyMethodDef blosc_methods[] =
 {
-    {"compress", (PyCFunction)PyBlosc_compress,  METH_VARARGS,
-                 compress__doc__},
-    {"decompress", (PyCFunction)PyBlosc_decompress, METH_VARARGS,
-                   decompress__doc__},
-    {"free_resources", (PyCFunction)PyBlosc_free_resources, METH_VARARGS,
-                     free_resources__doc__},
-    {"set_nthreads", (PyCFunction)PyBlosc_set_nthreads, METH_VARARGS,
-                     set_nthreads__doc__},
+  {"compress", (PyCFunction)PyBlosc_compress,  METH_VARARGS,
+   compress__doc__},
+  {"decompress", (PyCFunction)PyBlosc_decompress, METH_VARARGS,
+   decompress__doc__},
+  {"free_resources", (PyCFunction)PyBlosc_free_resources, METH_VARARGS,
+   free_resources__doc__},
+  {"set_nthreads", (PyCFunction)PyBlosc_set_nthreads, METH_VARARGS,
+   set_nthreads__doc__},
     {NULL, NULL, 0, NULL}
 };
 
 
+#if PY_MAJOR_VERSION < 3
+/* Python 2 module initialization */
 PyMODINIT_FUNC
-PyInit_blosc(void)
+initblosc_extension(void)
 {
-    PyObject *m;
-    m = Py_InitModule("blosc_extension", blosc_methods);
-    if (m == NULL)
-	return;
+  PyObject *m;
+  m = Py_InitModule("blosc_extension", blosc_methods);
+  if (m == NULL)
+    return;
 
-    BloscError = PyErr_NewException("blosc_extension.error", NULL, NULL);
-    if (BloscError != NULL) {
-        Py_INCREF(BloscError);
-	PyModule_AddObject(m, "error", BloscError);
-    }
+  BloscError = PyErr_NewException("blosc_extension.error", NULL, NULL);
+  if (BloscError != NULL) {
+    Py_INCREF(BloscError);
+    PyModule_AddObject(m, "error", BloscError);
+  }
 
-    /* Integer macros */
-    PyModule_AddIntMacro(m, BLOSC_VERSION_MAJOR);
-    PyModule_AddIntMacro(m, BLOSC_VERSION_MINOR);
-    PyModule_AddIntMacro(m, BLOSC_VERSION_RELEASE);
+  /* Integer macros */
+  PyModule_AddIntMacro(m, BLOSC_MAX_BUFFERSIZE);
+  PyModule_AddIntMacro(m, BLOSC_MAX_THREADS);
 
-    PyModule_AddIntMacro(m, BLOSC_VERSION_FORMAT);
-    PyModule_AddIntMacro(m, BLOSCLZ_VERSION_FORMAT);
-    PyModule_AddIntMacro(m, BLOSC_VERSION_CFORMAT);
-
-    PyModule_AddIntMacro(m, BLOSC_MIN_HEADER_LENGTH);
-    PyModule_AddIntMacro(m, BLOSC_MAX_OVERHEAD);
-
-    PyModule_AddIntMacro(m, BLOSC_MAX_BUFFERSIZE);
-    PyModule_AddIntMacro(m, BLOSC_MAX_TYPESIZE);
-    PyModule_AddIntMacro(m, BLOSC_MAX_THREADS);
-
-    PyModule_AddIntMacro(m, BLOSC_DOSHUFFLE);
-    PyModule_AddIntMacro(m, BLOSC_MEMCPYED);
-
-    /* String macros */
-    PyModule_AddStringMacro(m, BLOSC_VERSION_STRING);
-    PyModule_AddStringMacro(m, BLOSC_VERSION_REVISION);
-    PyModule_AddStringMacro(m, BLOSC_VERSION_DATE);
+  /* String macros */
+  PyModule_AddStringMacro(m, BLOSC_VERSION_STRING);
+  PyModule_AddStringMacro(m, BLOSC_VERSION_DATE);
 
 }
+# else
+/* Python 3 module initialization */
+static struct PyModuleDef blosc_def = {
+  PyModuleDef_HEAD_INIT,
+  "blosc_extension",
+  NULL,
+  -1,
+  blosc_methods,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
 
+PyMODINIT_FUNC
+PyInit_blosc_extension(void) {
+  PyObject *m = PyModule_Create(&blosc_def);
+
+  /* Integer macros */
+  PyModule_AddIntMacro(m, BLOSC_MAX_BUFFERSIZE);
+  PyModule_AddIntMacro(m, BLOSC_MAX_THREADS);
+
+  /* String macros */
+  PyModule_AddStringMacro(m, BLOSC_VERSION_STRING);
+  PyModule_AddStringMacro(m, BLOSC_VERSION_DATE);
+
+  return m;
+}
+#endif

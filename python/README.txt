@@ -12,9 +12,11 @@ using the Blosc library (http://blosc.pytables.org).
 Building
 --------
 
-Assuiming that you have a C compiler installed, do:
+Assuming that you have a C compiler installed, do:
 
 $ python setup.py build_ext --inplace
+
+This package supports both Python 2.6/3.1 or higher versions.
 
 Testing
 -------

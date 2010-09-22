@@ -26,7 +26,7 @@ def detect_number_of_cores():
     """
     # Linux, Unix and MacOS:
     if hasattr(os, "sysconf"):
-        if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+        if "SC_NPROCESSORS_ONLN" in os.sysconf_names:
             # Linux & Unix:
             ncpus = os.sysconf("SC_NPROCESSORS_ONLN")
             if isinstance(ncpus, int) and ncpus > 0:
@@ -74,8 +74,8 @@ def set_nthreads(nthreads):
 
     """
     if nthreads > _ext.BLOSC_MAX_THREADS:
-        raise ValueError, "the number of threads cannot be larger than %d" % \
-              _ext.BLOSC_MAX_THREADS
+        raise ValueError("the number of threads cannot be larger than %d" % \
+                         _ext.BLOSC_MAX_THREADS)
 
     return _ext.set_nthreads(nthreads)
 
@@ -140,15 +140,16 @@ def compress(string, typesize, clevel=5, shuffle=True):
 
     """
 
-    if type(string) is not str:
-        raise ValueError, "only string objects supported as input"
+    if type(string) is not bytes:
+        raise ValueError(
+            "only string (2.x) or bytes (3.x) objects supported as input")
 
     if len(string) > _ext.BLOSC_MAX_BUFFERSIZE:
-        raise ValueError, "string length cannot be larger than %d bytes" % \
-              _ext.BLOSC_MAX_BUFFERSIZE
+        raise ValueError("string length cannot be larger than %d bytes" % \
+                         _ext.BLOSC_MAX_BUFFERSIZE)
 
     if clevel < 0 or clevel > 9:
-        raise ValueError, "clevel can only be in the 0-9 range."
+        raise ValueError("clevel can only be in the 0-9 range.")
 
     return _ext.compress(string, typesize, clevel, shuffle)
 
@@ -181,8 +182,9 @@ def decompress(string):
 
     """
 
-    if type(string) is not str:
-        raise ValueError, "only string objects supported as input"
+    if type(string) is not bytes:
+        raise ValueError(
+            "only string (2.x) or bytes (3.x) objects supported as input")
 
     return _ext.decompress(string)
 
