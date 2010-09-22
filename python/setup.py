@@ -54,7 +54,8 @@ for arg in args:
 if os.name == 'posix':
     CFLAGS.append("-msse2")
 
-def_macros = [('NDEBUG', 1)]
+# Add some macros here for debugging purposes, if needed
+def_macros = []
 
 
 classifiers = """\
