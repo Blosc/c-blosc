@@ -8,6 +8,7 @@
 
 import os
 
+import blosc
 from blosc import blosc_extension as _ext
 
 
@@ -63,6 +64,14 @@ def set_nthreads(nthreads):
     cases Blosc gets better results if you set the number of threads
     to a value slightly below than your number of cores.
 
+    Examples
+    --------
+    Set the number of threads to 2 and then to 1:
+
+    >>> oldn = set_nthreads(2)
+    >>> set_nthreads(1)
+    2
+
     """
     if nthreads > _ext.BLOSC_MAX_THREADS:
         raise ValueError, "the number of threads cannot be larger than %d" % \
@@ -94,6 +103,16 @@ def compress(string, typesize, clevel=5, shuffle=True):
         out : str
             The compressed data in form of a Python string.
 
+    Examples
+    --------
+
+    >>> import array
+    >>> a = array.array('i', range(1000*1000))
+    >>> a_string = a.tostring()
+    >>> c_string = compress(a_string, typesize=4)
+    >>> len(c_string) < len(a_string)
+    True
+
     """
 
     if type(string) is not str:
@@ -124,6 +143,17 @@ def decompress(string):
         out : str
             The decompressed data in form of a Python string.
 
+    Examples
+    --------
+
+    >>> import array
+    >>> a = array.array('i', range(1000*1000))
+    >>> a_string = a.tostring()
+    >>> c_string = compress(a_string, typesize=4)
+    >>> a_string2 = decompress(c_string)
+    >>> a_string == a_string2
+    True
+
     """
 
     if type(string) is not str:
@@ -133,10 +163,13 @@ def decompress(string):
 
 
 if __name__ == '__main__':
-    print "ncores-->", detect_number_of_cores()
-    n = set_nthreads(1)
-    print "old nthreads-->", n
-    s = "asa"
-    cs = compress("asa", 1)
-    s2 = decompress(cs)
-    assert s == s2
+    # test myself
+    import doctest
+    print("Testing blosc version: %s [%s]" % \
+          (blosc.__version__, blosc.blosclib_version))
+    nfail, ntests = doctest.testmod()
+    if nfail == 0:
+        print("All %d tests passed successfuly!" % ntests)
+
+    # detect_ncores cannot be safely tested
+    #print("ncores-->", detect_number_of_cores())

@@ -17,6 +17,7 @@ Public variables
 ----------------
 
 * __version__ : the version of carray package
+* blosclib_version : the version of the Blosc C library
 * ncores : the number of detected cores
 
 Public functions
@@ -53,3 +54,4 @@ from blosc.blosc_extension import (
 # Initialize Blosc
 ncores = detect_number_of_cores()
 set_nthreads(ncores)
+blosclib_version = "%s (%s)" % (BLOSC_VERSION_STRING, BLOSC_VERSION_DATE)
