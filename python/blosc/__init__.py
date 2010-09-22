@@ -7,20 +7,39 @@
 ########################################################################
 
 """
+blosc: a Python package that wraps the Blosc compressor
+=======================================================
 
-The functions in this module allow compression and decompression using
-the Blosc library (http://blosc.pytables.org).
+The functions in this package allow compression and decompression
+using the Blosc library (http://blosc.pytables.org).
 
-compress(string, typesize[, clevel, shuffle]])::
-   Compress string, with a given type size.
+Public variables
+----------------
+
+* __version__ : the version of carray package
+* ncores : the number of detected cores
+
+Public functions
+----------------
+
+compress(string, typesize[, clevel=5, shuffle=True]])::
+    Compress string, with a given type size.
 
 decompress(string)::
-  Decompresses a compressed string.
+    Decompresses a compressed string.
+
+detect_number_of_cores::
+    Returns the number of cores in the system.
+
+set_nthreads::
+    Set the number of threads to be used during Blosc operation.
 
 """
 
+from blosc.version import __version__
+
 from blosc.toplevel import (
-    compress, decompress)
+    compress, decompress, detect_number_of_cores, set_nthreads)
 
 # Blosc symbols that we want to export
 from blosc.blosc_extension import (
@@ -31,8 +50,6 @@ from blosc.blosc_extension import (
     )
 
 
-
-
-
-
-
+# Initialize Blosc
+ncores = detect_number_of_cores()
+set_nthreads(ncores)

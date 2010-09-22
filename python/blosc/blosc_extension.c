@@ -24,6 +24,24 @@ blosc_error(int err, char *msg)
 }
 
 
+PyDoc_STRVAR(set_nthreads__doc__,
+"set_nthreads(nthreads) -- Initialize a pool of threads for Blosc operation.\n"
+             );
+
+static PyObject *
+PyBlosc_set_nthreads(PyObject *self, PyObject *args)
+{
+    int nthreads, old_nthreads;
+
+    if (!PyArg_ParseTuple(args, "i:set_nthreads", &nthreads))
+      return NULL;
+
+    old_nthreads = blosc_set_nthreads(nthreads);
+
+    return Py_BuildValue("i", old_nthreads);
+}
+
+
 PyDoc_STRVAR(compress__doc__,
 "compress(string[, typesize, clevel, shuffle]) -- Return compressed string.\n"
              );
@@ -36,8 +54,8 @@ PyBlosc_compress(PyObject *self, PyObject *args)
     int clevel, shuffle, cbytes;
     Py_ssize_t nbytes, typesize;
 
-    /* require Python string object, optional 'level' arg */
-    if (!PyArg_ParseTuple(args, "s#|nii:compress", &input, &nbytes,
+    /* require Python string object, typesize, clevel and shuffle agrs */
+    if (!PyArg_ParseTuple(args, "s#nii:compress", &input, &nbytes,
                           &typesize, &clevel, &shuffle))
       return NULL;
 
@@ -120,6 +138,8 @@ static PyMethodDef blosc_methods[] =
                  compress__doc__},
     {"decompress", (PyCFunction)PyBlosc_decompress, METH_VARARGS,
                    decompress__doc__},
+    {"set_nthreads", (PyCFunction)PyBlosc_set_nthreads, METH_VARARGS,
+                     set_nthreads__doc__},
     {NULL, NULL, 0, NULL}
 };
 
