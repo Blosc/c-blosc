@@ -155,6 +155,16 @@ successfully, I can say that Blosc is pretty safe now and ready for
 production purposes.
 
 
+Mailing list
+============
+
+There is an official Blosc blosc mailing list at:
+
+blosc@googlegroups.com
+http://groups.google.es/group/blosc
+
+
+
 ----
 
   **Enjoy data!**

@@ -1,5 +1,5 @@
 ===============================================================
- Announcing Blosc 1.0rc1
+ Announcing Blosc 1.1
  A blocking, shuffling and lossless compression library
 ===============================================================
 
@@ -11,8 +11,29 @@
 What is new?
 ============
 
-*** Add blurb here ***
+- Added code for emulating pthreads API on Windows.  No need to link
+  explicitly with pthreads lib on Windows anymore.
 
+- New BLOSC_MAX_BUFFERSIZE, BLOSC_MAX_TYPESIZE and BLOSC_MAX_THREADS
+  symbols are available in blosc.h.  These can be useful for
+  validating parameters in clients.  Thanks to Robert Smallshire for
+  suggesting that.
+
+- A new BLOSC_MIN_HEADER_LENGTH symbol in blosc.h tells how many bytes
+  long is the minimum length of a Blosc header.
+
+- Fixed a problem with the computation of the blocksize in the Blosc
+  filter for HDF5.
+
+- Many fixes, specially related with thread synchronization in
+  scenarios where a fork of a thread Blosc is done.  This situation is
+  handled correctly now.
+
+- Added a new `blosc_getitem()` call to allow the retrieval of items
+  in sizes smaller than the complete buffer.  That is useful for the
+  carray project, but it can certainly be so for others too.
+
+For more info, please see the RELEASE_NOTES.txt file.
 
 What is it?
 ===========
