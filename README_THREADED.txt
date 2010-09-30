@@ -31,4 +31,3 @@ whether you should set the number of threads to 1 (serial) or more
 your are done!
 
 Francesc Alted
-2010-07-01

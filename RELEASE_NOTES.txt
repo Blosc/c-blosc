@@ -10,22 +10,12 @@
 Changes from 1.0 to 1.1
 =======================
 
-- Fixed a problem with large datatypes.  See
-  http://www.pytables.org/trac/ticket/288 for more info.
-
-- Fixed a problem with the computation of the blocksize in the Blosc
-  filter for HDF5.
-
 - Added code for emulating pthreads API on Windows.  No need to link
   explicitly with pthreads lib on Windows anymore.  However, performance
   is a somewhat worse because the new emulation layer does not support
   the `pthread_barrier_wait()` call natively.  But the big improvement
   in installation easiness is worth this penalty (most specially on
   64-bit Windows, where pthreads-win32 support is flaky).
-
-- Added a new `blosc_getitem()` call to allow the retrieval of items in
-  sizes smaller than the complete buffer.  That is useful for the carray
-  project, but certainly for others too.
 
 - New BLOSC_MAX_BUFFERSIZE, BLOSC_MAX_TYPESIZE and BLOSC_MAX_THREADS
   symbols are available in blosc.h.  These can be useful for validating
@@ -43,10 +33,20 @@ Changes from 1.0 to 1.1
   currently only wraps `blosc_compress` and `blosc_decompress` as well
   as `blosc_set_nthreads`.  This can be improved in the future.
 
+- Fixed a problem with the computation of the blocksize in the Blosc
+  filter for HDF5.
+
+- Fixed a problem with large datatypes.  See
+  http://www.pytables.org/trac/ticket/288 for more info.
+
 - Now Blosc is able to work well even if you fork an existing process
   with a pool of threads.  Bug discovered when PyTables runs in
   multiprocess environments.  See http://pytables.org/trac/ticket/295
   for details.
+
+- Added a new `blosc_getitem()` call to allow the retrieval of items in
+  sizes smaller than the complete buffer.  That is useful for the carray
+  project, but certainly for others too.
 
 
 Changes from 0.9.5 to 1.0
