@@ -438,10 +438,8 @@ int serial_blosc(void)
 int parallel_blosc(void)
 {
 
-  if (pid != getpid()) {
-    /* We are in a forked subprocess: init threads again. See ticket #33. */
-    blosc_set_nthreads(nthreads);
-  }
+  /* Check whether we need to restart threads */
+  blosc_set_nthreads(nthreads);
 
   /* Synchronization point for all threads (wait for initialization) */
   WAIT_INIT;
@@ -594,8 +592,8 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   /* Check buffer size limits */
   if (nbytes > BLOSC_MAX_BUFFERSIZE) {
     /* If buffer is too large, give up. */
-    printf("Input buffer size cannot exceed %d MB\n", \
-           BLOSC_MAX_BUFFERSIZE / MB);
+    fprintf(stderr, "Input buffer size cannot exceed %d MB\n",
+            BLOSC_MAX_BUFFERSIZE / MB);
     exit(1);
   }
   /* We can safely do this assignation now */
@@ -1144,8 +1142,11 @@ int blosc_set_nthreads(int nthreads_new)
     fprintf(stderr, "Error.  nthreads must be a positive integer");
     return -1;
   }
-  else if (nthreads_new != nthreads || pid != getpid()) {
-    if (nthreads > 1 && init_threads_done && pid == getpid()) {
+
+  /* Only join threads if they are not initialized or if our PID is
+     different from that in pid var (probably means that we are a
+     subprocess, and thus threads are non-existent). */
+  if (nthreads > 1 && init_threads_done && pid == getpid()) {
       /* Tell all existing threads to finish */
       end_threads = 1;
       /* Synchronization point for all threads (wait for initialization) */
@@ -1162,12 +1163,13 @@ int blosc_set_nthreads(int nthreads_new)
       init_threads_done = 0;
       end_threads = 0;
     }
-    nthreads = nthreads_new;
-    if (nthreads > 1) {
-      /* Launch a new pool of threads */
-      init_threads();
-    }
+
+  /* Launch a new pool of threads (if necessary) */
+  nthreads = nthreads_new;
+  if (nthreads > 1) {
+    init_threads();
   }
+
   return nthreads_old;
 }
 
