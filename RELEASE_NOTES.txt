@@ -29,10 +29,6 @@ Changes from 1.0 to 1.1
 - Removed many warnings (related with potentially dangerous type-casting
   code) issued by MSVC 2008 in 64-bit mode.
 
-- Added a minimal wrapper for Python (see python/ directory).  This
-  currently only wraps `blosc_compress` and `blosc_decompress` as well
-  as `blosc_set_nthreads`.  This can be improved in the future.
-
 - Fixed a problem with the computation of the blocksize in the Blosc
   filter for HDF5.
 
