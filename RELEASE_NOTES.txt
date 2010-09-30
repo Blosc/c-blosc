@@ -43,6 +43,12 @@ Changes from 1.0 to 1.1
   currently only wraps `blosc_compress` and `blosc_decompress` as well
   as `blosc_set_nthreads`.  This can be improved in the future.
 
+- Now Blosc is able to work well even if you fork an existing process
+  with a pool of threads.  Bug discovered when PyTables runs in
+  multiprocess environments.  See http://pytables.org/trac/ticket/295
+  for details.
+
+
 Changes from 0.9.5 to 1.0
 =========================
 

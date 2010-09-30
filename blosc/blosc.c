@@ -21,6 +21,8 @@
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
   #include "win32/stdint-windows.h"
+  #include <process.h>
+  #define getpid _getpid
 #else
   #include <stdint.h>
   #include <unistd.h>
@@ -52,6 +54,7 @@
 /* Global variables for main logic */
 int32_t init_temps_done = 0;    /* temporaries for compr/decompr initialized? */
 uint32_t force_blocksize = 0;   /* should we force the use of a blocksize? */
+int pid = 0;                    /* the PID for this process */
 
 /* Global variables for threads */
 int32_t nthreads = 1;            /* number of desired threads in pool */
@@ -434,6 +437,11 @@ int serial_blosc(void)
 /* Threaded version for compression/decompression */
 int parallel_blosc(void)
 {
+
+  if (pid != getpid()) {
+    /* We are in a forked subprocess: init threads again. See ticket #33. */
+    blosc_set_nthreads(nthreads);
+  }
 
   /* Synchronization point for all threads (wait for initialization) */
   WAIT_INIT;
@@ -1114,6 +1122,7 @@ int init_threads(void)
   }
 
   init_threads_done = 1;                 /* Initialization done! */
+  pid = (int)getpid();                   /* save the PID for this process */
 
   return(0);
 }
@@ -1135,8 +1144,8 @@ int blosc_set_nthreads(int nthreads_new)
     fprintf(stderr, "Error.  nthreads must be a positive integer");
     return -1;
   }
-  else if (nthreads_new != nthreads) {
-    if (nthreads > 1 && init_threads_done) {
+  else if (nthreads_new != nthreads || pid != getpid()) {
+    if (nthreads > 1 && init_threads_done && pid == getpid()) {
       /* Tell all existing threads to finish */
       end_threads = 1;
       /* Synchronization point for all threads (wait for initialization) */
