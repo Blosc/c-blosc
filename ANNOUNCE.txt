@@ -1,18 +1,13 @@
 ===============================================================
- Announcing Blosc 1.1.1
+ Announcing Blosc *** VERSION HERE ***
  A blocking, shuffling and lossless compression library
 ===============================================================
 
-:Author: Francesc Alted i Abad
-:Contact: faltet@pytables.org
-:URL: http://blosc.pytables.org
 
 What is new?
 ============
 
-- Added code to avoid calling blosc_set_nthreads more than necessary.
-  That will improve performance up to 3x or more, specially for small
-  chunksizes (< 1 MB).
+*** Blurb about the new version here ***
 
 For more info, please see the RELEASE_NOTES.txt file.
 

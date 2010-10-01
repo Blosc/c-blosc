@@ -141,7 +141,7 @@ there is a sample implementation in the hdf5/ directory.
 Mailing list
 ============
 
-There is an official Blosc blosc mailing list at:
+There is an official mailing list for Blosc at:
 
 blosc@googlegroups.com
 http://groups.google.es/group/blosc
