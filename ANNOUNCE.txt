@@ -1,5 +1,5 @@
 ===============================================================
- Announcing Blosc 1.1
+ Announcing Blosc 1.1.1
  A blocking, shuffling and lossless compression library
 ===============================================================
 
@@ -7,62 +7,26 @@
 :Contact: faltet@pytables.org
 :URL: http://blosc.pytables.org
 
-
 What is new?
 ============
 
-- Added code for emulating pthreads API on Windows.  No need to link
-  explicitly with pthreads lib on Windows anymore.
-
-- New BLOSC_MAX_BUFFERSIZE, BLOSC_MAX_TYPESIZE and BLOSC_MAX_THREADS
-  symbols are available in blosc.h.  These can be useful for
-  validating parameters in clients.  Thanks to Robert Smallshire for
-  suggesting that.
-
-- A new BLOSC_MIN_HEADER_LENGTH symbol in blosc.h tells how many bytes
-  long is the minimum length of a Blosc header.
-
-- Fixed a problem with the computation of the blocksize in the Blosc
-  filter for HDF5.
-
-- Many fixes, specially related with thread synchronization in
-  scenarios where a fork of a thread Blosc is done.  This situation is
-  handled correctly now.
-
-- Added a new `blosc_getitem()` call to allow the retrieval of items
-  in sizes smaller than the complete buffer.  That is useful for the
-  carray project, but it can certainly be so for others too.
+- Added code to avoid calling blosc_set_nthreads more than necessary.
+  That will improve performance up to 3x or more, specially for small
+  chunksizes (< 1 MB).
 
 For more info, please see the RELEASE_NOTES.txt file.
 
 What is it?
 ===========
 
-Blosc [1]_ is a high performance compressor optimized for binary data.
-It has been designed to transmit data to the processor cache faster
-than the traditional, non-compressed, direct memory fetch approach via
-a memcpy() OS call.  Blosc is the first compressor (that I'm aware of)
-that is meant not only to reduce the size of large datasets on-disk or
-in-memory, but also to accelerate memory-bound computations.
+Blosc (http://blosc.pytables.org) is a high performance compressor
+optimized for binary data.  It has been designed to transmit data to
+the processor cache faster than the traditional, non-compressed,
+direct memory fetch approach via a memcpy() OS call.
 
-It uses the blocking technique (as described in [2]_) to reduce
-activity on the memory bus as much as possible.  In short, this
-technique works by dividing datasets in blocks that are small enough
-to fit in caches of modern processors and perform compression /
-decompression there.  It also leverages, if available, SIMD
-instructions (SSE2) and multi-threading capabilities of CPUs, in order
-to accelerate the compression / decompression process to a maximum.
-
-You can see some recent benchmarks about Blosc performance in [3]_,
-and in combination with PyTables in [4]_, [5]_ and [6]_.
-
-.. [1] http://blosc.pytables.org
-.. [2] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
-.. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
-.. [4] http://www.pytables.org/docs/manual/ch05.html#chunksizeFineTune
-.. [5] http://pytables.org/moin/ComputingKernel
-.. [6] http://pytables.org/moin/PyTablesPro
-
+Blosc is the first compressor (that I'm aware of) that is meant not
+only to reduce the size of large datasets on-disk or in-memory, but
+also to accelerate memory-bound computations.
 
 Download sources
 ================
@@ -75,6 +39,14 @@ and download the stable release from here.
 
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
+
+Mailing list
+============
+
+There is an official Blosc blosc mailing list at:
+
+blosc@googlegroups.com
+http://groups.google.es/group/blosc
 
 
 ----
