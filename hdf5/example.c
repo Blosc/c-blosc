@@ -15,7 +15,7 @@
     To run:
 
     $ ./example
-    Blosc version info: 1.1.b3.dev (2010-09-20)
+    Blosc version info: 1.1.1 ($Date:: 2010-10-01 #$)
     Success!
     $ h5ls -v example.h5
     Opened "example.h5" with sec2 driver.
