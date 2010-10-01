@@ -439,7 +439,9 @@ int parallel_blosc(void)
 {
 
   /* Check whether we need to restart threads */
-  blosc_set_nthreads(nthreads);
+  if (!init_threads_done || pid != getpid()) {
+    blosc_set_nthreads(nthreads);
+  }
 
   /* Synchronization point for all threads (wait for initialization) */
   WAIT_INIT;
