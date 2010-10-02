@@ -568,7 +568,9 @@ int32_t compute_blocksize(int32_t clevel, uint32_t typesize, int32_t nbytes)
   }
 
   /* blocksize must be a multiple of the typesize */
-  blocksize = blocksize / typesize * typesize;
+  if (blocksize > typesize) {
+    blocksize = blocksize / typesize * typesize;
+  }
 
   return blocksize;
 }
