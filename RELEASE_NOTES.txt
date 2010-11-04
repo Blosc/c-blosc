@@ -1,11 +1,16 @@
 ===============================
- Release notes for Blosc *****
+ Release notes for Blosc 1.1.3
 ===============================
 
 :Author: Francesc Alted i Abad
 :Contact: faltet@pytables.org
 :URL: http://blosc.pytables.org
 
+
+Changes from 1.1.2 to 1.1.3
+===========================
+
+- (None yet)
 
 Changes from 1.1.1 to 1.1.2
 ===========================
