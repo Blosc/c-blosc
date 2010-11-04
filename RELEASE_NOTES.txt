@@ -6,12 +6,13 @@
 :Contact: faltet@pytables.org
 :URL: http://blosc.pytables.org
 
+
 Changes from 1.1.1 to 1.1.2
 ===========================
 
-- None yet.
+- Fixes for small typesizes (#6 and #1 of python-blosc).
 
- 
+
 Changes from 1.1 to 1.1.1
 =========================
 
