@@ -1,5 +1,5 @@
 ===============================================================
- Announcing Blosc *** VERSION HERE ***
+ Announcing Blosc 1.1.2
  A blocking, shuffling and lossless compression library
 ===============================================================
 
@@ -7,7 +7,9 @@
 What is new?
 ============
 
-*** Blurb about the new version here ***
+This is a bug-fix release.  The main problems solved is added
+protection against passing too small buffers (typically smaller than
+the passed typesize).
 
 For more info, please see the RELEASE_NOTES.txt file.
 
