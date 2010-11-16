@@ -10,7 +10,10 @@
 Changes from 1.1.2 to 1.1.3
 ===========================
 
-- (None yet)
+- Much improved compression ratio when using large blocks (> 64 KB) and
+  high compression levels (> 6) under some circumstances (special data
+  distribution).  Closes #7.
+
 
 Changes from 1.1.1 to 1.1.2
 ===========================
