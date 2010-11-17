@@ -532,7 +532,7 @@ int32_t compute_blocksize(int32_t clevel, uint32_t typesize, int32_t nbytes)
   uint32_t blocksize;
 
   /* Protection against very small buffers */
-  if (nbytes < typesize) {
+  if (nbytes < (int32_t)typesize) {
     return 1;
   }
 
