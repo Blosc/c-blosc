@@ -1,5 +1,5 @@
 ===============================================================
- Announcing Blosc *** VERSION HERE ***
+ Announcing Blosc 1.1.3
  A blocking, shuffling and lossless compression library
 ===============================================================
 
@@ -23,6 +23,10 @@ direct memory fetch approach via a memcpy() OS call.
 Blosc is the first compressor (that I'm aware of) that is meant not
 only to reduce the size of large datasets on-disk or in-memory, but
 also to accelerate memory-bound computations.
+
+It also contains a filter for HDF5 (http://www.hdfgroup.org/HDF5) so
+that you can easily implement support for Blosc in your favourite HDF5
+tool.
 
 Download sources
 ================
