@@ -1,14 +1,12 @@
 ===============================================================
- Announcing Blosc 1.1.3
+ Announcing Blosc 1.1.4
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-Much improved compression ratio when using large blocks (> 64 KB) and
-high compression levels (> 6) under some circumstances (special data
-distribution).
+*** Add blurb here ***
 
 For more info, please see the RELEASE_NOTES.txt file.
 
