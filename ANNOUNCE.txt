@@ -3,11 +3,12 @@
  A blocking, shuffling and lossless compression library
 ===============================================================
 
-
 What is new?
 ============
 
-*** Blurb about the new version here ***
+Much improved compression ratio when using large blocks (> 64 KB) and
+high compression levels (> 6) under some circumstances (special data
+distribution).
 
 For more info, please see the RELEASE_NOTES.txt file.
 
