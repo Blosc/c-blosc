@@ -59,7 +59,7 @@ int pid = 0;                    /* the PID for this process */
 /* Global variables for threads */
 int32_t nthreads = 1;            /* number of desired threads in pool */
 int32_t init_threads_done = 0;   /* pool of threads initialized? */
-int32_t end_threads = 0;         /* should exisiting threads end? */
+int32_t end_threads = 0;         /* should existing threads end? */
 int32_t init_sentinels_done = 0; /* sentinels initialized? */
 int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
@@ -73,7 +73,7 @@ pthread_attr_t ct_attr;          /* creation time attributes for threads */
 #define _POSIX_BARRIERS_MINE
 #endif
 
-/* Syncronization variables */
+/* Synchronization variables */
 pthread_mutex_t count_mutex;
 #ifdef _POSIX_BARRIERS_MINE
 pthread_barrier_t barr_init;
