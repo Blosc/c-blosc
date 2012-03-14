@@ -155,8 +155,8 @@ if __name__ == '__main__':
         plot_ = plot(ratios, speed, linewidth=2)
         plots.append(plot_)
         nmarker = nt
-        if nt > len(markers):
-            nmarker = len(markers)
+        if nt >= len(markers):
+            nmarker = nt%len(markers)
         setp(plot_, marker=markers[nmarker], markersize=markersize,
              linewidth=linewidth)
         legends.append("%d threads" % nt)

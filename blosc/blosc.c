@@ -59,7 +59,7 @@ int pid = 0;                    /* the PID for this process */
 /* Global variables for threads */
 int32_t nthreads = 1;            /* number of desired threads in pool */
 int32_t init_threads_done = 0;   /* pool of threads initialized? */
-int32_t end_threads = 0;         /* should exisiting threads end? */
+int32_t end_threads = 0;         /* should existing threads end? */
 int32_t init_sentinels_done = 0; /* sentinels initialized? */
 int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
@@ -75,7 +75,7 @@ pthread_attr_t ct_attr;          /* creation time attributes for threads */
 #define _POSIX_BARRIERS_MINE
 #endif
 
-/* Syncronization variables */
+/* Synchronization variables */
 pthread_mutex_t count_mutex;
 #ifdef _POSIX_BARRIERS_MINE
 pthread_barrier_t barr_init;
@@ -171,7 +171,7 @@ uint8_t *my_malloc(size_t size)
 
 #if defined(_WIN32)
   /* A (void *) cast needed for avoiding a warning with MINGW :-/ */
-  block	=   (void *)_aligned_malloc(size, 16);
+  block = (void *)_aligned_malloc(size, 16);
 #elif defined __APPLE__
   /* Mac OS X guarantees 16-byte alignment in small allocs */
   block = malloc(size);
@@ -592,7 +592,7 @@ int32_t compute_blocksize(int32_t clevel, uint32_t typesize, int32_t nbytes)
 
 /* The public routine for compression.  See blosc.h for docstrings. */
 int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
-		   const void *src, void *dest, size_t destsize)
+      const void *src, void *dest, size_t destsize)
 {
   uint8_t *_dest=NULL;         /* current pos for destination buffer */
   uint8_t *flags;              /* flags for header.  Currently booked:
@@ -891,7 +891,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
     if (flags & BLOSC_MEMCPYED) {
       /* We want to memcpy only */
       memcpy((uint8_t *)dest + ntbytes,
-	     (uint8_t *)src + BLOSC_MAX_OVERHEAD + j*blocksize + startb,
+          (uint8_t *)src + BLOSC_MAX_OVERHEAD + j*blocksize + startb,
              bsize2);
       cbytes = bsize2;
     }
