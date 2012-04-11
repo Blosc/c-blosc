@@ -9,8 +9,8 @@
 
     To compile this program:
 
-    h5cc -DH5_USE_16_API -msse2 ../blosc/*.c blosc_filter.c example.c \
-         -o example -lpthread
+    h5cc [-DH5_USE_16_API] -msse2 ../blosc/*.c blosc_filter.c example.c \
+         -o example -lpthread 
 
     To run:
 
@@ -87,7 +87,11 @@ int main(){
 
     if(r<0) goto failed;
 
+#if H5_USE_16_API
     dset = H5Dcreate(fid, "dset", H5T_NATIVE_FLOAT, sid, plist);
+#else
+    dset = H5Dcreate(fid, "dset", H5T_NATIVE_FLOAT, sid, H5P_DEFAULT, plist, H5P_DEFAULT);
+#endif
     if(dset<0) goto failed;
 
     r = H5Dwrite(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
