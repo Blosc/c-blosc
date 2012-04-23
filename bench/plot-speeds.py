@@ -104,6 +104,11 @@ if __name__ == '__main__':
                       dest='title',
                       help='title of the plot',)
 
+    parser.add_option('-l',
+                      '--limit',
+                      dest='limit',
+                      help='expression to limit number of threads showen',)
+
     parser.add_option('-d', '--decompress', action='store_true',
             dest='dspeed',
             help='plot decompression data',
@@ -140,6 +145,11 @@ if __name__ == '__main__':
     nthreads, values = get_values(filename)
     #print "Values:", values
 
+    if options.limit:
+        thread_range = eval(options.limit)
+    else:
+        thread_range = range(1, nthreads+1)
+
     if options.title:
         plot_title = options.title
     else:
@@ -147,7 +157,7 @@ if __name__ == '__main__':
 
     gtitle = plot_title
 
-    for nt in range(1, nthreads+1):
+    for nt in thread_range:
         #print "Values for %s threads --> %s" % (nt, values[nt])
         (ratios, speedw, speedr) = values[nt]
         if cspeed:
