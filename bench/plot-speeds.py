@@ -60,11 +60,11 @@ def get_values(filename):
     return nthreads, values
 
 
-def show_plot(plots, yaxis, legends, gtitle):
+def show_plot(plots, yaxis, legends, gtitle, xmax=None):
     xlabel('Compresssion ratio')
     ylabel('Speed (MB/s)')
     title(gtitle)
-    xlim(0, None)
+    xlim(0, xmax)
     #ylim(0, 10000)
     ylim(0, None)
     grid(True)
@@ -108,6 +108,12 @@ if __name__ == '__main__':
                       '--limit',
                       dest='limit',
                       help='expression to limit number of threads showen',)
+
+    parser.add_option('-x',
+                      '--xmax',
+                      dest='xmax',
+                      help='limit the x-axis',
+                      default=None)
 
     parser.add_option('-d', '--decompress', action='store_true',
             dest='dspeed',
@@ -184,6 +190,7 @@ if __name__ == '__main__':
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
     text(4.0, mean+50, message)
     plots.append(plot_)
-    show_plot(plots, yaxis, legends, gtitle)
+    show_plot(plots, yaxis, legends, gtitle, xmax=int(options.xmax) if
+            options.xmax else None)
 
 
