@@ -86,63 +86,66 @@ def show_plot(plots, yaxis, legends, gtitle):
 
 if __name__ == '__main__':
 
-    import sys, getopt
+    from optparse import OptionParser
 
-    usage = """usage: %s [-o outfile] [-t title ] [-c] [-d] filename
- -o filename for output (many extensions supported, e.g. .png, .jpg, .pdf)
- -t title of the plot
- -c plot compression speed
- -d plot decompression speed (default)
- \n""" % sys.argv[0]
+    usage = "usage: %prog [-o outfile] [-t title ] [-d|-c] filename"
+    compress_title = 'Compression speed'
+    decompress_title = 'Decompression speed'
+    yaxis = 'No axis name'
 
-    try:
-        opts, pargs = getopt.getopt(sys.argv[1:], 'o:t:cd', [])
-    except:
-        sys.stderr.write(usage)
-        sys.exit(0)
+    parser = OptionParser(usage=usage)
+    parser.add_option('-o',
+                      '--outfile',
+                      dest='outfile',
+                      help='filename for output')
 
-    progname = sys.argv[0]
-    args = sys.argv[1:]
+    parser.add_option('-t',
+                      '--title',
+                      dest='title',
+                      help='title of the plot',)
 
-    # if we pass too few parameters, abort
-    if len(pargs) < 1:
-        sys.stderr.write(usage)
-        sys.exit(0)
+    parser.add_option('-d', '--decompress', action='store_true',
+            dest='dspeed',
+            help='plot decompression data',
+            default=False)
+    parser.add_option('-c', '--compress', action='store_true',
+            dest='cspeed',
+            help='plot compression data',
+            default=False)
 
-    # default options
-    outfile = None
-    tit = None
-    cspeed = False
-    gtitle = "Decompression speed"
-    dspeed = True
-    yaxis = "No axis name"
+    (options, args) = parser.parse_args()
+    if len(args) == 0:
+        parser.error("No input arguments")
+    elif len(args) > 1:
+        parser.error("Too many input arguments")
+    else:
+        pass
 
-    # Get the options
-    for option in opts:
-        if option[0] == '-o':
-            outfile = option[1]
-        elif option[0] == '-t':
-            tit = option[1]
-        elif option[0] == '-c':
-            cspeed = True
-            dspeed = False
-            gtitle = "Compression speed"
-        elif option[0] == '-d':
-            cspeed = False
-            dspeed = True
-            gtitle = "Decompression speed"
+    if options.dspeed and options.cspeed:
+        parser.error("Can only select one of [-d, -c]")
+    elif options.cspeed:
+        options.dspeed = False
+        plot_title = compress_title
+    else: # either neither or dspeed
+        options.dspeed = True
+        plot_title = decompress_title
 
-    filename = pargs[0]
+    filename = args[0]
+    outfile = options.outfile
+    cspeed = options.cspeed
+    dspeed = options.dspeed
 
     plots = []
     legends = []
     nthreads, values = get_values(filename)
     #print "Values:", values
 
-    if tit:
-        gtitle = tit
+    if options.title:
+        plot_title = options.title
     else:
-        gtitle += " (%(size).1f MB, %(elsize)d bytes, %(sbits)d bits)" % values
+        plot_title += " (%(size).1f MB, %(elsize)d bytes, %(sbits)d bits)" % values
+
+    gtitle = plot_title
 
     for nt in range(1, nthreads+1):
         #print "Values for %s threads --> %s" % (nt, values[nt])
