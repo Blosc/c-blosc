@@ -59,7 +59,7 @@
   between 0 (no compression) and 9 (maximum compression).
 
   `doshuffle` specifies whether the shuffle compression preconditioner
-  should be applyied or not.  0 means not applying it and 1 means
+  should be applied or not.  0 means not applying it and 1 means
   applying it.
 
   `typesize` is the number of bytes for the atomic type in binary
