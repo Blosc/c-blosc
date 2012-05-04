@@ -60,11 +60,11 @@ def get_values(filename):
     return nthreads, values
 
 
-def show_plot(plots, yaxis, legends, gtitle):
+def show_plot(plots, yaxis, legends, gtitle, xmax=None):
     xlabel('Compresssion ratio')
     ylabel('Speed (MB/s)')
     title(gtitle)
-    xlim(0, None)
+    xlim(0, xmax)
     #ylim(0, 10000)
     ylim(0, None)
     grid(True)
@@ -86,65 +86,84 @@ def show_plot(plots, yaxis, legends, gtitle):
 
 if __name__ == '__main__':
 
-    import sys, getopt
+    from optparse import OptionParser
 
-    usage = """usage: %s [-o outfile] [-t title ] [-c] [-d] filename
- -o filename for output (many extensions supported, e.g. .png, .jpg, .pdf)
- -t title of the plot
- -c plot compression speed
- -d plot decompression speed (default)
- \n""" % sys.argv[0]
+    usage = "usage: %prog [-o outfile] [-t title ] [-d|-c] filename"
+    compress_title = 'Compression speed'
+    decompress_title = 'Decompression speed'
+    yaxis = 'No axis name'
 
-    try:
-        opts, pargs = getopt.getopt(sys.argv[1:], 'o:t:cd', [])
-    except:
-        sys.stderr.write(usage)
-        sys.exit(0)
+    parser = OptionParser(usage=usage)
+    parser.add_option('-o',
+                      '--outfile',
+                      dest='outfile',
+                      help='filename for output')
 
-    progname = sys.argv[0]
-    args = sys.argv[1:]
+    parser.add_option('-t',
+                      '--title',
+                      dest='title',
+                      help='title of the plot',)
 
-    # if we pass too few parameters, abort
-    if len(pargs) < 1:
-        sys.stderr.write(usage)
-        sys.exit(0)
+    parser.add_option('-l',
+                      '--limit',
+                      dest='limit',
+                      help='expression to limit number of threads showen',)
 
-    # default options
-    outfile = None
-    tit = None
-    cspeed = False
-    gtitle = "Decompression speed"
-    dspeed = True
-    yaxis = "No axis name"
+    parser.add_option('-x',
+                      '--xmax',
+                      dest='xmax',
+                      help='limit the x-axis',
+                      default=None)
 
-    # Get the options
-    for option in opts:
-        if option[0] == '-o':
-            outfile = option[1]
-        elif option[0] == '-t':
-            tit = option[1]
-        elif option[0] == '-c':
-            cspeed = True
-            dspeed = False
-            gtitle = "Compression speed"
-        elif option[0] == '-d':
-            cspeed = False
-            dspeed = True
-            gtitle = "Decompression speed"
+    parser.add_option('-d', '--decompress', action='store_true',
+            dest='dspeed',
+            help='plot decompression data',
+            default=False)
+    parser.add_option('-c', '--compress', action='store_true',
+            dest='cspeed',
+            help='plot compression data',
+            default=False)
 
-    filename = pargs[0]
+    (options, args) = parser.parse_args()
+    if len(args) == 0:
+        parser.error("No input arguments")
+    elif len(args) > 1:
+        parser.error("Too many input arguments")
+    else:
+        pass
+
+    if options.dspeed and options.cspeed:
+        parser.error("Can only select one of [-d, -c]")
+    elif options.cspeed:
+        options.dspeed = False
+        plot_title = compress_title
+    else: # either neither or dspeed
+        options.dspeed = True
+        plot_title = decompress_title
+
+    filename = args[0]
+    outfile = options.outfile
+    cspeed = options.cspeed
+    dspeed = options.dspeed
 
     plots = []
     legends = []
     nthreads, values = get_values(filename)
     #print "Values:", values
 
-    if tit:
-        gtitle = tit
+    if options.limit:
+        thread_range = eval(options.limit)
     else:
-        gtitle += " (%(size).1f MB, %(elsize)d bytes, %(sbits)d bits)" % values
+        thread_range = range(1, nthreads+1)
 
-    for nt in range(1, nthreads+1):
+    if options.title:
+        plot_title = options.title
+    else:
+        plot_title += " (%(size).1f MB, %(elsize)d bytes, %(sbits)d bits)" % values
+
+    gtitle = plot_title
+
+    for nt in thread_range:
         #print "Values for %s threads --> %s" % (nt, values[nt])
         (ratios, speedw, speedr) = values[nt]
         if cspeed:
@@ -171,6 +190,7 @@ if __name__ == '__main__':
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
     text(4.0, mean+50, message)
     plots.append(plot_)
-    show_plot(plots, yaxis, legends, gtitle)
+    show_plot(plots, yaxis, legends, gtitle, xmax=int(options.xmax) if
+            options.xmax else None)
 
 
