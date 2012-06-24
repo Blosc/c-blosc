@@ -86,7 +86,7 @@
  */
 
 int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
-		   const void *src, void *dest, size_t destsize);
+                   const void *src, void *dest, size_t destsize);
 
 
 /**
