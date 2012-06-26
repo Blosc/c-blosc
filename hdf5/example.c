@@ -10,7 +10,7 @@
     To compile this program:
 
     h5cc [-DH5_USE_16_API] -msse2 ../blosc/*.c blosc_filter.c example.c \
-         -o example -lpthread 
+         -o example -lpthread
 
     To run:
 
