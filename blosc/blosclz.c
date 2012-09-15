@@ -453,7 +453,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
       ip += ctrl;
       op += ctrl;
 
-      loop = BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
+      loop = (uint32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if(loop)
         ctrl = *ip++;
     }

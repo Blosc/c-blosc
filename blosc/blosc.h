@@ -18,7 +18,7 @@
 
 #define BLOSC_VERSION_STRING   "1.1.4.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date::             $"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2012-09-15 #$"    /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
@@ -36,7 +36,7 @@
 #define BLOSC_MAX_OVERHEAD BLOSC_MIN_HEADER_LENGTH
 
 /* Maximum buffer size to be compressed */
-#define BLOSC_MAX_BUFFERSIZE INT_MAX   /* Signed 32-bit internal counters */
+#define BLOSC_MAX_BUFFERSIZE (INT_MAX - BLOSC_MAX_OVERHEAD)
 
 /* Maximum typesize before considering buffer as a stream of bytes */
 #define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
