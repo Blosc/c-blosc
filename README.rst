@@ -80,24 +80,24 @@ similar solutions.
 Compiling your application with Blosc
 =====================================
 
-Blosc consists of the next files (in blosc/ directory):
+Blosc consists of the next files (in blosc/ directory)::
 
-blosc.h and blosc.c      -- the main routines
-blosclz.h and blosclz.c  -- the actual compressor
-shuffle.h and shuffle.c  -- the shuffle code
+    blosc.h and blosc.c      -- the main routines
+    blosclz.h and blosclz.c  -- the actual compressor
+    shuffle.h and shuffle.c  -- the shuffle code
 
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
 
-To compile using GCC (4.4 or higher recommended) on Unix:
+To compile using GCC (4.4 or higher recommended) on Unix::
 
   gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
 
-Using Windows and MINGW:
+Using Windows and MINGW::
 
   gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
 
-Using Windows and MSVC (2008 or higher recommended):
+Using Windows and MSVC (2008 or higher recommended)::
 
   cl /Ox /Femyprog.exe myprog.c blosc\*.c
 
@@ -112,9 +112,9 @@ platforms.
 Testing Blosc
 =============
 
-Go to the test/ directory and issue:
+Go to the test/ directory and issue::
 
-$ make test
+  $ make test
 
 These tests are very basic, and only valid for platforms where GNU
 make/gcc tools are available.  If you really want to test Blosc the
