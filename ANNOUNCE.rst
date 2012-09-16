@@ -17,7 +17,8 @@ What is new?
 - Improvements in explicit casts.  Blosc compiles without warnings
   (with GCC) now.
 
-- Lots of improvements in docs and plotting script (Valentin Haenel).
+- Lots of improvements in docs, in particular a nice ascii-art diagram
+  of the Blosc format (Valentin Haenel).
 
 - [HDF5 filter] Adapted HDF5 filter to use HDF5 1.8 by default
   (Antonio Valentino).
@@ -43,9 +44,13 @@ tool.
 Download sources
 ================
 
-Please go to:
+Please go to main web site:
 
 http://blosc.pytables.org/sources/
+
+or the github repository:
+
+https://github.com/FrancescAlted/blosc
 
 and download the most recent release from there.
 

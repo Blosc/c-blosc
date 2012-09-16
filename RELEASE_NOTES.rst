@@ -21,7 +21,8 @@ Changes from 1.1.3 to 1.1.4
 - Improvements in explicit casts.  Blosc compiles without warnings
   (with GCC) now.
 
-- Lots of improvements in docs (Valentin Haenel).
+- Lots of improvements in docs, in particular a nice ascii-art diagram
+  of the Blosc format (Valentin Haenel).
 
 - Improvements to the plot-speeds.py (Valentin Haenel).
 
