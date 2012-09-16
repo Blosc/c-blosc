@@ -34,14 +34,15 @@ are given.
 Packaging
 ---------
 
-- Clone the repository in a temprary directory::
+- Unpack the archive of the repository in a temporary directory::
 
-  $ git clone git@github.com:FrancescAlted/blosc.git
+  $ export VERSION="the version number"
+  $ mkdir /tmp/blosc-$VERSION
+  $ git archive master | tar -x -C /tmp/blosc-$VERSION
 
 - And package the repo::
 
-  $ export VERSION="the version number"
-  $ mv blosc blosc-$VERSION
+  $ cd /tmp
   $ tar cvfz blosc-$VERSION.tar.gz blosc-$VERSION
 
 Do a quick check that the tarball is sane.
