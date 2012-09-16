@@ -97,7 +97,8 @@ if __name__ == '__main__':
     parser.add_option('-o',
                       '--outfile',
                       dest='outfile',
-                      help='filename for output')
+                      help='filename for output ' + \
+                      '(many extensions supported, e.g. .png, .jpg, .pdf)')
 
     parser.add_option('-t',
                       '--title',
@@ -107,7 +108,7 @@ if __name__ == '__main__':
     parser.add_option('-l',
                       '--limit',
                       dest='limit',
-                      help='expression to limit number of threads showen',)
+                      help='expression to limit number of threads shown',)
 
     parser.add_option('-x',
                       '--xmax',
