@@ -129,8 +129,9 @@ report it back!
 Wrapper for Python
 ==================
 
-Blosc comes with a simple wrapper for Python.  See python/README.txt
-for more info.
+Blosc has an official wrapper for Python.  See:
+
+https://github.com/FrancescAlted/python-blosc
 
 Filter for HDF5
 ===============
@@ -153,7 +154,8 @@ I'd like to thank the PyTables community that have collaborated in the
 exhaustive testing of Blosc.  With an aggregate amount of more than
 300 TB of different datasets compressed *and* decompressed
 successfully, I can say that Blosc is pretty safe now and ready for
-production purposes.
+production purposes.  Also, Valentin Haenel did a terrific work fixing
+typos and improving docs and the plotting script.
 
 
 ----

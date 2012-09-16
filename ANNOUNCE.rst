@@ -6,7 +6,21 @@
 What is new?
 ============
 
-*** Add blurb here ***
+- Redefinition of the BLOSC_MAX_BUFFERSIZE constant as (INT_MAX -
+  BLOSC_MAX_OVERHEAD) instead of just INT_MAX.  This prevents to produce
+  outputs larger than INT_MAX, which is not supported.
+
+- `exit()` call has been replaced by a ``return -1`` in blosc_compress()
+  when checking for buffer sizes.  Now programs will not just exit when
+  the buffer is too large, but return a negative code.
+
+- Improvements in explicit casts.  Blosc compiles without warnings
+  (with GCC) now.
+
+- Lots of improvements in docs and plotting script (Valentin Haenel).
+
+- [HDF5 filter] Adapted HDF5 filter to use HDF5 1.8 by default
+  (Antonio Valentino).
 
 For more info, please see the RELEASE_NOTES.txt file.
 
@@ -33,7 +47,7 @@ Please go to:
 
 http://blosc.pytables.org/sources/
 
-and download the stable release from here.
+and download the most recent release from there.
 
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.

@@ -7,10 +7,28 @@
 :URL: http://blosc.pytables.org
 
 
-Changes from 1.1.2 to 1.1.3
+Changes from 1.1.3 to 1.1.4
 ===========================
 
-- (None yet)
+- Redefinition of the BLOSC_MAX_BUFFERSIZE constant as (INT_MAX -
+  BLOSC_MAX_OVERHEAD) instead of just INT_MAX.  This prevents to produce
+  outputs larger than INT_MAX, which is not supported.
+
+- `exit()` call has been replaced by a ``return -1`` in blosc_compress()
+  when checking for buffer sizes.  Now programs will not just exit when
+  the buffer is too large, but return a negative code.
+
+- Improvements in explicit casts.  Blosc compiles without warnings
+  (with GCC) now.
+
+- Lots of improvements in docs (Valentin Haenel).
+
+- Improvements to the plot-speeds.py (Valentin Haenel).
+
+- [HDF5 filter] Adapted HDF5 filter to use HDF5 1.8 by default
+  (Antonio Valentino).
+
+- [HDF5 filter] New version of H5Z_class_t definition (Antonio Valentino).
 
 
 Changes from 1.1.2 to 1.1.3
