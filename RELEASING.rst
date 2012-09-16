@@ -58,6 +58,16 @@ Uploading
 
 http://blosc.pytables.org/sources/
 
+Tagging
+-------
+
+- Create a tag ``X.Y.Z`` from ``master``.  Use the next message::
+
+    $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
+
+- Push the tag to the github repo::
+
+    $ git push --tags
 
 
 Announcing
@@ -67,20 +77,12 @@ Announcing
 
 https://github.com/FrancescAlted/blosc/wiki/Release-notes
 
-- Send an announcement to the blosc and comp.compressors lists.  Use
-  the ``ANNOUNCE.rst`` file as skeleton (possibly as the definitive
-  version).
+- Send an announcement to the blosc, pytables, carray and
+  comp.compression lists.  Use the ``ANNOUNCE.rst`` file as skeleton
+  (possibly as the definitive version).
 
 Post-release actions
 --------------------
-
-- Create a tag ``X.Y.Z`` from ``master``.  Use the next message::
-
-    $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
-
-- Push the tag to the github repo::
-
-    $ git push --tags
 
 - Edit *VERSION* symbols in blosc/blosc.h in master to increment the
   version to the next minor one (i.e. X.Y.Z --> X.Y.(Z+1).dev).

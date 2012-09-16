@@ -23,7 +23,9 @@ What is new?
 - [HDF5 filter] Adapted HDF5 filter to use HDF5 1.8 by default
   (Antonio Valentino).
 
-For more info, please see the RELEASE_NOTES.txt file.
+For more info, please see the release notes in:
+
+https://github.com/FrancescAlted/blosc/wiki/Release-notes
 
 What is it?
 ===========
