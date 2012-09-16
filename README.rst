@@ -57,22 +57,22 @@ for doing blocking or multi-threading.
 
 Other advantages of Blosc are:
 
-    * Meant for binary data: can take advantage of the type size
-      meta-information for improved compression ratio (using the
-      integrated shuffle pre-conditioner).
+* Meant for binary data: can take advantage of the type size
+  meta-information for improved compression ratio (using the
+  integrated shuffle pre-conditioner).
 
-    * Small overhead on non-compressible data: only a maximum of 16
-      additional bytes over the source buffer length are needed to
-      compress *every* input.
+* Small overhead on non-compressible data: only a maximum of 16
+  additional bytes over the source buffer length are needed to
+  compress *every* input.
 
-    * Maximum destination length: contrarily to many other
-      compressors, both compression and decompression routines have
-      support for maximum size lengths for the destination buffer.
+* Maximum destination length: contrarily to many other
+  compressors, both compression and decompression routines have
+  support for maximum size lengths for the destination buffer.
 
-    * Replacement for memcpy(): it supports a 0 compression level that
-      does not compress at all and only adds 16 bytes of overhead. In
-      this mode Blosc can copy memory usually faster than a plain
-      memcpy().
+* Replacement for memcpy(): it supports a 0 compression level that
+  does not compress at all and only adds 16 bytes of overhead. In
+  this mode Blosc can copy memory usually faster than a plain
+  memcpy().
 
 When taken together, all these features set Blosc apart from other
 similar solutions.
@@ -80,24 +80,24 @@ similar solutions.
 Compiling your application with Blosc
 =====================================
 
-Blosc consists of the next files (in blosc/ directory):
+Blosc consists of the next files (in blosc/ directory)::
 
-blosc.h and blosc.c      -- the main routines
-blosclz.h and blosclz.c  -- the actual compressor
-shuffle.h and shuffle.c  -- the shuffle code
+    blosc.h and blosc.c      -- the main routines
+    blosclz.h and blosclz.c  -- the actual compressor
+    shuffle.h and shuffle.c  -- the shuffle code
 
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
 
-To compile using GCC (4.4 or higher recommended) on Unix:
+To compile using GCC (4.4 or higher recommended) on Unix::
 
   gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
 
-Using Windows and MINGW:
+Using Windows and MINGW::
 
   gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
 
-Using Windows and MSVC (2008 or higher recommended):
+Using Windows and MSVC (2008 or higher recommended)::
 
   cl /Ox /Femyprog.exe myprog.c blosc\*.c
 
@@ -112,9 +112,9 @@ platforms.
 Testing Blosc
 =============
 
-Go to the test/ directory and issue:
+Go to the test/ directory and issue::
 
-$ make test
+  $ make test
 
 These tests are very basic, and only valid for platforms where GNU
 make/gcc tools are available.  If you really want to test Blosc the
