@@ -10,7 +10,7 @@
 Changes from 1.1.4 to 1.1.5
 ===========================
 
- #XXX version-specific blurb XXX#
+- Fix compile error with msvc compilers (Christoph Gohlke)
 
 
 Changes from 1.1.3 to 1.1.4
