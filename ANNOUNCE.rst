@@ -1,13 +1,13 @@
 ===============================================================
- Announcing Blosc 1.1.5
+ Announcing Blosc 1.1.6
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-This is maintenance release fixing an issue that avoided compilation
-with MSVC.
+#XXX version-specific blurb XXX#
+
 
 For more info, please see the release notes in:
 
@@ -53,7 +53,3 @@ There is an official Blosc blosc mailing list at:
 blosc@googlegroups.com
 http://groups.google.es/group/blosc
 
-
-----
-
-  **Enjoy data!**
