@@ -6,8 +6,8 @@
 What is new?
 ============
 
- #XXX version-specific blurb XXX#
-
+This is maintenance release fixing an issue that avoided compilation
+with MSVC.
 
 For more info, please see the release notes in:
 
