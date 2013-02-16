@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-O3 -msse2 -Wall
-LDFLAGS=-lpthread
+CFLAGS=-O3 -msse2 -Wall -pthread
+LDFLAGS=-pthread
 BLOSC_LIB= $(wildcard ../blosc/*.c)
 
 # The list of executables
