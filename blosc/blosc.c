@@ -77,6 +77,7 @@ pthread_attr_t ct_attr;          /* creation time attributes for threads */
 
 /* Synchronization variables */
 pthread_mutex_t count_mutex;
+pthread_mutex_t global_comp_mutex;
 #ifdef _POSIX_BARRIERS_MINE
 pthread_barrier_t barr_init;
 pthread_barrier_t barr_finish;
@@ -442,7 +443,7 @@ int parallel_blosc(void)
 
   /* Check whether we need to restart threads */
   if (!init_threads_done || pid != getpid()) {
-    blosc_set_nthreads(nthreads);
+    blosc_set_nthreads_(nthreads);
   }
 
   /* Synchronization point for all threads (wait for initialization) */
@@ -693,6 +694,8 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     *flags |= BLOSC_DOSHUFFLE;              /* bit 0 set to one in flags */
   }
 
+  /* Take global lock for the time of compression */
+  pthread_mutex_lock(&global_comp_mutex);
   /* Populate parameters for compression routines */
   params.compress = 1;
   params.clevel = clevel;
@@ -745,6 +748,9 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   /* Set the number of compressed bytes in header */
   *ntbytes_ = sw32(ntbytes);
 
+  /* Release global lock */
+  pthread_mutex_unlock(&global_comp_mutex);
+  
   assert((int32_t)ntbytes <= (int32_t)maxbytes);
   return ntbytes;
 }
@@ -790,6 +796,9 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
     return -1;
   }
 
+  /* Take global lock for the time of decompression */
+  pthread_mutex_lock(&global_comp_mutex);
+  
   /* Populate parameters for decompression routines */
   params.compress = 0;
   params.clevel = 0;            /* specific for compression */
@@ -826,7 +835,9 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
       return -1;
     }
   }
-
+  /* Release global lock */
+  pthread_mutex_unlock(&global_comp_mutex);
+  
   assert(ntbytes <= (int32_t)destsize);
   return ntbytes;
 }
@@ -854,6 +865,9 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
 
   _src = (uint8_t *)(src);
 
+  /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+  
   /* Read the header block */
   version = _src[0];                         /* blosc format version */
   versionlz = _src[1];                       /* blosclz format version */
@@ -945,6 +959,9 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
     }
     ntbytes += cbytes;
   }
+  
+  /* Release global lock */
+  pthread_mutex_unlock(&global_comp_mutex);
 
   if (tmp_init) {
     my_free(tmp);
@@ -1179,8 +1196,19 @@ int init_threads(void)
   return(0);
 }
 
+int blosc_set_nthreads(int nthreads_new) 
+{
+   /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+  
+  int ret = blosc_set_nthreads_(nthreads_new);
+  /* Release global lock  */
+  pthread_mutex_unlock(&global_comp_mutex);
+  
+  return ret;
+}
 
-int blosc_set_nthreads(int nthreads_new)
+int blosc_set_nthreads_(int nthreads_new)
 {
   int32_t nthreads_old = nthreads;
   int32_t t;
@@ -1233,6 +1261,9 @@ void blosc_free_resources(void)
 {
   int32_t t;
   void *status;
+ 
+   /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
 
   /* Release temporaries */
   if (init_temps_done) {
@@ -1275,6 +1306,8 @@ void blosc_free_resources(void)
     init_threads_done = 0;
     end_threads = 0;
   }
+   /* Release global lock  */
+  pthread_mutex_unlock(&global_comp_mutex);
 }
 
 
@@ -1330,6 +1363,12 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
    blocksize will be used (the default). */
 void blosc_set_blocksize(size_t size)
 {
+  /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+  
   force_blocksize = (uint32_t)size;
+  
+   /* Release global lock  */
+  pthread_mutex_unlock(&global_comp_mutex);
 }
 
