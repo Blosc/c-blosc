@@ -50,6 +50,8 @@
 /* The size of L1 cache.  32 KB is quite common nowadays. */
 #define L1 (32*KB)
 
+/* Wrapped function to adjust the number of threads used by blosc */
+int blosc_set_nthreads_(int);
 
 /* Global variables for main logic */
 int32_t init_temps_done = 0;    /* temporaries for compr/decompr initialized? */
