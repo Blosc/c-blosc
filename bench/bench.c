@@ -30,6 +30,25 @@
   #include <sys/time.h>
 #endif
 #include <math.h>
+
+#if defined(_WIN32)
+  #include "win32/pthread.h"
+  #include "win32/pthread.c"
+#else
+  #include <pthread.h>
+#endif
+
+struct bench_wrap_args 
+{
+  int nthreads;
+  int size;
+  int elsize;
+  int rshift;
+  FILE * output_file;
+};
+
+void *bench_wrap(void * args);
+
 #include "../blosc/blosc.h"
 
 #define KB  1024
@@ -37,6 +56,7 @@
 #define GB  (1024*MB)
 
 #define NCHUNKS (32*1024)       /* maximum number of chunks */
+#define MAX_THREADS 16
 
 
 int nchunks = NCHUNKS;
@@ -141,7 +161,48 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-void do_bench(int nthreads, int size, int elsize, int rshift) {
+void do_parallel_bench(int parallel_threads, int nthreads, int size, int elsize, int rshift) {
+  pthread_t threads_[MAX_THREADS];
+  FILE * output_files[MAX_THREADS];
+  static int bench_ncall;
+  char filename[] = "suite_parallel_pt-XX_nt-XX_XXX.out";
+  struct bench_wrap_args arg_wrap;
+  arg_wrap.nthreads = nthreads;
+  arg_wrap.size = size;
+  arg_wrap.elsize = elsize;
+  arg_wrap.rshift = rshift;
+
+  int tid, rc;
+  for (tid = 0; tid < parallel_threads; tid++) {
+    bench_ncall++;
+    sprintf(filename, "suite_parallel_pt-%02d_nt-%02d_%03d.out", parallel_threads, nthreads, bench_ncall);
+    fprintf(stdout, "Thread %d started, writing output to %s...\n", tid, filename);
+    output_files[tid] = fopen(filename, "w");
+    arg_wrap.output_file = output_files[tid];
+    if (output_files[tid] == NULL) {
+      fprintf(stderr, "ERROR; Unable to open suite_parallel_pt-%02d_nt-%02d_%03d.out for writing\n", 
+	      parallel_threads, nthreads, bench_ncall);
+      exit(-1);
+    }
+#if !defined(_WIN32)
+    rc = pthread_create(&threads_[tid], NULL, bench_wrap, (void *) &arg_wrap);//(void *)&tids[tid]);
+#else
+    rc = pthread_create(&threads_[tid], NULL, bench_wrap, (void *) &arg_wrap)//(void *)&tids[tid]);
+#endif  
+    if (rc) {
+      fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
+      fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+      exit(-1);
+    }
+  }
+  for (tid = 0; tid < parallel_threads; tid++) {
+      rc = pthread_join(threads_[tid], NULL);
+      fclose(output_files[tid]);
+  }
+}
+
+
+void do_bench(int nthreads, int size, int elsize, int rshift, FILE * ofile) {
   void *src, *srccpy;
   void **dest[NCHUNKS], *dest2;
   int nbytes = 0, cbytes = 0;
@@ -170,14 +231,14 @@ void do_bench(int nthreads, int size, int elsize, int rshift) {
     memcpy(dest[j], src, size);
   }
 
-  printf("--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
-  printf("********************** Run info ******************************\n");
-  printf("Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
-  printf("Using synthetic data with %d significant bits (out of 32)\n", rshift);
-  printf("Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
-  printf("Working set: %.1f MB\t\t", (size*nchunks) / (float)MB);
-  printf("Number of threads: %d\n", nthreads);
-  printf("********************** Running benchmarks *********************\n");
+  fprintf(ofile, "--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
+  fprintf(ofile, "********************** Run info ******************************\n");
+  fprintf(ofile, "Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
+  fprintf(ofile, "Using synthetic data with %d significant bits (out of 32)\n", rshift);
+  fprintf(ofile, "Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
+  fprintf(ofile, "Working set: %.1f MB\t\t", (size*nchunks) / (float)MB);
+  fprintf(ofile, "Number of threads: %d\n", nthreads);
+  fprintf(ofile, "********************** Running benchmarks *********************\n");
 
   gettimeofday(&last, NULL);
   for (i = 0; i < niter; i++) {
@@ -187,7 +248,7 @@ void do_bench(int nthreads, int size, int elsize, int rshift) {
   }
   gettimeofday(&current, NULL);
   tmemcpy = get_usec_chunk(last, current);
-  printf("memcpy(write):\t\t %6.1f us, %.1f MB/s\n",
+  fprintf(ofile, "memcpy(write):\t\t %6.1f us, %.1f MB/s\n",
          tmemcpy, size/(tmemcpy*MB/1e6));
 
   gettimeofday(&last, NULL);
@@ -198,12 +259,12 @@ void do_bench(int nthreads, int size, int elsize, int rshift) {
   }
   gettimeofday(&current, NULL);
   tmemcpy = get_usec_chunk(last, current);
-  printf("memcpy(read):\t\t %6.1f us, %.1f MB/s\n",
+  fprintf(ofile, "memcpy(read):\t\t %6.1f us, %.1f MB/s\n",
          tmemcpy, size/(tmemcpy*MB/1e6));
 
   for (clevel=0; clevel<10; clevel++) {
 
-    printf("Compression level: %d\n", clevel);
+    fprintf(ofile, "Compression level: %d\n", clevel);
 
     gettimeofday(&last, NULL);
     for (i = 0; i < niter; i++) {
@@ -214,13 +275,13 @@ void do_bench(int nthreads, int size, int elsize, int rshift) {
     }
     gettimeofday(&current, NULL);
     tshuf = get_usec_chunk(last, current);
-    printf("comp(write):\t %6.1f us, %.1f MB/s\t  ",
+    fprintf(ofile, "comp(write):\t %6.1f us, %.1f MB/s\t  ",
            tshuf, size/(tshuf*MB/1e6));
-    printf("Final bytes: %d  ", cbytes);
+    fprintf(ofile, "Final bytes: %d  ", cbytes);
     if (cbytes > 0) {
-      printf("Ratio: %3.2f", size/(float)cbytes);
+      fprintf(ofile, "Ratio: %3.2f", size/(float)cbytes);
     }
-    printf("\n");
+    fprintf(ofile, "\n");
 
     /* Compressor was unable to compress.  Copy the buffer manually. */
     if (cbytes == 0) {
@@ -243,26 +304,26 @@ void do_bench(int nthreads, int size, int elsize, int rshift) {
     }
     gettimeofday(&current, NULL);
     tunshuf = get_usec_chunk(last, current);
-    printf("decomp(read):\t %6.1f us, %.1f MB/s\t  ",
+    fprintf(ofile, "decomp(read):\t %6.1f us, %.1f MB/s\t  ",
            tunshuf, nbytes/(tunshuf*MB/1e6));
     if (nbytes < 0) {
-      printf("FAILED.  Error code: %d\n", nbytes);
+      fprintf(ofile, "FAILED.  Error code: %d\n", nbytes);
     }
-    /* printf("Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
+    /* fprintf(ofile, "Orig bytes: %d\tFinal bytes: %d\n", cbytes, nbytes); */
 
     /* Check if data has had a good roundtrip */
     orig = (unsigned char *)srccpy;
     round = (unsigned char *)dest2;
     for(i = 0; i<size; ++i){
       if (orig[i] != round[i]) {
-        printf("\nError: Original data and round-trip do not match in pos %d\n",
+        fprintf(ofile, "\nError: Original data and round-trip do not match in pos %d\n",
                (int)i);
-        printf("Orig--> %x, round-trip--> %x\n", orig[i], round[i]);
+        fprintf(ofile, "Orig--> %x, round-trip--> %x\n", orig[i], round[i]);
         break;
       }
     }
 
-    if (i == size) printf("OK\n");
+    if (i == size) fprintf(ofile, "OK\n");
 
   } /* End clevel loop */
 
@@ -289,22 +350,32 @@ int get_nchunks(int size_, int ws) {
   return nchunks;
 }
 
+void *bench_wrap(void * args) 
+{
+    struct bench_wrap_args * arg = (struct bench_wrap_args *) args;
+    do_bench(arg->nthreads, arg->size, arg->elsize, arg->rshift, arg->output_file);
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
   int single = 1;
   int suite = 0;
+  int suite_parallel = 0;
   int hard_suite = 0;
   int extreme_suite = 0;
   int debug_suite = 0;
-  int nthreads = 1;                     /* The number of threads */
+  int nthreads = 4;                     /* The number of threads */
+  int parallel_threads = 4;             /* Number of thread executing the bench */
   int size = 2*MB;                      /* Buffer size */
   int elsize = 8;                       /* Datatype size */
   int rshift = 19;                      /* Significant bits */
   int workingset = 256*MB;              /* The maximum allocated memory */
   int nthreads_, size_, elsize_, rshift_, i;
+  int parallel_threads_;
+  FILE * output_file = stdout;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench ['single' | 'suite' | 'suite_parallel' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
   if (argc == 1) {
@@ -317,6 +388,9 @@ int main(int argc, char *argv[]) {
   }
   else if (strcmp(argv[1], "suite") == 0) {
     suite = 1;
+  }
+  else if (strcmp(argv[1], "suite_parallel") == 0) {
+    suite_parallel = 1; 
   }
   else if (strcmp(argv[1], "hardsuite") == 0) {
     hard_suite = 1;
@@ -366,7 +440,7 @@ int main(int argc, char *argv[]) {
     rshift = atoi(argv[5]);
   }
 
-  if ((argc >= 7) || !(single || suite || hard_suite || extreme_suite)) {
+  if ((argc >= 7) || !(single || suite || suite_parallel || hard_suite || extreme_suite)) {
     printf("%s\n", usage);
     exit(1);
   }
@@ -376,7 +450,14 @@ int main(int argc, char *argv[]) {
 
   if (suite) {
     for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
-        do_bench(nthreads_, size, elsize, rshift);
+        do_bench(nthreads_, size, elsize, rshift, output_file);
+    }
+  }
+  else if (suite_parallel) {
+    for (parallel_threads_ = 1; parallel_threads_ <= parallel_threads; parallel_threads_++) {
+      for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
+        do_parallel_bench(parallel_threads_, nthreads_, size, elsize, rshift);
+      }
     }
   }
   else if (hard_suite) {
@@ -391,7 +472,7 @@ int main(int argc, char *argv[]) {
             nchunks = get_nchunks(size_+i, workingset);
     	    niter = 1;
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(nthreads_, size_+i, elsize_, rshift_);
+              do_bench(nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -410,7 +491,7 @@ int main(int argc, char *argv[]) {
           for (size_ = 32*KB; size_ <= size; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(nthreads_, size_+i, elsize_, rshift_);
+              do_bench(nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -429,7 +510,7 @@ int main(int argc, char *argv[]) {
           for (size_ = size; size_ <= 16*MB; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = nthreads; nthreads_ <= 6; nthreads_++) {
-              do_bench(nthreads_, size_+i, elsize_, rshift_);
+              do_bench(nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -442,7 +523,7 @@ int main(int argc, char *argv[]) {
   }
   /* Single mode */
   else {
-    do_bench(nthreads, size, elsize, rshift);
+    do_bench(nthreads, size, elsize, rshift, output_file);
   }
 
   /* Print out some statistics */
