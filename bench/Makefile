@@ -8,7 +8,7 @@ EXECUTABLE=bench
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(SOURCES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o $@
+	$(CC) $(CFLAGS) $(SOURCES) -o $@ $(LDFLAGS)
 
 clean:
 	rm -rf $(EXECUTABLE)
