@@ -3,8 +3,6 @@ aux_source_directory(. SOURCES)
 
 
 # flags
-# @TODO:
-# -O3 -Wall -fPIC -msse2
 link_directories(${PROJECT_BINARY_DIR}/blosc)
 
 

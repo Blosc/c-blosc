@@ -18,11 +18,6 @@ else(WIN32)
 endif(WIN32)
 
 
-# flags
-# @TODO:
-# -O3 -Wall -fPIC -msse2
-
-
 # targets
 add_library(blosc_shared SHARED ${SOURCES})
 set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)

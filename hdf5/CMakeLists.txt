@@ -7,11 +7,6 @@ find_package(HDF5 REQUIRED)
 include_directories(HDF5_INCLIDE_DIRS)
 
 
-# flags
-# @TODO:
-# -O3 -Wall -fPIC -msse2
-
-
 # targets
 add_library(blosc_filter_shared SHARED ${SOURCES})
 set_target_properties(blosc_filter_shared PROPERTIES OUTPUT_NAME blosc_filter)

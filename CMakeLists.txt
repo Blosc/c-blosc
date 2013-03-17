@@ -20,6 +20,25 @@ option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
 
+# flags
+# @TODO: set -Wall
+# @NOTE: -O3 is enabled in Release mode (CMAKE_BUILD_TYPE="Release")
+
+# Set the "-msse2" build flag only if the CMAKE_C_FLAGS is not already set.
+# Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
+if(CMAKE_C_COMPILER_ID STREQUAL GNU)
+    if(NOT CMAKE_C_FLAGS)
+        set(CMAKE_C_FLAGS -msse2 CACHE STRING "C flags." FORCE)
+    endif(NOT CMAKE_C_FLAGS)
+endif(CMAKE_C_COMPILER_ID STREQUAL GNU)
+
+if(MSVC)
+    if(NOT CMAKE_C_FLAGS)
+        set(CMAKE_C_FLAGS "/Ox /Femyprog.exe" CACHE STRING "C flags." FORCE)
+    endif(NOT CMAKE_C_FLAGS)
+endif(MSVC)
+
+
 # testing
 enable_testing()
 

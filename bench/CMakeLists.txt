@@ -2,11 +2,6 @@
 set(SOURCES bench.c)
 
 
-# flags
-# @TODO:
-# -O3 -Wall -fPIC -msse2
-
-
 # targets
 add_executable(bench ${SOURCES})
 target_link_libraries(bench blosc_shared)
