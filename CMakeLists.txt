@@ -13,7 +13,7 @@ set(BLOSC_VERSION_PATCH 6)  # BLOSC_VERSION_RELEASE
 option(BUILD_STATIC
     "Build a static version of the blosc library." ON)
 option(BUILD_HDF5_FILTER
-    "Build a blosc based compression filter for the HDF5 library" ON)
+    "Build a blosc based compression filter for the HDF5 library" OFF)
 option(BUILD_TESTS
     "Build test programs form the blosc compression library" ON)
 option(BUILD_BENCHMARKS
