@@ -41,7 +41,8 @@ endif(MSVC)
 if(WIN32)
     # For some supporting headers
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/blosc")
-endif()
+endif(WIN32)
+
 
 # subdirectories
 add_subdirectory(blosc)

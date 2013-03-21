@@ -1,8 +1,6 @@
-if(WIN32)
-endif()
-
 # sources
 set(SOURCES bench.c)
+
 
 # targets
 add_executable(bench ${SOURCES})
@@ -11,7 +9,9 @@ target_link_libraries(bench blosc_shared)
 
 # tests
 if(BUILD_TESTS)
-    set(BENCH_N_THREADS 4 CACHE STRING "Number of threads to use for benchmarking")
+    set(BENCH_N_THREADS 4
+        CACHE STRING "Number of threads to use for benchmarking")
+
     option(TEST_INCLUDE_BENCH_SINGLE "Include bench_single in the tests" OFF)
     if(TEST_INCLUDE_BENCH_SINGLE)
         add_test(bench_single bench single)
