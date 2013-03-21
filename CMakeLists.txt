@@ -3,7 +3,7 @@ project(blosc)
 
 
 # version numbers
-# @TODO: set version numbers by parsing the bloasc.h header
+# @TODO: set version numbers by parsing the blosc.h header
 set(BLOSC_VERSION_MAJOR 1)
 set(BLOSC_VERSION_MINOR 1)
 set(BLOSC_VERSION_PATCH 6)  # BLOSC_VERSION_RELEASE
@@ -38,10 +38,10 @@ if(MSVC)
     endif(NOT CMAKE_C_FLAGS)
 endif(MSVC)
 
-
-# testing
-enable_testing()
-
+if(WIN32)
+    # For some supporting headers
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/blosc")
+endif()
 
 # subdirectories
 add_subdirectory(blosc)
@@ -51,6 +51,7 @@ if(BUILD_HDF5_FILTER)
 endif(BUILD_HDF5_FILTER)
 
 if(BUILD_TESTS)
+    enable_testing()
     add_subdirectory(tests)
 endif(BUILD_TESTS)
 
