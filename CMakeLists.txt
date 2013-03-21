@@ -1,3 +1,45 @@
+# CMake build system for Blosc
+# ============================
+#
+# Available options:
+#
+#   BUILD_STATIC: default ON
+#       build the static version of the Blosc library
+#   BUILD_HDF5_FILTER: default OFF
+#       build the compression filter for the HDF5 library
+#   BUILD_TESTS: default ON
+#       build thest programs and generates the "test" target
+#   BUILD_BENCHMARKS: default ON
+#       build the benchmark program
+#   TEST_INCLUDE_BENCH_SINGLE: default OFF
+#       add a test that runs the benchmark program passing "single"
+#       as first parameter
+#   TEST_INCLUDE_BENCH_SUITE: default ON
+#       add a test that runs the benchmark program passing "suite"
+#       as first parameter
+#   TEST_INCLUDE_BENCH_SUITE_PARALLEL: default OFF
+#       add a test that runs the benchmark program passing "parallel"
+#       as first parameter
+#   TEST_INCLUDE_BENCH_HARDSUITE: default OFF
+#       add a test that runs the benchmark program passing "hardsuite"
+#       as first parameter
+#   TEST_INCLUDE_BENCH_EXTREMESUITE: default OFF
+#       add a test that runs the benchmark program passing "extremesuite"
+#       as first parameter
+#   TEST_INCLUDE_BENCH_DEBUGSUITE: default OFF
+#       add a test that runs the benchmark program passing "debugsuite"
+#       as first parameter
+#   BENCH_N_THREADS: default 4
+#       number of threads used to run the benchmark program during tests
+#
+# Components:
+#
+#    LIB: includes blosc.so
+#    DEV: static includes blosc.a and blosc.h
+#    HDF5_FILTER: includes blosc_filter.so
+#    HDF5_FILTER_DEV: includes blosc_filter.h
+
+
 cmake_minimum_required(VERSION 2.6)
 project(blosc)
 
