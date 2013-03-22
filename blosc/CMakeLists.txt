@@ -38,7 +38,7 @@ endif(BUILD_STATIC)
 
 # install
 install(FILES blosc.h DESTINATION include COMPONENT DEV)
-install(TARGETS blosc_shared DESTINATION lib COMPONENT LIB)
+install(TARGETS blosc_shared DESTINATION ${lib_dir} COMPONENT LIB)
 if(BUILD_STATIC)
-    install(TARGETS blosc_static DESTINATION lib COMPONENT DEV)
+    install(TARGETS blosc_static DESTINATION ${lib_dir} COMPONENT DEV)
 endif(BUILD_STATIC)
