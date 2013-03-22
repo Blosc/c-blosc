@@ -61,6 +61,13 @@ option(BUILD_TESTS
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
+# Force the default build type to Release.
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+        "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
+        FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 
 # flags
 # @TODO: set -Wall
@@ -68,11 +75,11 @@ option(BUILD_BENCHMARKS
 
 # Set the "-msse2" build flag only if the CMAKE_C_FLAGS is not already set.
 # Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
-if(CMAKE_C_COMPILER_ID STREQUAL GNU)
-    if(NOT CMAKE_C_FLAGS)
-        set(CMAKE_C_FLAGS -msse2 CACHE STRING "C flags." FORCE)
-    endif(NOT CMAKE_C_FLAGS)
-endif(CMAKE_C_COMPILER_ID STREQUAL GNU)
+if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang)
+     if(NOT CMAKE_C_FLAGS)
+         set(CMAKE_C_FLAGS -msse2 CACHE STRING "C flags." FORCE)
+     endif(NOT CMAKE_C_FLAGS)
+endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang)
 
 if(MSVC)
     if(NOT CMAKE_C_FLAGS)
