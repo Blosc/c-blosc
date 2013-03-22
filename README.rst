@@ -126,6 +126,39 @@ where instructions on how to intensively test (and benchmark) Blosc
 are given.  If while running these tests you get some error, please
 report it back!
 
+Compiling the Blosc library with CMake
+======================================
+
+Blosc can also be built, tested and installed using CMake_.
+The following procedure describes the "out of source" build.
+
+Create the build directory and move into it::
+
+  $ mkdir build
+  $ cd build
+
+Configure Blosc in release mode (enable optimizations) specifying the
+installation directory::
+
+  $ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=INSTALL_DIR \
+      PATH_TO_BLOSC_SOURCE_DIR
+
+Please note that configuration can also be performed using UI tools
+provided by CMake_ (ccmake or cmake-gui)::
+
+  $ cmake-gui PATH_TO_BLOSC_SOURCE_DIR
+
+Build, test and install Blosc::
+
+  $ make
+  $ make test
+  $ make install 
+
+The static and dynamic version of the Bloasc library, together with
+header files, will be installed into the specified INSTALL_DIR.
+
+.. _CMake: http://www.cmake.org
+
 Wrapper for Python
 ==================
 
