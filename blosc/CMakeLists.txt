@@ -1,5 +1,7 @@
 # library sources
 set(SOURCES blosc.c blosclz.c shuffle.c)
+# library install directory
+set(lib_dir lib${LIB_SUFFIX})
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 if(WIN32)
@@ -31,7 +33,7 @@ endif(BUILD_STATIC)
 
 # install
 install(FILES blosc.h DESTINATION include COMPONENT DEV)
-install(TARGETS blosc_shared DESTINATION lib COMPONENT LIB)
+install(TARGETS blosc_shared DESTINATION ${lib_dir} COMPONENT LIB)
 if(BUILD_STATIC)
-    install(TARGETS blosc_static DESTINATION lib COMPONENT DEV)
+    install(TARGETS blosc_static DESTINATION ${lib_dir} COMPONENT DEV)
 endif(BUILD_STATIC)
