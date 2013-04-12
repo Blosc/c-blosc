@@ -18,20 +18,23 @@ Datatypes of the Header Entries
 All entries are little endian.
 
 :version:
-    ``uint8``
+    (``uint8``) Blosc format version.
 :versionlz:
-    ``uint8``
-:flags (bitfield):
+    (``uint8``) Blosclz format  version (internal Lempel-Ziv algorithm).
+:flags:
+    (``bitfield``) The flags of the buffer.
+
     :bit 0 (``0x01``):
-        whether the shuffle filter has been applied or not
+        Whether the shuffle filter has been applied or not.
     :bit 1 (``0x02``):
-        whether the internal buffer is a pure memcpy or not
+        Whether the internal buffer is a pure memcpy or not.
+
 :typesize:
-    ``uint8``
+    (``uint8``) Number of bytes for the atomic type.
 :nbytes:
-    ``uint32``
+    (``uint32``) Uncompressed size of the buffer.
 :blocksize:
-    ``uint32``
+    (``uint32``) Size of internal blocks.
 :ctbytes:
-    ``uint32``
+    (``uint32``) Compressed size of the buffer.
 
