@@ -89,17 +89,23 @@ Blosc consists of the next files (in blosc/ directory)::
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
 
-To compile using GCC (4.4 or higher recommended) on Unix::
+To compile using GCC (4.4 or higher recommended) on Unix:
 
-  gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
+.. code-block:: console
 
-Using Windows and MINGW::
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
 
-  gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
+Using Windows and MINGW:
 
-Using Windows and MSVC (2008 or higher recommended)::
+.. code-block:: console
 
-  cl /Ox /Femyprog.exe myprog.c blosc\*.c
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
+
+Using Windows and MSVC (2008 or higher recommended):
+
+.. code-block:: console
+
+  $ cl /Ox /Femyprog.exe myprog.c blosc\*.c
 
 A simple usage example is the benchmark in the bench/bench.c file.
 Also, another example for using Blosc as a generic HDF5 filter is in
@@ -112,7 +118,9 @@ platforms.
 Testing Blosc
 =============
 
-Go to the test/ directory and issue::
+Go to the test/ directory and issue:
+
+.. code-block:: console
 
   $ make test
 
@@ -132,23 +140,31 @@ Compiling the Blosc library with CMake
 Blosc can also be built, tested and installed using CMake_.
 The following procedure describes the "out of source" build.
 
-Create the build directory and move into it::
+Create the build directory and move into it:
+
+.. code-block:: console
 
   $ mkdir build
   $ cd build
 
 Configure Blosc in release mode (enable optimizations) specifying the
-installation directory::
+installation directory:
+
+.. code-block:: console
 
   $ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=INSTALL_DIR \
       PATH_TO_BLOSC_SOURCE_DIR
 
 Please note that configuration can also be performed using UI tools
-provided by CMake_ (ccmake or cmake-gui)::
+provided by CMake_ (ccmake or cmake-gui):
+
+.. code-block:: console
 
   $ cmake-gui PATH_TO_BLOSC_SOURCE_DIR
 
-Build, test and install Blosc::
+Build, test and install Blosc:
+
+.. code-block:: console
 
   $ make
   $ make test
