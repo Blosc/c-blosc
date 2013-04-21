@@ -129,7 +129,7 @@ int32_t rc = 0;
   rc = pthread_barrier_wait(&barr_init); \
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
     printf("Could not wait on barrier (init)\n"); \
-    exit(-1); \
+    return(-1); \
   }
 #else
 #define WAIT_INIT \
@@ -150,7 +150,7 @@ int32_t rc = 0;
   rc = pthread_barrier_wait(&barr_finish); \
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
     printf("Could not wait on barrier (finish)\n"); \
-    exit(-1);                                       \
+    return(-1);                                       \
   }
 #else
 #define WAIT_FINISH \
@@ -1188,7 +1188,7 @@ int init_threads(void)
     if (rc) {
       fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
       fprintf(stderr, "\tError detail: %s\n", strerror(rc));
-      exit(-1);
+      return(-1);
     }
   }
 
@@ -1241,7 +1241,7 @@ int blosc_set_nthreads_(int nthreads_new)
         if (rc) {
           fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
           fprintf(stderr, "\tError detail: %s\n", strerror(rc));
-          exit(-1);
+          return(-1);
         }
       }
       init_threads_done = 0;
@@ -1284,7 +1284,7 @@ void blosc_free_resources(void)
       if (rc) {
         fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
         fprintf(stderr, "\tError detail: %s\n", strerror(rc));
-        exit(-1);
+        return(-1);
       }
     }
 
