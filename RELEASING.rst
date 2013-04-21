@@ -3,7 +3,7 @@ Releasing Blosc
 ================
 
 :Author: Francesc Alted
-:Contact: faltet@pytables.org
+:Contact: faltet@gmail.com
 :Date: 2012-09-16
 
 
@@ -26,7 +26,7 @@ These tests are very basic, and only valid for platforms where GNU
 make/gcc tools are available.  To actually test Blosc the hard way,
 look at:
 
-http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+http://blosc.org/trac/wiki/SyntheticBenchmarks
 
 where instructions on how to intensively test (and benchmark) Blosc
 are given.
@@ -54,9 +54,6 @@ Uploading
 - Go to the downloads section of the blosc project in github and
   upload the source tarball.
 
-- Also, for backward compatibility, upload a copy of the tarball in:
-
-http://blosc.pytables.org/sources/
 
 Tagging
 -------

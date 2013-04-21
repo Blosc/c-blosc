@@ -128,7 +128,7 @@ These tests are very basic, and only valid for platforms where GNU
 make/gcc tools are available.  If you really want to test Blosc the
 hard way, look at:
 
-http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+http://blosc.org/trac/wiki/SyntheticBenchmarks
 
 where instructions on how to intensively test (and benchmark) Blosc
 are given.  If while running these tests you get some error, please

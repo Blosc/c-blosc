@@ -20,7 +20,7 @@ https://github.com/FrancescAlted/blosc/wiki/Release-notes
 What is it?
 ===========
 
-Blosc (http://blosc.pytables.org) is a high performance compressor
+Blosc (http://www.blosc.org) is a high performance compressor
 optimized for binary data.  It has been designed to transmit data to
 the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
