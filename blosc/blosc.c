@@ -763,7 +763,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   uint8_t *_src=NULL;            /* current pos for source buffer */
-  uint8_t *_dest=NULL;           /* current pos for destination buffer */
   uint8_t version, versionlz;    /* versions for compressed header */
   uint8_t flags;                 /* flags for header */
   int32_t ntbytes;               /* the number of uncompressed bytes */
@@ -773,7 +772,6 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   int32_t typesize, blocksize, nbytes, ctbytes;
 
   _src = (uint8_t *)(src);
-  _dest = (uint8_t *)(dest);
 
   /* Read the header block */
   version = _src[0];                         /* blosc format version */
@@ -784,6 +782,10 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   nbytes = sw32(((int32_t *)_src)[0]);      /* buffer size */
   blocksize = sw32(((int32_t *)_src)[1]);   /* block size */
   ctbytes = sw32(((int32_t *)_src)[2]);     /* compressed buffer size */
+
+  version += 0;                             /* shut up compiler warning */
+  versionlz += 0;                           /* shut up compiler warning */
+  ctbytes += 0;                             /* shut up compiler warning */
 
   _src += sizeof(int32_t)*3;
   bstarts = (int32_t *)_src;
@@ -880,6 +882,10 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   nbytes = sw32(((int32_t *)_src)[0]);      /* buffer size */
   blocksize = sw32(((int32_t *)_src)[1]);   /* block size */
   ctbytes = sw32(((int32_t *)_src)[2]);     /* compressed buffer size */
+
+  version += 0;                             /* shut up compiler warning */
+  versionlz += 0;                           /* shut up compiler warning */
+  ctbytes += 0;                             /* shut up compiler warning */
 
   _src += sizeof(int32_t)*3;
   bstarts = (int32_t *)_src;
@@ -1325,6 +1331,9 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   version = _src[0];                         /* blosc format version */
   versionlz = _src[1];                       /* blosclz format version */
 
+  version += 0;                             /* shut up compiler warning */
+  versionlz += 0;                           /* shut up compiler warning */
+
   /* Read the interesting values */
   _src += 4;
   *nbytes = (size_t)sw32(((int32_t *)_src)[0]);  /* uncompressed buffer size */
@@ -1343,6 +1352,9 @@ void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
   /* Read the version info (could be useful in the future) */
   version = _src[0];                     /* blosc format version */
   versionlz = _src[1];                   /* blosclz format version */
+
+  version += 0;                             /* shut up compiler warning */
+  versionlz += 0;                           /* shut up compiler warning */
 
   /* Read the interesting values */
   *flags = (int)_src[2];                 /* flags */
