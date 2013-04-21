@@ -55,7 +55,7 @@ int blosc_set_nthreads_(int);
 
 /* Global variables for main logic */
 static int32_t init_temps_done = 0;    /* temp for compr/decompr initialized? */
-static uint32_t force_blocksize = 0;   /* force the use of a blocksize? */
+static int32_t force_blocksize = 0;    /* force the use of a blocksize? */
 static int pid = 0;                    /* the PID for this process */
 
 /* Global variables for threads */
@@ -92,18 +92,18 @@ static pthread_cond_t count_threads_cv;
 
 /* Structure for parameters in (de-)compression threads */
 static struct thread_data {
-  uint32_t typesize;
-  uint32_t blocksize;
+  int32_t typesize;
+  int32_t blocksize;
   int32_t compress;
   int32_t clevel;
   int32_t flags;
   int32_t memcpyed;
   int32_t ntbytes;
-  uint32_t nbytes;
-  uint32_t maxbytes;
-  uint32_t nblocks;
-  uint32_t leftover;
-  uint32_t *bstarts;             /* start pointers for each block */
+  int32_t nbytes;
+  int32_t maxbytes;
+  int32_t nblocks;
+  int32_t leftover;
+  int32_t *bstarts;             /* start pointers for each block */
   uint8_t *src;
   uint8_t *dest;
   uint8_t *tmp[BLOSC_MAX_THREADS];
@@ -114,8 +114,8 @@ static struct thread_data {
 /* Structure for parameters meant for keeping track of current temporaries */
 static struct temp_data {
   int32_t nthreads;
-  uint32_t typesize;
-  uint32_t blocksize;
+  int32_t typesize;
+  int32_t blocksize;
 } current_temp;
 
 
@@ -230,15 +230,15 @@ static int32_t sw32(int32_t a)
 
 
 /* Shuffle & compress a single block */
-static int blosc_c(uint32_t blocksize, int32_t leftoverblock,
-                   uint32_t ntbytes, uint32_t maxbytes,
+static int blosc_c(int32_t blocksize, int32_t leftoverblock,
+                   int32_t ntbytes, int32_t maxbytes,
                    uint8_t *src, uint8_t *dest, uint8_t *tmp)
 {
   int32_t j, neblock, nsplits;
   int32_t cbytes;                   /* number of compressed bytes in split */
   int32_t ctbytes = 0;              /* number of compressed bytes in block */
   int32_t maxout;
-  uint32_t typesize = params.typesize;
+  int32_t typesize = params.typesize;
   uint8_t *_tmp;
 
   if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
@@ -263,7 +263,7 @@ static int blosc_c(uint32_t blocksize, int32_t leftoverblock,
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
     dest += sizeof(int32_t);
-    ntbytes += (uint32_t)sizeof(int32_t);
+    ntbytes += (int32_t)sizeof(int32_t);
     ctbytes += (int32_t)sizeof(int32_t);
     maxout = neblock;
     if (ntbytes+maxout > maxbytes) {
@@ -292,7 +292,7 @@ static int blosc_c(uint32_t blocksize, int32_t leftoverblock,
       memcpy(dest, _tmp+j*neblock, neblock);
       cbytes = neblock;
     }
-    ((uint32_t *)(dest))[-1] = sw32(cbytes);
+    ((int32_t *)(dest))[-1] = sw32(cbytes);
     dest += cbytes;
     ntbytes += cbytes;
     ctbytes += cbytes;
@@ -303,7 +303,7 @@ static int blosc_c(uint32_t blocksize, int32_t leftoverblock,
 
 
 /* Decompress & unshuffle a single block */
-static int blosc_d(uint32_t blocksize, int32_t leftoverblock,
+static int blosc_d(int32_t blocksize, int32_t leftoverblock,
                    uint8_t *src, uint8_t *dest, uint8_t *tmp, uint8_t *tmp2)
 {
   int32_t j, neblock, nsplits;
@@ -312,7 +312,7 @@ static int blosc_d(uint32_t blocksize, int32_t leftoverblock,
   int32_t ctbytes = 0;           /* number of compressed bytes in block */
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp;
-  uint32_t typesize = params.typesize;
+  int32_t typesize = params.typesize;
 
   if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
     _tmp = tmp;
@@ -331,7 +331,7 @@ static int blosc_d(uint32_t blocksize, int32_t leftoverblock,
   }
   neblock = blocksize / nsplits;
   for (j = 0; j < nsplits; j++) {
-    cbytes = sw32(((uint32_t *)(src))[0]);   /* amount of compressed bytes */
+    cbytes = sw32(((int32_t *)(src))[0]);   /* amount of compressed bytes */
     src += sizeof(int32_t);
     ctbytes += (int32_t)sizeof(int32_t);
     /* Uncompress */
@@ -374,16 +374,16 @@ static int blosc_d(uint32_t blocksize, int32_t leftoverblock,
 /* Serial version for compression/decompression */
 static int serial_blosc(void)
 {
-  uint32_t j, bsize, leftoverblock;
+  int32_t j, bsize, leftoverblock;
   int32_t cbytes;
   int32_t compress = params.compress;
-  uint32_t blocksize = params.blocksize;
+  int32_t blocksize = params.blocksize;
   int32_t ntbytes = params.ntbytes;
   int32_t flags = params.flags;
-  uint32_t maxbytes = params.maxbytes;
-  uint32_t nblocks = params.nblocks;
+  int32_t maxbytes = params.maxbytes;
+  int32_t nblocks = params.nblocks;
   int32_t leftover = params.nbytes % params.blocksize;
-  uint32_t *bstarts = params.bstarts;
+  int32_t *bstarts = params.bstarts;
   uint8_t *src = params.src;
   uint8_t *dest = params.dest;
   uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
@@ -467,12 +467,12 @@ static int parallel_blosc(void)
 static int create_temporaries(void)
 {
   int32_t tid;
-  uint32_t typesize = params.typesize;
-  uint32_t blocksize = params.blocksize;
+  int32_t typesize = params.typesize;
+  int32_t blocksize = params.blocksize;
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
    hurt serial mode either. */
-  uint32_t ebsize = blocksize + typesize*(uint32_t)sizeof(int32_t);
+  int32_t ebsize = blocksize + typesize*(int32_t)sizeof(int32_t);
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
@@ -549,10 +549,10 @@ static int do_job(void)
 }
 
 
-static int32_t compute_blocksize(int32_t clevel, uint32_t typesize,
+static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
                                  int32_t nbytes)
 {
-  uint32_t blocksize;
+  int32_t blocksize;
 
   /* Protection against very small buffers */
   if (nbytes < (int32_t)typesize) {
@@ -591,7 +591,7 @@ static int32_t compute_blocksize(int32_t clevel, uint32_t typesize,
   }
 
   /* Check that blocksize is not too large */
-  if (blocksize > (uint32_t)nbytes) {
+  if (blocksize > (int32_t)nbytes) {
     blocksize = nbytes;
   }
 
@@ -619,14 +619,14 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   uint8_t *flags;              /* flags for header.  Currently booked:
                                   - 0: shuffled?
                                   - 1: memcpy'ed? */
-  uint32_t nbytes_;            /* number of bytes in source buffer */
-  uint32_t nblocks;            /* number of total blocks in buffer */
-  uint32_t leftover;           /* extra bytes at end of buffer */
-  uint32_t *bstarts;           /* start pointers for each block */
-  uint32_t blocksize;          /* length of the block in bytes */
-  uint32_t ntbytes = 0;        /* the number of compressed bytes */
-  uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
-  uint32_t maxbytes = (uint32_t)destsize;  /* maximum size for dest buffer */
+  int32_t nbytes_;            /* number of bytes in source buffer */
+  int32_t nblocks;            /* number of total blocks in buffer */
+  int32_t leftover;           /* extra bytes at end of buffer */
+  int32_t *bstarts;           /* start pointers for each block */
+  int32_t blocksize;          /* length of the block in bytes */
+  int32_t ntbytes = 0;        /* the number of compressed bytes */
+  int32_t *ntbytes_;          /* placeholder for bytes in output buffer */
+  int32_t maxbytes = (int32_t)destsize;  /* maximum size for dest buffer */
 
   /* Check buffer size limits */
   if (nbytes > BLOSC_MAX_BUFFERSIZE) {
@@ -637,7 +637,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   }
 
   /* We can safely do this assignation now */
-  nbytes_ = (uint32_t)nbytes;
+  nbytes_ = (int32_t)nbytes;
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
@@ -659,7 +659,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   }
 
   /* Get the blocksize */
-  blocksize = compute_blocksize(clevel, (uint32_t)typesize, nbytes_);
+  blocksize = compute_blocksize(clevel, (int32_t)typesize, nbytes_);
 
   /* Compute number of blocks in buffer */
   nblocks = nbytes_ / blocksize;
@@ -674,13 +674,13 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   _dest[2] = 0;                            /* zeroes flags */
   _dest[3] = (uint8_t)typesize;            /* type size */
   _dest += 4;
-  ((uint32_t *)_dest)[0] = sw32(nbytes_);  /* size of the buffer */
-  ((uint32_t *)_dest)[1] = sw32(blocksize);/* block size */
-  ntbytes_ = (uint32_t *)(_dest+8);        /* compressed buffer size */
+  ((int32_t *)_dest)[0] = sw32(nbytes_);  /* size of the buffer */
+  ((int32_t *)_dest)[1] = sw32(blocksize);/* block size */
+  ntbytes_ = (int32_t *)(_dest+8);        /* compressed buffer size */
   _dest += sizeof(int32_t)*3;
-  bstarts = (uint32_t *)_dest;             /* starts for every block */
+  bstarts = (int32_t *)_dest;             /* starts for every block */
   _dest += sizeof(int32_t)*nblocks;        /* space for pointers to blocks */
-  ntbytes = (uint32_t)(_dest - (uint8_t *)dest);
+  ntbytes = (int32_t)(_dest - (uint8_t *)dest);
 
   if (clevel == 0) {
     /* Compression level 0 means buffer to be memcpy'ed */
@@ -703,7 +703,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   params.compress = 1;
   params.clevel = clevel;
   params.flags = (int32_t)*flags;
-  params.typesize = (uint32_t)typesize;
+  params.typesize = (int32_t)typesize;
   params.blocksize = blocksize;
   params.ntbytes = ntbytes;
   params.nbytes = nbytes_;
@@ -767,10 +767,10 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   uint8_t version, versionlz;    /* versions for compressed header */
   uint8_t flags;                 /* flags for header */
   int32_t ntbytes;               /* the number of uncompressed bytes */
-  uint32_t nblocks;              /* number of total blocks in buffer */
-  uint32_t leftover;             /* extra bytes at end of buffer */
-  uint32_t *bstarts;             /* start pointers for each block */
-  uint32_t typesize, blocksize, nbytes, ctbytes;
+  int32_t nblocks;              /* number of total blocks in buffer */
+  int32_t leftover;             /* extra bytes at end of buffer */
+  int32_t *bstarts;             /* start pointers for each block */
+  int32_t typesize, blocksize, nbytes, ctbytes;
 
   _src = (uint8_t *)(src);
   _dest = (uint8_t *)(dest);
@@ -779,14 +779,14 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   version = _src[0];                         /* blosc format version */
   versionlz = _src[1];                       /* blosclz format version */
   flags = _src[2];                           /* flags */
-  typesize = (uint32_t)_src[3];              /* typesize */
+  typesize = (int32_t)_src[3];              /* typesize */
   _src += 4;
-  nbytes = sw32(((uint32_t *)_src)[0]);      /* buffer size */
-  blocksize = sw32(((uint32_t *)_src)[1]);   /* block size */
-  ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
+  nbytes = sw32(((int32_t *)_src)[0]);      /* buffer size */
+  blocksize = sw32(((int32_t *)_src)[1]);   /* block size */
+  ctbytes = sw32(((int32_t *)_src)[2]);     /* compressed buffer size */
 
   _src += sizeof(int32_t)*3;
-  bstarts = (uint32_t *)_src;
+  bstarts = (int32_t *)_src;
   /* Compute some params */
   /* Total blocks */
   nblocks = nbytes / blocksize;
@@ -855,14 +855,14 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   uint8_t version, versionlz;       /* versions for compressed header */
   uint8_t flags;                    /* flags for header */
   int32_t ntbytes = 0;              /* the number of uncompressed bytes */
-  uint32_t nblocks;                 /* number of total blocks in buffer */
-  uint32_t leftover;                /* extra bytes at end of buffer */
-  uint32_t *bstarts;                /* start pointers for each block */
+  int32_t nblocks;                 /* number of total blocks in buffer */
+  int32_t leftover;                /* extra bytes at end of buffer */
+  int32_t *bstarts;                /* start pointers for each block */
   uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
   uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
   int tmp_init = 0;
-  uint32_t typesize, blocksize, nbytes, ctbytes;
-  uint32_t j, bsize, bsize2, leftoverblock;
+  int32_t typesize, blocksize, nbytes, ctbytes;
+  int32_t j, bsize, bsize2, leftoverblock;
   int32_t cbytes, startb, stopb;
   int stop = start + nitems;
 
@@ -875,14 +875,14 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   version = _src[0];                         /* blosc format version */
   versionlz = _src[1];                       /* blosclz format version */
   flags = _src[2];                           /* flags */
-  typesize = (uint32_t)_src[3];              /* typesize */
+  typesize = (int32_t)_src[3];              /* typesize */
   _src += 4;
-  nbytes = sw32(((uint32_t *)_src)[0]);      /* buffer size */
-  blocksize = sw32(((uint32_t *)_src)[1]);   /* block size */
-  ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
+  nbytes = sw32(((int32_t *)_src)[0]);      /* buffer size */
+  blocksize = sw32(((int32_t *)_src)[1]);   /* block size */
+  ctbytes = sw32(((int32_t *)_src)[2]);     /* compressed buffer size */
 
   _src += sizeof(int32_t)*3;
-  bstarts = (uint32_t *)_src;
+  bstarts = (int32_t *)_src;
   /* Compute some params */
   /* Total blocks */
   nblocks = nbytes / blocksize;
@@ -980,21 +980,21 @@ static void *t_blosc(void *tids)
 {
   int32_t tid = *(int32_t *)tids;
   int32_t cbytes, ntdest;
-  uint32_t tblocks;              /* number of blocks per thread */
-  uint32_t leftover2;
-  uint32_t tblock;               /* limit block on a thread */
-  uint32_t nblock_;              /* private copy of nblock */
-  uint32_t bsize, leftoverblock;
+  int32_t tblocks;              /* number of blocks per thread */
+  int32_t leftover2;
+  int32_t tblock;               /* limit block on a thread */
+  int32_t nblock_;              /* private copy of nblock */
+  int32_t bsize, leftoverblock;
   /* Parameters for threads */
-  uint32_t blocksize;
-  uint32_t ebsize;
+  int32_t blocksize;
+  int32_t ebsize;
   int32_t compress;
-  uint32_t maxbytes;
-  uint32_t ntbytes;
-  uint32_t flags;
-  uint32_t nblocks;
-  uint32_t leftover;
-  uint32_t *bstarts;
+  int32_t maxbytes;
+  int32_t ntbytes;
+  int32_t flags;
+  int32_t nblocks;
+  int32_t leftover;
+  int32_t *bstarts;
   uint8_t *src;
   uint8_t *dest;
   uint8_t *tmp;
@@ -1023,7 +1023,7 @@ static void *t_blosc(void *tids)
 
     /* Get parameters for this thread before entering the main loop */
     blocksize = params.blocksize;
-    ebsize = blocksize + params.typesize*(uint32_t)sizeof(int32_t);
+    ebsize = blocksize + params.typesize*(int32_t)sizeof(int32_t);
     compress = params.compress;
     flags = params.flags;
     maxbytes = params.maxbytes;
@@ -1327,9 +1327,9 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 
   /* Read the interesting values */
   _src += 4;
-  *nbytes = (size_t)sw32(((uint32_t *)_src)[0]);  /* uncompressed buffer size */
-  *blocksize = (size_t)sw32(((uint32_t *)_src)[1]);   /* block size */
-  *cbytes = (size_t)sw32(((uint32_t *)_src)[2]);  /* compressed buffer size */
+  *nbytes = (size_t)sw32(((int32_t *)_src)[0]);  /* uncompressed buffer size */
+  *blocksize = (size_t)sw32(((int32_t *)_src)[1]);   /* block size */
+  *cbytes = (size_t)sw32(((int32_t *)_src)[2]);  /* compressed buffer size */
 }
 
 
@@ -1369,7 +1369,7 @@ void blosc_set_blocksize(size_t size)
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
   
-  force_blocksize = (uint32_t)size;
+  force_blocksize = (int32_t)size;
   
    /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
