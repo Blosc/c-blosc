@@ -982,7 +982,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
 
 
 /* Decompress & unshuffle several blocks in a single thread */
-static void *t_blosc(void *tids)
+static int t_blosc(void *tids)
 {
   int32_t tid = *(int32_t *)tids;
   int32_t cbytes, ntdest;
@@ -1188,9 +1188,11 @@ static int init_threads(void)
   for (tid = 0; tid < nthreads; tid++) {
     tids[tid] = tid;
 #if !defined(_WIN32)
-    rc = pthread_create(&threads[tid], &ct_attr, t_blosc, (void *)&tids[tid]);
+    rc = pthread_create(&threads[tid], &ct_attr, (void*)t_blosc,
+			(void *)&tids[tid]);
 #else
-    rc = pthread_create(&threads[tid], NULL, t_blosc, (void *)&tids[tid]);
+    rc = pthread_create(&threads[tid], NULL, (void*)t_blosc,
+			(void *)&tids[tid]);
 #endif
     if (rc) {
       fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
@@ -1266,7 +1268,7 @@ int blosc_set_nthreads_(int nthreads_new)
 
 
 /* Free possible memory temporaries and thread resources */
-void blosc_free_resources(void)
+int blosc_free_resources(void)
 {
   int32_t t;
   void *status;
@@ -1317,6 +1319,8 @@ void blosc_free_resources(void)
   }
    /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
+  return(0);
+
 }
 
 
