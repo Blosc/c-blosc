@@ -2,9 +2,9 @@
  Blosc: A blocking, shuffling and lossless compression library
 ===============================================================
 
-:Author: Francesc Alted i Abad
-:Contact: faltet@pytables.org
-:URL: http://blosc.pytables.org
+:Author: Francesc Alted
+:Contact: faltet@gmail.com
+:URL: http://www.blosc.org
 
 What is it?
 ===========
@@ -29,9 +29,9 @@ You can see some recent benchmarks about Blosc performance in [3]_
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
 
-.. [1] http://blosc.pytables.org
+.. [1] http://www.blosc.org
 .. [2] http://www.pytables.org/docs/CISE-12-2-ScientificPro.pdf
-.. [3] http://blosc.pytables.org/trac/wiki/SyntheticBenchmarks
+.. [3] http://www.blosc.org/trac/wiki/SyntheticBenchmarks
 
 Meta-compression and other advantages over existing compressors
 ===============================================================
@@ -170,7 +170,7 @@ Build, test and install Blosc:
   $ make test
   $ make install 
 
-The static and dynamic version of the Bloasc library, together with
+The static and dynamic version of the Blosc library, together with
 header files, will be installed into the specified INSTALL_DIR.
 
 .. _CMake: http://www.cmake.org
@@ -200,11 +200,20 @@ Acknowledgments
 ===============
 
 I'd like to thank the PyTables community that have collaborated in the
-exhaustive testing of Blosc.  With an aggregate amount of more than
-300 TB of different datasets compressed *and* decompressed
-successfully, I can say that Blosc is pretty safe now and ready for
-production purposes.  Also, Valentin Haenel did a terrific work fixing
-typos and improving docs and the plotting script.
+exhaustive testing of Blosc.  With an aggregate amount of more than 300 TB of
+different datasets compressed *and* decompressed successfully, I can say that
+Blosc is pretty safe now and ready for production purposes.
+
+Other important cotributions:
+
+* Thibault North contributed a way to call BLosc from different threads in a
+  safe way.
+
+* The cmake support was a contribution of Thibault North, Antonio Valentino
+  and Mark Wiebe.
+
+* Valentin Haenel did a terrific work fixing typos and improving docs and the
+  plotting script.
 
 
 ----

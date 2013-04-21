@@ -1,16 +1,43 @@
-===============================
- Release notes for Blosc 1.1.6
-===============================
+=============================
+ Release notes for Blosc 1.2
+=============================
 
-:Author: Francesc Alted i Abad
-:Contact: faltet@pytables.org
-:URL: http://blosc.pytables.org
+:Author: Francesc Alted
+:Contact: faltet@gmail.com
+:URL: http://www.blosc.org
 
 
-Changes from 1.1.4 to 1.1.5
-===========================
+Changes from 1.1.4 to 1.2
+=========================
 
-#XXX version-specific blurb XXX#
+- Now it is possible to call Blosc simultaneously from a parent threaded
+  application without problems.  This has been solved by setting a
+  global lock so that the different calling threads do not execute Blosc
+  routines at the same time.  Of course, real threading work is still
+  available *inside* Blosc itself.  Thanks to Thibault North.
+
+- Support for cmake is now included.  Linux, Mac OSX and Windows
+  platforms are supported.  Thanks to Thibault North, Antonio Valentino
+  and Mark Wiebe.
+
+- Fixed many compilers warnings (specially about unused variables).
+
+- As a consequence of the above, as minimal change in the API has been
+  introduced.  That is, the previous API::
+
+    void blosc_free_resources(void)
+
+  has changed to::
+
+    int blosc_free_resources(void)
+
+  Now, a return value of 0 means that the resources have been released
+  successfully.  If the return value is negative, then it is not
+  guaranteed that all the resources have been freed.
+
+- Many typos were fixed and docs have been improved.  The script for
+  generating nice plots for the included benchmarks has been improved
+  too.  Thanks to Valetin Haenel.
 
 
 Changes from 1.1.4 to 1.1.5
