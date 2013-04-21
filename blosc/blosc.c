@@ -124,7 +124,6 @@ static struct temp_data {
 /* Wait until all threads are initialized */
 #ifdef _POSIX_BARRIERS_MINE
 #define WAIT_INIT \
-  int32_t rc; \
   rc = pthread_barrier_wait(&barr_init); \
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
     printf("Could not wait on barrier (init)\n"); \
@@ -441,6 +440,7 @@ static int serial_blosc(void)
 /* Threaded version for compression/decompression */
 static int parallel_blosc(void)
 {
+  int32_t rc;
 
   /* Check whether we need to restart threads */
   if (!init_threads_done || pid != getpid()) {
@@ -1005,6 +1005,7 @@ static int t_blosc(void *tids)
   uint8_t *dest;
   uint8_t *tmp;
   uint8_t *tmp2;
+  int32_t rc;
 
   while (1) {
 
