@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <time.h>
-  #include "stdint-windows.h"
+  #include "win32/stdint-windows.h"
 #else
   #include <unistd.h>
   #include <sys/time.h>

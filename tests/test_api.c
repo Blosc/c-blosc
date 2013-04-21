@@ -64,6 +64,7 @@ static char *all_tests() {
 }
 
 int main(int argc, char **argv) {
+  char *result;
 
   printf("STARTING TESTS for %s", argv[0]);
 
@@ -84,7 +85,7 @@ int main(int argc, char **argv) {
   nbytes = blosc_decompress(dest, dest2, size);
 
   /* Run all the suite */
-  char *result = all_tests();
+  result = all_tests();
   if (result != 0) {
     printf(" (%s)\n", result);
   }
