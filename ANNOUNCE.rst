@@ -1,13 +1,17 @@
 ===============================================================
- Announcing Blosc 1.1.6
+ Announcing Blosc 1.2.0
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+The most important features for this release are support for cmake (tested on
+Linux, Mac OSX and Windows) and thread safety calls of Blosc functions from
+threaded apps.
 
+Many thanks for those who contributed to this release: Thibault North, Antonio
+Valentino, Mark Wiebe and Valentin Haenel.
 
 For more info, please see the release notes in:
 
@@ -25,22 +29,21 @@ Blosc is the first compressor (that I'm aware of) that is meant not
 only to reduce the size of large datasets on-disk or in-memory, but
 also to accelerate object manipulations that are memory-bound.
 
-It also comes with a filter for HDF5 (http://www.hdfgroup.org/HDF5) so
-that you can easily implement support for Blosc in your favourite HDF5
-tool.
+There is also a handy command line for Blosc called Bloscpack
+(https://github.com/esc/bloscpack) that allows you to compress large binary
+datafiles on-disk.  Although the format for Bloscpack has not stabilized yet,
+it allows you to effectively use Blosc from you favorite shell.
 
 Download sources
 ================
 
-Please go to main web site:
+For more details on what it is, please go to main web site:
 
-http://blosc.pytables.org/sources/
+http://www.blosc.org/
 
-or the github repository:
+The github repository is over here:
 
 https://github.com/FrancescAlted/blosc
-
-and download the most recent release from there.
 
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.

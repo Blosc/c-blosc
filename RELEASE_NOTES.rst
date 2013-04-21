@@ -7,7 +7,7 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.1.4 to 1.2
+Changes from 1.1.5 to 1.2
 =========================
 
 - Now it is possible to call Blosc simultaneously from a parent threaded
