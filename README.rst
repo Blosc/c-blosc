@@ -204,7 +204,7 @@ exhaustive testing of Blosc.  With an aggregate amount of more than 300 TB of
 different datasets compressed *and* decompressed successfully, I can say that
 Blosc is pretty safe now and ready for production purposes.
 
-Other important cotributions:
+Other important contributions:
 
 * Thibault North contributed a way to call BLosc from different threads in a
   safe way.
