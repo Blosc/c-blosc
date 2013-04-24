@@ -440,7 +440,6 @@ static int serial_blosc(void)
 /* Threaded version for compression/decompression */
 static int parallel_blosc(void)
 {
-  int32_t rc;
 
   /* Check whether we need to restart threads */
   if (!init_threads_done || pid != getpid()) {
@@ -1005,7 +1004,6 @@ static int t_blosc(void *tids)
   uint8_t *dest;
   uint8_t *tmp;
   uint8_t *tmp2;
-  int32_t rc;
 
   while (1) {
 
