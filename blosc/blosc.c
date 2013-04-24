@@ -519,7 +519,8 @@ static int do_job(void)
 
   /* Initialize/reset temporaries if needed */
   if (!init_temps_done) {
-    int ret = create_temporaries();
+    int ret;
+    ret = create_temporaries();
     if (ret < 0) {
       return -1;
     }
