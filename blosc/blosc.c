@@ -1212,6 +1212,9 @@ int blosc_set_nthreads(int nthreads_new)
 {
   int ret;
 
+  /* Init global lock */
+  pthread_mutex_init(&global_comp_mutex, NULL);   
+
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
   
