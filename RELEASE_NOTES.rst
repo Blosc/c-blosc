@@ -3,7 +3,7 @@
 ===============================
 
 :Author: Francesc Alted
-:Contact: faltet@gmail.com
+:Contact: faltet@blosc.org
 :URL: http://www.blosc.org
 
 Changes from 1.2 to 1.2.1
