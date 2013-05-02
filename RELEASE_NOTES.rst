@@ -1,13 +1,20 @@
 ===============================
- Release notes for Blosc 1.2.1
+ Release notes for Blosc 1.2.2
 ===============================
 
 :Author: Francesc Alted
 :Contact: faltet@blosc.org
 :URL: http://www.blosc.org
 
-Changes from 1.2 to 1.2.1
-=========================
+
+ Changes from 1.2.1 to 1.2.2
+============================
+
+  #XXX version-specific blurb XXX#
+
+
+ Changes from 1.2 to 1.2.1
+==========================
 
 - Fixed a problem with global lock not being initialized.  This
   affected mostly to Windows platforms.  Thanks to Christoph

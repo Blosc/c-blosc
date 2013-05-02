@@ -1,17 +1,12 @@
 ===============================================================
- Announcing Blosc 1.2.1
+ Announcing Blosc 1.2.2
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-The most important features for this release are support for cmake
-(tested on Linux, Mac OSX and Windows) and thread safety calls of
-Blosc functions from threaded apps.
-
-Many thanks for those who contributed to this release: Thibault North,
-Antonio Valentino, Mark Wiebe, Valentin Haenel and Christoph Gohlke.
+  #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
@@ -52,10 +47,13 @@ details.
 Mailing list
 ============
 
-There is an official Blosc blosc mailing list at:
+There is an official Blosc mailing list at:
 
 blosc@googlegroups.com
 http://groups.google.es/group/blosc
+
+
+Enjoy Data!
 
 
 .. Local Variables:
