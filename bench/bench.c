@@ -31,12 +31,6 @@
 #endif
 #include <math.h>
 
-#if defined(_WIN32)
-  #include "win32/pthread.h"
-  #include "win32/pthread.c"
-#else
-  #include <pthread.h>
-#endif
 
 struct bench_wrap_args 
 {
@@ -157,47 +151,6 @@ void init_buffer(void *src, int size, int rshift) {
     //_src[i] = i;
     //_src[i] = rand() >> (32-rshift);
     _src[i] = get_value(i, rshift);
-  }
-}
-
-
-void do_parallel_bench(int parallel_threads, int nthreads, int size, int elsize, int rshift) {
-  pthread_t threads_[MAX_THREADS];
-  FILE * output_files[MAX_THREADS];
-  static int bench_ncall;
-  char filename[] = "suite_parallel_pt-XX_nt-XX_XXX.out";
-  struct bench_wrap_args arg_wrap;
-  arg_wrap.nthreads = nthreads;
-  arg_wrap.size = size;
-  arg_wrap.elsize = elsize;
-  arg_wrap.rshift = rshift;
-
-  int tid, rc;
-  for (tid = 0; tid < parallel_threads; tid++) {
-    bench_ncall++;
-    sprintf(filename, "suite_parallel_pt-%02d_nt-%02d_%03d.out", parallel_threads, nthreads, bench_ncall);
-    fprintf(stdout, "Thread %d started, writing output to %s...\n", tid, filename);
-    output_files[tid] = fopen(filename, "w");
-    arg_wrap.output_file = output_files[tid];
-    if (output_files[tid] == NULL) {
-      fprintf(stderr, "ERROR; Unable to open suite_parallel_pt-%02d_nt-%02d_%03d.out for writing\n", 
-	      parallel_threads, nthreads, bench_ncall);
-      exit(-1);
-    }
-#if !defined(_WIN32)
-    rc = pthread_create(&threads_[tid], NULL, bench_wrap, (void *) &arg_wrap);//(void *)&tids[tid]);
-#else
-    rc = pthread_create(&threads_[tid], NULL, bench_wrap, (void *) &arg_wrap)//(void *)&tids[tid]);
-#endif  
-    if (rc) {
-      fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
-      fprintf(stderr, "\tError detail: %s\n", strerror(rc));
-      exit(-1);
-    }
-  }
-  for (tid = 0; tid < parallel_threads; tid++) {
-      rc = pthread_join(threads_[tid], NULL);
-      fclose(output_files[tid]);
   }
 }
 
@@ -360,22 +313,19 @@ void *bench_wrap(void * args)
 int main(int argc, char *argv[]) {
   int single = 1;
   int suite = 0;
-  int suite_parallel = 0;
   int hard_suite = 0;
   int extreme_suite = 0;
   int debug_suite = 0;
   int nthreads = 4;                     /* The number of threads */
-  int parallel_threads = 4;             /* Number of thread executing the bench */
   int size = 2*MB;                      /* Buffer size */
   int elsize = 8;                       /* Datatype size */
   int rshift = 19;                      /* Significant bits */
   int workingset = 256*MB;              /* The maximum allocated memory */
   int nthreads_, size_, elsize_, rshift_, i;
-  int parallel_threads_;
   FILE * output_file = stdout;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['single' | 'suite' | 'suite_parallel' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
   if (argc == 1) {
@@ -388,9 +338,6 @@ int main(int argc, char *argv[]) {
   }
   else if (strcmp(argv[1], "suite") == 0) {
     suite = 1;
-  }
-  else if (strcmp(argv[1], "suite_parallel") == 0) {
-    suite_parallel = 1; 
   }
   else if (strcmp(argv[1], "hardsuite") == 0) {
     hard_suite = 1;
@@ -440,7 +387,7 @@ int main(int argc, char *argv[]) {
     rshift = atoi(argv[5]);
   }
 
-  if ((argc >= 7) || !(single || suite || suite_parallel || hard_suite || extreme_suite)) {
+  if ((argc >= 7) || !(single || suite || hard_suite || extreme_suite)) {
     printf("%s\n", usage);
     exit(1);
   }
@@ -451,13 +398,6 @@ int main(int argc, char *argv[]) {
   if (suite) {
     for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
         do_bench(nthreads_, size, elsize, rshift, output_file);
-    }
-  }
-  else if (suite_parallel) {
-    for (parallel_threads_ = 1; parallel_threads_ <= parallel_threads; parallel_threads_++) {
-      for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
-        do_parallel_bench(parallel_threads_, nthreads_, size, elsize, rshift);
-      }
     }
   }
   else if (hard_suite) {
