@@ -3,8 +3,8 @@
 ===============================================================
 
 :Author: Francesc Alted
-:Contact: faltet@blosc.org
-:URL: http://www.blosc.org
+:Contact: francesc@continuum.io
+:URL: http://blosc.pydata.org
 
 What is it?
 ===========
@@ -29,9 +29,9 @@ You can see some recent benchmarks about Blosc performance in [3]_
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
 
-.. [1] http://www.blosc.org
-.. [2] http://www.blosc.org/docs/StarvingCPUs-CISE-2010.pdf
-.. [3] http://www.blosc.org/trac/wiki/SyntheticBenchmarks
+.. [1] http://blosc.pydata.org
+.. [2] http://blosc.org/docs/StarvingCPUs-CISE-2010.pdf
+.. [3] http://blosc.org/trac/wiki/SyntheticBenchmarks
 
 Meta-compression and other advantages over existing compressors
 ===============================================================
@@ -206,7 +206,7 @@ Blosc is pretty safe now and ready for production purposes.
 
 Other important contributions:
 
-* Thibault North contributed a way to call BLosc from different threads in a
+* Thibault North contributed a way to call Blosc from different threads in a
   safe way.
 
 * The cmake support was a contribution of Thibault North, Antonio Valentino

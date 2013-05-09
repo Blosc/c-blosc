@@ -15,7 +15,7 @@ https://github.com/FrancescAlted/blosc/wiki/Release-notes
 What is it?
 ===========
 
-Blosc (http://www.blosc.org) is a high performance compressor
+Blosc (http://blosc.pydata.org) is a high performance compressor
 optimized for binary data.  It has been designed to transmit data to
 the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
@@ -35,7 +35,7 @@ Download sources
 
 For more details on what it is, please go to main web site:
 
-http://www.blosc.org/
+http://blosc.pydata.org/
 
 The github repository is over here:
 

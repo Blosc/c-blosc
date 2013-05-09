@@ -3,8 +3,8 @@
 ===============================
 
 :Author: Francesc Alted
-:Contact: faltet@blosc.org
-:URL: http://www.blosc.org
+:Contact: francesc@continuum.io
+:URL: http://blosc.pydata.org
 
 
  Changes from 1.2.1 to 1.2.2
