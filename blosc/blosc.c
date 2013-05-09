@@ -1164,7 +1164,8 @@ static int t_blosc(void *tids)
 
 static int init_threads(void)
 {
-  int32_t tid, rc;
+  int32_t tid;
+  int rc2;
 
   /* Initialize mutex and condition variable objects */
   pthread_mutex_init(&count_mutex, NULL);
@@ -1189,15 +1190,15 @@ static int init_threads(void)
   for (tid = 0; tid < nthreads; tid++) {
     tids[tid] = tid;
 #if !defined(_WIN32)
-    rc = pthread_create(&threads[tid], &ct_attr, (void*)t_blosc,
+    rc2 = pthread_create(&threads[tid], &ct_attr, (void*)t_blosc,
 			(void *)&tids[tid]);
 #else
-    rc = pthread_create(&threads[tid], NULL, (void*)t_blosc,
+    rc2 = pthread_create(&threads[tid], NULL, (void*)t_blosc,
 			(void *)&tids[tid]);
 #endif
-    if (rc) {
-      fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
-      fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+    if (rc2) {
+      fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc2);
+      fprintf(stderr, "\tError detail: %s\n", strerror(rc2));
       return(-1);
     }
   }
@@ -1228,7 +1229,8 @@ int blosc_set_nthreads(int nthreads_new)
 int blosc_set_nthreads_(int nthreads_new)
 {
   int32_t nthreads_old = nthreads;
-  int32_t t, rc;
+  int32_t t;
+  int rc2;
   void *status;
 
   if (nthreads_new > BLOSC_MAX_THREADS) {
@@ -1252,10 +1254,10 @@ int blosc_set_nthreads_(int nthreads_new)
       WAIT_INIT;
       /* Join exiting threads */
       for (t=0; t<nthreads; t++) {
-        rc = pthread_join(threads[t], &status);
-        if (rc) {
-          fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
-          fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+        rc2 = pthread_join(threads[t], &status);
+        if (rc2) {
+          fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc2);
+          fprintf(stderr, "\tError detail: %s\n", strerror(rc2));
           return(-1);
         }
       }
@@ -1276,7 +1278,8 @@ int blosc_set_nthreads_(int nthreads_new)
 /* Free possible memory temporaries and thread resources */
 int blosc_free_resources(void)
 {
-  int32_t t, rc;
+  int32_t t;
+  int rc2;
   void *status;
  
    /* Take global lock  */
@@ -1295,10 +1298,10 @@ int blosc_free_resources(void)
     WAIT_INIT;
     /* Join exiting threads */
     for (t=0; t<nthreads; t++) {
-      rc = pthread_join(threads[t], &status);
-      if (rc) {
-        fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
-        fprintf(stderr, "\tError detail: %s\n", strerror(rc));
+      rc2 = pthread_join(threads[t], &status);
+      if (rc2) {
+        fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc2);
+        fprintf(stderr, "\tError detail: %s\n", strerror(rc2));
         return(-1);
       }
     }
