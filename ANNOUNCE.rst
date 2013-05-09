@@ -10,6 +10,9 @@ What is new?
   allow less intrusiveness compilation experiences with applications
   including Blosc source code.
 
+- The `bench/bench.c` has been updated so that it can be compiled on
+  Windows again.
+
 - The new web site has been set to: http://blosc.pydata.org
 
 For more info, please see the release notes in:
