@@ -10,7 +10,11 @@
  Changes from 1.2.1 to 1.2.2
 ============================
 
-  #XXX version-specific blurb XXX#
+- All important warnings removed for all tested platforms.  This will
+  allow less intrusiveness compilation experiences with applications
+  including Blosc source code.
+
+- The new web site has been set to: http://blosc.pydata.org
 
 
  Changes from 1.2 to 1.2.1
