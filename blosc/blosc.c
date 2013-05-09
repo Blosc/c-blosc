@@ -120,10 +120,10 @@ static struct temp_data {
 
 
 /* Macros for synchronization */
-static int rc;
 
 /* Wait until all threads are initialized */
 #ifdef _POSIX_BARRIERS_MINE
+static int rc;
 #define WAIT_INIT \
   rc = pthread_barrier_wait(&barr_init); \
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
