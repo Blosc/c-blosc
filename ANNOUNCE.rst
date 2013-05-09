@@ -6,7 +6,11 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+- All important warnings removed for all tested platforms.  This will
+  allow less intrusiveness compilation experiences with applications
+  including Blosc source code.
+
+- The new web site has been set to: http://blosc.pydata.org
 
 For more info, please see the release notes in:
 
