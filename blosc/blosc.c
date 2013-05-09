@@ -120,6 +120,7 @@ static struct temp_data {
 
 
 /* Macros for synchronization */
+static int rc;
 
 /* Wait until all threads are initialized */
 #ifdef _POSIX_BARRIERS_MINE
