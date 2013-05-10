@@ -4,7 +4,7 @@
 #  Unit tests for basic features in Blosc.
 #
 #  Creation date: 2010-06-07
-#  Author: Francesc Alted <francesc@continuum.io>
+#  Author: Francesc Alted <faltet@gmail.com>
 #
 #  See LICENSES/BLOSC.txt for details about copyright and rights to use.
 #**********************************************************************

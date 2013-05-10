@@ -3,8 +3,8 @@
 ===============================
 
 :Author: Francesc Alted
-:Contact: francesc@continuum.io
-:URL: http://blosc.pydata.org
+:Contact: faltet@gmail.com
+:URL: http://www.blosc.org
 
 
  Changes from 1.2.1 to 1.2.2
@@ -17,7 +17,7 @@
 - The `bench/bench.c` has been updated so that it can be compiled on
   Windows again.
 
-- The new web site has been set to: http://blosc.pydata.org
+- The new web site has been set to: http://www.blosc.org
 
 
  Changes from 1.2 to 1.2.1

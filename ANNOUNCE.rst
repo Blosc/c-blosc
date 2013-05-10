@@ -13,7 +13,7 @@ What is new?
 - The `bench/bench.c` has been updated so that it can be compiled on
   Windows again.
 
-- The new web site has been set to: http://blosc.pydata.org
+- The new web site has been set to: http://www.blosc.org
 
 For more info, please see the release notes in:
 
@@ -22,7 +22,7 @@ https://github.com/FrancescAlted/blosc/wiki/Release-notes
 What is it?
 ===========
 
-Blosc (http://blosc.pydata.org) is a high performance compressor
+Blosc (http://www.blosc.org) is a high performance compressor
 optimized for binary data.  It has been designed to transmit data to
 the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
@@ -42,7 +42,7 @@ Download sources
 
 For more details on what it is, please go to main web site:
 
-http://blosc.pydata.org/
+http://www.blosc.org/
 
 The github repository is over here:
 

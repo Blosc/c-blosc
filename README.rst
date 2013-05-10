@@ -3,8 +3,8 @@
 ===============================================================
 
 :Author: Francesc Alted
-:Contact: francesc@continuum.io
-:URL: http://blosc.pydata.org
+:Contact: faltet@gmail.com
+:URL: http://www.blosc.org
 
 What is it?
 ===========
@@ -29,7 +29,7 @@ You can see some recent benchmarks about Blosc performance in [3]_
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
 
-.. [1] http://blosc.pydata.org
+.. [1] http://www.blosc.org
 .. [2] http://blosc.org/docs/StarvingCPUs-CISE-2010.pdf
 .. [3] http://blosc.org/trac/wiki/SyntheticBenchmarks
 
