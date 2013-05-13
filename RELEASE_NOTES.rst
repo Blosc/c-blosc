@@ -1,10 +1,16 @@
 ===============================
- Release notes for Blosc 1.2.2
+ Release notes for Blosc 1.2.3
 ===============================
 
 :Author: Francesc Alted
 :Contact: faltet@gmail.com
 :URL: http://www.blosc.org
+
+
+ Changes from 1.2.2 to 1.2.3
+============================
+
+  #XXX version-specific blurb XXX#
 
 
  Changes from 1.2.1 to 1.2.2

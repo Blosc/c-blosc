@@ -1,19 +1,12 @@
 ===============================================================
- Announcing Blosc 1.2.2
+ Announcing Blosc 1.2.3
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-- All important warnings removed for all tested platforms.  This will
-  allow less intrusiveness compilation experiences with applications
-  including Blosc source code.
-
-- The `bench/bench.c` has been updated so that it can be compiled on
-  Windows again.
-
-- The new web site has been set to: http://www.blosc.org
+  #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
