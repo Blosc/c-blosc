@@ -40,11 +40,11 @@ favorite shell.
 Download sources
 ================
 
-For more details on what it is, please go to main web site:
+Please go to main web site:
 
 http://www.blosc.org/
 
-The github repository is over here:
+and proceed from there.  The github repository is over here:
 
 https://github.com/FrancescAlted/blosc
 

@@ -24,7 +24,7 @@ Go to the test/ directory and issue::
 
 These tests are very basic, and only valid for platforms where GNU
 make/gcc tools are available.  To actually test Blosc the hard way,
-look at:
+look at the end of:
 
 http://blosc.org/trac/wiki/SyntheticBenchmarks
 
@@ -38,6 +38,7 @@ Packaging
 
   $ export VERSION="the version number"
   $ mkdir /tmp/blosc-$VERSION
+  # IMPORTANT: make sure that you are at the root of the repo now!
   $ git archive master | tar -x -C /tmp/blosc-$VERSION
 
 - And package the repo::
@@ -51,8 +52,8 @@ Do a quick check that the tarball is sane.
 Uploading
 ---------
 
-- Go to the downloads section of the blosc project in github and
-  upload the source tarball.
+- Go to the downloads section in blosc.org and upload the source
+  tarball.
 
 
 Tagging
