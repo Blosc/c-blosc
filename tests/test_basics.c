@@ -78,6 +78,7 @@ int main(int argc, char **argv) {
 
   printf("STARTING TESTS for %s", argv[0]);
 
+  blosc_init();
   blosc_set_nthreads(1);
 
   /* Initialize buffers */
@@ -102,5 +103,7 @@ int main(int argc, char **argv) {
   printf("\tTests run: %d\n", tests_run);
 
   free(src); free(srccpy); free(dest); free(dest2);
+  blosc_destroy();
+
   return result != 0;
 }

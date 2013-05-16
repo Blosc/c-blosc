@@ -395,6 +395,8 @@ int main(int argc, char *argv[]) {
   nchunks = get_nchunks(size, workingset);
   gettimeofday(&last, NULL);
 
+  blosc_init();
+
   if (suite) {
     for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
         do_bench(nthreads_, size, elsize, rshift, output_file);
@@ -475,6 +477,6 @@ int main(int argc, char *argv[]) {
 
   /* Free blosc resources */
   blosc_free_resources();
-
+  blosc_destroy();
   return 0;
 }

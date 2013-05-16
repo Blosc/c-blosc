@@ -1209,12 +1209,14 @@ static int init_threads(void)
   return(0);
 }
 
+void blosc_init(void) {
+  /* Init global lock  */
+  pthread_mutex_init(&global_comp_mutex);
+}
+
 int blosc_set_nthreads(int nthreads_new) 
 {
   int ret;
-
-  /* Init global lock */
-  pthread_mutex_init(&global_comp_mutex, NULL);   
 
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
@@ -1332,6 +1334,12 @@ int blosc_free_resources(void)
 
 }
 
+void blosc_destroy(void) {
+  /* Free the resources */
+  blosc_free_resources();
+  /* Destroy global lock */
+  pthread_mutex_destroy(&global_comp_mutex);
+}
 
 /* Return `nbytes`, `cbytes` and `blocksize` from a compressed buffer. */
 void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,

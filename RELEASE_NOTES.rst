@@ -10,7 +10,9 @@
  Changes from 1.2.2 to 1.2.3
 ============================
 
-  #XXX version-specific blurb XXX#
+- Added a `blosc_init()` and `blosc_destroy()` so that the global lock can be
+  initialized safely.  These new functions will also allow other kind of
+  initializations/destructions in the future.
 
 
  Changes from 1.2.1 to 1.2.2
@@ -32,6 +34,7 @@
 - Fixed a problem with global lock not being initialized.  This
   affected mostly to Windows platforms.  Thanks to Christoph
   Gohlke for finding the cure!
+
 
 Changes from 1.1.5 to 1.2
 =========================
