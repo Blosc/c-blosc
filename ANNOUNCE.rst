@@ -15,6 +15,9 @@ Existing applications using Blosc do not need to start using the new
 functions right away, as long as they calling `blosc_set_nthreads()`
 previous to anything else.  However, using them is highly recommended.
 
+Thanks to Oscar Villellas for the init/destroy suggestion, it is a
+nice idea indeed!
+
 For more info, please see the release notes in:
 
 https://github.com/FrancescAlted/blosc/wiki/Release-notes
