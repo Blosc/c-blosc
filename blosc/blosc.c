@@ -1212,7 +1212,7 @@ static int init_threads(void)
 
 void blosc_init(void) {
   /* Init global lock  */
-  pthread_mutex_init(&global_comp_mutex);
+  pthread_mutex_init(&global_comp_mutex, NULL);
   init_lib = 1;
 }
 
