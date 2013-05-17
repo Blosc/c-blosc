@@ -10,9 +10,13 @@
  Changes from 1.2.2 to 1.2.3
 ============================
 
-- Added a `blosc_init()` and `blosc_destroy()` so that the global lock can be
-  initialized safely.  These new functions will also allow other kind of
-  initializations/destructions in the future.
+- Added a `blosc_init()` and `blosc_destroy()` so that the global lock
+  can be initialized safely.  These new functions will also allow other
+  kind of initializations/destructions in the future.
+
+  Existing applications using Blosc do not need to start using the new
+  functions right away, as long as they calling `blosc_set_nthreads()`
+  previous to anything else.  However, using them is highly recommended.
 
 
  Changes from 1.2.1 to 1.2.2

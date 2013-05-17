@@ -6,7 +6,14 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+New `blosc_init()` and `blosc_destroy()` functions have been added so
+that the global lock can be initialized safely. These new functions
+will also allow for other kind of initializations/destructions in the
+future.
+
+Existing applications using Blosc do not need to start using the new
+functions right away, as long as they calling `blosc_set_nthreads()`
+previous to anything else.  However, using them is highly recommended.
 
 For more info, please see the release notes in:
 
