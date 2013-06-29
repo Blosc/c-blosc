@@ -13,19 +13,15 @@
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
-#define BLOSC_VERSION_MINOR    2    /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  4    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_MINOR    3    /* for minor interface/format changes  */
+#define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.2.4.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.3.0.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2013-05-17 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2013-06-29 #$"    /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
-#define BLOSCLZ_VERSION_FORMAT  1   /* Blosclz format version, starting at 1 */
-
-/* The combined blosc and blosclz formats */
-#define BLOSC_VERSION_CFORMAT (BLOSC_VERSION_FORMAT << 8) & (BLOSCLZ_VERSION_FORMAT)
 
 /* Minimum header length */
 #define BLOSC_MIN_HEADER_LENGTH 16
@@ -48,6 +44,15 @@
 #define BLOSC_DOSHUFFLE 0x1
 #define BLOSC_MEMCPYED  0x2
 
+/* Codes for different compressors shipped with Blosc */
+#define BLOSC_BLOSCLZ   0
+#define BLOSC_SNAPPY    1
+#define BLOSC_LZ4       2
+
+/* The version formats for compressors shipped with Blosc */
+#define BLOSC_BLOSCLZ_VERSION_FORMAT  1   /* Blosclz format version, starting at 1 */
+#define BLOSC_SNAPPY_VERSION_FORMAT   1   /* Snappy format version, starting at 1 */
+#define BLOSC_LZ4_VERSION_FORMAT      1   /* LZ4 format version, starting at 1 */
 
 
 /**
@@ -146,6 +151,17 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest);
 */
 
 int blosc_set_nthreads(int nthreads);
+
+/**
+
+  Select the compressor to be used.  The supported ones are "blosclz",
+  "snappy" and "lz4".  If this function is not called, then "blosclz"
+  will be used.  In case the complin is not recognized, it returns a
+  -1, else it returns 0.
+
+*/
+
+int blosc_set_complib(char* complib);
 
 
 /**
