@@ -34,6 +34,7 @@
 
 struct bench_wrap_args 
 {
+  char *complib;
   int nthreads;
   int size;
   int elsize;
@@ -155,7 +156,8 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-void do_bench(int nthreads, int size, int elsize, int rshift, FILE * ofile) {
+void do_bench(char *complib, int nthreads, int size, int elsize,
+              int rshift, FILE * ofile) {
   void *src, *srccpy;
   void **dest[NCHUNKS], *dest2;
   int nbytes = 0, cbytes = 0;
@@ -166,6 +168,8 @@ void do_bench(int nthreads, int size, int elsize, int rshift, FILE * ofile) {
   unsigned char *orig, *round;
 
   blosc_set_nthreads(nthreads);
+  printf("Setting compressor to %s\n", complib);
+  blosc_set_complib(complib);
 
   /* Initialize buffers */
   src = malloc(size);
@@ -306,11 +310,13 @@ int get_nchunks(int size_, int ws) {
 void *bench_wrap(void * args) 
 {
     struct bench_wrap_args * arg = (struct bench_wrap_args *) args;
-    do_bench(arg->nthreads, arg->size, arg->elsize, arg->rshift, arg->output_file);
+    do_bench(arg->complib, arg->nthreads, arg->size, arg->elsize,
+             arg->rshift, arg->output_file);
     return 0;
 }
 
 int main(int argc, char *argv[]) {
+  char complib[32];
   int single = 1;
   int suite = 0;
   int hard_suite = 0;
@@ -325,7 +331,7 @@ int main(int argc, char *argv[]) {
   FILE * output_file = stdout;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench ['blosclz' | 'snappy' | 'lz4'] ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
   if (argc == 1) {
@@ -333,13 +339,17 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  if (strcmp(argv[1], "single") == 0) {
+  if (argc >= 2) {
+    strcpy(complib, argv[1]);
+  }
+
+  if (strcmp(argv[2], "single") == 0) {
     single = 1;
   }
-  else if (strcmp(argv[1], "suite") == 0) {
+  else if (strcmp(argv[2], "suite") == 0) {
     suite = 1;
   }
-  else if (strcmp(argv[1], "hardsuite") == 0) {
+  else if (strcmp(argv[2], "hardsuite") == 0) {
     hard_suite = 1;
     workingset = 64*MB;
     /* Values here are ending points for loops */
@@ -348,7 +358,7 @@ int main(int argc, char *argv[]) {
     elsize = 32;
     rshift = 32;
   }
-  else if (strcmp(argv[1], "extremesuite") == 0) {
+  else if (strcmp(argv[2], "extremesuite") == 0) {
     extreme_suite = 1;
     workingset = 32*MB;
     niter = 1;
@@ -358,7 +368,7 @@ int main(int argc, char *argv[]) {
     elsize = 32;
     rshift = 32;
   }
-  else if (strcmp(argv[1], "debugsuite") == 0) {
+  else if (strcmp(argv[2], "debugsuite") == 0) {
     debug_suite = 1;
     workingset = 32*MB;
     niter = 1;
@@ -374,20 +384,20 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  if (argc >= 3) {
-    nthreads = atoi(argv[2]);
-  }
   if (argc >= 4) {
-    size = atoi(argv[3]);
+    nthreads = atoi(argv[3]);
   }
   if (argc >= 5) {
-    elsize = atoi(argv[4]);
+    size = atoi(argv[4]);
   }
   if (argc >= 6) {
-    rshift = atoi(argv[5]);
+    elsize = atoi(argv[5]);
+  }
+  if (argc >= 7) {
+    rshift = atoi(argv[6]);
   }
 
-  if ((argc >= 7) || !(single || suite || hard_suite || extreme_suite)) {
+  if ((argc >= 8) || !(single || suite || hard_suite || extreme_suite)) {
     printf("%s\n", usage);
     exit(1);
   }
@@ -399,7 +409,7 @@ int main(int argc, char *argv[]) {
 
   if (suite) {
     for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
-        do_bench(nthreads_, size, elsize, rshift, output_file);
+      do_bench(complib, nthreads_, size, elsize, rshift, output_file);
     }
   }
   else if (hard_suite) {
@@ -414,7 +424,7 @@ int main(int argc, char *argv[]) {
             nchunks = get_nchunks(size_+i, workingset);
     	    niter = 1;
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(complib, nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -433,7 +443,7 @@ int main(int argc, char *argv[]) {
           for (size_ = 32*KB; size_ <= size; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(complib, nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -452,7 +462,7 @@ int main(int argc, char *argv[]) {
           for (size_ = size; size_ <= 16*MB; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = nthreads; nthreads_ <= 6; nthreads_++) {
-              do_bench(nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(complib, nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -465,7 +475,7 @@ int main(int argc, char *argv[]) {
   }
   /* Single mode */
   else {
-    do_bench(nthreads, size, elsize, rshift, output_file);
+    do_bench(complib, nthreads, size, elsize, rshift, output_file);
   }
 
   /* Print out some statistics */
