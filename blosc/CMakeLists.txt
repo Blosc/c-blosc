@@ -1,5 +1,5 @@
 # library sources
-set(SOURCES blosc.c blosclz.c shuffle.c)
+set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
@@ -16,7 +16,7 @@ if(WIN32)
     endif(NOT Threads_FOUND)
 else(WIN32)
     find_package(Threads REQUIRED)
-    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT} snappy)
 endif(WIN32)
 
 
