@@ -115,7 +115,6 @@ int blosclz_compress(int opt_level, const void* input,
   uint16_t *htab;
   uint8_t* op_limit;
 
-  int32_t hslot;
   int32_t hval;
   uint8_t copy;
 
