@@ -132,7 +132,7 @@ int blosclz_compress(int opt_level, const void* input,
     return 0;                   /* Mark this as uncompressible */
   }
 
-  htab = (uint16_t *) malloc(hash_size*sizeof(uint16_t));
+  htab = (uint16_t *) calloc(hash_size, sizeof(uint16_t));
 
   /* sanity check */
   if(BLOSCLZ_UNEXPECT_CONDITIONAL(length < 4)) {
@@ -147,10 +147,6 @@ int blosclz_compress(int opt_level, const void* input,
     }
     else goto out;
   }
-
-  /* initializes hash table */
-  for (hslot = 0; hslot < hash_size; hslot++)
-    htab[hslot] = 0;
 
   /* we start with literal copy */
   copy = 2;
