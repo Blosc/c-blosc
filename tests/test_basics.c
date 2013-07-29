@@ -63,11 +63,42 @@ static char *test_maxout_great() {
   return 0;
 }
 
+static char * test_shuffle()
+{
+  int sizes[] = {7, 64 * 3, 7*256, 500, 8000, 100000, 702713};
+  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 16};
+  int i, j, k;
+  for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
+    for (j = 0; j < sizeof(types) / sizeof(types[0]); j++) {
+      int n = sizes[i];
+      int t = types[j];
+      char * d = malloc(t * n);
+      char * d2 = malloc(t * n);
+      char * o = malloc(t * n + BLOSC_MAX_OVERHEAD);
+      for (k = 0; k < n; k++) {
+        d[k] = rand();
+      }
+      blosc_compress(5, 1, t, t * n, d, o, t * n + BLOSC_MAX_OVERHEAD);
+      blosc_decompress(o, d2, t * n);
+      int ok = 1;
+      for (k = 0; ok&& k < n; k++) {
+        ok = (d[k] == d2[k]);
+      }
+      free(d);
+      free(d2);
+      free(o);
+      mu_assert("ERROR: multi size test failed", ok);
+    }
+  }
+
+  return 0;
+}
 
 static char *all_tests() {
   mu_run_test(test_maxout_less);
   mu_run_test(test_maxout_equal);
   mu_run_test(test_maxout_great);
+  mu_run_test(test_shuffle);
   return 0;
 }
 
