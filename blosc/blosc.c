@@ -594,16 +594,16 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
   else if (nbytes > (16 * 16))  {
       /* align to typesize to make use of vectorized shuffles */
       if (typesize == 2) {
-          blocksize -= blocksize & (16 * 2);
+          blocksize -= blocksize % (16 * 2);
       }
       else if (typesize == 4) {
-          blocksize -= blocksize & (16 * 4);
+          blocksize -= blocksize % (16 * 4);
       }
       else if (typesize == 8) {
-          blocksize -= blocksize & (16 * 8);
+          blocksize -= blocksize % (16 * 8);
       }
       else if (typesize == 16) {
-          blocksize -= blocksize & (16 * 16);
+          blocksize -= blocksize % (16 * 16);
       }
   }
 
