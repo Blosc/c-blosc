@@ -627,6 +627,8 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
   return blocksize;
 }
 
+#define BLOSC_UNLOCK_RETURN(val) \
+  return (pthread_mutex_unlock(&global_comp_mutex), val)
 
 /* The public routine for compression.  See blosc.h for docstrings. */
 int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
@@ -735,7 +737,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     /* Do the actual compression */
     ntbytes = do_job();
     if (ntbytes < 0) {
-      return -1;
+      BLOSC_UNLOCK_RETURN(-1);
     }
     if ((ntbytes == 0) && (nbytes_+BLOSC_MAX_OVERHEAD <= maxbytes)) {
       /* Last chance for fitting `src` buffer in `dest`.  Update flags
@@ -756,7 +758,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
       params.ntbytes = BLOSC_MAX_OVERHEAD;
       ntbytes = do_job();
       if (ntbytes < 0) {
-	return -1;
+        BLOSC_UNLOCK_RETURN(-1);
       }
     }
     else {
@@ -842,7 +844,7 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
        cache size or multi-cores */
       ntbytes = do_job();
       if (ntbytes < 0) {
-	return -1;
+        BLOSC_UNLOCK_RETURN(-1);
       }
     }
     else {
@@ -854,7 +856,7 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
     /* Do the actual decompression */
     ntbytes = do_job();
     if (ntbytes < 0) {
-      return -1;
+      BLOSC_UNLOCK_RETURN(-1);
     }
   }
   /* Release global lock */
@@ -916,12 +918,12 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   /* Check region boundaries */
   if ((start < 0) || (start*typesize > nbytes)) {
     fprintf(stderr, "`start` out of bounds");
-    return (-1);
+    BLOSC_UNLOCK_RETURN(-1);
   }
 
   if ((stop < 0) || (stop*typesize > nbytes)) {
     fprintf(stderr, "`start`+`nitems` out of bounds");
-    return (-1);
+    BLOSC_UNLOCK_RETURN(-1);
   }
 
   /* Parameters needed by blosc_d */
@@ -932,11 +934,11 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   if (tmp == NULL || tmp2 == NULL || current_temp.blocksize < blocksize) {
     tmp = my_malloc(blocksize);
     if (tmp == NULL) {
-      return -1;
+      BLOSC_UNLOCK_RETURN(-1);
     }
     tmp2 = my_malloc(blocksize);
     if (tmp2 == NULL) {
-      return -1;
+      BLOSC_UNLOCK_RETURN(-1);
     }
     tmp_init = 1;
   }
