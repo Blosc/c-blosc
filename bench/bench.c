@@ -340,6 +340,10 @@ int main(int argc, char *argv[]) {
   }
 
   strcpy(complib, argv[1]);
+  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "snappy") != 0 && strcmp(complib, "lz4") != 0){
+    printf("No such codec: '%s'\n", complib);
+    exit(2);
+  }
 
   if (strcmp(argv[2], "single") == 0) {
     single = 1;
