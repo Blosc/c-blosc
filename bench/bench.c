@@ -334,13 +334,15 @@ int main(int argc, char *argv[]) {
   char *usage = "Usage: bench ['blosclz' | 'snappy' | 'lz4'] ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
-  if (argc == 1) {
+  if (argc <= 2) {
     printf("%s\n", usage);
     exit(1);
   }
 
-  if (argc >= 2) {
-    strcpy(complib, argv[1]);
+  strcpy(complib, argv[1]);
+  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "snappy") != 0 && strcmp(complib, "lz4") != 0){
+    printf("No such codec: '%s'\n", complib);
+    exit(2);
   }
 
   if (strcmp(argv[2], "single") == 0) {
