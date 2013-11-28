@@ -61,6 +61,16 @@ option(BUILD_TESTS
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(Snappy REQUIRED)
+set(HAVE_SNAPPY "${SNAPPY_FOUND}")
+
+# create the config.h file
+configure_file ("blosc/config.h.in"
+                "blosc/config.h" )
+# Now make sure that you the the build directory on your "Include" path when compiling
+include_directories("${PROJECT_BINARY_DIR}/blosc/")
+
 # Force the default build type to Release.
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING

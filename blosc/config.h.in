@@ -1,0 +1,7 @@
+#ifndef _CONFIGURATION_HEADER_GUARD_H_
+#define _CONFIGURATION_HEADER_GUARD_H_
+
+#cmakedefine HAVE_SNAPPY @HAVE_SNAPPY@
+
+
+#endif
