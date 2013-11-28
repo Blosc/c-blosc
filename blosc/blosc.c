@@ -1362,7 +1362,7 @@ int blosc_set_complib(char *complib_)
 
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
-  
+
   if (strcmp(complib_, "blosclz") == 0) {
     complib = BLOSC_BLOSCLZ;
   }
