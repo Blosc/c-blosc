@@ -14,11 +14,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include "config.h"
 #include "blosc.h"
 #include "blosclz.h"
 #include "lz4.h"
 #include "shuffle.h"
-#include "snappy-c.h"
+#if defined(HAVE_SNAPPY)
+  #include "snappy-c.h"
+#endif /*  HAVE_SNAPPY */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
@@ -232,6 +235,7 @@ static int32_t sw32(int32_t a)
   }
 }
 
+#if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length, char* output, size_t compressed_length, size_t maxout){
     /* the assumption is that the output buffer has been allocated with
      * snappy_max_compressed_length and is big enough */
@@ -254,6 +258,7 @@ static int snappy_wrap_decompress(const char* input, size_t compressed_length, c
     }
     return (int)ul;
 }
+#endif /*  HAVE_SNAPPY */
 
 
 /* Shuffle & compress a single block */
@@ -307,11 +312,14 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       cbytes = LZ4_compress_limitedOutput((char*)(_tmp+j*neblock), (char*)dest,
                                           neblock, maxout);
     }
+    #if defined(HAVE_SNAPPY)
     else if (complib == BLOSC_SNAPPY) {
       /*  TODO perhaps refactor this to keep the value stashed somewhere */
       size_t compressed_length = snappy_max_compressed_length(blocksize) + typesize*(int32_t)sizeof(int32_t);
       cbytes = snappy_wrap_compress((char *) _tmp+j*neblock, (size_t)neblock, (char *) dest, compressed_length ,(size_t)maxout);
     }
+    #endif /*  HAVE_SNAPPY */
+
     if (cbytes >= maxout) {
       /* Buffer overrun caused by blosclz_compress (should never happen) */
       return -1;
@@ -395,12 +403,14 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
         }
         nbytes = neblock;
       }
+      #if defined(HAVE_SNAPPY)
       else if (complib_ == BLOSC_SNAPPY) {
         nbytes = snappy_wrap_decompress((char *) src, (size_t)cbytes, (char*)_tmp, (size_t)neblock ,(size_t) neblock);
         if (nbytes != neblock) {
           return -2;
         }
       }
+      #endif /*  HAVE_SNAPPY */
     }
     src += cbytes;
     ctbytes += cbytes;
@@ -529,12 +539,15 @@ static int create_temporaries(void)
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
    hurt serial mode either. */
-  if (complib == BLOSC_SNAPPY) {
-    ebsize = snappy_max_compressed_length(blocksize) + typesize*(int32_t)sizeof(int32_t);
-  }
-  else{
+
+  if (complib != BLOSC_SNAPPY) {
     ebsize = blocksize + typesize*(int32_t)sizeof(int32_t);
   }
+  #if defined(HAVE_SNAPPY)
+  else{
+    ebsize = snappy_max_compressed_length(blocksize) + typesize*(int32_t)sizeof(int32_t);
+  }
+  #endif /*  HAVE_SNAPPY */
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
@@ -752,9 +765,11 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   if (complib == BLOSC_BLOSCLZ) {
     _dest[1] = BLOSC_BLOSCLZ_VERSION_FORMAT;       /* blosclz format version */
   }
+  #if defined(HAVE_SNAPPY)
   else if (complib == BLOSC_SNAPPY) {
     _dest[1] = BLOSC_SNAPPY_VERSION_FORMAT;       /* snappy format version */
   }
+  #endif /*  HAVE_SNAPPY */
   else if (complib == BLOSC_LZ4) {
     _dest[1] = BLOSC_LZ4_VERSION_FORMAT;       /* lz4 format version */
   }
@@ -1383,9 +1398,11 @@ int blosc_set_complib(char *complib_)
   if (strcmp(complib_, "blosclz") == 0) {
     complib = BLOSC_BLOSCLZ;
   }
+#if defined(HAVE_SNAPPY)
   else if (strcmp(complib_, "snappy") == 0) {
     complib = BLOSC_SNAPPY;
   }
+#endif /*  HAVE_SNAPPY */
   else if (strcmp(complib_, "lz4") == 0) {
     complib = BLOSC_LZ4;
   }
