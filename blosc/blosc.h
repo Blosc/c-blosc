@@ -156,7 +156,7 @@ int blosc_set_nthreads(int nthreads);
 
   Select the compressor to be used.  The supported ones are "blosclz",
   "snappy" and "lz4".  If this function is not called, then "blosclz"
-  will be used.  In case the complin is not recognized, it returns a
+  will be used.  In case the complib is not recognized, it returns a
   -1, else it returns 0.
 
 */
