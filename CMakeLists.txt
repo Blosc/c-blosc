@@ -8,7 +8,7 @@
 #   BUILD_HDF5_FILTER: default OFF
 #       build the compression filter for the HDF5 library
 #   BUILD_TESTS: default ON
-#       build thest programs and generates the "test" target
+#       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
 #   TEST_INCLUDE_BENCH_SINGLE: default OFF
@@ -60,6 +60,16 @@ option(BUILD_TESTS
     "Build test programs form the blosc compression library" ON)
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
+
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(Snappy REQUIRED)
+set(HAVE_SNAPPY "${SNAPPY_FOUND}")
+
+# create the config.h file
+configure_file ("blosc/config.h.in"
+                "blosc/config.h" )
+# Now make sure that you the the build directory on your "Include" path when compiling
+include_directories("${PROJECT_BINARY_DIR}/blosc/")
 
 # Force the default build type to Release.
 if(NOT CMAKE_BUILD_TYPE)

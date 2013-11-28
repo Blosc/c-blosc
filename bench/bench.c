@@ -169,7 +169,10 @@ void do_bench(char *complib, int nthreads, int size, int elsize,
 
   blosc_set_nthreads(nthreads);
   printf("Setting compressor to %s\n", complib);
-  blosc_set_complib(complib);
+  if(blosc_set_complib(complib) != 0){
+    printf("Compiled w/o support for codec: '%s', so sorry.\n", complib);
+    exit(1);
+  }
 
   /* Initialize buffers */
   src = malloc(size);
