@@ -16,7 +16,11 @@ if(WIN32)
     endif(NOT Threads_FOUND)
 else(WIN32)
     find_package(Threads REQUIRED)
-    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT} snappy)
+    if (HAVE_SNAPPY)
+        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT} snappy)
+    else(HAVE_SNAPPY)
+        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    endif(HAVE_SNAPPY)
 endif(WIN32)
 
 
