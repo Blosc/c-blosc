@@ -8,7 +8,7 @@
 #   BUILD_HDF5_FILTER: default OFF
 #       build the compression filter for the HDF5 library
 #   BUILD_TESTS: default ON
-#       build thest programs and generates the "test" target
+#       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
 #   TEST_INCLUDE_BENCH_SINGLE: default OFF
