@@ -397,7 +397,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
         }
       }
       else if (complib_ == BLOSC_LZ4) {
-        cbytes2 = LZ4_uncompress((char*)src, (char*)_tmp, neblock);
+        cbytes2 = LZ4_decompress_fast((char*)src, (char*)_tmp, neblock);
         if (cbytes2 != cbytes) {
           return -2;
         }
