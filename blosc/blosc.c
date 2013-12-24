@@ -238,6 +238,16 @@ static int32_t sw32(int32_t a)
   }
 }
 
+static int lz4_wrap_decompress(const char* input, size_t compressed_length,
+                               char* output, size_t maxout) {
+    size_t cbytes;
+    cbytes = LZ4_decompress_fast((char*)input, (char*)output, (int)maxout);
+    if (cbytes != compressed_length) {
+      return 0;
+    }
+    return (int)maxout;
+}
+
 #if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length,
                                 char* output, size_t maxout) {
@@ -398,7 +408,6 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
   int32_t j, neblock, nsplits;
   int32_t nbytes;                /* number of decompressed bytes in split */
   int32_t cbytes;                /* number of compressed bytes in split */
-  int cbytes2;
   int32_t ctbytes = 0;           /* number of compressed bytes in block */
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp;
@@ -435,35 +444,28 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
     else {
       if (complib_ == BLOSC_BLOSCLZ) {
         nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
-        if (nbytes != neblock) {
-          return -2;
-        }
       }
       else if (complib_ == BLOSC_LZ4) {
-        cbytes2 = LZ4_decompress_fast((char*)src, (char*)_tmp, neblock);
-        if (cbytes2 != cbytes) {
-          return -2;
-        }
-        nbytes = neblock;
+        nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
+                                     (char*)_tmp, (size_t)neblock);
       }
       #if defined(HAVE_SNAPPY)
       else if (complib_ == BLOSC_SNAPPY) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
                                         (char*)_tmp, (size_t)neblock);
-        if (nbytes != neblock) {
-          return -2;
-        }
       }
       #endif /*  HAVE_SNAPPY */
       #if defined(HAVE_ZLIB)
       else if (complib_ == BLOSC_ZLIB) {
         nbytes = zlib_wrap_decompress((char *)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
-        if (nbytes != neblock) {
-          return -2;
-        }
       }
       #endif /*  HAVE_ZLIB */
+
+      /* Check that decompressed bytes number is correct */
+      if (nbytes != neblock) {
+	return -2;
+      }
     }
     src += cbytes;
     ctbytes += cbytes;
