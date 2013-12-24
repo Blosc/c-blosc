@@ -240,7 +240,8 @@ static int32_t sw32(int32_t a)
 
 
 /* Convert the complib code into a string */
-static char* clibtostr(int complib) {
+static char* clibtostr(int complib)
+{
   if (complib == BLOSC_BLOSCLZ) return "blosclz";
   else if (complib == BLOSC_LZ4) return "LZ4";
   else if (complib == BLOSC_SNAPPY) return "snappy";
@@ -250,44 +251,48 @@ static char* clibtostr(int complib) {
 }
 
 static int lz4_wrap_compress(const char* input, size_t input_length,
-                             char* output, size_t maxout) {
-    int cbytes;
-    cbytes = LZ4_compress_limitedOutput(input, output,
-                                        (int)input_length, (int)maxout);
-    return cbytes;
+                             char* output, size_t maxout)
+{
+  int cbytes;
+  cbytes = LZ4_compress_limitedOutput(input, output, (int)input_length,
+                                      (int)maxout);
+  return cbytes;
 }
 
 static int lz4_wrap_decompress(const char* input, size_t compressed_length,
-                               char* output, size_t maxout) {
-    size_t cbytes;
-    cbytes = LZ4_decompress_fast(input, output, (int)maxout);
-    if (cbytes != compressed_length) {
-      return 0;
-    }
-    return (int)maxout;
+                               char* output, size_t maxout)
+{
+  size_t cbytes;
+  cbytes = LZ4_decompress_fast(input, output, (int)maxout);
+  if (cbytes != compressed_length) {
+    return 0;
+  }
+  return (int)maxout;
 }
 
 #if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length,
-                                char* output, size_t maxout) {
-    snappy_status status;
-    size_t cl = maxout;
-    status = snappy_compress(input, input_length, output, &cl);
-    if (status != SNAPPY_OK){
-      return 0;
-    }
-    return (int)cl;
+                                char* output, size_t maxout)
+{
+  snappy_status status;
+  size_t cl = maxout;
+  status = snappy_compress(input, input_length, output, &cl);
+  if (status != SNAPPY_OK){
+    return 0;
+  }
+  return (int)cl;
 }
 
 static int snappy_wrap_decompress(const char* input, size_t compressed_length,
-                                  char* output, size_t maxout) {
-    snappy_status status;
-    size_t ul = maxout;
-    status = snappy_uncompress(input, compressed_length, output, &ul);
-    if (status != SNAPPY_OK){
-      return 0;
-    }
-    return (int)ul;
+                                  char* output, size_t maxout)
+{
+  snappy_status status;
+  size_t ul = maxout;
+  status = snappy_uncompress(input, compressed_length, output, &ul);
+  if (status != SNAPPY_OK){
+    return 0;
+  }
+  return (int)ul;
 }
 #endif /*  HAVE_SNAPPY */
 
@@ -295,29 +300,31 @@ static int snappy_wrap_decompress(const char* input, size_t compressed_length,
 /* zlib is not very respectful with sharing name space with others.
  Fortunately, its names do not collide with those already in blosc. */
 static int zlib_wrap_compress(const char* input, size_t input_length,
-                              char* output, size_t maxout, int clevel) {
-    int status;
-    uLongf cl = maxout;
-    /* We could use clevel as passed to this routine, but clevel == 5
-       provides pretty balanced results for the 'single' benchmark */
-    status = compress2((Bytef*)output, &cl, (Bytef*)input, (uLong)input_length,
-                       5);
-    if (status != Z_OK){
-        return 0;
-    }
-    return (int)cl;
+                              char* output, size_t maxout, int clevel)
+{
+  int status;
+  uLongf cl = maxout;
+  /* We could use clevel as passed to this routine, but clevel == 5
+     provides pretty balanced results for the 'single' benchmark */
+  status = compress2(
+	     (Bytef*)output, &cl, (Bytef*)input, (uLong)input_length, 5);
+  if (status != Z_OK){
+    return 0;
+  }
+  return (int)cl;
 }
 
 static int zlib_wrap_decompress(const char* input, size_t compressed_length,
-                                char* output, size_t maxout) {
-    int status;
-    uLongf ul = maxout;
-    status = uncompress((Bytef*)output, &ul,
-                        (Bytef*)input, (uLong)compressed_length);
-    if (status != Z_OK){
-        return 0;
-    }
-    return (int)ul;
+                                char* output, size_t maxout)
+{
+  int status;
+  uLongf ul = maxout;
+  status = uncompress(
+             (Bytef*)output, &ul, (Bytef*)input, (uLong)compressed_length);
+  if (status != Z_OK){
+    return 0;
+  }
+  return (int)ul;
 }
 
 #endif /*  HAVE_ZLIB */
