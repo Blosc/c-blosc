@@ -46,13 +46,15 @@
 
 /* Codes for different compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ   0
-#define BLOSC_SNAPPY    1
-#define BLOSC_LZ4       2
+#define BLOSC_LZ4       1
+#define BLOSC_SNAPPY    2
+#define BLOSC_ZLIB      3
 
 /* The version formats for compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ_VERSION_FORMAT  1   /* Blosclz format version, starting at 1 */
-#define BLOSC_SNAPPY_VERSION_FORMAT   1   /* Snappy format version, starting at 1 */
 #define BLOSC_LZ4_VERSION_FORMAT      1   /* LZ4 format version, starting at 1 */
+#define BLOSC_SNAPPY_VERSION_FORMAT   1   /* Snappy format version, starting at 1 */
+#define BLOSC_ZLIB_VERSION_FORMAT     1   /* ZLIB format version, starting at 1 */
 
 
 /**
@@ -155,9 +157,9 @@ int blosc_set_nthreads(int nthreads);
 /**
 
   Select the compressor to be used.  The supported ones are "blosclz",
-  "snappy" and "lz4".  If this function is not called, then "blosclz"
-  will be used.  In case the complib is not recognized, it returns a
-  -1, else it returns 0.
+  "lz4", "snappy" and "zlib".  If this function is not called, then
+  "blosclz" will be used.  In case the complib is not recognized, it
+  returns a -1, else it returns 0.
 
 */
 
