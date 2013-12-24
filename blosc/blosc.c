@@ -238,10 +238,18 @@ static int32_t sw32(int32_t a)
   }
 }
 
+static int lz4_wrap_compress(const char* input, size_t input_length,
+                             char* output, size_t maxout) {
+    int cbytes;
+    cbytes = LZ4_compress_limitedOutput(input, output,
+                                        (int)input_length, (int)maxout);
+    return cbytes;
+}
+
 static int lz4_wrap_decompress(const char* input, size_t compressed_length,
                                char* output, size_t maxout) {
     size_t cbytes;
-    cbytes = LZ4_decompress_fast((char*)input, (char*)output, (int)maxout);
+    cbytes = LZ4_decompress_fast(input, output, (int)maxout);
     if (cbytes != compressed_length) {
       return 0;
     }
@@ -357,8 +365,8 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
                                 dest, maxout);
     }
     else if (complib == BLOSC_LZ4) {
-      cbytes = LZ4_compress_limitedOutput((char*)(_tmp+j*neblock), (char*)dest,
-                                          neblock, maxout);
+      cbytes = lz4_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
+                                 (char *)dest, (size_t)maxout);
     }
     #if defined(HAVE_SNAPPY)
     else if (complib == BLOSC_SNAPPY) {
