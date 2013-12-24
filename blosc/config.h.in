@@ -2,6 +2,7 @@
 #define _CONFIGURATION_HEADER_GUARD_H_
 
 #cmakedefine HAVE_SNAPPY @HAVE_SNAPPY@
+#cmakedefine HAVE_ZLIB @HAVE_ZLIB@
 
 
 #endif
