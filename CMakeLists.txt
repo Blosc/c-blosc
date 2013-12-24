@@ -11,10 +11,10 @@
 #       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
-#   TEST_INCLUDE_BENCH_SINGLE: default OFF
+#   TEST_INCLUDE_BENCH_SINGLE: default ON
 #       add a test that runs the benchmark program passing "single"
 #       as first parameter
-#   TEST_INCLUDE_BENCH_SUITE: default ON
+#   TEST_INCLUDE_BENCH_SUITE: default OFF
 #       add a test that runs the benchmark program passing "suite"
 #       as first parameter
 #   TEST_INCLUDE_BENCH_SUITE_PARALLEL: default OFF

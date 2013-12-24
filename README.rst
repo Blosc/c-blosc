@@ -115,25 +115,6 @@ I have not tried to compile this with compilers other than GCC, MINGW,
 Intel ICC or MSVC yet. Please report your experiences with your own
 platforms.
 
-Testing Blosc
-=============
-
-Go to the test/ directory and issue:
-
-.. code-block:: console
-
-  $ make test
-
-These tests are very basic, and only valid for platforms where GNU
-make/gcc tools are available.  If you really want to test Blosc the
-hard way, look at:
-
-http://blosc.org/trac/wiki/SyntheticBenchmarks
-
-where instructions on how to intensively test (and benchmark) Blosc
-are given.  If while running these tests you get some error, please
-report it back!
-
 Compiling the Blosc library with CMake
 ======================================
 
@@ -168,7 +149,7 @@ Build, test and install Blosc:
 
   $ make
   $ make test
-  $ make install 
+  $ make install
 
 The static and dynamic version of the Blosc library, together with
 header files, will be installed into the specified INSTALL_DIR.
@@ -206,14 +187,15 @@ Blosc is pretty safe now and ready for production purposes.
 
 Other important contributions:
 
+* Valentin Haenel did a terrific work implementing the support for the
+  snappy compression, fixing typos and improving docs and the plotting
+  script.
+
 * Thibault North contributed a way to call Blosc from different threads in a
   safe way.
 
 * The cmake support was a contribution of Thibault North, Antonio Valentino
   and Mark Wiebe.
-
-* Valentin Haenel did a terrific work fixing typos and improving docs and the
-  plotting script.
 
 
 ----
