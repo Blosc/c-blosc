@@ -240,28 +240,23 @@ static int32_t sw32(int32_t a)
 
 #if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length,
-                                char* output, size_t compressed_length,
-                                size_t maxout){
-    /* the assumption is that the output buffer has been allocated with
-     * snappy_max_compressed_length and is big enough */
+                                char* output, size_t maxout) {
     snappy_status status;
-    size_t cl = compressed_length;
+    size_t cl = maxout;
     status = snappy_compress(input, input_length, output, &cl);
-    /*  If snappy wasn't a happy chappy or if it went over the desired length */
-    if (status != SNAPPY_OK || cl > maxout){
-        return 0;
+    if (status != SNAPPY_OK){
+      return 0;
     }
     return (int)cl;
 }
 
 static int snappy_wrap_decompress(const char* input, size_t compressed_length,
-                                  char* output, size_t uncompressed_length,
-                                  size_t maxout) {
+                                  char* output, size_t maxout) {
     snappy_status status;
-    size_t ul = uncompressed_length;
+    size_t ul = maxout;
     status = snappy_uncompress(input, compressed_length, output, &ul);
-    if (status != SNAPPY_OK || ul > maxout){
-        return 0;
+    if (status != SNAPPY_OK){
+      return 0;
     }
     return (int)ul;
 }
@@ -275,10 +270,9 @@ static int zlib_wrap_compress(const char* input, size_t input_length,
     int status;
     uLongf cl = maxout;
     /* We could use clevel as passed to this routine, but clevel == 5
-       gives pretty balanced results for the 'single' benchmark */
+       provides pretty balanced results for the 'single' benchmark */
     status = compress2((Bytef*)output, &cl, (Bytef*)input, (uLong)input_length,
                        5);
-    /*  If snappy wasn't a happy chappy or if it went over the desired length */
     if (status != Z_OK){
         return 0;
     }
@@ -336,6 +330,12 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
     ntbytes += (int32_t)sizeof(int32_t);
     ctbytes += (int32_t)sizeof(int32_t);
     maxout = neblock;
+    #if defined(HAVE_SNAPPY)
+    if (complib == BLOSC_SNAPPY) {
+      /* TODO perhaps refactor this to keep the value stashed somewhere */
+      maxout = snappy_max_compressed_length(neblock);
+    }
+    #endif /*  HAVE_SNAPPY */
     if (ntbytes+maxout > maxbytes) {
       maxout = maxbytes - ntbytes;   /* avoid buffer overrun */
       if (maxout <= 0) {
@@ -352,11 +352,8 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
     }
     #if defined(HAVE_SNAPPY)
     else if (complib == BLOSC_SNAPPY) {
-      /*  TODO perhaps refactor this to keep the value stashed somewhere */
-      size_t compressed_length = snappy_max_compressed_length(blocksize) + typesize*(int32_t)sizeof(int32_t);
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
-                                    (char *)dest, compressed_length,
-                                    (size_t)maxout);
+                                    (char *)dest, (size_t)maxout);
     }
     #endif /*  HAVE_SNAPPY */
     #if defined(HAVE_ZLIB)
@@ -367,7 +364,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
     #endif /*  HAVE_ZLIB */
 
     if (cbytes >= maxout) {
-      /* Buffer overrun caused by blosclz_compress (should never happen) */
+      /* Buffer overrun caused by compression (should never happen) */
       return -1;
     }
     else if (cbytes < 0) {
@@ -452,8 +449,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
       #if defined(HAVE_SNAPPY)
       else if (complib_ == BLOSC_SNAPPY) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
-                                        (char*)_tmp, (size_t)neblock,
-                                        (size_t) neblock);
+                                        (char*)_tmp, (size_t)neblock);
         if (nbytes != neblock) {
           return -2;
         }
@@ -593,18 +589,11 @@ static int create_temporaries(void)
   int32_t tid, ebsize;
   int32_t typesize = params.typesize;
   int32_t blocksize = params.blocksize;
+
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
    hurt serial mode either. */
-
-  if (complib != BLOSC_SNAPPY) {
-    ebsize = blocksize + typesize*(int32_t)sizeof(int32_t);
-  }
-  #if defined(HAVE_SNAPPY)
-  else{
-    ebsize = snappy_max_compressed_length(blocksize) + typesize*(int32_t)sizeof(int32_t);
-  }
-  #endif /*  HAVE_SNAPPY */
+  ebsize = blocksize + typesize * (int32_t)sizeof(int32_t);
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
@@ -818,7 +807,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     _dest[1] = BLOSC_ZLIB_VERSION_FORMAT;       /* snappy format version */
   }
   #endif /*  HAVE_ZLIB */
- 
+
   flags = _dest+2;                         /* flags */
   _dest[2] = 0;                            /* zeroes flags */
   _dest[3] = (uint8_t)typesize;            /* type size */
@@ -904,7 +893,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   /* Release global lock */
   pthread_mutex_unlock(&global_comp_mutex);
-  
+
   assert((int32_t)ntbytes <= (int32_t)maxbytes);
   return ntbytes;
 }
@@ -954,7 +943,7 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
 
   /* Take global lock for the time of decompression */
   pthread_mutex_lock(&global_comp_mutex);
-  
+
   /* Populate parameters for decompression routines */
   params.compress = 0;
   params.clevel = 0;            /* specific for compression */
@@ -993,7 +982,7 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   }
   /* Release global lock */
   pthread_mutex_unlock(&global_comp_mutex);
-  
+
   assert(ntbytes <= (int32_t)destsize);
   return ntbytes;
 }
@@ -1023,7 +1012,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
 
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
-  
+
   /* Read the header block */
   version = _src[0];                         /* blosc format version */
   versionlz = _src[1];                       /* blosclz format version */
@@ -1119,7 +1108,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
     }
     ntbytes += cbytes;
   }
-  
+
   /* Release global lock */
   pthread_mutex_unlock(&global_comp_mutex);
 
@@ -1180,7 +1169,7 @@ static int t_blosc(void *tids)
 
     /* Get parameters for this thread before entering the main loop */
     blocksize = params.blocksize;
-    ebsize = blocksize + params.typesize*(int32_t)sizeof(int32_t);
+    ebsize = blocksize + params.typesize * (int32_t)sizeof(int32_t);
     compress = params.compress;
     flags = params.flags;
     maxbytes = params.maxbytes;
@@ -1365,7 +1354,7 @@ void blosc_init(void) {
   init_lib = 1;
 }
 
-int blosc_set_nthreads(int nthreads_new) 
+int blosc_set_nthreads(int nthreads_new)
 {
   int ret;
 
@@ -1375,11 +1364,11 @@ int blosc_set_nthreads(int nthreads_new)
 
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
-  
+
   ret = blosc_set_nthreads_(nthreads_new);
   /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
-  
+
   return ret;
 }
 
@@ -1431,7 +1420,7 @@ int blosc_set_nthreads_(int nthreads_new)
   return nthreads_old;
 }
 
-int blosc_set_complib(char *complib_) 
+int blosc_set_complib(char *complib_)
 {
   int ret = 0;
 
@@ -1460,10 +1449,10 @@ int blosc_set_complib(char *complib_)
   else {
     ret = -1;
   }
- 
+
   /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
-  
+
   return ret;
 }
 
@@ -1474,7 +1463,7 @@ int blosc_free_resources(void)
   int32_t t;
   int rc2;
   void *status;
- 
+
    /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
 
@@ -1592,9 +1581,9 @@ void blosc_set_blocksize(size_t size)
 {
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
-  
+
   force_blocksize = (int32_t)size;
-  
+
    /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
 }
