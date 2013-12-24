@@ -789,7 +789,7 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
   /* blocksize must not exceed (64 KB * typesize) in order to allow
      BloscLZ to achieve better compression ratios (the ultimate reason
      for this is that hash_log in BloscLZ cannot be larger than 15) */
-  if ((blocksize / typesize) > 64*KB) {
+  if ((complib == BLOSC_ZLIB) && (blocksize / typesize) > 64*KB) {
     blocksize = 64 * KB * typesize;
   }
 
