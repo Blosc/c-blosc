@@ -304,10 +304,8 @@ static int zlib_wrap_compress(const char* input, size_t input_length,
 {
   int status;
   uLongf cl = maxout;
-  /* We could use clevel as passed to this routine, but clevel == 5
-     provides pretty balanced results for the 'single' benchmark */
   status = compress2(
-	     (Bytef*)output, &cl, (Bytef*)input, (uLong)input_length, 5);
+	     (Bytef*)output, &cl, (Bytef*)input, (uLong)input_length, clevel);
   if (status != Z_OK){
     return 0;
   }
@@ -736,6 +734,13 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
   }
   else if (nbytes >= L1*4) {
     blocksize = L1 * 4;
+    /* For Zlib, increase the block sizes in a factor of 8 because it
+       is meant for compression large blocks (it shows a big overhead
+       in compressing small ones). */
+    if (complib == BLOSC_ZLIB) {
+      blocksize *= 8;
+    }
+
     if (clevel == 0) {
       blocksize /= 16;
     }
