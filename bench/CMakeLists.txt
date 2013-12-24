@@ -12,18 +12,20 @@ if(BUILD_TESTS)
     set(BENCH_N_THREADS 4
         CACHE STRING "Number of threads to use for benchmarking")
 
-    option(TEST_INCLUDE_BENCH_SINGLE "Include bench_single in the tests" OFF)
+    option(TEST_INCLUDE_BENCH_SINGLE "Include bench_single in the tests" ON)
     if(TEST_INCLUDE_BENCH_SINGLE)
         add_test(bench_single bench blosclz single)
-        add_test(bench_single bench snappy  single)
         add_test(bench_single bench lz4     single)
+        add_test(bench_single bench snappy  single)
+        add_test(bench_single bench zlib    single)
     endif(TEST_INCLUDE_BENCH_SINGLE)
 
-    option(TEST_INCLUDE_BENCH_SUITE "Include bench_suite in the tests" ON)
+    option(TEST_INCLUDE_BENCH_SUITE "Include bench_suite in the tests" OFF)
     if(TEST_INCLUDE_BENCH_SUITE)
         add_test(bench_suite bench blosclz suite ${BENCH_N_THREADS})
-        add_test(bench_suite bench snappy  suite ${BENCH_N_THREADS})
         add_test(bench_suite bench lz4     suite ${BENCH_N_THREADS})
+        add_test(bench_suite bench snappy  suite ${BENCH_N_THREADS})
+        add_test(bench_suite bench zlib    suite ${BENCH_N_THREADS})
     endif(TEST_INCLUDE_BENCH_SUITE)
 
     option(TEST_INCLUDE_BENCH_SUITE_PARALLEL
