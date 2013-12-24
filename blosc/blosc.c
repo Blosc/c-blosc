@@ -239,13 +239,13 @@ static int32_t sw32(int32_t a)
 }
 
 
-/* Convert the complib code into a string */
-static char* clibtostr(int complib)
+/* Convert the compresion lib code into a string */
+static char* clibtostr(int clib)
 {
-  if (complib == BLOSC_BLOSCLZ) return "blosclz";
-  else if (complib == BLOSC_LZ4) return "LZ4";
-  else if (complib == BLOSC_SNAPPY) return "snappy";
-  else if (complib == BLOSC_ZLIB) return "Zlib";
+  if (clib == BLOSC_BLOSCLZ) return "blosclz";
+  else if (clib == BLOSC_LZ4) return "LZ4";
+  else if (clib == BLOSC_SNAPPY) return "snappy";
+  else if (clib == BLOSC_ZLIB) return "Zlib";
   /* We should never reach this point */
   return "Unknown";
 }
@@ -445,7 +445,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp;
   int32_t typesize = params.typesize;
-  int complib;
+  int clib;
   char *strclib;
 
   if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
@@ -455,7 +455,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
     _tmp = dest;
   }
 
-  complib = (params.flags & 0xe0) >> 5;
+  clib = (params.flags & 0xe0) >> 5;
 
   /* Compress for each shuffled slice split for this block. */
   if ((typesize <= MAX_SPLITS) && (blocksize/typesize) >= MIN_BUFFERSIZE &&
@@ -476,28 +476,28 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
       nbytes = neblock;
     }
     else {
-      if (complib == BLOSC_BLOSCLZ) {
+      if (clib == BLOSC_BLOSCLZ) {
         nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
       }
-      else if (complib == BLOSC_LZ4) {
+      else if (clib == BLOSC_LZ4) {
         nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
                                      (char*)_tmp, (size_t)neblock);
       }
       #if defined(HAVE_SNAPPY)
-      else if (complib == BLOSC_SNAPPY) {
+      else if (clib == BLOSC_SNAPPY) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
                                         (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_SNAPPY */
       #if defined(HAVE_ZLIB)
-      else if (complib == BLOSC_ZLIB) {
+      else if (clib == BLOSC_ZLIB) {
         nbytes = zlib_wrap_decompress((char *)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_ZLIB */
 
       else {
-        strclib = clibtostr(complib);
+        strclib = clibtostr(clib);
         fprintf(stderr, "Blosc has not been compiled with `%s` ", strclib);
         fprintf(stderr, "decompression support.  Please use one having it.");
         return -5;    /* signals no decompression support */
