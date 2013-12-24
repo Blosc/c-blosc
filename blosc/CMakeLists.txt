@@ -9,7 +9,7 @@ if(WIN32)
     # try to use the system library
     find_package(Threads)
     if(NOT Threads_FOUND)
-        message(STATUS "using the internal pthead library for win32 systems.")
+        message(STATUS "using the internal pthread library for win32 systems.")
         set(SOURCES ${SOURCES} win32/pthread.c)
     else(NOT Threads_FOUND)
         set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
@@ -21,13 +21,18 @@ else(WIN32)
     else(HAVE_SNAPPY)
         set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
     endif(HAVE_SNAPPY)
+    if (HAVE_ZLIB)
+        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT} z)
+    else(HAVE_ZLIB)
+        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    endif(HAVE_ZLIB)
 endif(WIN32)
 
 
 # targets
 add_library(blosc_shared SHARED ${SOURCES})
 set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)
-set_target_properties(blosc_shared PROPERTIES 
+set_target_properties(blosc_shared PROPERTIES
         VERSION ${version_string}
         SOVERSION ${version_string}
     )

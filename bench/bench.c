@@ -334,7 +334,7 @@ int main(int argc, char *argv[]) {
   FILE * output_file = stdout;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['blosclz' | 'snappy' | 'lz4'] ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench ['blosclz' | 'lz4' | 'snappy' | 'zlib'] ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
 
 
   if (argc <= 2) {
@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
   }
 
   strcpy(complib, argv[1]);
-  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "snappy") != 0 && strcmp(complib, "lz4") != 0){
+  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "lz4") != 0 && strcmp(complib, "snappy") != 0 && strcmp(complib, "zlib") != 0){
     printf("No such codec: '%s'\n", complib);
     exit(2);
   }

@@ -47,9 +47,11 @@ All entries are little endian.
     :``0``:
         ``blosclz``
     :``1``:
-        ``snappy``
-    :``2``:
         ``lz4``
+    :``2``:
+        ``snappy``
+    :``3``:
+        ``zlib``
 
 :typesize:
     (``uint8``) Number of bytes for the atomic type.

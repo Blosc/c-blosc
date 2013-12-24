@@ -68,6 +68,7 @@ option(BUILD_BENCHMARKS
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(Snappy REQUIRED)
+find_package(Zlib REQUIRED)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"
