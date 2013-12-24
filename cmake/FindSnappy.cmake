@@ -1,4 +1,4 @@
-find_path(SNAPPY_INCLUDE_DIR snappy.h NO_DEFAULT_PATH PATHS
+find_path(SNAPPY_INCLUDE_DIR snappy-c.h NO_DEFAULT_PATH PATHS
   /usr/include
   /usr/local/include
 )
