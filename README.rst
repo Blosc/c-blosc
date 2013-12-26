@@ -83,8 +83,9 @@ Compiling your application with Blosc
 Blosc consists of the next files (in blosc/ directory)::
 
     blosc.h and blosc.c      -- the main routines
-    blosclz.h and blosclz.c  -- the actual compressor
     shuffle.h and shuffle.c  -- the shuffle code
+    blosclz.h and blosclz.c  -- the blosclz compressor
+    lz4.h and lz4.c          -- the lz4 compressor
 
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
@@ -94,6 +95,14 @@ To compile using GCC (4.4 or higher recommended) on Unix:
 .. code-block:: console
 
    $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
+
+If you want to add support for other compressors, just add the symbols
+HAVE_SNAPPY or HAVE_ZLIB during compilation and add the libraries.
+For example, for compiling Blosc with Zlib support do:
+
+.. code-block:: console
+
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -HAVE_ZLIB -lz
 
 Using Windows and MINGW:
 
@@ -128,20 +137,20 @@ Create the build directory and move into it:
   $ mkdir build
   $ cd build
 
-Configure Blosc in release mode (enable optimizations) specifying the
-installation directory:
+Now run cmake configuration and optionally specify the installation
+directory (e.g. '/usr' or '/usr/local'):
 
 .. code-block:: console
 
-  $ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=INSTALL_DIR \
-      PATH_TO_BLOSC_SOURCE_DIR
+  $ cmake -DCMAKE_INSTALL_PREFIX=your_install_prefix_directory ..
 
 Please note that configuration can also be performed using UI tools
 provided by CMake_ (ccmake or cmake-gui):
 
 .. code-block:: console
 
-  $ cmake-gui PATH_TO_BLOSC_SOURCE_DIR
+  $ ccmake ..
+  $ cmake-gui ..
 
 Build, test and install Blosc:
 
@@ -152,7 +161,8 @@ Build, test and install Blosc:
   $ make install
 
 The static and dynamic version of the Blosc library, together with
-header files, will be installed into the specified INSTALL_DIR.
+header files, will be installed into the specified
+CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
 
@@ -194,8 +204,8 @@ Other important contributions:
 * Thibault North contributed a way to call Blosc from different threads in a
   safe way.
 
-* The cmake support was a contribution of Thibault North, Antonio Valentino
-  and Mark Wiebe.
+* The cmake support was initially contributed by Thibault North,
+  Antonio Valentino and Mark Wiebe.
 
 
 ----
