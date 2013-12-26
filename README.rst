@@ -120,9 +120,9 @@ A simple usage example is the benchmark in the bench/bench.c file.
 Also, another example for using Blosc as a generic HDF5 filter is in
 the hdf5/ directory.
 
-I have not tried to compile this with compilers other than GCC, MINGW,
-Intel ICC or MSVC yet. Please report your experiences with your own
-platforms.
+I have not tried to compile this with compilers other than GCC, clang,
+MINGW, Intel ICC or MSVC yet. Please report your experiences with your
+own platforms.
 
 Compiling the Blosc library with CMake
 ======================================
@@ -165,6 +165,17 @@ header files, will be installed into the specified
 CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
+
+Mac OSX troubleshooting
+=======================
+
+If you run into compilation troubles when using Mac OSX, please make
+sure that you have installed the command line developer tools.  You
+can always install them with:
+
+.. code-block:: console
+
+  $ xcode-select --install
 
 Wrapper for Python
 ==================
