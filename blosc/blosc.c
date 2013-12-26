@@ -14,7 +14,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
-#include "config.h"
+#if defined(USING_CMAKE)
+  #include "config.h"
+#endif /*  HAVE_SNAPPY */
 #include "blosc.h"
 #include "blosclz.h"
 #include "lz4.h"

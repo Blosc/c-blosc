@@ -4,6 +4,7 @@ set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
 
+set(USING_CMAKE TRUE)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 if(WIN32)
     # try to use the system library
