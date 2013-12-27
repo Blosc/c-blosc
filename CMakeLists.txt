@@ -43,12 +43,16 @@
 cmake_minimum_required(VERSION 2.6)
 project(blosc)
 
-
-# version numbers
-# @TODO: set version numbers by parsing the blosc.h header
-set(BLOSC_VERSION_MAJOR 1)
-set(BLOSC_VERSION_MINOR 1)
-set(BLOSC_VERSION_PATCH 6)  # BLOSC_VERSION_RELEASE
+# parse the full version numbers from blosc.h
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/blosc/blosc.h _blosc_h_contents)
+string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_MAJOR[ \t]+([0-9]+).*"
+     "\\1" BLOSC_VERSION_MAJOR ${_blosc_h_contents})
+string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_MINOR[ \t]+([0-9]+).*"
+    "\\1" BLOSC_VERSION_MINOR ${_blosc_h_contents})
+string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_RELEASE[ \t]+([0-9]+).*"
+    "\\1" BLOSC_VERSION_PATCH ${_blosc_h_contents})
+string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
+    "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
 
 # options
@@ -83,7 +87,7 @@ endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang)
 
 if(MSVC)
     if(NOT CMAKE_C_FLAGS)
-        set(CMAKE_C_FLAGS "/Ox /Femyprog.exe" CACHE STRING "C flags." FORCE)
+        set(CMAKE_C_FLAGS "/Ox" CACHE STRING "C flags." FORCE)
     endif(NOT CMAKE_C_FLAGS)
 endif(MSVC)
 
@@ -128,6 +132,7 @@ set(CPACK_SOURCE_GENERATOR TGZ ZIP)
 set(CPACK_PACKAGE_VERSION_MAJOR ${BLOSC_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${BLOSC_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${BLOSC_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION ${BLOSC_STRING_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
     "A blocking, shuffling and lossless compression library")
