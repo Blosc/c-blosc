@@ -1524,6 +1524,22 @@ int blosc_set_complib(char *complib_)
   return ret;
 }
 
+char* blosc_list_complibs(void)
+{
+  static int complibs_list_done = 0;
+  static char ret[256];
+  if (complibs_list_done) return ret;
+  ret[0] = '\0';
+  strcat(ret, "blosclz, lz4");
+#if defined(HAVE_SNAPPY)
+  strcat(ret, ", snappy");
+#endif /*  HAVE_SNAPPY */
+#if defined(HAVE_ZLIB)
+  strcat(ret, ", zlib");
+#endif /*  HAVE_ZLIB */
+  complibs_list_done = 1;
+  return ret;
+}  
 
 /* Free possible memory temporaries and thread resources */
 int blosc_free_resources(void)

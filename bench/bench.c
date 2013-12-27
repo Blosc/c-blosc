@@ -168,7 +168,8 @@ void do_bench(char *complib, int nthreads, int size, int elsize,
   unsigned char *orig, *round;
 
   blosc_set_nthreads(nthreads);
-  printf("Setting compressor to %s\n", complib);
+  printf("List of supported compressors in this build: %s\n", blosc_list_complibs());
+  printf("Setting compressor to: %s\n", complib);
   if(blosc_set_complib(complib) != 0){
     printf("Compiled w/o support for codec: '%s', so sorry.\n", complib);
     exit(1);
