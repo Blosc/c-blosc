@@ -70,8 +70,8 @@ option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-find_package(Snappy REQUIRED)
-find_package(Zlib REQUIRED)
+find_package(Snappy)
+find_package(Zlib)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"
