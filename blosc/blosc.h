@@ -155,15 +155,21 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest);
 int blosc_set_nthreads(int nthreads);
 
 /**
-
   Select the compressor to be used.  The supported ones are "blosclz",
   "lz4", "snappy" and "zlib".  If this function is not called, then
   "blosclz" will be used.  In case the complib is not recognized, it
   returns a -1, else it returns 0.
-
 */
 
 int blosc_set_complib(char* complib);
+
+/**
+  Get a list of compression libraries supported in thid Blosc build.
+  The returned value is a string with a concatenation of "blosclz",
+  "lz4", "snappy" and "zlib".  This function cannot fail.
+*/
+
+char* blosc_list_complibs(void);
 
 
 /**
