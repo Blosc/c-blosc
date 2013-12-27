@@ -163,6 +163,7 @@ int blosc_set_nthreads(int nthreads);
 
 int blosc_set_complib(char* complib);
 
+
 /**
   Get a list of compression libraries supported in thid Blosc build.
   The returned value is a string with a concatenation of "blosclz",
