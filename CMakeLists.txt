@@ -41,9 +41,21 @@
 #    DEV: static includes blosc.a and blosc.h
 #    HDF5_FILTER: includes blosc_filter.so
 #    HDF5_FILTER_DEV: includes blosc_filter.h
+#
+# Making packages:
+#
+#   $ cmake <PATH_TO_SOURCES>
+#   $ make package
+#   $ make package_source
+#
+# Note: to include the Snappy source tarball in the archive run the
+# following commands:
+#
+#   $ cmake <PATH_TO_SOURCES>
+#   $ make Snappy-download
+#   $ make package_source
 
-
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(blosc)
 
 # parse the full version numbers from blosc.h
@@ -57,7 +69,7 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_RELEASE[ \t]+([0-9]+).*"
 string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
     "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
-message("Blosc version: " ${BLOSC_VERSION_STRING})
+message(STATUS "Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
 option(BUILD_STATIC
@@ -70,7 +82,48 @@ option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 find_package(Snappy)
+if(NOT SNAPPY_FOUND)
+    # If Snappy is not found in the system paths then download and build
+    # a copy of the library that will be linked statically.
+    #
+    # Note: a CMakeLists.txt file for building Snappy is available at
+    # https://github.com/okuoku/snappy-cmake
+
+    message(STATUS "Using internal Snappy")
+    set(EXTERN_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/extern)
+
+    include(ExternalProject)
+    ExternalProject_Add(
+        Snappy
+        PREFIX ${EXTERN_PREFIX}
+
+        #--Download step--------------
+        DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern
+        URL http://snappy.googlecode.com/files/snappy-1.1.1.tar.gz
+        #URL ${CMAKE_CURRENT_SOURCE_DIR}/extern/snappy-1.1.1.tar.gz
+        URL_HASH SHA1=2988f1227622d79c1e520d4317e299b61d042852
+
+        #--Configure step-------------
+        CONFIGURE_COMMAND ${EXTERN_PREFIX}/src/Snappy/configure
+            --prefix=${EXTERN_PREFIX} --disable-shared --with-pic=yes
+
+        #--Build step-----------------
+        #BUILD_COMMAND make
+
+        #--Test step------------------
+        #TEST_COMMAND make check
+
+        #--Custom targets-------------
+        STEP_TARGETS download configure build test install
+    )
+
+    set(SNAPPY_INCLUDE_DIR ${EXTERN_PREFIX}/include)
+    set(SNAPPY_LIBRARY ${EXTERN_PREFIX}/lib/libsnappy.a stdc++)
+    set(HAVE_SNAPPY TRUE)
+endif(NOT SNAPPY_FOUND)
+
 # import the ZLIB_ROOT environment variable to help finding the zlib library
 set(ZLIB_ROOT $ENV{ZLIB_ROOT})
 find_package( ZLIB )
@@ -135,7 +188,7 @@ endif(BUILD_BENCHMARKS)
 
 # uninstall target
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
 
