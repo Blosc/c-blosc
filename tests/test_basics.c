@@ -68,6 +68,7 @@ static char * test_shuffle()
   int sizes[] = {7, 64 * 3, 7*256, 500, 8000, 100000, 702713};
   int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 16};
   int i, j, k;
+  int ok;
   for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
     for (j = 0; j < sizeof(types) / sizeof(types[0]); j++) {
       int n = sizes[i];
@@ -80,7 +81,7 @@ static char * test_shuffle()
       }
       blosc_compress(5, 1, t, t * n, d, o, t * n + BLOSC_MAX_OVERHEAD);
       blosc_decompress(o, d2, t * n);
-      int ok = 1;
+      ok = 1;
       for (k = 0; ok&& k < n; k++) {
         ok = (d[k] == d2[k]);
       }

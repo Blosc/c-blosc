@@ -24,7 +24,13 @@ decompression there.  It also leverages, if available, SIMD
 instructions (SSE2) and multi-threading capabilities of CPUs, in order
 to accelerate the compression / decompression process to a maximum.
 
-You can see some recent benchmarks about Blosc performance in [3]_
+Blosc is actually a metacompressor, that meaning that it can use a
+range of compression libraries for performing the actual
+compression/decompression.  Right now, it comes with integrated
+support for blosclz (the initial one) and lz4.  Optionally, Blosc can
+be configured to use Snappy and Zlib too (see below for instructions).
+
+You can see some benchmarks about Blosc performance in [3]_
 
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
@@ -83,8 +89,9 @@ Compiling your application with Blosc
 Blosc consists of the next files (in blosc/ directory)::
 
     blosc.h and blosc.c      -- the main routines
-    blosclz.h and blosclz.c  -- the actual compressor
     shuffle.h and shuffle.c  -- the shuffle code
+    blosclz.h and blosclz.c  -- the blosclz compressor
+    lz4.h and lz4.c          -- the lz4 compressor
 
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
@@ -108,31 +115,23 @@ Using Windows and MSVC (2008 or higher recommended):
   $ cl /Ox /Femyprog.exe myprog.c blosc\*.c
 
 A simple usage example is the benchmark in the bench/bench.c file.
-Also, another example for using Blosc as a generic HDF5 filter is in
-the hdf5/ directory.
+Another example for using Blosc as a generic HDF5 filter is in the
+hdf5/ directory.
 
-I have not tried to compile this with compilers other than GCC, MINGW,
-Intel ICC or MSVC yet. Please report your experiences with your own
-platforms.
+I have not tried to compile this with compilers other than GCC, clang,
+MINGW, Intel ICC or MSVC yet. Please report your experiences with your
+own platforms.
 
-Testing Blosc
-=============
+Adding support for other compressors (Snappy, Zlib...)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Go to the test/ directory and issue:
+If you want to add support for other compressors, just add the symbols
+HAVE_SNAPPY or HAVE_ZLIB during compilation and add the libraries.
+For example, for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 
-  $ make test
-
-These tests are very basic, and only valid for platforms where GNU
-make/gcc tools are available.  If you really want to test Blosc the
-hard way, look at:
-
-http://blosc.org/trac/wiki/SyntheticBenchmarks
-
-where instructions on how to intensively test (and benchmark) Blosc
-are given.  If while running these tests you get some error, please
-report it back!
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -DHAVE_ZLIB -lz
 
 Compiling the Blosc library with CMake
 ======================================
@@ -147,20 +146,20 @@ Create the build directory and move into it:
   $ mkdir build
   $ cd build
 
-Configure Blosc in release mode (enable optimizations) specifying the
-installation directory:
+Now run cmake configuration and optionally specify the installation
+directory (e.g. '/usr' or '/usr/local'):
 
 .. code-block:: console
 
-  $ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=INSTALL_DIR \
-      PATH_TO_BLOSC_SOURCE_DIR
+  $ cmake -DCMAKE_INSTALL_PREFIX=your_install_prefix_directory ..
 
 Please note that configuration can also be performed using UI tools
 provided by CMake_ (ccmake or cmake-gui):
 
 .. code-block:: console
 
-  $ cmake-gui PATH_TO_BLOSC_SOURCE_DIR
+  $ ccmake ..
+  $ cmake-gui ..
 
 Build, test and install Blosc:
 
@@ -168,12 +167,42 @@ Build, test and install Blosc:
 
   $ make
   $ make test
-  $ make install 
+  $ make install
 
 The static and dynamic version of the Blosc library, together with
-header files, will be installed into the specified INSTALL_DIR.
+header files, will be installed into the specified
+CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
+
+Adding support for other compressors (Snappy, Zlib...) with cmake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The cmake files in Blosc as configured to automatically detect other
+compressors like Snappy or Zlib, so as long as the libraries and the
+header files for these libraries are accessible, you should be done.
+
+However, due to the lack of standard places for putting development
+files on Windows, you can help cmake to find the Zlib library by
+setting the environment variable 'ZLIB_ROOT' to where zlib 'include'
+and 'lib' directories are.  Also, make sure that Zlib DDL library is
+in your '\Windows' directory.
+
+And regarding Snappy on Windows, the lack of existence of binary
+distributions in this platform makes its support a bit more difficult.
+Have a look at 'cmake/FindSnappy.cmake' and if you can tweak it to be
+discovered and included in Blosc, please report that back!
+
+Mac OSX troubleshooting
+=======================
+
+If you run into compilation troubles when using Mac OSX, please make
+sure that you have installed the command line developer tools.  You
+can always install them with:
+
+.. code-block:: console
+
+  $ xcode-select --install
 
 Wrapper for Python
 ==================
@@ -206,14 +235,15 @@ Blosc is pretty safe now and ready for production purposes.
 
 Other important contributions:
 
+* Valentin Haenel did a terrific work implementing the support for the
+  Snappy compression, fixing typos and improving docs and the plotting
+  script.
+
 * Thibault North contributed a way to call Blosc from different threads in a
   safe way.
 
-* The cmake support was a contribution of Thibault North, Antonio Valentino
-  and Mark Wiebe.
-
-* Valentin Haenel did a terrific work fixing typos and improving docs and the
-  plotting script.
+* The cmake support was initially contributed by Thibault North,
+  Antonio Valentino and Mark Wiebe.
 
 
 ----
