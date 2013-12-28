@@ -1,10 +1,20 @@
+# a simple way to detect that we are using CMAKE
+add_definitions(-DUSING_CMAKE)
+
+# includes
+if (HAVE_SNAPPY)
+    include_directories( ${SNAPPY_INCLUDE_DIR} )
+endif(HAVE_SNAPPY)
+if (HAVE_ZLIB)
+    include_directories( ${ZLIB_INCLUDE_DIR} )
+endif(HAVE_ZLIB)
+
 # library sources
 set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
 
-add_definitions(-DUSING_CMAKE)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 if(WIN32)
     # try to use the system library
@@ -17,17 +27,15 @@ if(WIN32)
     endif(NOT Threads_FOUND)
 else(WIN32)
     find_package(Threads REQUIRED)
-    if (HAVE_SNAPPY)
-        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT} snappy)
-    else(HAVE_SNAPPY)
-        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
-    endif(HAVE_SNAPPY)
-    if (HAVE_ZLIB)
-        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT} z)
-    else(HAVE_ZLIB)
-        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
-    endif(HAVE_ZLIB)
+    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
+
+if(HAVE_SNAPPY)
+    set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
+endif(HAVE_SNAPPY)
+if(HAVE_ZLIB)
+    set(LIBS ${LIBS} ${ZLIB_LIBRARY})
+endif(HAVE_ZLIB)
 
 
 # targets
