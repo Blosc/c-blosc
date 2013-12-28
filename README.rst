@@ -131,7 +131,7 @@ For example, for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -HAVE_ZLIB -lz
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -DHAVE_ZLIB -lz
 
 Compiling the Blosc library with CMake
 ======================================
@@ -182,10 +182,16 @@ The cmake files in Blosc as configured to automatically detect other
 compressors like Snappy or Zlib, so as long as the libraries and the
 header files for these libraries are accessible, you should be done.
 
-However, on Windows it is a lot more difficult to implement such an
-auto-detection capabilities, so you may have to explicitly modify the
-'cmake/FindZlib.cmake' or 'cmake/FindSnappy.cmake' by yourself and add
-the proper directories for you system.
+However, due to the lack of standard places for putting development
+files on Windows, you can help cmake to find the Zlib library by
+setting the environment variable 'ZLIB_ROOT' to where zlib 'include'
+and 'lib' directories are.  Also, make sure that Zlib DDL library is
+in your '\Windows' directory.
+
+And regarding Snappy on Windows, the lack of existence of binary
+distributions in this platform makes its support a bit more difficult.
+Have a look at 'cmake/FindSnappy.cmake' and if you can tweak it to be
+discovered and included in Blosc, please report that back!
 
 Mac OSX troubleshooting
 =======================
