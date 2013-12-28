@@ -168,8 +168,6 @@ void do_bench(char *complib, int nthreads, int size, int elsize,
   unsigned char *orig, *round;
 
   blosc_set_nthreads(nthreads);
-  printf("List of supported compressors in this build: %s\n", blosc_list_complibs());
-  printf("Setting compressor to: %s\n", complib);
   if(blosc_set_complib(complib) != 0){
     printf("Compiled w/o support for codec: '%s', so sorry.\n", complib);
     exit(1);
@@ -192,7 +190,7 @@ void do_bench(char *complib, int nthreads, int size, int elsize,
     memcpy(dest[j], src, size);
   }
 
-  fprintf(ofile, "--> %d, %d, %d, %d\n", nthreads, size, elsize, rshift);
+  fprintf(ofile, "--> %d, %d, %d, %d, %s\n", nthreads, size, elsize, rshift, complib);
   fprintf(ofile, "********************** Run info ******************************\n");
   fprintf(ofile, "Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   fprintf(ofile, "Using synthetic data with %d significant bits (out of 32)\n", rshift);
@@ -321,6 +319,7 @@ void *bench_wrap(void * args)
 
 int main(int argc, char *argv[]) {
   char complib[32];
+  char bsuite[32];
   int single = 1;
   int suite = 0;
   int hard_suite = 0;
@@ -335,27 +334,35 @@ int main(int argc, char *argv[]) {
   FILE * output_file = stdout;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench ['blosclz' | 'lz4' | 'snappy' | 'zlib'] ['single' | 'suite' | 'hardsuite' | 'extremesuite' | 'debugsuite'] [nthreads [bufsize(bytes) [typesize [sbits ]]]]";
+  char *usage = "Usage: bench [blosclz | lz4 | snappy | zlib] [[single | suite | hardsuite | extremesuite | debugsuite] [nthreads [bufsize(bytes) [typesize [sbits ]]]]]";
 
 
-  if (argc <= 2) {
+  if (argc < 2) {
     printf("%s\n", usage);
+    printf("List of supported compressors in this build: %s\n", blosc_list_complibs());
     exit(1);
   }
 
   strcpy(complib, argv[1]);
-  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "lz4") != 0 && strcmp(complib, "snappy") != 0 && strcmp(complib, "zlib") != 0){
+
+  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "lz4") != 0 &&
+      strcmp(complib, "snappy") != 0 && strcmp(complib, "zlib") != 0) {
     printf("No such codec: '%s'\n", complib);
     exit(2);
   }
 
-  if (strcmp(argv[2], "single") == 0) {
+  if (argc < 3)
+    strcpy(bsuite, "single");
+  else
+    strcpy(bsuite, argv[2]);
+
+  if (strcmp(bsuite, "single") == 0) {
     single = 1;
   }
-  else if (strcmp(argv[2], "suite") == 0) {
+  else if (strcmp(bsuite, "suite") == 0) {
     suite = 1;
   }
-  else if (strcmp(argv[2], "hardsuite") == 0) {
+  else if (strcmp(bsuite, "hardsuite") == 0) {
     hard_suite = 1;
     workingset = 64*MB;
     /* Values here are ending points for loops */
@@ -364,7 +371,7 @@ int main(int argc, char *argv[]) {
     elsize = 32;
     rshift = 32;
   }
-  else if (strcmp(argv[2], "extremesuite") == 0) {
+  else if (strcmp(bsuite, "extremesuite") == 0) {
     extreme_suite = 1;
     workingset = 32*MB;
     niter = 1;
@@ -374,7 +381,7 @@ int main(int argc, char *argv[]) {
     elsize = 32;
     rshift = 32;
   }
-  else if (strcmp(argv[2], "debugsuite") == 0) {
+  else if (strcmp(bsuite, "debugsuite") == 0) {
     debug_suite = 1;
     workingset = 32*MB;
     niter = 1;
@@ -389,6 +396,10 @@ int main(int argc, char *argv[]) {
     printf("%s\n", usage);
     exit(1);
   }
+
+  printf("List of supported compressors in this build: %s\n", blosc_list_complibs());
+  printf("Using compressor: %s\n", complib);
+  printf("Running suite: %s\n", bsuite);
 
   if (argc >= 4) {
     nthreads = atoi(argv[3]);
