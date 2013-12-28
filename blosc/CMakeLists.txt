@@ -1,5 +1,16 @@
+# a simple way to detect that we are using CMAKE
+add_definitions(-DUSING_CMAKE)
+
+# includes
+if (HAVE_SNAPPY)
+    include_directories( ${SNAPPY_INCLUDE_DIR} )
+endif(HAVE_SNAPPY)
+if (HAVE_ZLIB)
+    include_directories( ${ZLIB_INCLUDE_DIR} )
+endif(HAVE_ZLIB)
+
 # library sources
-set(SOURCES blosc.c blosclz.c shuffle.c)
+set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
@@ -9,7 +20,7 @@ if(WIN32)
     # try to use the system library
     find_package(Threads)
     if(NOT Threads_FOUND)
-        message(STATUS "using the internal pthead library for win32 systems.")
+        message(STATUS "using the internal pthread library for win32 systems.")
         set(SOURCES ${SOURCES} win32/pthread.c)
     else(NOT Threads_FOUND)
         set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
@@ -19,11 +30,18 @@ else(WIN32)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
+if(HAVE_SNAPPY)
+    set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
+endif(HAVE_SNAPPY)
+if(HAVE_ZLIB)
+    set(LIBS ${LIBS} ${ZLIB_LIBRARY})
+endif(HAVE_ZLIB)
+
 
 # targets
 add_library(blosc_shared SHARED ${SOURCES})
 set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)
-set_target_properties(blosc_shared PROPERTIES 
+set_target_properties(blosc_shared PROPERTIES
         VERSION ${version_string}
         SOVERSION ${version_string}
     )

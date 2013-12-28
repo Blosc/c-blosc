@@ -8,13 +8,16 @@
 #   BUILD_HDF5_FILTER: default OFF
 #       build the compression filter for the HDF5 library
 #   BUILD_TESTS: default ON
-#       build thest programs and generates the "test" target
+#       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
-#   TEST_INCLUDE_BENCH_SINGLE: default OFF
-#       add a test that runs the benchmark program passing "single"
+#   TEST_INCLUDE_BENCH_SINGLE_1: default ON
+#       add a test that runs the benchmark program passing "single" with 1 thread
 #       as first parameter
-#   TEST_INCLUDE_BENCH_SUITE: default ON
+#   TEST_INCLUDE_BENCH_SINGLE_N: default ON
+#       add a test that runs the benchmark program passing "single" with all threads
+#       as first parameter
+#   TEST_INCLUDE_BENCH_SUITE: default OFF
 #       add a test that runs the benchmark program passing "suite"
 #       as first parameter
 #   TEST_INCLUDE_BENCH_SUITE_PARALLEL: default OFF
@@ -66,7 +69,22 @@ option(BUILD_TESTS
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
-# Force the default build type to Release.
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(Snappy)
+# import the ZLIB_ROOT environment variable to help finding the zlib library
+set(ZLIB_ROOT $ENV{ZLIB_ROOT})
+find_package( ZLIB )
+if ( ZLIB_FOUND )
+    set(HAVE_ZLIB TRUE)
+    set(BLOSC_ZLIB_VERSION_STRING ZLIB_VERSION_STRING)
+endif ( ZLIB_FOUND )
+
+# create the config.h file
+configure_file ("blosc/config.h.in"  "blosc/config.h" )
+# now make sure that you set the build directory on your "Include" path when compiling
+include_directories("${PROJECT_BINARY_DIR}/blosc/")
+
+# force the default build type to Release.
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
         "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
