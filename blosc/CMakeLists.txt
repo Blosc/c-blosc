@@ -2,6 +2,10 @@
 add_definitions(-DUSING_CMAKE)
 
 # includes
+if (LZ4_FOUND)
+    include_directories( ${LZ4_INCLUDE_DIR} )
+endif(LZ4_FOUND)
+
 if (SNAPPY_FOUND)
     include_directories( ${SNAPPY_INCLUDE_DIR} )
 endif(SNAPPY_FOUND)
@@ -11,7 +15,7 @@ if (ZLIB_FOUND)
 endif(ZLIB_FOUND)
 
 # library sources
-set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
+set(SOURCES blosc.c blosclz.c shuffle.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
@@ -30,6 +34,10 @@ else(WIN32)
     find_package(Threads REQUIRED)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
+
+if(LZ4_FOUND)
+    set(LIBS ${LIBS} ${LZ4_LIBRARY})
+endif(LZ4_FOUND)
 
 if(SNAPPY_FOUND)
     set(LIBS ${LIBS} ${SNAPPY_LIBRARY})

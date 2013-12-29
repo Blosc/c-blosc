@@ -88,6 +88,11 @@ if(NOT SNAPPY_FOUND)
     include(SnappyExternalProject)
 endif(NOT SNAPPY_FOUND)
 
+find_package(LZ4)
+if(NOT LZ4_FOUND)
+    include(Lz4ExternalProject)
+endif(NOT LZ4_FOUND)
+
 # import the ZLIB_ROOT environment variable to help finding the zlib library
 set(ZLIB_ROOT $ENV{ZLIB_ROOT})
 find_package( ZLIB )
