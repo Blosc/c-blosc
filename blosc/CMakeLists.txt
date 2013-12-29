@@ -1,20 +1,20 @@
 # a simple way to detect that we are using CMAKE
 add_definitions(-DUSING_CMAKE)
 
-set(INTERNAL_LIBS ${CMAKE_SOURCE_DIR}"/internal-complibs")
+set(INTERNAL_LIBS ${CMAKE_SOURCE_DIR}/internal-complibs)
 
 # includes
 if (LZ4_FOUND)
     include_directories( ${LZ4_INCLUDE_DIR} )
 else(LZ4_FOUND)
-   set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}"/lz4-r109")
+   set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}/lz4-r109)
    include_directories( ${LZ4_LOCAL_DIR} )
 endif(LZ4_FOUND)
 
 if (SNAPPY_FOUND)
     include_directories( ${SNAPPY_INCLUDE_DIR} )
 else(SNAPPY_FOUND)
-   set(SNAPPY_LOCAL_DIR ${INTERNAL_LIBS}"/snappy-1.1.1")
+   set(SNAPPY_LOCAL_DIR ${INTERNAL_LIBS}/snappy-1.1.1)
    include_directories( ${SNAPPY_LOCAL_DIR} )
 endif(SNAPPY_FOUND)
 
