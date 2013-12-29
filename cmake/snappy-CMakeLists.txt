@@ -1,0 +1,88 @@
+# This file is a modified version of the CMakeLists.txt file originally
+# written for the snappy project (https://github.com/okuoku/snappy-cmake)
+# by okuoku.
+#
+# url: https://github.com/okuoku/snappy-cmake/blob/master/CMakeLists.txt
+#
+# Copyright 2011, okuoku <mjt@cltn.org>
+
+cmake_minimum_required(VERSION 2.8)
+PROJECT(snappy)
+
+include(CheckIncludeFile)
+
+# version
+#set(SNAPPY_MAJOR 1)
+#set(SNAPPY_MINOR 1)
+#set(SNAPPY_PATCHLEVEL 1)
+
+# parse the full version numbers from configure
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/configure _configure_contents)
+string(REGEX REPLACE ".*SNAPPY_MAJOR=\"([0-9]+)\".*"
+     "\\1" SNAPPY_MAJOR ${_configure_contents})
+string(REGEX REPLACE ".*SNAPPY_MINOR=\"([0-9]+)\".*"
+    "\\1" SNAPPY_MINOR ${_configure_contents})
+string(REGEX REPLACE ".*SNAPPY_PATCHLEVEL=\"([0-9]+)\".*"
+    "\\1" SNAPPY_PATCHLEVEL ${_configure_contents})
+
+set(SRCS
+    snappy.cc snappy-sinksource.cc snappy-stubs-internal.cc snappy-c.cc)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+CHECK_INCLUDE_FILE(stdint.h HAVE_STDINT_H)
+CHECK_INCLUDE_FILE(stddef.h HAVE_STDDEF_H)
+
+if(HAVE_STDINT_H)
+    set(ac_cv_have_stdint_h 1)
+else()
+    set(ac_cv_have_stdint_h 0)
+endif()
+
+if(HAVE_STDDEF_H)
+    set(ac_cv_have_stddef_h 1)
+else()
+    set(ac_cv_have_stddef_h 0)
+endif()
+
+if(WIN32)
+    add_definitions(-DHAVE_WINDOWS_H)
+endif()
+
+
+configure_file(snappy-stubs-public.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/snappy-stubs-public.h
+    @ONLY)
+
+add_library(snappy ${SRCS})
+
+install(
+    FILES snappy-c.h snappy.h snappy-sinksource.h snappy-stubs-public.h
+    DESTINATION include
+    COMPONENT DEV)
+install(
+    TARGETS snappy
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib${LIB_SUFFIX}
+    ARCHIVE DESTINATION lib${LIB_SUFFIX}
+    COMPONENT LIB)
+install(
+    FILES ChangeLog COPYING format_description.txt framing_format.txt INSTALL
+        NEWS README
+    DESTINATION share/doc/snappy
+    COMPONENT DOCS)
+
+
+find_package(GTest)
+if(GTest_FOUND)
+    enable_testing()
+    add_definitions(-DHAVE_GTEST)
+    include_directories(${GTEST_INCLUDE_DIRS})
+    add_executable(snappy_unittest
+        snappy_unittest.cc
+        snappy-test.cc)
+
+    target_link_libraries(snappy_unittest
+        snappy
+        ${GTEST_BOTH_LIBRARIES})
+endif()

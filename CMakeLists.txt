@@ -102,18 +102,23 @@ if(NOT SNAPPY_FOUND)
         #--Download step--------------
         DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern
         URL http://snappy.googlecode.com/files/snappy-1.1.1.tar.gz
-        #URL ${CMAKE_CURRENT_SOURCE_DIR}/extern/snappy-1.1.1.tar.gz
         URL_HASH SHA1=2988f1227622d79c1e520d4317e299b61d042852
 
+        #--Update/Patch step----------
+        PATCH_COMMAND cmake -E copy
+            ${CMAKE_CURRENT_SOURCE_DIR}/cmake/snappy-CMakeLists.txt
+            ${EXTERN_PREFIX}/src/Snappy/CMakeLists.txt
+
         #--Configure step-------------
-        CONFIGURE_COMMAND ${EXTERN_PREFIX}/src/Snappy/configure
-            --prefix=${EXTERN_PREFIX} --disable-shared --with-pic=yes
+        CMAKE_ARGS
+            -DCMAKE_INSTALL_PREFIX=${EXTERN_PREFIX}
+            -DCMAKE_CXX_FLAGS=-fPIC
 
         #--Build step-----------------
         #BUILD_COMMAND make
 
         #--Test step------------------
-        #TEST_COMMAND make check
+        #TEST_COMMAND make test
 
         #--Custom targets-------------
         STEP_TARGETS download configure build test install
