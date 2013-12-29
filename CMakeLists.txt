@@ -11,6 +11,12 @@
 #       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
+#   ENABLE_LZ4: default ON
+#       enable the Lz4 compressor
+#   ENABLE_SNAPPY: default ON
+#       enable the Snappy compressor
+#   ENABLE_ZLIB: default ON
+#       enable the zlib compressor (if available)
 #   TEST_INCLUDE_BENCH_SINGLE_1: default ON
 #       add a test that runs the benchmark program passing "single" with 1 thread
 #       as first parameter
@@ -81,25 +87,43 @@ option(BUILD_TESTS
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
+option(ENABLE_LZ4 "Enable the Lz4 compressor." ON)
+option(ENABLE_SNAPPY "Enable the Snappy compressor." ON)
+option(ENABLE_ZLIB "Enable the zlib compressor (if available)." ON)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(Snappy)
-if(NOT SNAPPY_FOUND)
-    include(SnappyExternalProject)
-endif(NOT SNAPPY_FOUND)
+if(ENABLE_LZ4)
+    find_package(LZ4)
 
-find_package(LZ4)
-if(NOT LZ4_FOUND)
-    include(Lz4ExternalProject)
-endif(NOT LZ4_FOUND)
+    if(NOT LZ4_FOUND)
+        include(Lz4ExternalProject)
+    endif(NOT LZ4_FOUND)
+
+    set(HAVE_LZ4 TRUE)
+endif(ENABLE_LZ4)
+
+if(ENABLE_SNAPPY)
+    find_package(Snappy)
+
+    if(NOT SNAPPY_FOUND)
+        include(SnappyExternalProject)
+    endif(NOT SNAPPY_FOUND)
+
+    set(HAVE_SNAPPY TRUE)
+endif(ENABLE_SNAPPY)
 
 # import the ZLIB_ROOT environment variable to help finding the zlib library
-set(ZLIB_ROOT $ENV{ZLIB_ROOT})
-find_package( ZLIB )
-if ( ZLIB_FOUND )
-    set(HAVE_ZLIB TRUE)
-    set(BLOSC_ZLIB_VERSION_STRING ZLIB_VERSION_STRING)
-endif ( ZLIB_FOUND )
+if(ENABLE_ZLIB)
+    set(ZLIB_ROOT $ENV{ZLIB_ROOT})
+
+    find_package(ZLIB)
+
+    if(ZLIB_FOUND)
+        set(HAVE_ZLIB TRUE)
+        set(BLOSC_ZLIB_VERSION_STRING ZLIB_VERSION_STRING)
+    endif(ZLIB_FOUND)
+endif(ENABLE_ZLIB)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )

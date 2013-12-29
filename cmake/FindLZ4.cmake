@@ -9,7 +9,6 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(LZ4
     REQUIRED_VARS LZ4_LIBRARY LZ4_INCLUDE_DIR)
 
 if(LZ4_FOUND)
-    set(HAVE_LZ4 TRUE)
     message(STATUS "Found LZ4 library: ${LZ4_INCLUDE_DIR} ${LZ4_LIBRARY}")
 else ()
     message(STATUS "No lz4 found.")

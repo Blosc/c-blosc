@@ -42,5 +42,4 @@ ExternalProject_Add(
 
 set(SNAPPY_INCLUDE_DIR ${EXTERN_PREFIX}/include)
 set(SNAPPY_LIBRARY ${EXTERN_PREFIX}/lib/libsnappy.a stdc++)
-set(HAVE_SNAPPY TRUE)
 set(SNAPPY_FOUND TRUE)

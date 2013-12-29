@@ -45,5 +45,4 @@ ExternalProject_Add(
 
 set(LZ4_INCLUDE_DIR ${EXTERN_PREFIX}/include)
 set(LZ4_LIBRARY ${EXTERN_PREFIX}/lib/liblz4.a)
-set(HAVE_LZ4 TRUE)
 set(LZ4_FOUND TRUE)
