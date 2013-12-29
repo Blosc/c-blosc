@@ -14,4 +14,3 @@ if(SNAPPY_FOUND)
 else ()
     message(STATUS "No snappy found")
 endif ()
-
