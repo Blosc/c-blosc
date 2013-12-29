@@ -1,14 +1,29 @@
-CC=gcc
-LZ4_INC =  $(wildcard ../lz4*)
-CFLAGS=-O3 -g -msse2 -Wall -I$(LZ4_INC)
-#SNAPPY_INC =  $(wildcard ../snappy*)
-#CFLAGS=-O3 -g -msse2 -Wall -I$(LZ4_INC) -I$(SNAPPY_INC)
-LDFLAGS=-lpthread
-BLOSC_LIB= $(wildcard ../blosc/*.c)
-BLOSC_LIB += $(wildcard ../lz4*/*.c)
-#BLOSC_LIB += $(wildcard ../snappy*/*.cc)
-SOURCES=bench.c $(BLOSC_LIB)
-EXECUTABLE=bench
+CC = gcc
+CFLAGS = -O3 -g -msse2 -Wall
+LDFLAGS = -lpthread
+COMPLIBS_SRC = $(wildcard ../blosc/*.c)
+EXECUTABLE = bench
+
+# Support for internal LZ4
+LZ4_DIR = ../internal-complibs/lz4-r109
+CFLAGS += -DHAVE_LZ4 -I$(LZ4_DIR)
+COMPLIBS_SRC += $(wildcard $(LZ4_DIR)/*.c)
+
+# Support for external LZ4
+#LDFLAGS += -DHAVE_LZ4 -llz4
+
+# Support for internal Snappy
+#SNAPPY_DIR = ../internal-complibs/snappy-1.1.1
+#CFLAGS += -I$(SNAPPY_DIR)
+#COMPLIBS_SRC += $(wildcard $(SNAPPY_DIR)/*.cc)
+
+# Support for external Snappy
+LDFLAGS += -DHAVE_SNAPPY -lsnappy
+
+# Support for external Zlib
+LDFLAGS += -DHAVE_ZLIB -lz
+
+SOURCES = bench.c $(COMPLIBS_SRC)
 
 all: $(SOURCES) $(EXECUTABLE)
 
