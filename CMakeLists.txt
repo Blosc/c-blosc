@@ -71,6 +71,11 @@ option(BUILD_BENCHMARKS
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+find_package(LZ4)
+# HAVE_LZ4 will be set to true because even if the library is not found,
+# we will use the included sources for it
+set(HAVE_LZ4 TRUE)
+
 find_package(Snappy)
 # HAVE_SNAPPY will be set to true because even if the library is not found,
 # we will use the included sources for it

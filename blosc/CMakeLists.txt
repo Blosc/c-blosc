@@ -2,6 +2,13 @@
 add_definitions(-DUSING_CMAKE)
 
 # includes
+if (LZ4_FOUND)
+    include_directories( ${LZ4_INCLUDE_DIR} )
+else(LZ4_FOUND)
+   set(LZ4_LOCAL_DIR "../lz4-r109")
+   include_directories( ${LZ4_LOCAL_DIR} )
+endif(LZ4_FOUND)
+
 if (SNAPPY_FOUND)
     include_directories( ${SNAPPY_INCLUDE_DIR} )
 else(SNAPPY_FOUND)
@@ -14,7 +21,7 @@ if (ZLIB_FOUND)
 endif(ZLIB_FOUND)
 
 # library sources
-set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
+set(SOURCES blosc.c blosclz.c shuffle.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
@@ -34,6 +41,12 @@ else(WIN32)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
+if(LZ4_FOUND)
+    set(LIBS ${LIBS} ${LZ4_LIBRARY})
+else(LZ4_FOUND)
+    set(SOURCES ${SOURCES} ${LZ4_LOCAL_DIR}/lz4.c)
+endif(LZ4_FOUND)
+
 if(SNAPPY_FOUND)
     set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
 else(SNAPPY_FOUND)
@@ -45,6 +58,7 @@ else(SNAPPY_FOUND)
         )
 endif(SNAPPY_FOUND)
 
+# Zlib is only supported if the library has been found
 if(ZLIB_FOUND)
     set(LIBS ${LIBS} ${ZLIB_LIBRARY})
 endif(ZLIB_FOUND)

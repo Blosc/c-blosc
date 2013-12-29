@@ -4,7 +4,7 @@ find_library(SNAPPY_LIBRARY NAMES snappy)
 
 if (SNAPPY_INCLUDE_DIR AND SNAPPY_LIBRARY)
     set(SNAPPY_FOUND TRUE)
-    message(STATUS "Found snappy library: ${SNAPPY_LIBRARY}")
+    message(STATUS "Found SNAPPY library: ${SNAPPY_LIBRARY}")
 else ()
     message(STATUS "No snappy found.  Using internal sources.")
 endif ()
