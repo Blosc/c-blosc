@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang++  # or g++ or just gcc if not compiling Snappy (C++ code)
 CFLAGS = -O3 -g -msse2 -Wall
 LDFLAGS = -lpthread
 COMPLIBS_SRC = $(wildcard ../blosc/*.c)

@@ -159,7 +159,7 @@ void init_buffer(void *src, int size, int rshift) {
 void do_bench(char *complib, int nthreads, int size, int elsize,
               int rshift, FILE * ofile) {
   void *src, *srccpy;
-  void **dest[NCHUNKS], *dest2;
+  void *dest[NCHUNKS], *dest2;
   int nbytes = 0, cbytes = 0;
   int i, j;
   struct timeval last, current;
@@ -334,8 +334,11 @@ int main(int argc, char *argv[]) {
   FILE * output_file = stdout;
   struct timeval last, current;
   float totaltime;
-  char *usage = "Usage: bench [blosclz | lz4 | snappy | zlib] [[single | suite | hardsuite | extremesuite | debugsuite] [nthreads [bufsize(bytes) [typesize [sbits ]]]]]";
+  char usage[256];
 
+  strncpy(usage, "Usage: bench [blosclz | lz4 | snappy | zlib] "
+          "[[single | suite | hardsuite | extremesuite | debugsuite] "
+          "[nthreads [bufsize(bytes) [typesize [sbits ]]]]]", 255);
 
   if (argc < 2) {
     printf("%s\n", usage);

@@ -246,12 +246,13 @@ static int32_t sw32(int32_t a)
 /* Convert the compresion lib code into a string */
 static char* clibtostr(int clib)
 {
-  if (clib == BLOSC_BLOSCLZ) return "blosclz";
-  else if (clib == BLOSC_LZ4) return "LZ4";
-  else if (clib == BLOSC_SNAPPY) return "snappy";
-  else if (clib == BLOSC_ZLIB) return "Zlib";
+  static char ret[32];
+  if (clib == BLOSC_BLOSCLZ) return strcpy(ret, "blosclz");
+  else if (clib == BLOSC_LZ4) return strcpy(ret, "LZ4");
+  else if (clib == BLOSC_SNAPPY) return strcpy(ret, "Snappy");
+  else if (clib == BLOSC_ZLIB) return strcpy(ret, "Zlib");
   /* We should never reach this point */
-  return "Unknown";
+  return strcpy(ret, "Unknown (please report this to the maintainers)");
 }
 
 #if defined(HAVE_LZ4)
@@ -1200,7 +1201,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
 
 
 /* Decompress & unshuffle several blocks in a single thread */
-static int t_blosc(void *tids)
+static void *t_blosc(void *tids)
 {
   int32_t tid = *(int32_t *)tids;
   int32_t cbytes, ntdest;
@@ -1233,7 +1234,7 @@ static int t_blosc(void *tids)
 
     /* Check if thread has been asked to return */
     if (end_threads) {
-      return(0);
+      return(NULL);
     }
 
     pthread_mutex_lock(&count_mutex);
@@ -1375,7 +1376,7 @@ static int t_blosc(void *tids)
   }  /* closes while(1) */
 
   /* This should never be reached, but anyway */
-  return(0);
+  return(NULL);
 }
 
 
@@ -1407,11 +1408,9 @@ static int init_threads(void)
   for (tid = 0; tid < nthreads; tid++) {
     tids[tid] = tid;
 #if !defined(_WIN32)
-    rc2 = pthread_create(&threads[tid], &ct_attr, (void*)t_blosc,
-                        (void *)&tids[tid]);
+    rc2 = pthread_create(&threads[tid], &ct_attr, t_blosc, (void *)&tids[tid]);
 #else
-    rc2 = pthread_create(&threads[tid], NULL, (void*)t_blosc,
-                        (void *)&tids[tid]);
+    rc2 = pthread_create(&threads[tid], NULL, t_blosc, (void *)&tids[tid]);
 #endif
     if (rc2) {
       fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc2);
