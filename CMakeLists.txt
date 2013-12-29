@@ -57,7 +57,7 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_RELEASE[ \t]+([0-9]+).*"
 string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
     "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
-message("Blosc version: " ${BLOSC_VERSION_STRING})
+message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
 option(BUILD_STATIC
@@ -70,7 +70,12 @@ option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 find_package(Snappy)
+# HAVE_SNAPPY will be set to true because even if the library is not found,
+# we will use the included sources for it
+set(HAVE_SNAPPY TRUE)
+
 # import the ZLIB_ROOT environment variable to help finding the zlib library
 set(ZLIB_ROOT $ENV{ZLIB_ROOT})
 find_package( ZLIB )

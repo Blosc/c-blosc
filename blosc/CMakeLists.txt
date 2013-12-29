@@ -2,12 +2,16 @@
 add_definitions(-DUSING_CMAKE)
 
 # includes
-if (HAVE_SNAPPY)
+if (SNAPPY_FOUND)
     include_directories( ${SNAPPY_INCLUDE_DIR} )
-endif(HAVE_SNAPPY)
-if (HAVE_ZLIB)
+else(SNAPPY_FOUND)
+   set(SNAPPY_LOCAL_DIR "../snappy-1.1.1")
+   include_directories( ${SNAPPY_LOCAL_DIR} )
+endif(SNAPPY_FOUND)
+
+if (ZLIB_FOUND)
     include_directories( ${ZLIB_INCLUDE_DIR} )
-endif(HAVE_ZLIB)
+endif(ZLIB_FOUND)
 
 # library sources
 set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
@@ -30,12 +34,20 @@ else(WIN32)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
-if(HAVE_SNAPPY)
+if(SNAPPY_FOUND)
     set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
-endif(HAVE_SNAPPY)
-if(HAVE_ZLIB)
+else(SNAPPY_FOUND)
+    set(SOURCES ${SOURCES} 
+        ${SNAPPY_LOCAL_DIR}/snappy.cc
+        ${SNAPPY_LOCAL_DIR}/snappy-c.cc
+        ${SNAPPY_LOCAL_DIR}/snappy-sinksource.cc
+        ${SNAPPY_LOCAL_DIR}/snappy-stubs-internal.cc
+        )
+endif(SNAPPY_FOUND)
+
+if(ZLIB_FOUND)
     set(LIBS ${LIBS} ${ZLIB_LIBRARY})
-endif(HAVE_ZLIB)
+endif(ZLIB_FOUND)
 
 
 # targets
