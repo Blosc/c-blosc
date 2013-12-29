@@ -125,12 +125,12 @@ I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
 
-Adding support for other compressors (Zlib)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (Snappy, Zlib)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to add support for the Zlib compressor, just add the
-symbol HAVE_ZLIB during compilation and add the libraries.  For
-example, for compiling Blosc with Zlib support do:
+If you want to add support for the Snappy or Zlib compressor, just add
+the symbol HAVE_SNAPY and HAVE_ZLIB during compilation and add the
+libraries.  For example, for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 
