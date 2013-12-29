@@ -18,7 +18,8 @@ endif(ZLIB_FOUND)
 set(SOURCES blosc.c blosclz.c shuffle.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
-set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
+set(version_string
+    ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 if(WIN32)

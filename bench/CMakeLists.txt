@@ -10,7 +10,8 @@ target_link_libraries(bench blosc_shared)
 # tests
 if(BUILD_TESTS)
 
-    option(TEST_INCLUDE_BENCH_SINGLE_1 "Include bench single (1 thread) in the tests" ON)
+    option(TEST_INCLUDE_BENCH_SINGLE_1
+        "Include bench single (1 thread) in the tests" ON)
     if(TEST_INCLUDE_BENCH_SINGLE_1)
         add_test(test_blosclz_1 bench blosclz single 1)
         if (LZ4_FOUND)
@@ -24,7 +25,8 @@ if(BUILD_TESTS)
         endif (ZLIB_FOUND)
     endif(TEST_INCLUDE_BENCH_SINGLE_1)
 
-    option(TEST_INCLUDE_BENCH_SINGLE_N "Include bench single (multithread) in the tests" ON)
+    option(TEST_INCLUDE_BENCH_SINGLE_N
+        "Include bench single (multithread) in the tests" ON)
     if(TEST_INCLUDE_BENCH_SINGLE_N)
         add_test(test_blosclz_n bench blosclz single)
         if (LZ4_FOUND)
@@ -52,17 +54,20 @@ if(BUILD_TESTS)
         endif (ZLIB_FOUND)
     endif(TEST_INCLUDE_BENCH_SUITE)
 
-    option(TEST_INCLUDE_BENCH_HARDSUITE "Include bench hardsuite in the tests" OFF)
+    option(TEST_INCLUDE_BENCH_HARDSUITE
+        "Include bench hardsuite in the tests" OFF)
     if(TEST_INCLUDE_BENCH_HARDSUITE)
         add_test(test_hardsuite blosc blosclz hardsuite)
     endif(TEST_INCLUDE_BENCH_HARDSUITE)
 
-    option(TEST_INCLUDE_BENCH_EXTREMESUITE "Include bench extremesuite in the tests" OFF)
+    option(TEST_INCLUDE_BENCH_EXTREMESUITE
+        "Include bench extremesuite in the tests" OFF)
     if(TEST_INCLUDE_BENCH_EXTREMESUITE)
         add_test(test_extremesuite bench blosclz extremesuite)
     endif(TEST_INCLUDE_BENCH_EXTREMESUITE)
 
-    option(TEST_INCLUDE_BENCH_DEBUGSUITE "Include bench debugsuite in the tests" OFF)
+    option(TEST_INCLUDE_BENCH_DEBUGSUITE
+        "Include bench debugsuite in the tests" OFF)
     if(TEST_INCLUDE_BENCH_DEBUGSUITE)
         add_test(test_debugsuite bench debugsuite)
     endif(TEST_INCLUDE_BENCH_DEBUGSUITE)
