@@ -27,8 +27,12 @@ to accelerate the compression / decompression process to a maximum.
 Blosc is actually a metacompressor, that meaning that it can use a
 range of compression libraries for performing the actual
 compression/decompression.  Right now, it comes with integrated
-support for blosclz (the initial one) and lz4.  Optionally, Blosc can
-be configured to use Snappy and Zlib too (see below for instructions).
+support for BloscLZ (the original one), LZ4, Snappy and Zlib.  Blosc
+comes with full sources for LZ4 and Snappy, so in case it does not
+find the libraries installed in your system, it will compile these
+sources and will be included into the Blosc library.  Zlib is pretty
+much everywhere, so you will need to install the library for Blosc
+supporting Zlib.  See below for instructions on how to do this.
 
 You can see some benchmarks about Blosc performance in [3]_
 
@@ -91,7 +95,6 @@ Blosc consists of the next files (in blosc/ directory)::
     blosc.h and blosc.c      -- the main routines
     shuffle.h and shuffle.c  -- the shuffle code
     blosclz.h and blosclz.c  -- the blosclz compressor
-    lz4.h and lz4.c          -- the lz4 compressor
 
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see blosc.h.
@@ -122,12 +125,12 @@ I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
 
-Adding support for other compressors (Snappy, Zlib...)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (Zlib)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to add support for other compressors, just add the symbols
-HAVE_SNAPPY or HAVE_ZLIB during compilation and add the libraries.
-For example, for compiling Blosc with Zlib support do:
+If you want to add support for the Zlib compressor, just add the
+symbol HAVE_ZLIB during compilation and add the libraries.  For
+example, for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 
@@ -175,23 +178,25 @@ CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
 
-Adding support for other compressors (Snappy, Zlib...) with cmake
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (Zlib) with cmake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The cmake files in Blosc as configured to automatically detect other
-compressors like Snappy or Zlib, so as long as the libraries and the
-header files for these libraries are accessible, you should be done.
+compressors like LZ4, Snappy or Zlib, so as long as the libraries and
+the header files for these libraries are accessible, you should be
+done.
 
 However, due to the lack of standard places for putting development
-files on Windows, you can help cmake to find the Zlib library by
-setting the environment variable 'ZLIB_ROOT' to where zlib 'include'
-and 'lib' directories are.  Also, make sure that Zlib DDL library is
-in your '\Windows' directory.
+files on Windows, the full sources for LZ4 and Snappy has been
+included in Blosc.  So in general you should not worry about not
+having (or Blosc not finding) the libraries in your system because in
+this case, their sources will be automaticall compiled for you.
 
-And regarding Snappy on Windows, the lack of existence of binary
-distributions in this platform makes its support a bit more difficult.
-Have a look at 'cmake/FindSnappy.cmake' and if you can tweak it to be
-discovered and included in Blosc, please report that back!
+Regarding Zlib, the library should be easily found on UNIX systems,
+but on Windows, you can help cmake to find it by setting the
+environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
+directories are.  Also, make sure that Zlib DDL library is in your
+'\Windows' directory.
 
 Mac OSX troubleshooting
 =======================
