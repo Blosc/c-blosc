@@ -54,11 +54,12 @@
 #   $ make package
 #   $ make package_source
 #
-# Note: to include the Snappy source tarball in the archive run the
-# following commands:
+# Note: to include the Snappy and Lz4 source tarballs in the archive the
+# following commands have to be run:
 #
 #   $ cmake <PATH_TO_SOURCES>
 #   $ make Snappy-download
+#   $ make Lz4-download
 #   $ make package_source
 
 cmake_minimum_required(VERSION 2.8)
