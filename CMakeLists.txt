@@ -214,7 +214,8 @@ set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
     "A blocking, shuffling and lossless compression library")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/BLOSC.txt")
-set(CPACK_SOURCE_IGNORE_FILES "/build.*;.*~;\\\\.git.*;\\\\.DS_Store")
+set(CPACK_SOURCE_IGNORE_FILES
+    "/build.*;.*~;\\\\.git.*;\\\\.DS_Store;\\\\.mailmap")
 set(CPACK_STRIP_FILES TRUE)
 set(CPACK_SOURCE_STRIP_FILES TRUE)
 
