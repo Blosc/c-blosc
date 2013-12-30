@@ -20,6 +20,9 @@ endif(SNAPPY_FOUND)
 
 if (ZLIB_FOUND)
     include_directories( ${ZLIB_INCLUDE_DIR} )
+else(ZLIB_FOUND)
+   set(ZLIB_LOCAL_DIR ${INTERNAL_LIBS}/zlib-1.2.8)
+   include_directories( ${ZLIB_LOCAL_DIR} )
 endif(ZLIB_FOUND)
 
 # library sources
@@ -63,6 +66,24 @@ endif(SNAPPY_FOUND)
 # Zlib is only supported if the library has been found
 if(ZLIB_FOUND)
     set(LIBS ${LIBS} ${ZLIB_LIBRARY})
+else(ZLIB_FOUND)
+    set(SOURCES ${SOURCES}
+       ${ZLIB_LOCAL_DIR}/adler32.c
+       ${ZLIB_LOCAL_DIR}/compress.c
+       ${ZLIB_LOCAL_DIR}/crc32.c
+       ${ZLIB_LOCAL_DIR}/deflate.c
+       ${ZLIB_LOCAL_DIR}/gzclose.c
+       ${ZLIB_LOCAL_DIR}/gzlib.c
+       ${ZLIB_LOCAL_DIR}/gzread.c
+       ${ZLIB_LOCAL_DIR}/gzwrite.c
+       ${ZLIB_LOCAL_DIR}/infback.c
+       ${ZLIB_LOCAL_DIR}/inffast.c
+       ${ZLIB_LOCAL_DIR}/inflate.c
+       ${ZLIB_LOCAL_DIR}/inftrees.c
+       ${ZLIB_LOCAL_DIR}/trees.c
+       ${ZLIB_LOCAL_DIR}/uncompr.c
+       ${ZLIB_LOCAL_DIR}/zutil.c
+       )
 endif(ZLIB_FOUND)
 
 

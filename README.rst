@@ -17,7 +17,7 @@ that is meant not only to reduce the size of large datasets on-disk or
 in-memory, but also to accelerate memory-bound computations.
 
 It uses the blocking technique (as described in [2]_) to reduce
-activity on the memory bus as much as possible.  In short, this
+activity on the memory bus as much as possible. In short, this
 technique works by dividing datasets in blocks that are small enough
 to fit in caches of modern processors and perform compression /
 decompression there.  It also leverages, if available, SIMD
@@ -125,12 +125,12 @@ I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
 
-Adding support for other compressors (Snappy, Zlib)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (LZ4, Snappy, Zlib)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to add support for the Snappy or Zlib compressor, just add
-the symbol HAVE_SNAPY and HAVE_ZLIB during compilation and add the
-libraries.  For example, for compiling Blosc with Zlib support do:
+If you want to add support for the LZ4, Snappy or Zlib compressor, just
+add the symbol HAVE_SNAPY and HAVE_ZLIB during compilation and add the
+libraries. For example, for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 
@@ -149,7 +149,7 @@ Create the build directory and move into it:
   $ mkdir build
   $ cd build
 
-Now run cmake configuration and optionally specify the installation
+Now run CMake configuration and optionally specify the installation
 directory (e.g. '/usr' or '/usr/local'):
 
 .. code-block:: console
@@ -178,24 +178,23 @@ CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
 
-Adding support for other compressors (Zlib) with cmake
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (LZ4, Snappy, Zlib) with CMake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The cmake files in Blosc as configured to automatically detect other
+The CMake files in Blosc as configured to automatically detect other
 compressors like LZ4, Snappy or Zlib, so as long as the libraries and
-the header files for these libraries are accessible, you should be
-done.
+the header files for these libraries are accessible, you should be done.
 
 However, due to the lack of standard places for putting development
-files on Windows, the full sources for LZ4 and Snappy has been
-included in Blosc.  So in general you should not worry about not
-having (or Blosc not finding) the libraries in your system because in
-this case, their sources will be automaticall compiled for you.
+files on Windows, the full sources for LZ4, Snappy and Zlib have been
+included in Blosc. So in general you should not worry about not having
+(or CMake not finding) the libraries in your system because in this
+case, their sources will be automaticall compiled for you.
 
 Regarding Zlib, the library should be easily found on UNIX systems,
-but on Windows, you can help cmake to find it by setting the
+although on Windows, you can help CMake to find it by setting the
 environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
-directories are.  Also, make sure that Zlib DDL library is in your
+directories are. Also, make sure that Zlib DDL library is in your
 '\Windows' directory.
 
 Mac OSX troubleshooting
@@ -247,7 +246,7 @@ Other important contributions:
 * Thibault North contributed a way to call Blosc from different threads in a
   safe way.
 
-* The cmake support was initially contributed by Thibault North,
+* The CMake support was initially contributed by Thibault North,
   Antonio Valentino and Mark Wiebe.
 
 

@@ -27,7 +27,7 @@ void die(const char *err, ...)
 
 static unsigned __stdcall win32_start_routine(void *arg)
 {
-	pthread_t *thread = arg;
+	pthread_t *thread = (pthread_t*)arg;
 	thread->arg = thread->start_routine(thread->arg);
 	return 0;
 }
