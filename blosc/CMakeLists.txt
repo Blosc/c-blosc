@@ -2,18 +2,24 @@
 add_definitions(-DUSING_CMAKE)
 
 # includes
-if (HAVE_SNAPPY)
+if (LZ4_FOUND)
+    include_directories( ${LZ4_INCLUDE_DIR} )
+endif(LZ4_FOUND)
+
+if (SNAPPY_FOUND)
     include_directories( ${SNAPPY_INCLUDE_DIR} )
-endif(HAVE_SNAPPY)
-if (HAVE_ZLIB)
+endif(SNAPPY_FOUND)
+
+if (ZLIB_FOUND)
     include_directories( ${ZLIB_INCLUDE_DIR} )
-endif(HAVE_ZLIB)
+endif(ZLIB_FOUND)
 
 # library sources
-set(SOURCES blosc.c blosclz.c shuffle.c lz4.c)
+set(SOURCES blosc.c blosclz.c shuffle.c)
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})
-set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
+set(version_string
+    ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 if(WIN32)
@@ -30,12 +36,17 @@ else(WIN32)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
-if(HAVE_SNAPPY)
+if(LZ4_FOUND)
+    set(LIBS ${LIBS} ${LZ4_LIBRARY})
+endif(LZ4_FOUND)
+
+if(SNAPPY_FOUND)
     set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
-endif(HAVE_SNAPPY)
-if(HAVE_ZLIB)
+endif(SNAPPY_FOUND)
+
+if(ZLIB_FOUND)
     set(LIBS ${LIBS} ${ZLIB_LIBRARY})
-endif(HAVE_ZLIB)
+endif(ZLIB_FOUND)
 
 
 # targets

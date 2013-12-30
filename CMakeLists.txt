@@ -11,12 +11,18 @@
 #       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
+#   ENABLE_LZ4: default ON
+#       enable the Lz4 compressor
+#   ENABLE_SNAPPY: default ON
+#       enable the Snappy compressor
+#   ENABLE_ZLIB: default ON
+#       enable the zlib compressor (if available)
 #   TEST_INCLUDE_BENCH_SINGLE_1: default ON
-#       add a test that runs the benchmark program passing "single" with 1 thread
-#       as first parameter
+#       add a test that runs the benchmark program passing "single" with
+#       1 thread as first parameter
 #   TEST_INCLUDE_BENCH_SINGLE_N: default ON
-#       add a test that runs the benchmark program passing "single" with all threads
-#       as first parameter
+#       add a test that runs the benchmark program passing "single" with
+#       all threads as first parameter
 #   TEST_INCLUDE_BENCH_SUITE: default OFF
 #       add a test that runs the benchmark program passing "suite"
 #       as first parameter
@@ -48,11 +54,12 @@
 #   $ make package
 #   $ make package_source
 #
-# Note: to include the Snappy source tarball in the archive run the
-# following commands:
+# Note: to include the Snappy and Lz4 source tarballs in the archive the
+# following commands have to be run:
 #
 #   $ cmake <PATH_TO_SOURCES>
 #   $ make Snappy-download
+#   $ make Lz4-download
 #   $ make package_source
 
 cmake_minimum_required(VERSION 2.8)
@@ -66,7 +73,8 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_MINOR[ \t]+([0-9]+).*"
     "\\1" BLOSC_VERSION_MINOR ${_blosc_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_RELEASE[ \t]+([0-9]+).*"
     "\\1" BLOSC_VERSION_PATCH ${_blosc_h_contents})
-string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
+string(REGEX REPLACE
+    ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
     "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
 message(STATUS "Blosc version: " ${BLOSC_VERSION_STRING})
@@ -81,60 +89,48 @@ option(BUILD_TESTS
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
+option(ENABLE_LZ4 "Enable the Lz4 compressor." ON)
+option(ENABLE_SNAPPY "Enable the Snappy compressor." ON)
+option(ENABLE_ZLIB "Enable the zlib compressor (if available)." ON)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(Snappy)
-if(NOT SNAPPY_FOUND)
-    # If Snappy is not found in the system paths then download and build
-    # a copy of the library that will be linked statically.
-    #
-    # Note: a CMakeLists.txt file for building Snappy is available at
-    # https://github.com/okuoku/snappy-cmake
+if(ENABLE_LZ4)
+    find_package(LZ4)
 
-    message(STATUS "Using internal Snappy")
-    set(EXTERN_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/extern)
+    if(NOT LZ4_FOUND)
+        include(Lz4ExternalProject)
+    endif(NOT LZ4_FOUND)
 
-    include(ExternalProject)
-    ExternalProject_Add(
-        Snappy
-        PREFIX ${EXTERN_PREFIX}
+    set(HAVE_LZ4 TRUE)
+endif(ENABLE_LZ4)
 
-        #--Download step--------------
-        DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern
-        URL http://snappy.googlecode.com/files/snappy-1.1.1.tar.gz
-        #URL ${CMAKE_CURRENT_SOURCE_DIR}/extern/snappy-1.1.1.tar.gz
-        URL_HASH SHA1=2988f1227622d79c1e520d4317e299b61d042852
+if(ENABLE_SNAPPY)
+    find_package(Snappy)
 
-        #--Configure step-------------
-        CONFIGURE_COMMAND ${EXTERN_PREFIX}/src/Snappy/configure
-            --prefix=${EXTERN_PREFIX} --disable-shared --with-pic=yes
+    if(NOT SNAPPY_FOUND)
+        include(SnappyExternalProject)
+    endif(NOT SNAPPY_FOUND)
 
-        #--Build step-----------------
-        #BUILD_COMMAND make
-
-        #--Test step------------------
-        #TEST_COMMAND make check
-
-        #--Custom targets-------------
-        STEP_TARGETS download configure build test install
-    )
-
-    set(SNAPPY_INCLUDE_DIR ${EXTERN_PREFIX}/include)
-    set(SNAPPY_LIBRARY ${EXTERN_PREFIX}/lib/libsnappy.a stdc++)
     set(HAVE_SNAPPY TRUE)
-endif(NOT SNAPPY_FOUND)
+endif(ENABLE_SNAPPY)
 
 # import the ZLIB_ROOT environment variable to help finding the zlib library
-set(ZLIB_ROOT $ENV{ZLIB_ROOT})
-find_package( ZLIB )
-if ( ZLIB_FOUND )
-    set(HAVE_ZLIB TRUE)
-    set(BLOSC_ZLIB_VERSION_STRING ZLIB_VERSION_STRING)
-endif ( ZLIB_FOUND )
+if(ENABLE_ZLIB)
+    set(ZLIB_ROOT $ENV{ZLIB_ROOT})
+
+    find_package(ZLIB)
+
+    if(ZLIB_FOUND)
+        set(HAVE_ZLIB TRUE)
+        set(BLOSC_ZLIB_VERSION_STRING ZLIB_VERSION_STRING)
+    endif(ZLIB_FOUND)
+endif(ENABLE_ZLIB)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
-# now make sure that you set the build directory on your "Include" path when compiling
+# now make sure that you set the build directory on your "Include" path
+# when compiling
 include_directories("${PROJECT_BINARY_DIR}/blosc/")
 
 # force the default build type to Release.
@@ -193,7 +189,8 @@ configure_file(
     IMMEDIATE @ONLY)
 
 add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+    COMMAND ${CMAKE_COMMAND}
+        -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
 
 # packaging
@@ -208,8 +205,10 @@ set(CPACK_PACKAGE_VERSION ${BLOSC_STRING_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
     "A blocking, shuffling and lossless compression library")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/BLOSC.txt")
-set(CPACK_SOURCE_IGNORE_FILES "/build.*;.*~;\\\\.git.*;\\\\.DS_Store")
+set(CPACK_RESOURCE_FILE_LICENSE
+    "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/BLOSC.txt")
+set(CPACK_SOURCE_IGNORE_FILES
+    "/build.*;.*~;\\\\.git.*;\\\\.DS_Store;\\\\.mailmap")
 set(CPACK_STRIP_FILES TRUE)
 set(CPACK_SOURCE_STRIP_FILES TRUE)
 
