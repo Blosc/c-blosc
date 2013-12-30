@@ -6,7 +6,7 @@
 
 +// Windows does not define ssize_t by default.  This is a workaround.
 +// Please note that this is only defined in the Blosc sources of Snappy.
-+#if defined(_WIN32)
++#if defined(_WIN32) && !defined(__MINGW32__)
 +#include <BaseTsd.h>
 +typedef SSIZE_T ssize_t;
 +#endif
