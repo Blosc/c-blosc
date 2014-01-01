@@ -125,12 +125,13 @@ I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
 
-Adding support for other compressors (LZ4, Snappy, Zlib)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to add support for the LZ4, Snappy or Zlib compressor, just
-add the symbol HAVE_SNAPY and HAVE_ZLIB during compilation and add the
-libraries. For example, for compiling Blosc with Zlib support do:
+If you want to add support for the LZ4, LZ4HC, Snappy or Zlib
+compressors, just add the symbols HAVE_LZ4, HAVE_LZ4HC, HAVE_SNAPPY
+and HAVE_ZLIB during compilation and add the libraries. For example,
+for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 
@@ -178,18 +179,19 @@ CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
 
-Adding support for other compressors (LZ4, Snappy, Zlib) with CMake
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib) with CMake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The CMake files in Blosc as configured to automatically detect other
-compressors like LZ4, Snappy or Zlib, so as long as the libraries and
-the header files for these libraries are accessible, you should be done.
+compressors like LZ4, LZ4HC, Snappy or Zlib, so as long as the
+libraries and the header files for these libraries are accessible, you
+should be done.
 
 However, due to the lack of standard places for putting development
-files on Windows, the full sources for LZ4, Snappy and Zlib have been
-included in Blosc. So in general you should not worry about not having
-(or CMake not finding) the libraries in your system because in this
-case, their sources will be automaticall compiled for you.
+files on Windows, the full sources for LZ4, LZ4HC, Snappy and Zlib
+have been included in Blosc. So in general you should not worry about
+not having (or CMake not finding) the libraries in your system because
+in this case, their sources will be automaticall compiled for you.
 
 Regarding Zlib, the library should be easily found on UNIX systems,
 although on Windows, you can help CMake to find it by setting the

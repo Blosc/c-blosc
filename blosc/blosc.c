@@ -23,6 +23,9 @@
 #if defined(HAVE_LZ4)
   #include "lz4.h"
 #endif /*  HAVE_LZ4 */
+#if defined(HAVE_LZ4HC)
+  #include "lz4hc.h"
+#endif /*  HAVE_LZ4HC */
 #if defined(HAVE_SNAPPY)
   #include "snappy-c.h"
 #endif /*  HAVE_SNAPPY */
@@ -249,6 +252,7 @@ static char* clibtostr(int clib)
   static char ret[32];
   if (clib == BLOSC_BLOSCLZ) return strcpy(ret, "blosclz");
   else if (clib == BLOSC_LZ4) return strcpy(ret, "LZ4");
+  else if (clib == BLOSC_LZ4HC) return strcpy(ret, "LZ4HC");
   else if (clib == BLOSC_SNAPPY) return strcpy(ret, "Snappy");
   else if (clib == BLOSC_ZLIB) return strcpy(ret, "Zlib");
   /* We should never reach this point */
@@ -276,6 +280,30 @@ static int lz4_wrap_decompress(const char* input, size_t compressed_length,
   return (int)maxout;
 }
 #endif /* HAVE_LZ4 */
+
+#if defined(HAVE_LZ4HC)
+static int lz4hc_wrap_compress(const char* input, size_t input_length,
+			       char* output, size_t maxout)
+{
+  int cbytes;
+  if (input_length > (2<<30))
+    return -1;   /* input larger than 1 GB is not supported */
+  cbytes = LZ4_compressHC_limitedOutput(input, output, (int)input_length,
+					(int)maxout);
+  return cbytes;
+}
+
+static int lz4hc_wrap_decompress(const char* input, size_t compressed_length,
+				 char* output, size_t maxout)
+{
+  size_t cbytes;
+  cbytes = LZ4_decompress_fast(input, output, (int)maxout);
+  if (cbytes != compressed_length) {
+    return 0;
+  }
+  return (int)maxout;
+}
+#endif /* HAVE_LZ4HC */
 
 #if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length,
@@ -394,6 +422,12 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
                                  (char *)dest, (size_t)maxout);
     }
     #endif /*  HAVE_LZ4 */
+    #if defined(HAVE_LZ4HC)
+    else if (complib == BLOSC_LZ4HC) {
+      cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
+                                   (char *)dest, (size_t)maxout);
+    }
+    #endif /*  HAVE_LZ4HC */
     #if defined(HAVE_SNAPPY)
     else if (complib == BLOSC_SNAPPY) {
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
@@ -492,6 +526,12 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
                                      (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_LZ4 */
+      #if defined(HAVE_LZ4HC)
+      else if (clib == BLOSC_LZ4HC) {
+        nbytes = lz4hc_wrap_decompress((char *)src, (size_t)cbytes,
+                                       (char*)_tmp, (size_t)neblock);
+      }
+      #endif /*  HAVE_LZ4HC */
       #if defined(HAVE_SNAPPY)
       else if (clib == BLOSC_SNAPPY) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
@@ -752,6 +792,13 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
       blocksize *= 8;
     }
 
+    /* For LZ4HC, increase the block sizes in a factor of 8 because it
+       is meant for compression large blocks (it shows a big overhead
+       in compressing small ones). */
+    if (complib == BLOSC_LZ4HC) {
+      blocksize *= 8;
+    }
+
     if (clevel == 0) {
       blocksize /= 16;
     }
@@ -876,6 +923,11 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     _dest[1] = BLOSC_LZ4_VERSION_FORMAT;       /* lz4 format version */
   }
   #endif /*  HAVE_LZ4 */
+  #if defined(HAVE_LZ4HC)
+  else if (complib == BLOSC_LZ4HC) {
+    _dest[1] = BLOSC_LZ4HC_VERSION_FORMAT;       /* lz4hc format version */
+  }
+  #endif /*  HAVE_LZ4HC */
   #if defined(HAVE_SNAPPY)
   else if (complib == BLOSC_SNAPPY) {
     _dest[1] = BLOSC_SNAPPY_VERSION_FORMAT;       /* snappy format version */
@@ -1515,6 +1567,11 @@ int blosc_set_complib(char *complib_)
     complib = BLOSC_LZ4;
   }
 #endif /*  HAVE_LZ4 */
+#if defined(HAVE_LZ4HC)
+  else if (strcmp(complib_, "lz4hc") == 0) {
+    complib = BLOSC_LZ4HC;
+  }
+#endif /*  HAVE_LZ4HC */
 #if defined(HAVE_SNAPPY)
   else if (strcmp(complib_, "snappy") == 0) {
     complib = BLOSC_SNAPPY;
@@ -1545,6 +1602,9 @@ char* blosc_list_complibs(void)
 #if defined(HAVE_LZ4)
   strcat(ret, ", lz4");
 #endif /*  HAVE_LZ4 */
+#if defined(HAVE_LZ4HC)
+  strcat(ret, ", lz4hc");
+#endif /*  HAVE_LZ4HC */
 #if defined(HAVE_SNAPPY)
   strcat(ret, ", snappy");
 #endif /*  HAVE_SNAPPY */
@@ -1553,7 +1613,7 @@ char* blosc_list_complibs(void)
 #endif /*  HAVE_ZLIB */
   complibs_list_done = 1;
   return ret;
-}  
+}
 
 /* Free possible memory temporaries and thread resources */
 int blosc_free_resources(void)

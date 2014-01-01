@@ -32,7 +32,7 @@
 #include <math.h>
 
 
-struct bench_wrap_args 
+struct bench_wrap_args
 {
   char *complib;
   int nthreads;
@@ -348,8 +348,11 @@ int main(int argc, char *argv[]) {
 
   strcpy(complib, argv[1]);
 
-  if (strcmp(complib, "blosclz") != 0 && strcmp(complib, "lz4") != 0 &&
-      strcmp(complib, "snappy") != 0 && strcmp(complib, "zlib") != 0) {
+  if (strcmp(complib, "blosclz") != 0 &&
+      strcmp(complib, "lz4") != 0 &&
+      strcmp(complib, "lz4hc") != 0 &&
+      strcmp(complib, "snappy") != 0 &&
+      strcmp(complib, "zlib") != 0) {
     printf("No such codec: '%s'\n", complib);
     exit(2);
   }

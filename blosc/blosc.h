@@ -47,12 +47,14 @@
 /* Codes for different compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ   0
 #define BLOSC_LZ4       1
-#define BLOSC_SNAPPY    2
-#define BLOSC_ZLIB      3
+#define BLOSC_LZ4HC     2
+#define BLOSC_SNAPPY    3
+#define BLOSC_ZLIB      4
 
 /* The version formats for compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ_VERSION_FORMAT  1   /* Blosclz format version, starting at 1 */
 #define BLOSC_LZ4_VERSION_FORMAT      1   /* LZ4 format version, starting at 1 */
+#define BLOSC_LZ4HC_VERSION_FORMAT    1   /* LZ4HC format version, starting at 1 */
 #define BLOSC_SNAPPY_VERSION_FORMAT   1   /* Snappy format version, starting at 1 */
 #define BLOSC_ZLIB_VERSION_FORMAT     1   /* ZLIB format version, starting at 1 */
 
@@ -156,9 +158,9 @@ int blosc_set_nthreads(int nthreads);
 
 /**
   Select the compressor to be used.  The supported ones are "blosclz",
-  "lz4", "snappy" and "zlib".  If this function is not called, then
-  "blosclz" will be used.  In case the complib is not recognized, it
-  returns a -1, else it returns 0.
+  "lz4", "lz4hc", "snappy" and "zlib".  If this function is not
+  called, then "blosclz" will be used.  In case the complib is not
+  recognized, it returns a -1, else it returns 0.
 */
 
 int blosc_set_complib(char* complib);
@@ -167,7 +169,7 @@ int blosc_set_complib(char* complib);
 /**
   Get a list of compression libraries supported in thid Blosc build.
   The returned value is a string with a concatenation of "blosclz",
-  "lz4", "snappy" and "zlib".  This function cannot fail.
+  "lz4", "lz4hc", "snappy" and "zlib".  This function cannot fail.
 */
 
 char* blosc_list_complibs(void);

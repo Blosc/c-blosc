@@ -49,13 +49,16 @@ endif(WIN32)
 if(LZ4_FOUND)
     set(LIBS ${LIBS} ${LZ4_LIBRARY})
 else(LZ4_FOUND)
-    set(SOURCES ${SOURCES} ${LZ4_LOCAL_DIR}/lz4.c)
+    set(SOURCES ${SOURCES}
+        ${LZ4_LOCAL_DIR}/lz4.c
+        ${LZ4_LOCAL_DIR}/lz4hc.c
+        )
 endif(LZ4_FOUND)
 
 if(SNAPPY_FOUND)
     set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
 else(SNAPPY_FOUND)
-    set(SOURCES ${SOURCES} 
+    set(SOURCES ${SOURCES}
         ${SNAPPY_LOCAL_DIR}/snappy.cc
         ${SNAPPY_LOCAL_DIR}/snappy-c.cc
         ${SNAPPY_LOCAL_DIR}/snappy-sinksource.cc
