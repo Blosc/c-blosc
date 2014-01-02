@@ -1,5 +1,5 @@
 ===============================
- Release notes for Blosc 1.2.3
+ Release notes for Blosc 1.3.0
 ===============================
 
 :Author: Francesc Alted
@@ -7,10 +7,38 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.2.3 to 1.2.4
+Changes from 1.2.3 to 1.3.0
 ===========================
 
- #XXX version-specific blurb XXX#
+A nice handful of compressors have been added to Blosc:
+
+* LZ4 (http://code.google.com/p/lz4/): A very fast
+  compressor/decompressor.  Could be thought as a replacement of the
+  original BloscLZ, but it can behave better is some scenarios.
+
+* LZ4HC (http://code.google.com/p/lz4/): This is a variation of LZ4
+  that achieves much better compression ratio at the cost of being
+  much slower for compressing.  Decompression speed is unaffected (and
+  sometimes better than when using LZ4 itself!), so this is very good
+  for read-only datasets.
+
+* Snappy (http://code.google.com/p/snappy/): A very fast
+  compressor/decompressor.  Could be thought as a replacement of the
+  original BloscLZ, but it can behave better is some scenarios.
+
+* Zlib (http://www.zlib.net/): This is a classic.  It achieves very
+  good compression ratios, at the cost of speed.  However,
+  decompression speed is still pretty good, so it is a good candidate
+  for read-only datasets.
+
+With this, you can select the compression library with the new
+function::
+
+  int blosc_set_complib(char* complib);
+
+where you pass the library that you want to use (currently "blosclz",
+"lz4", "lz4hc", "snappy" and "zlib", but the list can grow in the
+future).
 
 
 Changes from 1.2.2 to 1.2.3
