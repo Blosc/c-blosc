@@ -16,9 +16,9 @@
 #define BLOSC_VERSION_MINOR    3    /* for minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.3.0.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.3.0-rc1"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2013-06-29 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2014-01-02 #$"    /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
@@ -63,7 +63,6 @@
   Initialize the Blosc library. You must call this previous to any other
   Blosc call, and make sure that you call this in a non-threaded environment.
   Other Blosc calls can be called in a threaded environment, if desired.
-
  */
 
 void blosc_init(void);
