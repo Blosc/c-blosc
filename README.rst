@@ -137,6 +137,10 @@ for compiling Blosc with Zlib support do:
 
    $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -DHAVE_ZLIB -lz
 
+In the bench/ directory there a couple of Makefile files (one for UNIX
+and the other for MinGW) with more complete building examples, like
+selecting between libraries or internal sources for the compressors.
+
 Compiling the Blosc library with CMake
 ======================================
 

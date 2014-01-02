@@ -44,9 +44,12 @@ Using Windows and MSVC (2008 or higher recommended):
 
 Intel ICC compilers should work too.
 
+For support for other compressors (LZ4, LZ4HC, Snappy or Zlib) see the
+README file in the main Blosc directory.
+
 
 Acknowledgments
 ===============
 
-This HDF5 filter interface and its example is base the LZF interface
+This HDF5 filter interface and its example is based in the LZF interface
 (http://h5py.alfven.org) by Andrew Collette.
