@@ -286,7 +286,7 @@ static int lz4hc_wrap_compress(const char* input, size_t input_length,
 			       char* output, size_t maxout)
 {
   int cbytes;
-  if (input_length > (2<<30))
+  if (input_length > (size_t)(2<<30))
     return -1;   /* input larger than 1 GB is not supported */
   cbytes = LZ4_compressHC_limitedOutput(input, output, (int)input_length,
 					(int)maxout);
