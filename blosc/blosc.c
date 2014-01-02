@@ -16,11 +16,16 @@
 #include <assert.h>
 #if defined(USING_CMAKE)
   #include "config.h"
-#endif /*  HAVE_SNAPPY */
+#endif /*  USING_CMAKE */
 #include "blosc.h"
-#include "blosclz.h"
-#include "lz4.h"
 #include "shuffle.h"
+#include "blosclz.h"
+#if defined(HAVE_LZ4)
+  #include "lz4.h"
+#endif /*  HAVE_LZ4 */
+#if defined(HAVE_LZ4HC)
+  #include "lz4hc.h"
+#endif /*  HAVE_LZ4HC */
 #if defined(HAVE_SNAPPY)
   #include "snappy-c.h"
 #endif /*  HAVE_SNAPPY */
@@ -244,14 +249,17 @@ static int32_t sw32(int32_t a)
 /* Convert the compresion lib code into a string */
 static char* clibtostr(int clib)
 {
-  if (clib == BLOSC_BLOSCLZ) return "blosclz";
-  else if (clib == BLOSC_LZ4) return "LZ4";
-  else if (clib == BLOSC_SNAPPY) return "snappy";
-  else if (clib == BLOSC_ZLIB) return "Zlib";
+  static char ret[32];
+  if (clib == BLOSC_BLOSCLZ) return strcpy(ret, "blosclz");
+  else if (clib == BLOSC_LZ4) return strcpy(ret, "LZ4");
+  else if (clib == BLOSC_LZ4HC) return strcpy(ret, "LZ4HC");
+  else if (clib == BLOSC_SNAPPY) return strcpy(ret, "Snappy");
+  else if (clib == BLOSC_ZLIB) return strcpy(ret, "Zlib");
   /* We should never reach this point */
-  return "Unknown";
+  return strcpy(ret, "Unknown (please report this to the maintainers)");
 }
 
+#if defined(HAVE_LZ4)
 static int lz4_wrap_compress(const char* input, size_t input_length,
                              char* output, size_t maxout)
 {
@@ -271,6 +279,31 @@ static int lz4_wrap_decompress(const char* input, size_t compressed_length,
   }
   return (int)maxout;
 }
+#endif /* HAVE_LZ4 */
+
+#if defined(HAVE_LZ4HC)
+static int lz4hc_wrap_compress(const char* input, size_t input_length,
+			       char* output, size_t maxout)
+{
+  int cbytes;
+  if (input_length > (size_t)(2<<30))
+    return -1;   /* input larger than 1 GB is not supported */
+  cbytes = LZ4_compressHC_limitedOutput(input, output, (int)input_length,
+					(int)maxout);
+  return cbytes;
+}
+
+static int lz4hc_wrap_decompress(const char* input, size_t compressed_length,
+				 char* output, size_t maxout)
+{
+  size_t cbytes;
+  cbytes = LZ4_decompress_fast(input, output, (int)maxout);
+  if (cbytes != compressed_length) {
+    return 0;
+  }
+  return (int)maxout;
+}
+#endif /* HAVE_LZ4HC */
 
 #if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length,
@@ -296,7 +329,7 @@ static int snappy_wrap_decompress(const char* input, size_t compressed_length,
   }
   return (int)ul;
 }
-#endif /*  HAVE_SNAPPY */
+#endif /* HAVE_SNAPPY */
 
 #if defined(HAVE_ZLIB)
 /* zlib is not very respectful with sharing name space with others.
@@ -383,10 +416,18 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       cbytes = blosclz_compress(params.clevel, _tmp+j*neblock, neblock,
                                 dest, maxout);
     }
+    #if defined(HAVE_LZ4)
     else if (complib == BLOSC_LZ4) {
       cbytes = lz4_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                  (char *)dest, (size_t)maxout);
     }
+    #endif /*  HAVE_LZ4 */
+    #if defined(HAVE_LZ4HC)
+    else if (complib == BLOSC_LZ4HC) {
+      cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
+                                   (char *)dest, (size_t)maxout);
+    }
+    #endif /*  HAVE_LZ4HC */
     #if defined(HAVE_SNAPPY)
     else if (complib == BLOSC_SNAPPY) {
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
@@ -479,10 +520,18 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
       if (clib == BLOSC_BLOSCLZ) {
         nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
       }
+      #if defined(HAVE_LZ4)
       else if (clib == BLOSC_LZ4) {
         nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
                                      (char*)_tmp, (size_t)neblock);
       }
+      #endif /*  HAVE_LZ4 */
+      #if defined(HAVE_LZ4HC)
+      else if (clib == BLOSC_LZ4HC) {
+        nbytes = lz4hc_wrap_decompress((char *)src, (size_t)cbytes,
+                                       (char*)_tmp, (size_t)neblock);
+      }
+      #endif /*  HAVE_LZ4HC */
       #if defined(HAVE_SNAPPY)
       else if (clib == BLOSC_SNAPPY) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
@@ -743,6 +792,13 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
       blocksize *= 8;
     }
 
+    /* For LZ4HC, increase the block sizes in a factor of 8 because it
+       is meant for compression large blocks (it shows a big overhead
+       in compressing small ones). */
+    if (complib == BLOSC_LZ4HC) {
+      blocksize *= 8;
+    }
+
     if (clevel == 0) {
       blocksize /= 16;
     }
@@ -862,9 +918,16 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   if (complib == BLOSC_BLOSCLZ) {
     _dest[1] = BLOSC_BLOSCLZ_VERSION_FORMAT;       /* blosclz format version */
   }
+  #if defined(HAVE_LZ4)
   else if (complib == BLOSC_LZ4) {
     _dest[1] = BLOSC_LZ4_VERSION_FORMAT;       /* lz4 format version */
   }
+  #endif /*  HAVE_LZ4 */
+  #if defined(HAVE_LZ4HC)
+  else if (complib == BLOSC_LZ4HC) {
+    _dest[1] = BLOSC_LZ4HC_VERSION_FORMAT;       /* lz4hc format version */
+  }
+  #endif /*  HAVE_LZ4HC */
   #if defined(HAVE_SNAPPY)
   else if (complib == BLOSC_SNAPPY) {
     _dest[1] = BLOSC_SNAPPY_VERSION_FORMAT;       /* snappy format version */
@@ -1190,7 +1253,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
 
 
 /* Decompress & unshuffle several blocks in a single thread */
-static int t_blosc(void *tids)
+static void *t_blosc(void *tids)
 {
   int32_t tid = *(int32_t *)tids;
   int32_t cbytes, ntdest;
@@ -1223,7 +1286,7 @@ static int t_blosc(void *tids)
 
     /* Check if thread has been asked to return */
     if (end_threads) {
-      return(0);
+      return(NULL);
     }
 
     pthread_mutex_lock(&count_mutex);
@@ -1365,7 +1428,7 @@ static int t_blosc(void *tids)
   }  /* closes while(1) */
 
   /* This should never be reached, but anyway */
-  return(0);
+  return(NULL);
 }
 
 
@@ -1397,11 +1460,9 @@ static int init_threads(void)
   for (tid = 0; tid < nthreads; tid++) {
     tids[tid] = tid;
 #if !defined(_WIN32)
-    rc2 = pthread_create(&threads[tid], &ct_attr, (void*)t_blosc,
-                        (void *)&tids[tid]);
+    rc2 = pthread_create(&threads[tid], &ct_attr, t_blosc, (void *)&tids[tid]);
 #else
-    rc2 = pthread_create(&threads[tid], NULL, (void*)t_blosc,
-                        (void *)&tids[tid]);
+    rc2 = pthread_create(&threads[tid], NULL, t_blosc, (void *)&tids[tid]);
 #endif
     if (rc2) {
       fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc2);
@@ -1501,9 +1562,16 @@ int blosc_set_complib(char *complib_)
   if (strcmp(complib_, "blosclz") == 0) {
     complib = BLOSC_BLOSCLZ;
   }
+#if defined(HAVE_LZ4)
   else if (strcmp(complib_, "lz4") == 0) {
     complib = BLOSC_LZ4;
   }
+#endif /*  HAVE_LZ4 */
+#if defined(HAVE_LZ4HC)
+  else if (strcmp(complib_, "lz4hc") == 0) {
+    complib = BLOSC_LZ4HC;
+  }
+#endif /*  HAVE_LZ4HC */
 #if defined(HAVE_SNAPPY)
   else if (strcmp(complib_, "snappy") == 0) {
     complib = BLOSC_SNAPPY;
@@ -1530,7 +1598,13 @@ char* blosc_list_complibs(void)
   static char ret[256];
   if (complibs_list_done) return ret;
   ret[0] = '\0';
-  strcat(ret, "blosclz, lz4");
+  strcat(ret, "blosclz");
+#if defined(HAVE_LZ4)
+  strcat(ret, ", lz4");
+#endif /*  HAVE_LZ4 */
+#if defined(HAVE_LZ4HC)
+  strcat(ret, ", lz4hc");
+#endif /*  HAVE_LZ4HC */
 #if defined(HAVE_SNAPPY)
   strcat(ret, ", snappy");
 #endif /*  HAVE_SNAPPY */
@@ -1539,7 +1613,7 @@ char* blosc_list_complibs(void)
 #endif /*  HAVE_ZLIB */
   complibs_list_done = 1;
   return ret;
-}  
+}
 
 /* Free possible memory temporaries and thread resources */
 int blosc_free_resources(void)

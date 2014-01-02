@@ -57,7 +57,7 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_RELEASE[ \t]+([0-9]+).*"
 string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
     "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
-message("Blosc version: " ${BLOSC_VERSION_STRING})
+message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
 option(BUILD_STATIC
@@ -70,14 +70,27 @@ option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+find_package(LZ4)
+# HAVE_LZ4, HAVE_LZ4HC will be set to true because even if the library is
+# not found, we will use the included sources for it
+set(HAVE_LZ4 TRUE)
+set(HAVE_LZ4HC TRUE)
+
 find_package(Snappy)
+# HAVE_SNAPPY will be set to true because even if the library is not found,
+# we will use the included sources for it
+set(HAVE_SNAPPY TRUE)
+
 # import the ZLIB_ROOT environment variable to help finding the zlib library
 set(ZLIB_ROOT $ENV{ZLIB_ROOT})
 find_package( ZLIB )
-if ( ZLIB_FOUND )
-    set(HAVE_ZLIB TRUE)
-    set(BLOSC_ZLIB_VERSION_STRING ZLIB_VERSION_STRING)
-endif ( ZLIB_FOUND )
+if (NOT ZLIB_FOUND )
+    message(STATUS "No zlib found.  Using internal sources.")
+endif (NOT ZLIB_FOUND )
+# HAVE_ZLIB will be set to true because even if the library is not found,
+# we will use the included sources for it
+set(HAVE_ZLIB TRUE)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
