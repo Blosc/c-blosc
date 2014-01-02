@@ -24,15 +24,15 @@ decompression there.  It also leverages, if available, SIMD
 instructions (SSE2) and multi-threading capabilities of CPUs, in order
 to accelerate the compression / decompression process to a maximum.
 
-Blosc is actually a metacompressor, that meaning that it can use a
-range of compression libraries for performing the actual
-compression/decompression.  Right now, it comes with integrated
-support for BloscLZ (the original one), LZ4, Snappy and Zlib.  Blosc
-comes with full sources for LZ4 and Snappy, so in case it does not
-find the libraries installed in your system, it will compile these
-sources and will be included into the Blosc library.  Zlib is pretty
-much everywhere, so you will need to install the library for Blosc
-supporting Zlib.  See below for instructions on how to do this.
+Blosc is actually a metacompressor, that meaning that it can use a range
+of compression libraries for performing the actual
+compression/decompression. Right now, it comes with integrated support
+for BloscLZ (the original one), LZ4, LZ4HC, Snappy and Zlib. Blosc comes
+with full sources for all compressors, so in case it does not find the
+libraries installed in your system, it will compile from the included
+sources and they will be integrated into the Blosc library anyway. That
+means that you can trust in having all supported compressors integrated
+in Blosc in all supported platforms.
 
 You can see some benchmarks about Blosc performance in [3]_
 
@@ -90,7 +90,7 @@ similar solutions.
 Compiling your application with Blosc
 =====================================
 
-Blosc consists of the next files (in blosc/ directory)::
+The minimal Blosc consists of the next files (in blosc/ directory)::
 
     blosc.h and blosc.c      -- the main routines
     shuffle.h and shuffle.c  -- the shuffle code
@@ -140,7 +140,12 @@ for compiling Blosc with Zlib support do:
 Compiling the Blosc library with CMake
 ======================================
 
-Blosc can also be built, tested and installed using CMake_.
+Blosc can also be built, tested and installed using CMake_. Although
+this procedure is a bit more invloved than the one described above, it
+is the most general because it allows to integrate compressors either
+from libraries or from internal sources. Hence, serious library
+developers should use this way.
+
 The following procedure describes the "out of source" build.
 
 Create the build directory and move into it:
@@ -183,17 +188,18 @@ Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib) with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The CMake files in Blosc as configured to automatically detect other
-compressors like LZ4, LZ4HC, Snappy or Zlib, so as long as the
-libraries and the header files for these libraries are accessible, you
-should be done.
+compressors like LZ4, LZ4HC, Snappy or Zlib, so as long as the libraries
+and the header files for these libraries are accessible, these will be
+used by default.
 
-However, due to the lack of standard places for putting development
-files on Windows, the full sources for LZ4, LZ4HC, Snappy and Zlib
-have been included in Blosc. So in general you should not worry about
-not having (or CMake not finding) the libraries in your system because
-in this case, their sources will be automaticall compiled for you.
+However, the full sources for LZ4, LZ4HC, Snappy and Zlib have been
+included in Blosc too. So, in general, you should not worry about not
+having (or CMake not finding) the libraries in your system because in
+this case, their sources will be automaticall compiled for you. That
+effectively means that you can be confident in having a complete support
+for all the supported compression libraries in all supported platforms.
 
-Regarding Zlib, the library should be easily found on UNIX systems,
+*Note on Zlib*: the library should be easily found on UNIX systems,
 although on Windows, you can help CMake to find it by setting the
 environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
 directories are. Also, make sure that Zlib DDL library is in your
