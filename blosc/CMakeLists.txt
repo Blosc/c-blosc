@@ -7,7 +7,7 @@ set(INTERNAL_LIBS ${CMAKE_SOURCE_DIR}/internal-complibs)
 if (LZ4_FOUND)
     include_directories( ${LZ4_INCLUDE_DIR} )
 else(LZ4_FOUND)
-   set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}/lz4-r109)
+   set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}/lz4-r110)
    include_directories( ${LZ4_LOCAL_DIR} )
 endif(LZ4_FOUND)
 
