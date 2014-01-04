@@ -16,7 +16,7 @@
 #define BLOSC_VERSION_MINOR    3    /* for minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.3.0-rc1"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.3.0-rc2.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
 #define BLOSC_VERSION_DATE     "$Date:: 2014-01-02 #$"    /* date version */
 
@@ -51,12 +51,20 @@
 #define BLOSC_SNAPPY    3
 #define BLOSC_ZLIB      4
 
+/* The format IDs for compressors shipped with Blosc (< 8) */
+#define BLOSC_BLOSCLZ_FORMAT  0
+#define BLOSC_LZ4_FORMAT      1
+#define BLOSC_LZ4HC_FORMAT    1    /* LZ4HC and LZ4 have the same format */
+#define BLOSC_SNAPPY_FORMAT   2
+#define BLOSC_ZLIB_FORMAT     3
+
 /* The version formats for compressors shipped with Blosc */
-#define BLOSC_BLOSCLZ_VERSION_FORMAT  1   /* Blosclz format version, starting at 1 */
-#define BLOSC_LZ4_VERSION_FORMAT      1   /* LZ4 format version, starting at 1 */
-#define BLOSC_LZ4HC_VERSION_FORMAT    1   /* LZ4HC format version, starting at 1 */
-#define BLOSC_SNAPPY_VERSION_FORMAT   1   /* Snappy format version, starting at 1 */
-#define BLOSC_ZLIB_VERSION_FORMAT     1   /* ZLIB format version, starting at 1 */
+/* All versions here starts at 1 */
+#define BLOSC_BLOSCLZ_VERSION_FORMAT  1
+#define BLOSC_LZ4_VERSION_FORMAT      1
+#define BLOSC_LZ4HC_VERSION_FORMAT    1
+#define BLOSC_SNAPPY_VERSION_FORMAT   1
+#define BLOSC_ZLIB_VERSION_FORMAT     1
 
 
 /**

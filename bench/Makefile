@@ -7,11 +7,11 @@ EXECUTABLE = bench
 
 # Support for internal LZ4 and LZ4HC
 LZ4_DIR = ../internal-complibs/lz4-r110
-CFLAGS += -DHAVE_LZ4 -DHAVE_LZ4HC -I$(LZ4_DIR)
+CFLAGS += -DHAVE_LZ4 -I$(LZ4_DIR)
 SOURCES += $(wildcard $(LZ4_DIR)/*.c)
 
 # Support for external LZ4 and LZ4HC
-#LDFLAGS += -DHAVE_LZ4 -DHAVE_LZ4HC -llz4
+#LDFLAGS += -DHAVE_LZ4 -llz4
 
 # Support for internal Snappy
 #SNAPPY_DIR = ../internal-complibs/snappy-1.1.1
