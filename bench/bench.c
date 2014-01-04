@@ -34,7 +34,7 @@
 
 struct bench_wrap_args
 {
-  char *complib;
+  char *compressor;
   int nthreads;
   int size;
   int elsize;
@@ -156,7 +156,7 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-void do_bench(char *complib, int nthreads, int size, int elsize,
+void do_bench(char *compressor, int nthreads, int size, int elsize,
               int rshift, FILE * ofile) {
   void *src, *srccpy;
   void *dest[NCHUNKS], *dest2;
@@ -168,8 +168,8 @@ void do_bench(char *complib, int nthreads, int size, int elsize,
   unsigned char *orig, *round;
 
   blosc_set_nthreads(nthreads);
-  if(blosc_set_complib(complib) != 0){
-    printf("Compiled w/o support for codec: '%s', so sorry.\n", complib);
+  if(blosc_set_compressor(compressor) != 0){
+    printf("Compiled w/o support for codec: '%s', so sorry.\n", compressor);
     exit(1);
   }
 
@@ -190,7 +190,7 @@ void do_bench(char *complib, int nthreads, int size, int elsize,
     memcpy(dest[j], src, size);
   }
 
-  fprintf(ofile, "--> %d, %d, %d, %d, %s\n", nthreads, size, elsize, rshift, complib);
+  fprintf(ofile, "--> %d, %d, %d, %d, %s\n", nthreads, size, elsize, rshift, compressor);
   fprintf(ofile, "********************** Run info ******************************\n");
   fprintf(ofile, "Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   fprintf(ofile, "Using synthetic data with %d significant bits (out of 32)\n", rshift);
@@ -312,13 +312,13 @@ int get_nchunks(int size_, int ws) {
 void *bench_wrap(void * args) 
 {
     struct bench_wrap_args * arg = (struct bench_wrap_args *) args;
-    do_bench(arg->complib, arg->nthreads, arg->size, arg->elsize,
+    do_bench(arg->compressor, arg->nthreads, arg->size, arg->elsize,
              arg->rshift, arg->output_file);
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-  char complib[32];
+  char compressor[32];
   char bsuite[32];
   int single = 1;
   int suite = 0;
@@ -342,18 +342,18 @@ int main(int argc, char *argv[]) {
 
   if (argc < 2) {
     printf("%s\n", usage);
-    printf("List of supported compressors in this build: %s\n", blosc_list_complibs());
+    printf("List of supported compressors in this build: %s\n", blosc_list_compressors());
     exit(1);
   }
 
-  strcpy(complib, argv[1]);
+  strcpy(compressor, argv[1]);
 
-  if (strcmp(complib, "blosclz") != 0 &&
-      strcmp(complib, "lz4") != 0 &&
-      strcmp(complib, "lz4hc") != 0 &&
-      strcmp(complib, "snappy") != 0 &&
-      strcmp(complib, "zlib") != 0) {
-    printf("No such codec: '%s'\n", complib);
+  if (strcmp(compressor, "blosclz") != 0 &&
+      strcmp(compressor, "lz4") != 0 &&
+      strcmp(compressor, "lz4hc") != 0 &&
+      strcmp(compressor, "snappy") != 0 &&
+      strcmp(compressor, "zlib") != 0) {
+    printf("No such compressor: '%s'\n", compressor);
     exit(2);
   }
 
@@ -403,8 +403,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  printf("List of supported compressors in this build: %s\n", blosc_list_complibs());
-  printf("Using compressor: %s\n", complib);
+  printf("List of supported compressors in this build: %s\n", blosc_list_compressors());
+  printf("Using compressor: %s\n", compressor);
   printf("Running suite: %s\n", bsuite);
 
   if (argc >= 4) {
@@ -432,7 +432,7 @@ int main(int argc, char *argv[]) {
 
   if (suite) {
     for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
-      do_bench(complib, nthreads_, size, elsize, rshift, output_file);
+      do_bench(compressor, nthreads_, size, elsize, rshift, output_file);
     }
   }
   else if (hard_suite) {
@@ -447,7 +447,7 @@ int main(int argc, char *argv[]) {
             nchunks = get_nchunks(size_+i, workingset);
     	    niter = 1;
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(complib, nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(compressor, nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -466,7 +466,7 @@ int main(int argc, char *argv[]) {
           for (size_ = 32*KB; size_ <= size; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(complib, nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(compressor, nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -485,7 +485,7 @@ int main(int argc, char *argv[]) {
           for (size_ = size; size_ <= 16*MB; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = nthreads; nthreads_ <= 6; nthreads_++) {
-              do_bench(complib, nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(compressor, nthreads_, size_+i, elsize_, rshift_, output_file);
               gettimeofday(&current, NULL);
               totaltime = getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -498,7 +498,7 @@ int main(int argc, char *argv[]) {
   }
   /* Single mode */
   else {
-    do_bench(complib, nthreads, size, elsize, rshift, output_file);
+    do_bench(compressor, nthreads, size, elsize, rshift, output_file);
   }
 
   /* Print out some statistics */
