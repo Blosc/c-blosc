@@ -169,7 +169,8 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
 
   blosc_set_nthreads(nthreads);
   if(blosc_set_compressor(compressor) != 0){
-    printf("Compiled w/o support for codec: '%s', so sorry.\n", compressor);
+    printf("Compiled w/o support for compressor: '%s', so sorry.\n",
+           compressor);
     exit(1);
   }
 
@@ -317,6 +318,40 @@ void *bench_wrap(void * args)
     return 0;
 }
 
+void print_compress_info(void)
+{
+  char *names[BLOSC_MAX_SUPPORTED_FORMATS];
+  char *versions[BLOSC_MAX_SUPPORTED_FORMATS];
+  int mask;
+
+  printf("List of supported compressors in this build: %s\n",
+         blosc_list_compressors());
+
+  printf("Supported compression libraries:\n");
+  mask = blosc_get_complibs_info(names, versions);
+
+  printf("  %s: %s\n",
+         names[BLOSC_BLOSCLZ_FORMAT],
+         versions[BLOSC_BLOSCLZ_FORMAT]);
+
+  if (mask & (BLOSC_LZ4_FORMAT + 1)) {
+      printf("  %s: %s\n",
+             names[BLOSC_LZ4_FORMAT],
+             versions[BLOSC_LZ4_FORMAT]);
+        }
+  if (mask & (BLOSC_SNAPPY_FORMAT + 1)) {
+      printf("  %s: %s\n",
+             names[BLOSC_SNAPPY_FORMAT],
+             versions[BLOSC_SNAPPY_FORMAT]);
+        }
+  if (mask & (BLOSC_ZLIB_FORMAT + 1)) {
+      printf("  %s: %s\n",
+             names[BLOSC_ZLIB_FORMAT],
+             versions[BLOSC_ZLIB_FORMAT]);
+        }
+}
+
+
 int main(int argc, char *argv[]) {
   char compressor[32];
   char bsuite[32];
@@ -336,13 +371,14 @@ int main(int argc, char *argv[]) {
   float totaltime;
   char usage[256];
 
-  strncpy(usage, "Usage: bench [blosclz | lz4 | snappy | zlib] "
+  print_compress_info();
+
+  strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib] "
           "[[single | suite | hardsuite | extremesuite | debugsuite] "
           "[nthreads [bufsize(bytes) [typesize [sbits ]]]]]", 255);
 
   if (argc < 2) {
     printf("%s\n", usage);
-    printf("List of supported compressors in this build: %s\n", blosc_list_compressors());
     exit(1);
   }
 
@@ -403,7 +439,6 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  printf("List of supported compressors in this build: %s\n", blosc_list_compressors());
   printf("Using compressor: %s\n", compressor);
   printf("Running suite: %s\n", bsuite);
 

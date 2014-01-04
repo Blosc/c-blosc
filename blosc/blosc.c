@@ -1596,6 +1596,72 @@ char* blosc_list_compressors(void)
   return ret;
 }
 
+int blosc_get_complibs_info(char *names[], char *versions[])
+{
+  char *name, *version;
+  int mask = 0;
+  char *strclib, *strversion;
+
+  /* Filling info for BloscLZ */
+  strclib = compressor_to_clib(BLOSC_BLOSCLZ);
+  name = malloc(strlen(strclib) + 1);
+  names[BLOSC_BLOSCLZ_FORMAT] = strcat(name, strclib);
+  strversion = BLOSCLZ_VERSION_STRING;
+  version = malloc(strlen(strversion) + 1);
+  versions[BLOSC_BLOSCLZ_FORMAT] = strcat(version, strversion);
+  mask |= (BLOSC_BLOSCLZ_FORMAT + 1);
+
+#if defined(HAVE_LZ4)
+  strclib = compressor_to_clib(BLOSC_LZ4);
+  mask |= (BLOSC_LZ4_FORMAT + 1);
+#else /*  HAVE_LZ4 */
+  strclib = "";
+#endif /*  HAVE_LZ4 */
+  name = malloc(strlen(strclib) + 1);
+  names[BLOSC_LZ4_FORMAT] = strcat(name, strclib);
+#if defined(HAVE_LZ4)
+  strversion = "unknown";
+#else /*  HAVE_LZ4 */
+  strversion = "";
+#endif /*  HAVE_LZ4 */
+  version = malloc(strlen(strversion) + 1);
+  versions[BLOSC_LZ4_FORMAT] = strcat(version, strversion);
+
+#if defined(HAVE_SNAPPY)
+  strclib = compressor_to_clib(BLOSC_SNAPPY);
+  mask |= (BLOSC_SNAPPY_FORMAT + 1);
+#else /*  HAVE_SNAPPY */
+  strclib = "";
+#endif /*  HAVE_SNAPPY */
+  name = malloc(strlen(strclib) + 1);
+  names[BLOSC_SNAPPY_FORMAT] = strcat(name, strclib);
+#if defined(HAVE_SNAPPY)
+  strversion = "unknown";
+#else /*  HAVE_SNAPPY */
+  strversion = "";
+#endif /*  HAVE_SNAPPY */
+  version = malloc(strlen(strversion) + 1);
+  versions[BLOSC_SNAPPY_FORMAT] = strcat(version, strversion);
+
+#if defined(HAVE_ZLIB)
+  strclib = compressor_to_clib(BLOSC_ZLIB);
+  mask |= (BLOSC_ZLIB_FORMAT + 1);
+#else /*  HAVE_ZLIB */
+  strclib = "";
+#endif /*  HAVE_ZLIB */
+  name = malloc(strlen(strclib) + 1);
+  names[BLOSC_ZLIB_FORMAT] = strcat(name, strclib);
+#if defined(HAVE_ZLIB)
+  strversion = ZLIB_VERSION;
+#else /*  HAVE_ZLIB */
+  strversion = "";
+#endif /*  HAVE_ZLIB */
+  version = malloc(strlen(strversion) + 1);
+  versions[BLOSC_ZLIB_FORMAT] = strcat(version, strversion);
+
+  return mask;
+}
+
 /* Free possible memory temporaries and thread resources */
 int blosc_free_resources(void)
 {

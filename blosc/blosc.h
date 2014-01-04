@@ -20,6 +20,8 @@
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
 #define BLOSC_VERSION_DATE     "$Date:: 2014-01-02 #$"    /* date version */
 
+#define BLOSCLZ_VERSION_STRING   "1.0.0"
+
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
 
@@ -54,36 +56,34 @@
 /* The format IDs for compressors shipped with Blosc (< 8) */
 #define BLOSC_BLOSCLZ_FORMAT  0
 #define BLOSC_LZ4_FORMAT      1
-#define BLOSC_LZ4HC_FORMAT    1    /* LZ4HC and LZ4 have the same format */
+#define BLOSC_LZ4HC_FORMAT    1    /* LZ4HC and LZ4 share the same format */
 #define BLOSC_SNAPPY_FORMAT   2
 #define BLOSC_ZLIB_FORMAT     3
+#define BLOSC_MAX_SUPPORTED_FORMATS  4
 
 /* The version formats for compressors shipped with Blosc */
 /* All versions here starts at 1 */
 #define BLOSC_BLOSCLZ_VERSION_FORMAT  1
 #define BLOSC_LZ4_VERSION_FORMAT      1
-#define BLOSC_LZ4HC_VERSION_FORMAT    1
+#define BLOSC_LZ4HC_VERSION_FORMAT    1  /* LZ4HC and LZ4 share the same format */
 #define BLOSC_SNAPPY_VERSION_FORMAT   1
 #define BLOSC_ZLIB_VERSION_FORMAT     1
 
 
 /**
-  Initialize the Blosc library. You must call this previous to any other
-  Blosc call, and make sure that you call this in a non-threaded environment.
-  Other Blosc calls can be called in a threaded environment, if desired.
- */
-
+  Initialize the Blosc library. You must call this previous to any
+  other Blosc call, and make sure that you call this in a non-threaded
+  environment.  Other Blosc calls can be called in a threaded
+  environment, if desired.
+  */
 void blosc_init(void);
 
 
 /**
-
-  Destroy the Blosc library environment. You must call this after to you are
-  done with all the Blosc calls, and make sure that you call this in a
-  non-threaded environment.
-
- */
-
+  Destroy the Blosc library environment. You must call this after to
+  you are done with all the Blosc calls, and make sure that you call
+  this in a non-threaded environment.
+  */
 void blosc_destroy(void);
 
 
@@ -108,6 +108,11 @@ void blosc_destroy(void);
   (`nbytes`+BLOSC_MAX_OVERHEAD), the compression will always succeed.
   The `src` buffer and the `dest` buffer can not overlap.
 
+  Compression is memory safe and guaranteed not to write the `dest`
+  buffer more than what is specified in `destsize`.  However, it is
+  not re-entrant and not thread-safe (despite the fact that it uses
+  threads internally).
+
   If `src` buffer cannot be compressed into `destsize`, the return
   value is zero and you should discard the contents of the `dest`
   buffer.
@@ -115,23 +120,14 @@ void blosc_destroy(void);
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report it back
   together with the buffer data causing this and compression settings.
-
-  Compression is memory safe and guaranteed not to write the `dest`
-  buffer more than what is specified in `destsize`.  However, it is
-  not re-entrant and not thread-safe (despite the fact that it uses
-  threads internally).
- */
-
+  */
 int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
                    const void *src, void *dest, size_t destsize);
 
 
 /**
   Decompress a block of compressed data in `src`, put the result in
-  `dest` and returns the size of the decompressed block. If error
-  occurs, e.g. the compressed data is corrupted or the output buffer
-  is not large enough, then 0 (zero) or a negative value will be
-  returned instead.
+  `dest` and returns the size of the decompressed block.
 
   The `src` buffer and the `dest` buffer can not overlap.
 
@@ -139,54 +135,81 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   buffer more than what is specified in `destsize`.  However, it is
   not re-entrant and not thread-safe (despite the fact that it uses
   threads internally).
-*/
 
+  If an error occurs, e.g. the compressed data is corrupted or the
+  output buffer is not large enough, then 0 (zero) or a negative value
+  will be returned instead.
+  */
 int blosc_decompress(const void *src, void *dest, size_t destsize);
 
 
 /**
   Get `nitems` (of typesize size) in `src` buffer starting in `start`.
   The items are returned in `dest` buffer, which has to have enough
-  space for storing all items.  Returns the number of bytes copied to
-  `dest` or a negative value if some error happens.
- */
+  space for storing all items.
 
+  Returns the number of bytes copied to `dest` or a negative value if
+  some error happens.
+  */
 int blosc_getitem(const void *src, int start, int nitems, void *dest);
 
 
 /**
   Initialize a pool of threads for compression/decompression.  If
   `nthreads` is 1, then the serial version is chosen and a possible
-  previous existing pool is ended.  Returns the previous number of
-  threads.  If this is not called, `nthreads` is set to 1 internally.
-*/
+  previous existing pool is ended.  If this is not called, `nthreads`
+  is set to 1 internally.
 
+  Returns the previous number of threads.
+  */
 int blosc_set_nthreads(int nthreads);
+
 
 /**
   Select the compressor to be used.  The supported ones are "blosclz",
   "lz4", "lz4hc", "snappy" and "zlib".  If this function is not
-  called, then "blosclz" will be used.  In case the compressor is not
-  recognized, it returns a -1, else it returns 0.
-*/
+  called, then "blosclz" will be used.
 
+  In case the compressor is not recognized, it returns a -1, else it
+  returns 0.
+  */
 int blosc_set_compressor(char* compressor);
 
 
 /**
   Get a list of compressors supported in the Blosc build.  The
   returned value is a string with a concatenation of "blosclz", "lz4",
-  "lz4hc", "snappy" and "zlib".  This function cannot fail.  */
+  "lz4hc", "snappy" and "zlib".
 
+  This function does not leak. 
+
+  This function should always succeed.
+  */
 char* blosc_list_compressors(void);
+
+
+/**
+  Get info from compression libraries included in the Blosc build.  In
+  `names` an array of pointers to complib strings is filled, while in
+  `versions` an array of pointers to complib version info strings is
+  filled.  The number of entries in `names` and `versions` should be
+  at least BLOSC_MAX_SUPPORTED_FORMATS.
+
+  Contrarily to `blosc_list_compressor()` this functions leaks the
+  strings returned, so please do not abuse it.
+
+  It returns a mask with the complibs found.
+
+  This function should always succeed.
+  */
+int blosc_get_complibs_info(char *names[], char *versions[]);
 
 
 /**
   Free possible memory temporaries and thread resources.  Use this when you
   are not going to use Blosc for a long while.  In case of problems releasing
   the resources, it returns a negative number, else it returns 0.
-*/
-
+  */
 int blosc_free_resources(void);
 
 
@@ -200,8 +223,7 @@ int blosc_free_resources(void);
   compressed buffer for this call to work.
 
   This function should always succeed.
-*/
-
+  */
 void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
                          size_t *cbytes, size_t *blocksize);
 
@@ -219,8 +241,7 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   says whether the buffer is shuffled or not).
 
   This function should always succeed.
-*/
-
+  */
 void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
                             int *flags);
 
@@ -228,10 +249,10 @@ void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
 /**
   Return information about a compressed buffer, namely the internal
   Blosc format version (`version`) and the format for the internal
-  Lempel-Ziv algorithm (`versionlz`).  This function should always
-  succeed.
-*/
+  Lempel-Ziv algorithm (`versionlz`).
 
+  This function should always succeed.
+  */
 void blosc_cbuffer_versions(const void *cbuffer, int *version,
                             int *versionlz);
 
@@ -247,8 +268,7 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 /**
   Force the use of a specific blocksize.  If 0, an automatic
   blocksize will be used (the default).
-*/
-
+  */
 void blosc_set_blocksize(size_t blocksize);
 
 
