@@ -49,8 +49,10 @@ All entries are little endian.
     :``1``:
         ``lz4``
     :``2``:
-        ``snappy``
+        ``lz4hc``
     :``3``:
+        ``snappy``
+    :``4``:
         ``zlib``
 
 :typesize:
