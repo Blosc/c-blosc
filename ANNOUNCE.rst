@@ -28,6 +28,11 @@ compressors have been added to Blosc:
   decompression speed is still pretty good, so it is a good candidate
   for read-only datasets.
 
+Blosc stores the compression library in its headers, so when the
+decompression time comes, the proper decompressor can be selected
+automatically for the task.  This actually fulfills the claim that
+Blosc was actually a meta-compressor instead of just a regular one.
+
 With this, you can select the compression library with the new
 function::
 
@@ -37,11 +42,11 @@ where you pass the library that you want to use (currently "blosclz",
 "lz4", "lz4hc", "snappy" and "zlib", but the list can grow in the
 future).
 
-Blosc stores the compression library in its headers, so when the
-decompression time comes, the proper decompressor can be selected
-automatically for the task.  This actually fulfills the statement that
-Blosc is actually a meta-compressor instead of just a regular
-compressor.
+You can get more info about compressors support in you Blosc build by
+using these functions::
+
+  char* blosc_list_compressors(void);
+  int blosc_get_complib_info(char *compressor, char **complib, char **version);
 
 For more info, please see the release notes in:
 

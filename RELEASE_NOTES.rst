@@ -40,6 +40,12 @@ where you pass the library that you want to use (currently "blosclz",
 "lz4", "lz4hc", "snappy" and "zlib", but the list can grow in the
 future).
 
+You can get more info about compressors support in you Blosc build by
+using these functions::
+
+  char* blosc_list_compressors(void);
+  int blosc_get_complib_info(char *compressor, char **complib, char **version);
+
 
 Changes from 1.2.2 to 1.2.3
 ===========================

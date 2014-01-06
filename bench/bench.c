@@ -168,7 +168,7 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   unsigned char *orig, *round;
 
   blosc_set_nthreads(nthreads);
-  if(blosc_set_compressor(compressor) != 0){
+  if(blosc_set_compressor(compressor) < 0){
     printf("Compiled w/o support for compressor: '%s', so sorry.\n",
            compressor);
     exit(1);
@@ -320,35 +320,22 @@ void *bench_wrap(void * args)
 
 void print_compress_info(void)
 {
-  char *names[BLOSC_MAX_SUPPORTED_FORMATS];
-  char *versions[BLOSC_MAX_SUPPORTED_FORMATS];
-  int mask;
+  char *name = NULL, *version = NULL;
+  int ret;
 
   printf("List of supported compressors in this build: %s\n",
          blosc_list_compressors());
 
   printf("Supported compression libraries:\n");
-  mask = blosc_get_complibs_info(names, versions);
+  ret = blosc_get_complib_info("blosclz", &name, &version);
+  if (ret >= 0) printf("  %s: %s\n", name, version);
+  ret = blosc_get_complib_info("lz4", &name, &version);
+  if (ret >= 0) printf("  %s: %s\n", name, version);
+  ret = blosc_get_complib_info("snappy", &name, &version);
+  if (ret >= 0) printf("  %s: %s\n", name, version);
+  ret = blosc_get_complib_info("zlib", &name, &version);
+  if (ret >= 0) printf("  %s: %s\n", name, version);
 
-  printf("  %s: %s\n",
-         names[BLOSC_BLOSCLZ_FORMAT],
-         versions[BLOSC_BLOSCLZ_FORMAT]);
-
-  if (mask & (BLOSC_LZ4_FORMAT + 1)) {
-      printf("  %s: %s\n",
-             names[BLOSC_LZ4_FORMAT],
-             versions[BLOSC_LZ4_FORMAT]);
-        }
-  if (mask & (BLOSC_SNAPPY_FORMAT + 1)) {
-      printf("  %s: %s\n",
-             names[BLOSC_SNAPPY_FORMAT],
-             versions[BLOSC_SNAPPY_FORMAT]);
-        }
-  if (mask & (BLOSC_ZLIB_FORMAT + 1)) {
-      printf("  %s: %s\n",
-             names[BLOSC_ZLIB_FORMAT],
-             versions[BLOSC_ZLIB_FORMAT]);
-        }
 }
 
 

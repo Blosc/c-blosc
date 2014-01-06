@@ -18,9 +18,9 @@
 
 #define BLOSC_VERSION_STRING   "1.3.0-rc2.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2014-01-02 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2014-01-06 #$"    /* date version */
 
-#define BLOSCLZ_VERSION_STRING   "1.0.0"
+#define BLOSCLZ_VERSION_STRING   "1.0.0" /* the internal compressor version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
@@ -53,13 +53,20 @@
 #define BLOSC_SNAPPY    3
 #define BLOSC_ZLIB      4
 
-/* The format IDs for compressors shipped with Blosc (< 8) */
-#define BLOSC_BLOSCLZ_FORMAT  0
-#define BLOSC_LZ4_FORMAT      1
-#define BLOSC_LZ4HC_FORMAT    1    /* LZ4HC and LZ4 share the same format */
-#define BLOSC_SNAPPY_FORMAT   2
-#define BLOSC_ZLIB_FORMAT     3
-#define BLOSC_MAX_SUPPORTED_FORMATS  4
+/* Codes for different compression libraries shipped with Blosc */
+#define BLOSC_BLOSCLZ_LIB   0
+#define BLOSC_LZ4_LIB       1
+#define BLOSC_SNAPPY_LIB    2
+#define BLOSC_ZLIB_LIB      3
+
+/* The format IDs for compressors shipped with Blosc */
+#define BLOSC_BLOSCLZ_FORMAT  BLOSC_BLOSCLZ_LIB
+#define BLOSC_LZ4_FORMAT      BLOSC_LZ4_LIB
+    /* LZ4HC and LZ4 share the same format */
+#define BLOSC_LZ4HC_FORMAT    BLOSC_LZ4_LIB
+#define BLOSC_SNAPPY_FORMAT   BLOSC_SNAPPY_LIB
+#define BLOSC_ZLIB_FORMAT     BLOSC_ZLIB_LIB
+
 
 /* The version formats for compressors shipped with Blosc */
 /* All versions here starts at 1 */
@@ -171,7 +178,7 @@ int blosc_set_nthreads(int nthreads);
   called, then "blosclz" will be used.
 
   In case the compressor is not recognized, it returns a -1, else it
-  returns 0.
+  returns the code for the compressor (>=0).
   */
 int blosc_set_compressor(char* compressor);
 
@@ -190,19 +197,17 @@ char* blosc_list_compressors(void);
 
 /**
   Get info from compression libraries included in the Blosc build.  In
-  `names` an array of pointers to complib strings is filled, while in
-  `versions` an array of pointers to complib version info strings is
-  filled.  The number of entries in `names` and `versions` should be
-  at least BLOSC_MAX_SUPPORTED_FORMATS.
+  `compressor` you pass the compressor that you want info from.  In
+  `complib` and `version` you get the compression library name and
+  version (if available) as output.
 
-  Contrarily to `blosc_list_compressor()` this functions leaks the
+  Contrarily to `blosc_list_compressors()` this functions leaks the
   strings returned, so please do not abuse it.
 
-  It returns a mask with the complibs found.
-
-  This function should always succeed.
+  If the compressor is supported, it returns the code for the library
+  (>=0).  If it is not supported, this function returns -1.
   */
-int blosc_get_complibs_info(char *names[], char *versions[]);
+int blosc_get_complib_info(char *compressor, char **complib, char **version);
 
 
 /**

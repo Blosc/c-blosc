@@ -1534,132 +1534,148 @@ int blosc_set_nthreads_(int nthreads_new)
   return nthreads_old;
 }
 
-int blosc_set_compressor(char *compressor_)
+char *clibcode_to_clib(code)
 {
-  int ret = 0;
+  if (code == BLOSC_BLOSCLZ_LIB) return strdup("BloscLZ");
+  if (code == BLOSC_LZ4_LIB) return strdup("LZ4");
+  if (code == BLOSC_SNAPPY_LIB) return strdup("Snappy");
+  if (code == BLOSC_ZLIB_LIB) return strdup("Zlib");
+  return NULL;
+}
 
-  /* Check if should initialize */
-  if (!init_lib) blosc_init();
-
-  /* Take global lock  */
-  pthread_mutex_lock(&global_comp_mutex);
+int compressor_to_clibcode(char *compressor_)
+{
+  int code = -1;
 
   if (strcmp(compressor_, "blosclz") == 0) {
-    compressor = BLOSC_BLOSCLZ;
+    code = BLOSC_BLOSCLZ_LIB;
+  }
+  else if (strcmp(compressor_, "lz4") == 0) {
+    code = BLOSC_LZ4_LIB;
+  }
+  else if (strcmp(compressor_, "lz4hc") == 0) {
+    code = BLOSC_LZ4_LIB;
+  }
+  else if (strcmp(compressor_, "snappy") == 0) {
+    code = BLOSC_SNAPPY_LIB;
+  }
+  if (strcmp(compressor_, "zlib") == 0) {
+    code = BLOSC_ZLIB_LIB;
+  }
+  return code;
+}
+
+int compressor_to_compcode(char *compressor_)
+{
+  int code = -1;
+
+  if (strcmp(compressor_, "blosclz") == 0) {
+    code = BLOSC_BLOSCLZ;
   }
 #if defined(HAVE_LZ4)
   else if (strcmp(compressor_, "lz4") == 0) {
-    compressor = BLOSC_LZ4;
+    code = BLOSC_LZ4;
   }
   else if (strcmp(compressor_, "lz4hc") == 0) {
-    compressor = BLOSC_LZ4HC;
+    code = BLOSC_LZ4HC;
   }
 #endif /*  HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
   else if (strcmp(compressor_, "snappy") == 0) {
-    compressor = BLOSC_SNAPPY;
+    code = BLOSC_SNAPPY;
   }
 #endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
   else if (strcmp(compressor_, "zlib") == 0) {
-    compressor = BLOSC_ZLIB;
+    code = BLOSC_ZLIB;
   }
 #endif /*  HAVE_ZLIB */
-  else {
-    ret = -1;
-  }
+
+return code;
+}
+
+int blosc_set_compressor(char *compressor_)
+{
+  int code;
+
+  /* Check if should initialize */
+  if (!init_lib) blosc_init();
+
+  code = compressor_to_compcode(compressor_);
+
+  /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+
+  compressor = code;
 
   /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
 
-  return ret;
+  return code;
 }
 
 char* blosc_list_compressors(void)
 {
   static int compressors_list_done = 0;
   static char ret[256];
+
   if (compressors_list_done) return ret;
   ret[0] = '\0';
   strcat(ret, "blosclz");
 #if defined(HAVE_LZ4)
-  strcat(ret, ", lz4");
-  strcat(ret, ", lz4hc");
+  strcat(ret, ",lz4");
+  strcat(ret, ",lz4hc");
 #endif /*  HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
-  strcat(ret, ", snappy");
+  strcat(ret, ",snappy");
 #endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
-  strcat(ret, ", zlib");
+  strcat(ret, ",zlib");
 #endif /*  HAVE_ZLIB */
   compressors_list_done = 1;
   return ret;
 }
 
-int blosc_get_complibs_info(char *names[], char *versions[])
+int blosc_get_complib_info(char *compressor_, char **complib, char **version)
 {
-  char *name, *version;
-  int mask = 0;
-  char *strclib, *strversion;
+  char *strclib = NULL, *strversion = NULL;
+  int compcode = -1, clibcode = -1;
 
-  /* Filling info for BloscLZ */
-  strclib = compressor_to_clib(BLOSC_BLOSCLZ);
-  name = malloc(strlen(strclib) + 1);
-  names[BLOSC_BLOSCLZ_FORMAT] = strcat(name, strclib);
-  strversion = BLOSCLZ_VERSION_STRING;
-  version = malloc(strlen(strversion) + 1);
-  versions[BLOSC_BLOSCLZ_FORMAT] = strcat(version, strversion);
-  mask |= (BLOSC_BLOSCLZ_FORMAT + 1);
+  compcode = compressor_to_compcode(compressor_);
+  clibcode = compressor_to_clibcode(compressor_);
+  strclib = strdup(clibcode_to_clib(clibcode));
 
+  /* complib version */
+  if (clibcode == BLOSC_BLOSCLZ_LIB) {
+    strversion = strdup(BLOSCLZ_VERSION_STRING);
+  }
 #if defined(HAVE_LZ4)
-  strclib = compressor_to_clib(BLOSC_LZ4);
-  mask |= (BLOSC_LZ4_FORMAT + 1);
-#else /*  HAVE_LZ4 */
-  strclib = "";
+  else if (clibcode == BLOSC_LZ4_LIB) {
+#if defined(LZ4_VERSION_STRING)
+    strversion = strdup(LZ4_VERSION_STRING);
+#else /* LZ4_VERSION_STRING */
+    strversion = strdup("unknown");
+#endif /* LZ4_VERSION_STRING */
+  }
 #endif /*  HAVE_LZ4 */
-  name = malloc(strlen(strclib) + 1);
-  names[BLOSC_LZ4_FORMAT] = strcat(name, strclib);
-#if defined(HAVE_LZ4)
-  strversion = "unknown";
-#else /*  HAVE_LZ4 */
-  strversion = "";
-#endif /*  HAVE_LZ4 */
-  version = malloc(strlen(strversion) + 1);
-  versions[BLOSC_LZ4_FORMAT] = strcat(version, strversion);
-
 #if defined(HAVE_SNAPPY)
-  strclib = compressor_to_clib(BLOSC_SNAPPY);
-  mask |= (BLOSC_SNAPPY_FORMAT + 1);
-#else /*  HAVE_SNAPPY */
-  strclib = "";
+  else if (clibcode == BLOSC_SNAPPY_LIB) {
+#if defined(SNAPPY_VERSION_STRING)
+    strversion = strdup(SNAPPY_VERSION_STRING);
+#else /* SNAPPY_VERSION_STRING */
+    strversion = strdup("unknown");
+#endif /* SNAPPY_VERSION_STRING */
+  }
 #endif /*  HAVE_SNAPPY */
-  name = malloc(strlen(strclib) + 1);
-  names[BLOSC_SNAPPY_FORMAT] = strcat(name, strclib);
-#if defined(HAVE_SNAPPY)
-  strversion = "unknown";
-#else /*  HAVE_SNAPPY */
-  strversion = "";
-#endif /*  HAVE_SNAPPY */
-  version = malloc(strlen(strversion) + 1);
-  versions[BLOSC_SNAPPY_FORMAT] = strcat(version, strversion);
-
 #if defined(HAVE_ZLIB)
-  strclib = compressor_to_clib(BLOSC_ZLIB);
-  mask |= (BLOSC_ZLIB_FORMAT + 1);
-#else /*  HAVE_ZLIB */
-  strclib = "";
+  else if (clibcode == BLOSC_ZLIB_LIB) {
+    strversion = strdup(ZLIB_VERSION);
+  }
 #endif /*  HAVE_ZLIB */
-  name = malloc(strlen(strclib) + 1);
-  names[BLOSC_ZLIB_FORMAT] = strcat(name, strclib);
-#if defined(HAVE_ZLIB)
-  strversion = ZLIB_VERSION;
-#else /*  HAVE_ZLIB */
-  strversion = "";
-#endif /*  HAVE_ZLIB */
-  version = malloc(strlen(strversion) + 1);
-  versions[BLOSC_ZLIB_FORMAT] = strcat(version, strversion);
 
-  return mask;
+  *complib = strclib;
+  *version = strversion;
+  return clibcode;
 }
 
 /* Free possible memory temporaries and thread resources */
