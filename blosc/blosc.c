@@ -1534,7 +1534,7 @@ int blosc_set_nthreads_(int nthreads_new)
   return nthreads_old;
 }
 
-char *clibcode_to_clib(code)
+char *clibcode_to_clib(int code)
 {
   if (code == BLOSC_BLOSCLZ_LIB) return strdup("BloscLZ");
   if (code == BLOSC_LZ4_LIB) return strdup("LZ4");
