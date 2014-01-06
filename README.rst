@@ -111,7 +111,7 @@ Using Windows and MINGW:
 
    $ gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
 
-Using Windows and MSVC (2008 or higher recommended):
+Using Windows and MSVC (2010 or higher recommended):
 
 .. code-block:: console
 
