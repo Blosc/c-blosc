@@ -66,12 +66,8 @@
 /*
  * Use inlined functions for supported systems.
  */
-#if defined(__GNUC__) || defined(__DMC__) || defined(__POCC__) || defined(__WATCOMC__) || defined(__SUNPRO_C)
-#define BLOSCLZ_INLINE inline
-#elif defined(__BORLANDC__) || defined(_MSC_VER) || defined(__LCC__)
-#define BLOSCLZ_INLINE __inline
-#else
-#define BLOSCLZ_INLINE
+#if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
+#define inline __inline  /* Visual C is not C99, but supports some kind of inline */
 #endif
 
 #define MAX_COPY       32
@@ -86,7 +82,7 @@
 #endif
 
 
-static BLOSCLZ_INLINE int32_t hash_function(uint8_t* p, uint8_t hash_log)
+static inline int32_t hash_function(uint8_t* p, uint8_t hash_log)
 {
   int32_t v;
 
