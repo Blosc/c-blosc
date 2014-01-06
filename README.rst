@@ -129,9 +129,9 @@ Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to add support for the LZ4, LZ4HC, Snappy or Zlib
-compressors, just add the symbols HAVE_LZ4, HAVE_LZ4HC, HAVE_SNAPPY
-and HAVE_ZLIB during compilation and add the libraries. For example,
-for compiling Blosc with Zlib support do:
+compressors, just add the symbols HAVE_LZ4 (will include both LZ4 and
+LZ4HC), HAVE_SNAPPY and HAVE_ZLIB during compilation and add the
+libraries. For example, for compiling Blosc with Zlib support do:
 
 .. code-block:: console
 

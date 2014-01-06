@@ -186,9 +186,10 @@ int blosc_set_compressor(char* compressor);
 /**
   Get a list of compressors supported in the Blosc build.  The
   returned value is a string with a concatenation of "blosclz", "lz4",
-  "lz4hc", "snappy" and "zlib".
+  "lz4hc", "snappy" or "zlib", depending on which ones are present in
+  the build.
 
-  This function does not leak. 
+  This function does not leak.
 
   This function should always succeed.
   */
