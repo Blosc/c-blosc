@@ -3,6 +3,8 @@
 #
 # Available options:
 #
+#   PREFER_EXTERNAL_COMPLIBS: default ON
+#       when found, use the installed compression libs instead of included sources
 #   BUILD_STATIC: default ON
 #       build the static version of the Blosc library
 #   BUILD_HDF5_FILTER: default OFF
@@ -32,8 +34,6 @@
 #   TEST_INCLUDE_BENCH_DEBUGSUITE: default OFF
 #       add a test that runs the benchmark program passing "debugsuite"
 #       as first parameter
-#   BENCH_N_THREADS: default 4
-#       number of threads used to run the benchmark program during tests
 #
 # Components:
 #
@@ -60,6 +60,8 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+
 message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
+option(PREFER_EXTERNAL_COMPLIBS
+    "When found, use the installed compression libs instead of included sources." ON)
 option(BUILD_STATIC
     "Build a static version of the blosc library." ON)
 option(BUILD_HDF5_FILTER
@@ -71,22 +73,34 @@ option(BUILD_BENCHMARKS
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(LZ4)
+
+if(NOT PREFER_EXTERNAL_COMPLIBS)
+    message(STATUS "Finding external libraries disabled.  Using internal sources.")
+endif(NOT PREFER_EXTERNAL_COMPLIBS)
+
+
+if(PREFER_EXTERNAL_COMPLIBS)
+    find_package(LZ4)
+endif(PREFER_EXTERNAL_COMPLIBS)
 # HAVE_LZ4 will be set to true because even if the library is
 # not found, we will use the included sources for it
 set(HAVE_LZ4 TRUE)
 
-find_package(Snappy)
+if(PREFER_EXTERNAL_COMPLIBS)
+    find_package(Snappy)
+endif(PREFER_EXTERNAL_COMPLIBS)
 # HAVE_SNAPPY will be set to true because even if the library is not found,
 # we will use the included sources for it
 set(HAVE_SNAPPY TRUE)
 
 # import the ZLIB_ROOT environment variable to help finding the zlib library
-set(ZLIB_ROOT $ENV{ZLIB_ROOT})
-find_package( ZLIB )
-if (NOT ZLIB_FOUND )
-    message(STATUS "No zlib found.  Using internal sources.")
-endif (NOT ZLIB_FOUND )
+if(PREFER_EXTERNAL_COMPLIBS)
+    set(ZLIB_ROOT $ENV{ZLIB_ROOT})
+    find_package( ZLIB )
+    if (NOT ZLIB_FOUND )
+        message(STATUS "No zlib found.  Using internal sources.")
+    endif (NOT ZLIB_FOUND )
+endif(PREFER_EXTERNAL_COMPLIBS)
 # HAVE_ZLIB will be set to true because even if the library is not found,
 # we will use the included sources for it
 set(HAVE_ZLIB TRUE)

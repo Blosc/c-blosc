@@ -191,10 +191,10 @@ CMAKE_INSTALL_PREFIX.
 Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib) with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The CMake files in Blosc as configured to automatically detect other
-compressors like LZ4, LZ4HC, Snappy or Zlib, so as long as the libraries
-and the header files for these libraries are accessible, these will be
-used by default.
+The CMake files in Blosc are configured to automatically detect other
+compressors like LZ4, LZ4HC, Snappy or Zlib by default.  So as long as
+the libraries and the header files for these libraries are accessible,
+these will be used by default.
 
 However, the full sources for LZ4, LZ4HC, Snappy and Zlib have been
 included in Blosc too. So, in general, you should not worry about not
@@ -208,6 +208,14 @@ although on Windows, you can help CMake to find it by setting the
 environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
 directories are. Also, make sure that Zlib DDL library is in your
 '\Windows' directory.
+
+In addition, if you want to force Blosc to use the include compression
+libraries instead of trying to find the libraries in the system first,
+you can switch off the PREFER_EXTERNAL_COMPLIBS CMake option:
+
+.. code-block:: console
+
+  $ cmake -DPREFER_EXTERNAL_COMPLIBS=OFF ..
 
 Mac OSX troubleshooting
 =======================
