@@ -1637,10 +1637,9 @@ char* blosc_list_compressors(void)
 
 int blosc_get_complib_info(char *compressor_, char **complib, char **version)
 {
-  char *strclib = NULL, *strversion = NULL;
-  int compcode = -1, clibcode = -1;
+  char *strclib, *strversion = NULL;
+  int clibcode;
 
-  compcode = compressor_to_compcode(compressor_);
   clibcode = compressor_to_clibcode(compressor_);
   strclib = strdup(clibcode_to_clib(clibcode));
 
