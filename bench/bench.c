@@ -145,12 +145,12 @@ void init_buffer(void *src, int size, int rshift) {
   /* Initialize the original buffer */
   for (i = 0; i < size/sizeof(int); ++i) {
     /* Choose one below */
-    //_src[i] = 0;
-    //_src[i] = 0x01010101;
-    //_src[i] = 0x01020304;
-    //_src[i] = i * 1/.3;
-    //_src[i] = i;
-    //_src[i] = rand() >> (32-rshift);
+    /* _src[i] = 0;
+     * _src[i] = 0x01010101;
+     * _src[i] = 0x01020304;
+     * _src[i] = i * 1/.3;
+     * _src[i] = i;
+     * _src[i] = rand() >> (32-rshift); */
     _src[i] = get_value(i, rshift);
   }
 }
