@@ -247,14 +247,13 @@ static int32_t sw32(int32_t a)
 /* Convert the compressor code into its compression lib */
 static char* compressor_to_clib(int compressor)
 {
-  static char ret[32];
-  if (compressor == BLOSC_BLOSCLZ) return strcpy(ret, "BloscLZ");
-  else if (compressor == BLOSC_LZ4) return strcpy(ret, "LZ4");
-  else if (compressor == BLOSC_LZ4HC) return strcpy(ret, "LZ4");
-  else if (compressor == BLOSC_SNAPPY) return strcpy(ret, "Snappy");
-  else if (compressor == BLOSC_ZLIB) return strcpy(ret, "Zlib");
+  if (compressor == BLOSC_BLOSCLZ) return strdup("BloscLZ");
+  else if (compressor == BLOSC_LZ4) return strdup("LZ4");
+  else if (compressor == BLOSC_LZ4HC) return strdup("LZ4");
+  else if (compressor == BLOSC_SNAPPY) return strdup("Snappy");
+  else if (compressor == BLOSC_ZLIB) return strdup("Zlib");
   /* We should never reach this point */
-  return strcpy(ret, "Unknown (please report this to the maintainers)");
+  return strdup("Unknown (please report this to the maintainers)");
 }
 
 #if defined(HAVE_LZ4)
