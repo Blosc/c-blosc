@@ -46,18 +46,24 @@
 #define BLOSC_DOSHUFFLE 0x1
 #define BLOSC_MEMCPYED  0x2
 
-/* Codes for different compressors shipped with Blosc */
+/* Codes for the different compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ   0
 #define BLOSC_LZ4       1
 #define BLOSC_LZ4HC     2
 #define BLOSC_SNAPPY    3
 #define BLOSC_ZLIB      4
 
-/* Codes for different compression libraries shipped with Blosc */
+/* Codes for the different compression libraries shipped with Blosc */
 #define BLOSC_BLOSCLZ_LIB   0
 #define BLOSC_LZ4_LIB       1
 #define BLOSC_SNAPPY_LIB    2
 #define BLOSC_ZLIB_LIB      3
+
+/* Names for the different compression libraries shipped with Blosc */
+#define BLOSC_BLOSCLZ_LIBNAME   "BloscLZ"
+#define BLOSC_LZ4_LIBNAME       "LZ4"
+#define BLOSC_SNAPPY_LIBNAME    "Snappy"
+#define BLOSC_ZLIB_LIBNAME      "Zlib"
 
 /* The format IDs for compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ_FORMAT  BLOSC_BLOSCLZ_LIB
@@ -189,8 +195,6 @@ int blosc_set_compressor(char* compressor);
   "lz4hc", "snappy" or "zlib", depending on which ones are present in
   the build.
 
-  This function does not leak.
-
   This function should always succeed.
   */
 char* blosc_list_compressors(void);
@@ -201,9 +205,6 @@ char* blosc_list_compressors(void);
   `compressor` you pass the compressor that you want info from.  In
   `complib` and `version` you get the compression library name and
   version (if available) as output.
-
-  Contrarily to `blosc_list_compressors()` this functions leaks the
-  strings returned, so please do not abuse it.
 
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.
