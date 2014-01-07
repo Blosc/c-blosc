@@ -1535,6 +1535,7 @@ int blosc_set_nthreads_(int nthreads_new)
   return nthreads_old;
 }
 
+/* Return the library code associated with the compressor code */
 static char *clibcode_to_clib(int code)
 {
   if (code == BLOSC_BLOSCLZ_LIB) return BLOSC_BLOSCLZ_LIBNAME;
@@ -1544,50 +1545,45 @@ static char *clibcode_to_clib(int code)
   return NULL;			/* should never be reached */
 }
 
+/* Return the library code associated with the compressor */
 static int compressor_to_clibcode(char *compressor_)
 {
-  int code = -1;
-
-  if (strcmp(compressor_, "blosclz") == 0) {
-    code = BLOSC_BLOSCLZ_LIB;
-  }
-  else if (strcmp(compressor_, "lz4") == 0) {
-    code = BLOSC_LZ4_LIB;
-  }
-  else if (strcmp(compressor_, "lz4hc") == 0) {
-    code = BLOSC_LZ4_LIB;
-  }
-  else if (strcmp(compressor_, "snappy") == 0) {
-    code = BLOSC_SNAPPY_LIB;
-  }
-  if (strcmp(compressor_, "zlib") == 0) {
-    code = BLOSC_ZLIB_LIB;
-  }
-  return code;
+  if (strcmp(compressor_, BLOSC_BLOSCLZ_COMPNAME) == 0)
+    return BLOSC_BLOSCLZ_LIB;
+  if (strcmp(compressor_, BLOSC_LZ4_COMPNAME) == 0)
+    return BLOSC_LZ4_LIB;
+  if (strcmp(compressor_, BLOSC_LZ4HC_COMPNAME) == 0)
+    return BLOSC_LZ4_LIB;
+  if (strcmp(compressor_, BLOSC_SNAPPY_COMPNAME) == 0)
+    return BLOSC_SNAPPY_LIB;
+  if (strcmp(compressor_, BLOSC_ZLIB_COMPNAME) == 0)
+    return BLOSC_ZLIB_LIB;
+  return -1;
 }
 
-int compressor_to_compcode(char *compressor_)
+/* Return the code for the compressor and -1 if it is not available */
+static int compressor_to_compcode(char *compressor_)
 {
   int code = -1;
 
-  if (strcmp(compressor_, "blosclz") == 0) {
-    code = BLOSC_BLOSCLZ;
+  if (strcmp(compressor_, BLOSC_BLOSCLZ_COMPNAME) == 0) {
+    return BLOSC_BLOSCLZ;
   }
 #if defined(HAVE_LZ4)
-  else if (strcmp(compressor_, "lz4") == 0) {
+  else if (strcmp(compressor_, BLOSC_LZ4_COMPNAME) == 0) {
     code = BLOSC_LZ4;
   }
-  else if (strcmp(compressor_, "lz4hc") == 0) {
+  else if (strcmp(compressor_, BLOSC_LZ4HC_COMPNAME) == 0) {
     code = BLOSC_LZ4HC;
   }
 #endif /*  HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
-  else if (strcmp(compressor_, "snappy") == 0) {
+  else if (strcmp(compressor_, BLOSC_SNAPPY_COMPNAME) == 0) {
     code = BLOSC_SNAPPY;
   }
 #endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
-  else if (strcmp(compressor_, "zlib") == 0) {
+  else if (strcmp(compressor_, BLOSC_ZLIB_COMPNAME) == 0) {
     code = BLOSC_ZLIB;
   }
 #endif /*  HAVE_ZLIB */
@@ -1622,16 +1618,16 @@ char* blosc_list_compressors(void)
 
   if (compressors_list_done) return ret;
   ret[0] = '\0';
-  strcat(ret, "blosclz");
+  strcat(ret, BLOSC_BLOSCLZ_COMPNAME);
 #if defined(HAVE_LZ4)
-  strcat(ret, ",lz4");
-  strcat(ret, ",lz4hc");
+  strcat(ret, ","); strcat(ret, BLOSC_LZ4_COMPNAME);
+  strcat(ret, ","); strcat(ret, BLOSC_LZ4HC_COMPNAME);
 #endif /*  HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
-  strcat(ret, ",snappy");
+  strcat(ret, ","); strcat(ret, BLOSC_SNAPPY_COMPNAME);
 #endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
-  strcat(ret, ",zlib");
+  strcat(ret, ","); strcat(ret, BLOSC_ZLIB_COMPNAME);
 #endif /*  HAVE_ZLIB */
   compressors_list_done = 1;
   return ret;

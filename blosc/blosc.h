@@ -53,6 +53,13 @@
 #define BLOSC_SNAPPY    3
 #define BLOSC_ZLIB      4
 
+/* Names for the different compressors shipped with Blosc */
+#define BLOSC_BLOSCLZ_COMPNAME   "blosclz"
+#define BLOSC_LZ4_COMPNAME       "lz4"
+#define BLOSC_LZ4HC_COMPNAME     "lz4hc"
+#define BLOSC_SNAPPY_COMPNAME    "snappy"
+#define BLOSC_ZLIB_COMPNAME      "zlib"
+
 /* Codes for the different compression libraries shipped with Blosc */
 #define BLOSC_BLOSCLZ_LIB   0
 #define BLOSC_LZ4_LIB       1
