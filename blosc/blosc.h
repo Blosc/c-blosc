@@ -72,7 +72,7 @@
 #define BLOSC_SNAPPY_LIBNAME    "Snappy"
 #define BLOSC_ZLIB_LIBNAME      "Zlib"
 
-/* The format IDs for compressors shipped with Blosc */
+/* The codes for compressor formats shipped with Blosc (code must be < 8) */
 #define BLOSC_BLOSCLZ_FORMAT  BLOSC_BLOSCLZ_LIB
 #define BLOSC_LZ4_FORMAT      BLOSC_LZ4_LIB
     /* LZ4HC and LZ4 share the same format */
@@ -190,17 +190,36 @@ int blosc_set_nthreads(int nthreads);
   "lz4", "lz4hc", "snappy" and "zlib".  If this function is not
   called, then "blosclz" will be used.
 
-  In case the compressor is not recognized, it returns a -1, else it
-  returns the code for the compressor (>=0).
+  In case the compressor is not recognized, or there is not support
+  for it in this build, it returns a -1.  Else it returns the code for
+  the compressor (>=0).
   */
-int blosc_set_compressor(char* compressor);
+int blosc_set_compressor(char* compname);
 
 
 /**
-  Get a list of compressors supported in the Blosc build.  The
+ Return the compressor name associated with the compressor code.
+
+ If the compressor code is not recognized, or there is not support for
+ it in this build, NULL is returned instead.
+ */
+char *compcode_to_compname(int compcode);
+
+
+/**
+ Return the compressor code associated with the compressor name.
+
+ If the compressor name is not recognized, or there is not support for
+ it in this build, NULL is returned instead.
+ */
+int compname_to_compcode(char *compname);
+
+
+/**
+  Get a list of compressors supported in the current build.  The
   returned value is a string with a concatenation of "blosclz", "lz4",
-  "lz4hc", "snappy" or "zlib", depending on which ones are present in
-  the build.
+  "lz4hc", "snappy" or "zlib" separated by commas, depending on which
+  ones are present in the build.
 
   This function should always succeed.
   */
@@ -208,15 +227,15 @@ char* blosc_list_compressors(void);
 
 
 /**
-  Get info from compression libraries included in the Blosc build.  In
-  `compressor` you pass the compressor that you want info from.  In
-  `complib` and `version` you get the compression library name and
+  Get info from compression libraries included in the current build.
+  In `compname` you pass the compressor name that you want info from.
+  In `complib` and `version` you get the compression library name and
   version (if available) as output.
 
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.
   */
-int blosc_get_complib_info(char *compressor, char **complib, char **version);
+int blosc_get_complib_info(char *compname, char **complib, char **version);
 
 
 /**
