@@ -203,7 +203,7 @@ int blosc_set_compressor(char* compname);
  If the compressor code is not recognized, or there is not support for
  it in this build, NULL is returned instead.
  */
-char *compcode_to_compname(int compcode);
+char *blosc_compcode_to_compname(int compcode);
 
 
 /**
@@ -212,7 +212,7 @@ char *compcode_to_compname(int compcode);
  If the compressor name is not recognized, or there is not support for
  it in this build, NULL is returned instead.
  */
-int compname_to_compcode(char *compname);
+int blosc_compname_to_compcode(char *compname);
 
 
 /**

@@ -280,7 +280,7 @@ static char *clibcode_to_clibname(int clibcode)
  */
 
 /* Get the compressor name associated with the compressor code */
-char *compcode_to_compname(int compcode)
+char *blosc_compcode_to_compname(int compcode)
 {
   char *compname = NULL;      	/* NULL means non-existent compressor code */
 
@@ -305,7 +305,7 @@ char *compcode_to_compname(int compcode)
 }
 
 /* Get the compressor code for the compressor name. -1 if it is not available */
-int compname_to_compcode(char *compname)
+int blosc_compname_to_compcode(char *compname)
 {
   int code = -1;
 
@@ -504,7 +504,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
     #endif /*  HAVE_ZLIB */
 
     else {
-      compname = compcode_to_compname(compressor);
+      compname = blosc_compcode_to_compname(compressor);
       fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
       fprintf(stderr, "compression support.  Please use one having it.");
       return -5;    /* signals no compression support */
@@ -602,7 +602,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
       #endif /*  HAVE_ZLIB */
 
       else {
-        compname = compcode_to_compname(compressor_format);
+        compname = blosc_compcode_to_compname(compressor_format);
         fprintf(stderr,
                 "Blosc has not been compiled with decompression "
                 "support for '%s' format. ", compname);
@@ -1619,7 +1619,7 @@ int blosc_set_compressor(char *compname)
   /* Check if should initialize */
   if (!init_lib) blosc_init();
 
-  code = compname_to_compcode(compname);
+  code = blosc_compname_to_compcode(compname);
 
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);

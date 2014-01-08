@@ -45,8 +45,8 @@ future).
 You can map between compressor names and its codes for the current
 build through these functions:
 
-  char *compcode_to_compname(int compcode);
-  int compname_to_compcode(char *compname);
+  char *blosc_compcode_to_compname(int compcode);
+  int blosc_compname_to_compcode(char *compname);
 
 You can get more info about compressors supported for the current
 build by using these functions::
