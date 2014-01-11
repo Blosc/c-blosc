@@ -16,9 +16,9 @@
 #define BLOSC_VERSION_MINOR    3    /* for minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.3.0-rc3.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.3.0-rc3"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2014-01-06 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2014-01-11 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.0.1"   /* the internal compressor version */
 
