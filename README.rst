@@ -87,8 +87,8 @@ Other advantages of Blosc are:
 When taken together, all these features set Blosc apart from other
 similar solutions.
 
-Compiling your application with Blosc
-=====================================
+Compiling your application with a minimalistic Blosc
+====================================================
 
 The minimal Blosc consists of the next files (in blosc/ directory)::
 
@@ -166,13 +166,15 @@ directory (e.g. '/usr' or '/usr/local'):
 
   $ cmake -DCMAKE_INSTALL_PREFIX=your_install_prefix_directory ..
 
-Please note that configuration can also be performed using UI tools
-provided by CMake_ (ccmake or cmake-gui):
+CMake allows to configure Blosc in many different ways, like prefering
+internal or external sources for compressors or enabling/disabling
+them.  Please note that configuration can also be performed using UI
+tools provided by CMake_ (ccmake or cmake-gui):
 
 .. code-block:: console
 
-  $ ccmake ..
-  $ cmake-gui ..
+  $ ccmake ..      # run a curses-based interface
+  $ cmake-gui ..   # run a graphical interface
 
 Build, test and install Blosc:
 
@@ -209,13 +211,20 @@ environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
 directories are. Also, make sure that Zlib DDL library is in your
 '\Windows' directory.
 
-In addition, if you want to force Blosc to use the include compression
-libraries instead of trying to find the libraries in the system first,
-you can switch off the PREFER_EXTERNAL_COMPLIBS CMake option:
+If you want to force Blosc to use the include compression libraries
+instead of trying to find the libraries in the system first, you can
+switch off the PREFER_EXTERNAL_COMPLIBS CMake option:
 
 .. code-block:: console
 
   $ cmake -DPREFER_EXTERNAL_COMPLIBS=OFF ..
+
+You can also disable support for some compression libraries:
+
+.. code-block:: console
+
+  $ cmake -DDEACTIVATE_SNAPPY=ON ..
+
 
 Mac OSX troubleshooting
 =======================
