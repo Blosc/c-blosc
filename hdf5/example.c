@@ -9,13 +9,13 @@
 
     To compile this program:
 
-    h5cc [-DH5_USE_16_API] -msse2 ../blosc/*.c blosc_filter.c example.c \
+    h5cc [-DH5_USE_16_API] -lblosc blosc_filter.c example.c \
          -o example -lpthread
 
     To run:
 
     $ ./example
-    Blosc version info: 1.1.1 ($Date:: 2010-10-01 #$)
+    Blosc version info: 1.3.0 ($Date:: 2014-01-11 #$)
     Success!
     $ h5ls -v example.h5
     Opened "example.h5" with sec2 driver.
@@ -23,8 +23,8 @@
         Location:  1:800
         Links:     1
         Chunks:    {1, 100, 100} 40000 bytes
-        Storage:   4000000 logical bytes, 142097 allocated bytes, 2814.98% utilization
-        Filter-0:  blosc-32001 OPT {1, 2, 4, 40000, 4, 1}
+        Storage:   4000000 logical bytes, 126002 allocated bytes, 3174.55% utilization
+        Filter-0:  blosc-32001 OPT {2, 2, 4, 40000, 4, 1, 2}
         Type:      native float
 
 */
@@ -45,7 +45,7 @@ int main(){
     const hsize_t chunkshape[] = CHUNKSHAPE;
     char *version, *date;
     int r, i;
-    unsigned int cd_values[6];
+    unsigned int cd_values[7];
     int return_code = 1;
 
     hid_t fid, sid, dset, plist = 0;
@@ -79,11 +79,12 @@ int main(){
 
     /* But you can also taylor Blosc parameters to your needs */
     /* 0 to 3 (inclusive) param slots are reserved. */
-    cd_values[4] = 4;       /* compression level for BloscLZ */
+    cd_values[4] = 4;       /* compression level */
     cd_values[5] = 1;       /* 0: shuffle not active, 1: shuffle active */
+    cd_values[6] = BLOSC_LZ4HC; /* the actual compressor to use */
 
-    /* Set the filter with 6 params */
-    r = H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 6, cd_values);
+    /* Set the filter with 7 params */
+    r = H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 7, cd_values);
 
     if(r<0) goto failed;
 

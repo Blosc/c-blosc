@@ -17,8 +17,9 @@ value is returned.
 An example C program ("example.c") is included which demonstrates the
 proper use of the filter.
 
-This filter has been tested against HDF5 versions 1.6.5 through 1.8.5.  It
-is released under the MIT license (see LICENSE.txt for details).
+This filter has been tested against HDF5 versions 1.6.5 through
+1.8.10.  It is released under the MIT license (see LICENSE.txt for
+details).
 
 
 Compiling
@@ -27,25 +28,31 @@ Compiling
 The filter consists of a single '.c' source file and '.h' header,
 along with an embedded version of the BLOSC compression library.
 Also, as Blosc uses SSE2 and multithreading, you must remember to use
-special flags and libraries to make sure that these features are used.
+some special flags and libraries to make sure that these features are
+used (only necessary when compiling Blosc from sources).
 
 To compile using GCC on UNIX:
 
   gcc -O3 -msse2 -lhdf5 ../blosc/*.c blosc_filter.c \
-        myprog.c -o myprog -lpthread
+        example.c -o example -lpthread
 
-To compile using MINGW on Windows:
+or, if you have the Blosc library already installed (recommended):
 
-  gcc -O3 -msse2 -lhdf5 ..\blosc\*.c blosc_filter.c myprog.c -o myprog
+  gcc -O3 -lhdf5 -lblosc blosc_filter.c example.c -o example -lpthread
+
+Using MINGW on Windows:
+
+  gcc -O3 -lhdf5 -lblosc blosc_filter.c example.c -o example
 
 Using Windows and MSVC (2008 or higher recommended):
 
-  cl /Ox /Femyprog.exe myprog.c ..\blosc\*.c blosc_filter.c
+  cl /Ox /Feexample.exe example.c ..\blosc\*.c blosc_filter.c
 
 Intel ICC compilers should work too.
 
-For support for other compressors (LZ4, LZ4HC, Snappy or Zlib) see the
-README file in the main Blosc directory.
+For activating the support for other compressors than the integrated
+BloscLZ (like LZ4, LZ4HC, Snappy or Zlib) see the README file in the
+main Blosc directory.
 
 
 Acknowledgments
