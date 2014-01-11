@@ -194,25 +194,26 @@ int blosc_set_nthreads(int nthreads);
   for it in this build, it returns a -1.  Else it returns the code for
   the compressor (>=0).
   */
-int blosc_set_compressor(char* compname);
+int blosc_set_compressor(const char* compname);
 
 
 /**
- Return the compressor name associated with the compressor code.
+  Get the `compname` associated with the `compcode`.
 
- If the compressor code is not recognized, or there is not support for
- it in this build, NULL is returned instead.
+  If the compressor code is not recognized, or there is not support
+  for it in this build, -1 is returned.  Else, the compressor code is
+  returned.
  */
-char *blosc_compcode_to_compname(int compcode);
+int blosc_compcode_to_compname(int compcode, char **compname);
 
 
 /**
- Return the compressor code associated with the compressor name.
+  Return the compressor code associated with the compressor name.
 
- If the compressor name is not recognized, or there is not support for
- it in this build, NULL is returned instead.
+  If the compressor name is not recognized, or there is not support
+  for it in this build, -1 is returned instead.
  */
-int blosc_compname_to_compcode(char *compname);
+int blosc_compname_to_compcode(const char *compname);
 
 
 /**
@@ -220,6 +221,9 @@ int blosc_compname_to_compcode(char *compname);
   returned value is a string with a concatenation of "blosclz", "lz4",
   "lz4hc", "snappy" or "zlib" separated by commas, depending on which
   ones are present in the build.
+
+  This function does not leak, so you should not free() the returned
+  list.
 
   This function should always succeed.
   */
@@ -231,6 +235,10 @@ char* blosc_list_compressors(void);
   In `compname` you pass the compressor name that you want info from.
   In `complib` and `version` you get the compression library name and
   version (if available) as output.
+
+  In `complib` and `version` you get a pointer to the compressor name
+  and the version in string format respectively.  After using the name
+  and version, you should free() them so as to avoid leaks.
 
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.

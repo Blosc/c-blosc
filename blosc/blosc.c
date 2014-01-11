@@ -249,7 +249,7 @@ static int32_t sw32(int32_t a)
  */
 
 /* Return the library code associated with the compressor name */
-static int compname_to_clibcode(char *compname)
+static int compname_to_clibcode(const char *compname)
 {
   if (strcmp(compname, BLOSC_BLOSCLZ_COMPNAME) == 0)
     return BLOSC_BLOSCLZ_LIB;
@@ -280,34 +280,50 @@ static char *clibcode_to_clibname(int clibcode)
  */
 
 /* Get the compressor name associated with the compressor code */
-char *blosc_compcode_to_compname(int compcode)
+int blosc_compcode_to_compname(int compcode, char **compname)
 {
-  char *compname = NULL;      	/* NULL means non-existent compressor code */
+  int code = -1;    /* -1 means non-existent compressor code */
+  char *name = NULL;
 
+  /* Map the compressor code */
   if (compcode == BLOSC_BLOSCLZ)
-    compname = BLOSC_BLOSCLZ_COMPNAME;
+    name = BLOSC_BLOSCLZ_COMPNAME;
+  else if (compcode == BLOSC_LZ4)
+    name = BLOSC_LZ4_COMPNAME;
+  else if (compcode == BLOSC_LZ4HC)
+    name = BLOSC_LZ4HC_COMPNAME;
+  else if (compcode == BLOSC_SNAPPY)
+    name = BLOSC_SNAPPY_COMPNAME;
+  else if (compcode == BLOSC_ZLIB)
+    name = BLOSC_ZLIB_COMPNAME;
+
+  *compname = name;
+
+  /* Guess if there is support for this code */
+  if (compcode == BLOSC_BLOSCLZ)
+    code = BLOSC_BLOSCLZ;
 #if defined(HAVE_LZ4)
   else if (compcode == BLOSC_LZ4)
-    compname = BLOSC_LZ4_COMPNAME;
+    code = BLOSC_LZ4;
   else if (compcode == BLOSC_LZ4HC)
-    compname = BLOSC_LZ4HC_COMPNAME;
+    code = BLOSC_LZ4HC;
 #endif /*  HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
   else if (compcode == BLOSC_SNAPPY)
-    compname = BLOSC_SNAPPY_COMPNAME;
+    code = BLOSC_SNAPPY;
 #endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
   else if (compcode == BLOSC_ZLIB)
-    compname = BLOSC_ZLIB_COMPNAME;
+    code = BLOSC_ZLIB;
 #endif /*  HAVE_ZLIB */
 
-  return strdup(compname);
+  return code;
 }
 
 /* Get the compressor code for the compressor name. -1 if it is not available */
-int blosc_compname_to_compcode(char *compname)
+int blosc_compname_to_compcode(const char *compname)
 {
-  int code = -1;
+  int code = -1;  /* -1 means non-existent compressor code */
 
   if (strcmp(compname, BLOSC_BLOSCLZ_COMPNAME) == 0) {
     code = BLOSC_BLOSCLZ;
@@ -504,7 +520,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
     #endif /*  HAVE_ZLIB */
 
     else {
-      compname = blosc_compcode_to_compname(compressor);
+      blosc_compcode_to_compname(compressor, &compname);
       fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
       fprintf(stderr, "compression support.  Please use one having it.");
       return -5;    /* signals no compression support */
@@ -600,9 +616,8 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
                                       (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_ZLIB */
-
       else {
-        compname = blosc_compcode_to_compname(compressor_format);
+        blosc_compcode_to_compname(compressor_format, &compname);
         fprintf(stderr,
                 "Blosc has not been compiled with decompression "
                 "support for '%s' format. ", compname);
@@ -1612,7 +1627,7 @@ int blosc_set_nthreads_(int nthreads_new)
   return nthreads_old;
 }
 
-int blosc_set_compressor(char *compname)
+int blosc_set_compressor(const char *compname)
 {
   int code;
 
@@ -1637,7 +1652,7 @@ char* blosc_list_compressors(void)
   static int compressors_list_done = 0;
   static char ret[256];
 
-  if (compressors_list_done) return strdup(ret);
+  if (compressors_list_done) return ret;
   ret[0] = '\0';
   strcat(ret, BLOSC_BLOSCLZ_COMPNAME);
 #if defined(HAVE_LZ4)
@@ -1651,13 +1666,15 @@ char* blosc_list_compressors(void)
   strcat(ret, ","); strcat(ret, BLOSC_ZLIB_COMPNAME);
 #endif /*  HAVE_ZLIB */
   compressors_list_done = 1;
-  return strdup(ret);
+  return ret;
 }
 
 int blosc_get_complib_info(char *compname, char **complib, char **version)
 {
   int clibcode;
-  char *clibname, *clibversion = "unknown";
+  char *clibname;
+  char *clibversion = "unknown";
+  char *sbuffer[256];
 
   clibcode = compname_to_clibcode(compname);
   clibname = clibcode_to_clibname(clibcode);
@@ -1678,6 +1695,10 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
 #if defined(SNAPPY_VERSION_STRING)
     clibversion = SNAPPY_VERSION_STRING;
 #endif /* SNAPPY_VERSION_STRING */
+#if defined(SNAPPY_VERSION)
+    sprintf(sbuffer, "%d.%d.%d", SNAPPY_MAJOR, SNAPPY_MINOR, SNAPPY_PATCHLEVEL);
+    clibversion = sbuffer;
+#endif /* SNAPPY_VERSION */
   }
 #endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)

@@ -310,7 +310,7 @@ int get_nchunks(int size_, int ws) {
   return nchunks;
 }
 
-void *bench_wrap(void * args) 
+void *bench_wrap(void * args)
 {
     struct bench_wrap_args * arg = (struct bench_wrap_args *) args;
     do_bench(arg->compressor, arg->nthreads, arg->size, arg->elsize,
