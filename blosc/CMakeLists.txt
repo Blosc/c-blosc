@@ -4,26 +4,32 @@ add_definitions(-DUSING_CMAKE)
 set(INTERNAL_LIBS ${CMAKE_SOURCE_DIR}/internal-complibs)
 
 # includes
-if (LZ4_FOUND)
-    include_directories( ${LZ4_INCLUDE_DIR} )
-else(LZ4_FOUND)
-   set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}/lz4-r110)
-   include_directories( ${LZ4_LOCAL_DIR} )
-endif(LZ4_FOUND)
+if(NOT DEACTIVATE_LZ4)
+    if (LZ4_FOUND)
+        include_directories( ${LZ4_INCLUDE_DIR} )
+    else(LZ4_FOUND)
+        set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}/lz4-r110)
+        include_directories( ${LZ4_LOCAL_DIR} )
+    endif(LZ4_FOUND)
+endif(NOT DEACTIVATE_LZ4)
 
-if (SNAPPY_FOUND)
-    include_directories( ${SNAPPY_INCLUDE_DIR} )
-else(SNAPPY_FOUND)
-   set(SNAPPY_LOCAL_DIR ${INTERNAL_LIBS}/snappy-1.1.1)
-   include_directories( ${SNAPPY_LOCAL_DIR} )
-endif(SNAPPY_FOUND)
+if(NOT DEACTIVATE_SNAPPY)
+    if (SNAPPY_FOUND)
+        include_directories( ${SNAPPY_INCLUDE_DIR} )
+    else(SNAPPY_FOUND)
+        set(SNAPPY_LOCAL_DIR ${INTERNAL_LIBS}/snappy-1.1.1)
+        include_directories( ${SNAPPY_LOCAL_DIR} )
+    endif(SNAPPY_FOUND)
+endif(NOT DEACTIVATE_SNAPPY)
 
-if (ZLIB_FOUND)
-    include_directories( ${ZLIB_INCLUDE_DIR} )
-else(ZLIB_FOUND)
-   set(ZLIB_LOCAL_DIR ${INTERNAL_LIBS}/zlib-1.2.8)
-   include_directories( ${ZLIB_LOCAL_DIR} )
-endif(ZLIB_FOUND)
+if(NOT DEACTIVATE_ZLIB)
+    if (ZLIB_FOUND)
+        include_directories( ${ZLIB_INCLUDE_DIR} )
+    else(ZLIB_FOUND)
+        set(ZLIB_LOCAL_DIR ${INTERNAL_LIBS}/zlib-1.2.8)
+        include_directories( ${ZLIB_LOCAL_DIR} )
+    endif(ZLIB_FOUND)
+endif(NOT DEACTIVATE_ZLIB)
 
 # library sources
 set(SOURCES blosc.c blosclz.c shuffle.c)
@@ -46,48 +52,32 @@ else(WIN32)
     set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
-if(LZ4_FOUND)
-    set(LIBS ${LIBS} ${LZ4_LIBRARY})
-else(LZ4_FOUND)
-    set(SOURCES ${SOURCES}
-        ${LZ4_LOCAL_DIR}/lz4.c
-        ${LZ4_LOCAL_DIR}/lz4hc.c
-        )
-endif(LZ4_FOUND)
+if(NOT DEACTIVATE_LZ4)
+    if(LZ4_FOUND)
+        set(LIBS ${LIBS} ${LZ4_LIBRARY})
+    else(LZ4_FOUND)
+        file(GLOB LZ4_FILES ${LZ4_LOCAL_DIR}/*.c)
+        set(SOURCES ${SOURCES} ${LZ4_FILES})
+    endif(LZ4_FOUND)
+endif(NOT DEACTIVATE_LZ4)
 
-if(SNAPPY_FOUND)
-    set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
-else(SNAPPY_FOUND)
-    set(SOURCES ${SOURCES}
-        ${SNAPPY_LOCAL_DIR}/snappy.cc
-        ${SNAPPY_LOCAL_DIR}/snappy-c.cc
-        ${SNAPPY_LOCAL_DIR}/snappy-sinksource.cc
-        ${SNAPPY_LOCAL_DIR}/snappy-stubs-internal.cc
-        )
-endif(SNAPPY_FOUND)
+if(NOT DEACTIVATE_SNAPPY)
+    if(SNAPPY_FOUND)
+        set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
+    else(SNAPPY_FOUND)
+        file(GLOB SNAPPY_FILES ${SNAPPY_LOCAL_DIR}/*.cc)
+        set(SOURCES ${SOURCES} ${SNAPPY_FILES})
+    endif(SNAPPY_FOUND)
+endif(NOT DEACTIVATE_SNAPPY)
 
-# Zlib is only supported if the library has been found
-if(ZLIB_FOUND)
-    set(LIBS ${LIBS} ${ZLIB_LIBRARY})
-else(ZLIB_FOUND)
-    set(SOURCES ${SOURCES}
-       ${ZLIB_LOCAL_DIR}/adler32.c
-       ${ZLIB_LOCAL_DIR}/compress.c
-       ${ZLIB_LOCAL_DIR}/crc32.c
-       ${ZLIB_LOCAL_DIR}/deflate.c
-       ${ZLIB_LOCAL_DIR}/gzclose.c
-       ${ZLIB_LOCAL_DIR}/gzlib.c
-       ${ZLIB_LOCAL_DIR}/gzread.c
-       ${ZLIB_LOCAL_DIR}/gzwrite.c
-       ${ZLIB_LOCAL_DIR}/infback.c
-       ${ZLIB_LOCAL_DIR}/inffast.c
-       ${ZLIB_LOCAL_DIR}/inflate.c
-       ${ZLIB_LOCAL_DIR}/inftrees.c
-       ${ZLIB_LOCAL_DIR}/trees.c
-       ${ZLIB_LOCAL_DIR}/uncompr.c
-       ${ZLIB_LOCAL_DIR}/zutil.c
-       )
-endif(ZLIB_FOUND)
+if(NOT DEACTIVATE_ZLIB)
+    if(ZLIB_FOUND)
+        set(LIBS ${LIBS} ${ZLIB_LIBRARY})
+    else(ZLIB_FOUND)
+        file(GLOB ZLIB_FILES ${ZLIB_LOCAL_DIR}/*.c)
+        set(SOURCES ${SOURCES} ${ZLIB_FILES})
+    endif(ZLIB_FOUND)
+endif(NOT DEACTIVATE_ZLIB)
 
 
 # targets

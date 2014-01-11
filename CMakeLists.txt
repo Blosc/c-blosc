@@ -3,8 +3,6 @@
 #
 # Available options:
 #
-#   PREFER_EXTERNAL_COMPLIBS: default ON
-#       when found, use the installed compression libs instead of included sources
 #   BUILD_STATIC: default ON
 #       build the static version of the Blosc library
 #   BUILD_HDF5_FILTER: default OFF
@@ -13,6 +11,14 @@
 #       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
+#   DEACTIVATE_LZ4: default OFF
+#       do not include support for the LZ4 library
+#   DEACTIVATE_SNAPPY: default OFF
+#       do not include support for the Snappy library
+#   DEACTIVATE_ZLIB: default OFF
+#       do not include support for the Zlib library
+#   PREFER_EXTERNAL_COMPLIBS: default ON
+#       when found, use the installed compression libs instead of included sources
 #   TEST_INCLUDE_BENCH_SINGLE_1: default ON
 #       add a test that runs the benchmark program passing "single" with 1 thread
 #       as first parameter
@@ -60,8 +66,6 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+
 message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
-option(PREFER_EXTERNAL_COMPLIBS
-    "When found, use the installed compression libs instead of included sources." ON)
 option(BUILD_STATIC
     "Build a static version of the blosc library." ON)
 option(BUILD_HDF5_FILTER
@@ -70,6 +74,14 @@ option(BUILD_TESTS
     "Build test programs form the blosc compression library" ON)
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
+option(DEACTIVATE_LZ4
+    "Do not include support for the LZ4 library." OFF)
+option(DEACTIVATE_SNAPPY
+    "Do not include support for the SNAPPY library." OFF)
+option(DEACTIVATE_ZLIB
+    "Do not include support for the ZLIB library." OFF)
+option(PREFER_EXTERNAL_COMPLIBS
+    "When found, use the installed compression libs instead of included sources." ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -79,31 +91,37 @@ if(NOT PREFER_EXTERNAL_COMPLIBS)
 endif(NOT PREFER_EXTERNAL_COMPLIBS)
 
 
-if(PREFER_EXTERNAL_COMPLIBS)
-    find_package(LZ4)
-endif(PREFER_EXTERNAL_COMPLIBS)
-# HAVE_LZ4 will be set to true because even if the library is
-# not found, we will use the included sources for it
-set(HAVE_LZ4 TRUE)
+if(NOT DEACTIVATE_LZ4)
+    if(PREFER_EXTERNAL_COMPLIBS)
+        find_package(LZ4)
+    endif(PREFER_EXTERNAL_COMPLIBS)
+    # HAVE_LZ4 will be set to true because even if the library is
+    # not found, we will use the included sources for it
+    set(HAVE_LZ4 TRUE)
+endif(NOT DEACTIVATE_LZ4)
 
-if(PREFER_EXTERNAL_COMPLIBS)
-    find_package(Snappy)
-endif(PREFER_EXTERNAL_COMPLIBS)
-# HAVE_SNAPPY will be set to true because even if the library is not found,
-# we will use the included sources for it
-set(HAVE_SNAPPY TRUE)
+if(NOT DEACTIVATE_SNAPPY)
+    if(PREFER_EXTERNAL_COMPLIBS)
+        find_package(Snappy)
+    endif(PREFER_EXTERNAL_COMPLIBS)
+    # HAVE_SNAPPY will be set to true because even if the library is not found,
+    # we will use the included sources for it
+    set(HAVE_SNAPPY TRUE)
+endif(NOT DEACTIVATE_SNAPPY)
 
-# import the ZLIB_ROOT environment variable to help finding the zlib library
-if(PREFER_EXTERNAL_COMPLIBS)
-    set(ZLIB_ROOT $ENV{ZLIB_ROOT})
-    find_package( ZLIB )
-    if (NOT ZLIB_FOUND )
-        message(STATUS "No zlib found.  Using internal sources.")
-    endif (NOT ZLIB_FOUND )
-endif(PREFER_EXTERNAL_COMPLIBS)
-# HAVE_ZLIB will be set to true because even if the library is not found,
-# we will use the included sources for it
-set(HAVE_ZLIB TRUE)
+if(NOT DEACTIVATE_ZLIB)
+    # import the ZLIB_ROOT environment variable to help finding the zlib library
+    if(PREFER_EXTERNAL_COMPLIBS)
+        set(ZLIB_ROOT $ENV{ZLIB_ROOT})
+        find_package( ZLIB )
+        if (NOT ZLIB_FOUND )
+            message(STATUS "No zlib found.  Using internal sources.")
+        endif (NOT ZLIB_FOUND )
+    endif(PREFER_EXTERNAL_COMPLIBS)
+    # HAVE_ZLIB will be set to true because even if the library is not found,
+    # we will use the included sources for it
+    set(HAVE_ZLIB TRUE)
+endif(NOT DEACTIVATE_ZLIB)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
