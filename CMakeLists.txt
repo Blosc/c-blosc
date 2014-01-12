@@ -163,14 +163,14 @@ endif(WIN32)
 # subdirectories
 add_subdirectory(blosc)
 
-if(BUILD_HDF5_FILTER)
-    add_subdirectory(hdf5)
-endif(BUILD_HDF5_FILTER)
-
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif(BUILD_TESTS)
+
+if(BUILD_HDF5_FILTER)
+    add_subdirectory(hdf5)
+endif(BUILD_HDF5_FILTER)
 
 if(BUILD_BENCHMARKS)
     add_subdirectory(bench)
