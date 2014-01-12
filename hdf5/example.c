@@ -73,6 +73,12 @@ int main(){
     r = H5Pset_chunk(plist, 3, chunkshape);
     if(r<0) goto failed;
 
+    /* Using the blosc filter in combianation with other ones also works */
+    /*
+    r = H5Pset_fletcher32(plist);
+    if(r<0) goto failed;
+    */
+
     /* This is the easiest way to call Blosc with default values: 5
      for BloscLZ and shuffle active. */
     /* r = H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 0, NULL);  */
