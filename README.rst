@@ -146,9 +146,9 @@ Compiling the Blosc library with CMake
 
 Blosc can also be built, tested and installed using CMake_. Although
 this procedure is a bit more invloved than the one described above, it
-is the most general because it allows to integrate compressors either
-from libraries or from internal sources. Hence, serious library
-developers should use this way.
+is the most general because it allows to integrate other compressors
+than BloscLZ either from libraries or from internal sources. Hence,
+serious library developers should use this way.
 
 The following procedure describes the "out of source" build.
 
@@ -198,20 +198,21 @@ compressors like LZ4, LZ4HC, Snappy or Zlib by default.  So as long as
 the libraries and the header files for these libraries are accessible,
 these will be used by default.
 
-However, the full sources for LZ4, LZ4HC, Snappy and Zlib have been
-included in Blosc too. So, in general, you should not worry about not
-having (or CMake not finding) the libraries in your system because in
-this case, their sources will be automaticall compiled for you. That
-effectively means that you can be confident in having a complete support
-for all the supported compression libraries in all supported platforms.
-
 *Note on Zlib*: the library should be easily found on UNIX systems,
 although on Windows, you can help CMake to find it by setting the
 environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
 directories are. Also, make sure that Zlib DDL library is in your
 '\Windows' directory.
 
-If you want to force Blosc to use the include compression libraries
+However, the full sources for LZ4, LZ4HC, Snappy and Zlib have been
+included in Blosc too. So, in general, you should not worry about not
+having (or CMake not finding) the libraries in your system because in
+this case, their sources will be automaticall compiled for you. That
+effectively means that you can be confident in having a complete
+support for all the supported compression libraries in all supported
+platforms.
+
+If you want to force Blosc to use the included compression sources
 instead of trying to find the libraries in the system first, you can
 switch off the PREFER_EXTERNAL_COMPLIBS CMake option:
 
@@ -224,7 +225,6 @@ You can also disable support for some compression libraries:
 .. code-block:: console
 
   $ cmake -DDEACTIVATE_SNAPPY=ON ..
-
 
 Mac OSX troubleshooting
 =======================
@@ -242,6 +242,7 @@ Wrapper for Python
 
 Blosc has an official wrapper for Python.  See:
 
+http://blosc.pydata.org
 https://github.com/FrancescAlted/python-blosc
 
 Filter for HDF5
@@ -262,9 +263,10 @@ Acknowledgments
 ===============
 
 I'd like to thank the PyTables community that have collaborated in the
-exhaustive testing of Blosc.  With an aggregate amount of more than 300 TB of
-different datasets compressed *and* decompressed successfully, I can say that
-Blosc is pretty safe now and ready for production purposes.
+exhaustive testing of Blosc.  With an aggregate amount of more than
+300 TB of different datasets compressed *and* decompressed
+successfully, I can say that Blosc is pretty safe now and ready for
+production purposes.
 
 Other important contributions:
 
@@ -272,11 +274,11 @@ Other important contributions:
   Snappy compression, fixing typos and improving docs and the plotting
   script.
 
-* Thibault North contributed a way to call Blosc from different threads in a
-  safe way.
+* Thibault North, with ideas from Oscar Villellas, contributed a way
+  to call Blosc from different threads in a safe way.
 
-* The CMake support was initially contributed by Thibault North,
-  Antonio Valentino and Mark Wiebe.
+* The CMake support was initially contributed by Thibault North, and
+  Antonio Valentino and Mark Wiebe made great enhancements to it.
 
 
 ----
