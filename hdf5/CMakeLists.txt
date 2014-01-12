@@ -1,6 +1,7 @@
 # sources
 set(SOURCES blosc_filter.c)
 
+include_directories("${PROJECT_SOURCE_DIR}/blosc")
 
 # dependencies
 find_package(HDF5 REQUIRED)
