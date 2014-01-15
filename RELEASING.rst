@@ -4,7 +4,7 @@ Releasing Blosc
 
 :Author: Francesc Alted
 :Contact: faltet@gmail.com
-:Date: 2012-09-16
+:Date: 2014-01-15
 
 
 Preliminaries
@@ -18,13 +18,13 @@ Preliminaries
 Testing
 -------
 
-Go to the test/ directory and issue::
+Create a new build/ directory, change into it and issue::
 
+  $ cmake ..
+  $ make
   $ make test
 
-These tests are very basic, and only valid for platforms where GNU
-make/gcc tools are available.  To actually test Blosc the hard way,
-look at the end of:
+To actually test Blosc the hard way, look at the end of:
 
 http://blosc.org/trac/wiki/SyntheticBenchmarks
 

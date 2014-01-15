@@ -6,12 +6,18 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+This is a bug fis release for a series of issues with the filter for
+HDF5 and, in particular, a problem in the decompression buffer size
+that made it impossible to use the blosc_filter in combination with
+other ones (e.g. fletcher32).  See
+https://github.com/PyTables/PyTables/issues/21.
 
+Thanks to Antonio Valentino for the fix!
 
 For more info, please see the release notes in:
 
 https://github.com/FrancescAlted/blosc/wiki/Release-notes
+
 
 What is it?
 ===========
@@ -31,6 +37,7 @@ binary datafiles on-disk.  Although the format for Bloscpack has not
 stabilized yet, it allows you to effectively use Blosc from you
 favorite shell.
 
+
 Download sources
 ================
 
@@ -44,6 +51,7 @@ https://github.com/FrancescAlted/blosc
 
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
+
 
 Mailing list
 ============
