@@ -49,7 +49,7 @@
 #    HDF5_FILTER_DEV: includes blosc_filter.h
 
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(blosc)
 
 # parse the full version numbers from blosc.h
