@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+This is a maintenance release, where basically support for MSVC 2008
+has been added for Snappy internal sources and versioning symbols have
+been included in internal sources.
 
 For more info, please see the release notes in:
 
