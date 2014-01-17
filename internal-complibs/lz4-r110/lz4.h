@@ -37,6 +37,9 @@
 extern "C" {
 #endif
 
+// The next is for getting the LZ4 version.
+// Please note that this is only defined in the Blosc sources of LZ4.
+#define LZ4_VERSION_STRING "r110"
 
 //**************************************
 // Compiler Options
