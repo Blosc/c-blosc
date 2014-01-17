@@ -1,10 +1,9 @@
 # sources
-aux_source_directory(. SOURCES)
-
+#aux_source_directory(. SOURCES)
+file(GLOB SOURCES test_*.c)
 
 # flags
 link_directories(${PROJECT_BINARY_DIR}/blosc)
-
 
 # targets and tests
 foreach(source ${SOURCES})
