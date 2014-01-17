@@ -13,6 +13,10 @@ Changes from 1.3.1 to 1.3.2
 * Fix for compiling Snappy sources against MSVC 2008.  Thanks to Mark
   Wiebe!
 
+* Version for internal LZ4 and Snappy are now supported.  When compiled
+  against the external libraries, this info is not available because
+  they do not support the symbols (yet).
+
 
 Changes from 1.3.0 to 1.3.1
 ===========================
