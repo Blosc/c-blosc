@@ -1,14 +1,12 @@
 ===============================================================
- Announcing Blosc 1.3.2
+ Announcing Blosc 1.3.3
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release, where basically support for MSVC 2008
-has been added for Snappy internal sources and versioning symbols have
-been included in internal sources.
+ #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
