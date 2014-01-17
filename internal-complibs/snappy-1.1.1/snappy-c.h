@@ -37,6 +37,14 @@
 extern "C" {
 #endif
 
+// The next is for getting the Snappy version even if used the C API.
+// Please note that this is only defined in the Blosc sources of Snappy.
+#define SNAPPY_MAJOR 1
+#define SNAPPY_MINOR 1
+#define SNAPPY_PATCHLEVEL 1
+#define SNAPPY_VERSION \
+    ((SNAPPY_MAJOR << 16) | (SNAPPY_MINOR << 8) | SNAPPY_PATCHLEVEL)
+
 #include <stddef.h>
 
 /*
