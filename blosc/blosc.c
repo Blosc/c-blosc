@@ -1685,9 +1685,11 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
   }
 #if defined(HAVE_LZ4)
   else if (clibcode == BLOSC_LZ4_LIB) {
-#if defined(LZ4_VERSION_STRING)
-    clibversion = LZ4_VERSION_STRING;
-#endif /* LZ4_VERSION_STRING */
+#if defined(LZ4_VERSION_MAJOR)
+    sprintf(sbuffer, "%d.%d.%d",
+            LZ4_VERSION_MAJOR, LZ4_VERSION_MINOR, LZ4_VERSION_RELEASE);
+    clibversion = sbuffer;
+#endif /*  LZ4_VERSION_MAJOR */
   }
 #endif /*  HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)

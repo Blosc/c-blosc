@@ -39,6 +39,10 @@ extern "C" {
 #endif
 
 
+/**************************************
+   Simple Functions
+**************************************/
+
 int LZ4_compressHC (const char* source, char* dest, int inputSize);
 /*
 LZ4_compressHC :
@@ -68,9 +72,9 @@ Decompression functions are provided within LZ4 source code (see "lz4.h") (BSD l
 */
 
 
-//*****************************
-// Using an external allocation
-//*****************************
+/**************************************
+   Using external allocation
+**************************************/
 int LZ4_sizeofStateHC();
 int LZ4_compressHC_withStateHC               (void* state, const char* source, char* dest, int inputSize);
 int LZ4_compressHC_limitedOutput_withStateHC (void* state, const char* source, char* dest, int inputSize, int maxOutputSize);
@@ -88,10 +92,9 @@ They just use the externally allocated memory area instead of allocating their o
 */
 
 
-//****************************
-// Streaming Functions
-//****************************
-
+/**************************************
+   Streaming Functions
+**************************************/
 void* LZ4_createHC (const char* inputBuffer);
 int   LZ4_compressHC_continue (void* LZ4HC_Data, const char* source, char* dest, int inputSize);
 int   LZ4_compressHC_limitedOutput_continue (void* LZ4HC_Data, const char* source, char* dest, int inputSize, int maxOutputSize);
