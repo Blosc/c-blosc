@@ -1825,7 +1825,7 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 
   /* Read the version info */
   *version = (int)_src[0];             /* blosc format version */
-  *versionlz = (int)_src[1];           /* blosclz format version */
+  *versionlz = (int)_src[1];           /* Lempel-Ziv compressor format version */
 }
 
 
