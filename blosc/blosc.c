@@ -362,13 +362,13 @@ static int lz4_wrap_compress(const char* input, size_t input_length,
 }
 
 static int lz4hc_wrap_compress(const char* input, size_t input_length,
-                               char* output, size_t maxout)
+                               char* output, size_t maxout, int clevel)
 {
   int cbytes;
   if (input_length > (size_t)(2<<30))
     return -1;   /* input larger than 1 GB is not supported */
-  cbytes = LZ4_compressHC_limitedOutput(input, output, (int)input_length,
-					(int)maxout);
+  cbytes = LZ4_compressHC2_limitedOutput(input, output, (int)input_length,
+					 (int)maxout, clevel*2-1);
   return cbytes;
 }
 
@@ -503,7 +503,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
     }
     else if (compressor == BLOSC_LZ4HC) {
       cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
-                                   (char *)dest, (size_t)maxout);
+                                   (char *)dest, (size_t)maxout, params.clevel);
     }
     #endif /*  HAVE_LZ4 */
     #if defined(HAVE_SNAPPY)
@@ -1824,8 +1824,8 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
   uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
 
   /* Read the version info */
-  *version = (int)_src[0];             /* blosc format version */
-  *versionlz = (int)_src[1];           /* Lempel-Ziv compressor format version */
+  *version = (int)_src[0];         /* blosc format version */
+  *versionlz = (int)_src[1];       /* Lempel-Ziv compressor format version */
 }
 
 

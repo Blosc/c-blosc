@@ -1,6 +1,6 @@
 /*
    LZ4 - Fast LZ compression algorithm
-   Copyright (C) 2011-2013, Yann Collet.
+   Copyright (C) 2011-2014, Yann Collet.
    BSD 2-Clause License (http://www.opensource.org/licenses/bsd-license.php)
 
    Redistribution and use in source and binary forms, with or without
@@ -439,7 +439,7 @@ FORCE_INLINE int LZ4_compress_generic(
     if ((U32)inputSize > (U32)LZ4_MAX_INPUT_SIZE) return 0;                                /* Unsupported input size, too large (or negative) */
     if ((prefix==withPrefix) && (ip != ((LZ4_Data_Structure*)ctx)->nextBlock)) return 0;   /* must continue from end of previous block */
     if (prefix==withPrefix) ((LZ4_Data_Structure*)ctx)->nextBlock=iend;                    /* do it now, due to potential early exit */
-    if ((tableType == byU16) && (inputSize>=LZ4_64KLIMIT)) return 0;                       /* Size too large (not within 64K limit) */
+    if ((tableType == byU16) && (inputSize>=(int)LZ4_64KLIMIT)) return 0;                  /* Size too large (not within 64K limit) */
     if (inputSize<LZ4_minLength) goto _last_literals;                                      /* Input too small, no compression (all literals) */
 
     /* First Byte */
