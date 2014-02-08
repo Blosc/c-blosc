@@ -1834,15 +1834,11 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 char *blosc_cbuffer_complib(const void *cbuffer)
 {
   uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
-  int compressor_format;
-  char *compname;
   int clibcode;
   char *complib;
 
   /* Read the compressor format/library info */
-  compressor_format = (_src[2] & 0xe0) >> 5;
-  blosc_compcode_to_compname(compressor_format, &compname);
-  clibcode = compname_to_clibcode(compname);
+  clibcode = (_src[2] & 0xe0) >> 5;
   complib = clibcode_to_clibname(clibcode);
   return complib;
 }
