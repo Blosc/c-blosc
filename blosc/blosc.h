@@ -300,6 +300,15 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
                             int *versionlz);
 
 
+/**
+  Return the compressor library/format used in a compressed buffer.
+
+  This function should always succeed.
+  */
+char *blosc_cbuffer_complib(const void *cbuffer);
+
+
+
 /*********************************************************************
 
   Low-level functions follows.  Use them only if you are an expert!
