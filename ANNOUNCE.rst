@@ -6,7 +6,10 @@
 What is new?
 ============
 
- #XXX version-specific blurb XXX#
+* Updated to LZ4 1.1.3 (improved speed for 32-bit platforms).
+
+* Added a new `blosc_cbuffer_complib()` for getting the compression
+  library for a compressed buffer.
 
 For more info, please see the release notes in:
 
