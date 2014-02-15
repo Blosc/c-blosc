@@ -1,15 +1,12 @@
 ===============================================================
- Announcing Blosc 1.3.3
+ Announcing Blosc 1.3.4
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-* Updated to LZ4 1.1.3 (improved speed for 32-bit platforms).
-
-* Added a new `blosc_cbuffer_complib()` for getting the compression
-  library for a compressed buffer.
+ #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 

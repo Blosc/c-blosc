@@ -1,10 +1,16 @@
 ===============================
- Release notes for Blosc 1.3.3
+ Release notes for Blosc 1.3.4
 ===============================
 
 :Author: Francesc Alted
 :Contact: faltet@gmail.com
 :URL: http://www.blosc.org
+
+
+Changes from 1.3.3 to 1.3.4
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.3.2 to 1.3.3
