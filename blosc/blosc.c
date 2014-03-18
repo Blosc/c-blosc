@@ -1675,7 +1675,7 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
   int clibcode;
   char *clibname;
   char *clibversion = "unknown";
-  char *sbuffer[256];
+  char sbuffer[256];
 
   clibcode = compname_to_clibcode(compname);
   clibname = clibcode_to_clibname(clibcode);
