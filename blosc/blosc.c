@@ -527,7 +527,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       return -5;    /* signals no compression support */
     }
 
-    if (cbytes >= maxout) {
+    if (cbytes > maxout) {
       /* Buffer overrun caused by compression (should never happen) */
       return -1;
     }
@@ -536,7 +536,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       return -2;
     }
     else if (cbytes == 0) {
-      /* The compressor has been unable to compress data significantly. */
+      /* The compressor has been unable to compress data at all. */
       /* Before doing the copy, check that we are not running into a
          buffer overflow. */
       if ((ntbytes+neblock) > maxbytes) {
