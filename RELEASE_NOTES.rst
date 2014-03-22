@@ -10,7 +10,8 @@
 Changes from 1.3.4 to 1.3.5
 ===========================
 
- #XXX version-specific blurb XXX#
+* Removed a pointer from 'pointer from integer without a cast' compiler
+  warning due to a bad macro definition.
 
 
 Changes from 1.3.3 to 1.3.4

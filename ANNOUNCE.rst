@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+This is just a maintenance release for removing a 'pointer from
+integer without a cast' compiler warning due to a bad macro
+definition.
 
 For more info, please see the release notes in:
 
