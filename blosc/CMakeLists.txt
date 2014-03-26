@@ -85,7 +85,7 @@ add_library(blosc_shared SHARED ${SOURCES})
 set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)
 set_target_properties(blosc_shared PROPERTIES
         VERSION ${version_string}
-        SOVERSION ${version_string}
+        SOVERSION 1  # Change this when an ABI change happens
     )
 target_link_libraries(blosc_shared ${LIBS})
 
