@@ -121,7 +121,9 @@ void blosc_destroy(void);
 
   `typesize` is the number of bytes for the atomic type in binary
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
-  Only a typesize > 1 will allow the shuffle to work.
+  For implementation reasons, only a 1 < typesize < 256 will allow the
+  shuffle filter to work.  When typesize is not in this range, shuffle
+  will be silently disabled.
 
   The `dest` buffer must have at least the size of `destsize`.  Blosc
   guarantees that if you set `destsize` to, at least,
