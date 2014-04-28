@@ -7,6 +7,10 @@
 **********************************************************************/
 
 #include <limits.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #ifndef BLOSC_H
 #define BLOSC_H
@@ -323,6 +327,10 @@ char *blosc_cbuffer_complib(const void *cbuffer);
   blocksize will be used (the default).
   */
 void blosc_set_blocksize(size_t blocksize);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif
