@@ -40,8 +40,8 @@ Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
 
 .. [1] http://www.blosc.org
-.. [2] http://blosc.org/docs/StarvingCPUs-CISE-2010.pdf
-.. [3] http://blosc.org/trac/wiki/SyntheticBenchmarks
+.. [2] http://www.blosc.org/docs/StarvingCPUs-CISE-2010.pdf
+.. [3] http://www.blosc.org/trac/wiki/SyntheticBenchmarks
 
 Meta-compression and other advantages over existing compressors
 ===============================================================
