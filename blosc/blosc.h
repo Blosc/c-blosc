@@ -135,9 +135,7 @@ void blosc_destroy(void);
   The `src` buffer and the `dest` buffer can not overlap.
 
   Compression is memory safe and guaranteed not to write the `dest`
-  buffer more than what is specified in `destsize`.  However, it is
-  not re-entrant and not thread-safe (despite the fact that it uses
-  threads internally).
+  buffer more than what is specified in `destsize`.
 
   If `src` buffer cannot be compressed into `destsize`, the return
   value is zero and you should discard the contents of the `dest`
@@ -158,9 +156,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   The `src` buffer and the `dest` buffer can not overlap.
 
   Decompression is memory safe and guaranteed not to write the `dest`
-  buffer more than what is specified in `destsize`.  However, it is
-  not re-entrant and not thread-safe (despite the fact that it uses
-  threads internally).
+  buffer more than what is specified in `destsize`.
 
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
