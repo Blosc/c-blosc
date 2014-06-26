@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     from optparse import OptionParser
 
-    usage = "usage: %prog [-o outfile] [-t title ] [-d|-c] filename"
+    usage = "usage: %prog [-r] [-o outfile] [-t title ] [-d|-c] filename"
     compress_title = 'Compression speed'
     decompress_title = 'Decompression speed'
     yaxis = 'No axis name'
@@ -99,8 +99,8 @@ if __name__ == '__main__':
     parser.add_option('-o',
                       '--outfile',
                       dest='outfile',
-                      help='filename for output ' + \
-                      '(many extensions supported, e.g. .png, .jpg, .pdf)')
+                      help=('filename for output (many extensions '
+                            'supported, e.g. .png, .jpg, .pdf)'))
 
     parser.add_option('-t',
                       '--title',
@@ -117,6 +117,11 @@ if __name__ == '__main__':
                       dest='xmax',
                       help='limit the x-axis',
                       default=None)
+
+    parser.add_option('-r', '--report', action='store_true',
+                      dest='report',
+                      help='generate file for reporting ',
+                      default=False)
 
     parser.add_option('-d', '--decompress', action='store_true',
             dest='dspeed',
@@ -135,6 +140,9 @@ if __name__ == '__main__':
     else:
         pass
 
+    if options.report and options.outfile:
+        parser.error("Can only select one of [-r, -o]")
+
     if options.dspeed and options.cspeed:
         parser.error("Can only select one of [-d, -c]")
     elif options.cspeed:
@@ -145,9 +153,17 @@ if __name__ == '__main__':
         plot_title = decompress_title
 
     filename = args[0]
-    outfile = options.outfile
     cspeed = options.cspeed
     dspeed = options.dspeed
+    if options.outfile:
+        outfile = options.outfile
+    elif options.report:
+        if cspeed:
+            outfile = filename[:filename.rindex('.')] + '-compr.png'
+        else:
+            outfile = filename[:filename.rindex('.')] + '-decompr.png'
+    else:
+        outfile = None
 
     plots = []
     legends = []
