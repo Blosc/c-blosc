@@ -82,7 +82,7 @@ def show_plot(plots, yaxis, legends, gtitle, xmax=None):
     #subplots_adjust(bottom=0.2, top=None, wspace=0.2, hspace=0.2)
     if outfile:
         print "Saving plot to:", outfile
-        savefig(outfile)
+        savefig(outfile, dpi=64)
     else:
         show()
 
