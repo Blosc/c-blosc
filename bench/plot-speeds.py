@@ -201,10 +201,10 @@ if __name__ == '__main__':
 
     # Add memcpy lines
     if cspeed:
-        mean = sum(values["memcpyw"]) / nthreads
+        mean = np.mean(values["memcpyw"])
         message = "memcpy (write to memory)"
     else:
-        mean = sum(values["memcpyr"]) / nthreads
+        mean = np.mean(values["memcpyr"])
         message = "memcpy (read from memory)"
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
     text(1.0, mean+50, message)
