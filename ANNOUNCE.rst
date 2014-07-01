@@ -6,7 +6,10 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+This is a pure maintenance release where LZ4 has been updated (to
+r118) due to a (highly unlikely) security hole.  For details see:
+
+http://fastcompression.blogspot.fr/2014/06/debunking-lz4-20-years-old-bug-myth.html
 
 For more info, please see the release notes in:
 

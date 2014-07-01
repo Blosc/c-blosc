@@ -10,7 +10,7 @@
 Changes from 1.3.5 to 1.3.6
 ===========================
 
-#XXX version-specific blurb XXX#
+* Updated to LZ4 r118 due to a (highly unlikely) security hole.
 
 
 Changes from 1.3.4 to 1.3.5
