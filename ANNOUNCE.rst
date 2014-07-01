@@ -1,15 +1,12 @@
 ===============================================================
- Announcing c-blosc 1.3.6
+ Announcing c-blosc 1.3.7
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-This is a pure maintenance release where LZ4 has been updated (to
-r118) due to a (highly unlikely) security hole.  For details see:
-
-http://fastcompression.blogspot.fr/2014/06/debunking-lz4-20-years-old-bug-myth.html
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 

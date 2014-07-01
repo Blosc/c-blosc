@@ -1,5 +1,5 @@
 ================================
- Release notes for c-blosc 1.3.6
+ Release notes for c-blosc 1.3.7
 ================================
 
 :Author: Francesc Alted
@@ -7,10 +7,19 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.3.6 to 1.3.7
+===========================
+
+#XXX version-specific blurb XXX#
+
+
 Changes from 1.3.5 to 1.3.6
 ===========================
 
-* Updated to LZ4 r118 due to a (highly unlikely) security hole.
+* Updated to LZ4 r118 due to a (highly unlikely) security hole.  For
+  details see:
+ 
+  http://fastcompression.blogspot.fr/2014/06/debunking-lz4-20-years-old-bug-myth.html
 
 
 Changes from 1.3.4 to 1.3.5
