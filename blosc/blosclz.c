@@ -43,8 +43,11 @@
 #undef BLOSCLZ_STRICT_ALIGN
 #elif defined(__I86__) /* Digital Mars */
 #undef BLOSCLZ_STRICT_ALIGN
-#elif defined(__ARM_FEATURE_UNALIGNED)  /* ARM, GNU C */
-#undef BLOSCLZ_STRICT_ALIGN
+/* Seems like unaligned access in ARM (at least ARMv6) is pretty
+   expensive, so we are always to enfor strict aligment in ARM.  If
+   anybody suggest that newer ARMs are better, we can revisit this. */
+/* #elif defined(__ARM_FEATURE_UNALIGNED) */  /* ARM, GNU C */
+/* #undef BLOSCLZ_STRICT_ALIGN */
 #endif
 #endif
 

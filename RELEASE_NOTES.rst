@@ -11,9 +11,11 @@ Changes from 1.3.6 to 1.4.0
 ===========================
 
 * Support for non-Intel and non-SSE2 architectures has been added.  In
-  particular, ARMv6 (Raspberry Pi) has been tested.
+  particular, Raspberry Pi (ARM) has been tested and all tests pass.
 
 * Architectures requiring strict access alignment are supported as well.
+  Due to this, arquitectures with a high penalty in accessing unaligned
+  data (e.g. Raspberry Pi, ARMv6) can compress up to 2.5x faster.
 
 
 Changes from 1.3.5 to 1.3.6
