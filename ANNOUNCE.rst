@@ -1,5 +1,5 @@
 ===============================================================
- Announcing c-blosc 1.3.7
+ Announcing c-blosc 1.4.0
  A blocking, shuffling and lossless compression library
 ===============================================================
 

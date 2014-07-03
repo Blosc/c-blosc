@@ -1,5 +1,5 @@
 ================================
- Release notes for c-blosc 1.3.7
+ Release notes for c-blosc 1.4.0
 ================================
 
 :Author: Francesc Alted
@@ -7,10 +7,13 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.3.6 to 1.3.7
+Changes from 1.3.6 to 1.4.0
 ===========================
 
-#XXX version-specific blurb XXX#
+* Support for non-Intel and non-SSE2 architectures has been added.  In
+  particular, ARMv6 (Raspberry Pi) has been tested.
+
+* Architectures requiring strict access alignment are supported as well.
 
 
 Changes from 1.3.5 to 1.3.6

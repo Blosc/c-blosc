@@ -43,6 +43,8 @@
 #undef BLOSCLZ_STRICT_ALIGN
 #elif defined(__I86__) /* Digital Mars */
 #undef BLOSCLZ_STRICT_ALIGN
+#elif defined(__ARM_FEATURE_UNALIGNED)  /* ARM, GNU C */
+#undef BLOSCLZ_STRICT_ALIGN
 #endif
 #endif
 
@@ -201,7 +203,11 @@ int blosclz_compress(int opt_level, const void* input,
       memset(&value, x, 8);
       /* safe because the outer check against ip limit */
       while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
+#if !defined(BLOSCLZ_STRICT_ALIGN)
         value2 = ((int64_t *)ref)[0];
+#else
+        memcpy(&value2, ref, 8);
+#endif
         if (value != value2) {
           /* Find the byte that starts to differ */
           while (ip < ip_bound) {
@@ -225,17 +231,17 @@ int blosclz_compress(int opt_level, const void* input,
         /* safe because the outer check against ip limit */
         while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
           if (*ref++ != *ip++) break;
+#if !defined(BLOSCLZ_STRICT_ALIGN)
           if (((int64_t *)ref)[0] != ((int64_t *)ip)[0]) {
+#endif
             /* Find the byte that starts to differ */
             while (ip < ip_bound) {
               if (*ref++ != *ip++) break;
             }
             break;
-          }
-          else {
-            ip += 8;
-            ref += 8;
-          }
+#if !defined(BLOSCLZ_STRICT_ALIGN)
+          } else { ip += 8; ref += 8; }
+#endif
         }
         /* Last correction before exiting loop */
         if (ip > ip_bound) {
