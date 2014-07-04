@@ -8,9 +8,9 @@ What is new?
 
 Support for non-Intel and non-SSE2 architectures has been added.  In
 particular, c-blosc has been tested in a Raspberry Pi (ARM) and
-everything seems to go smoothly, even when the kernel has been
-configured to crash with a SIGBUS (echo 4 > /proc/cpu/alignment) in
-case of an unaligned access.
+everything seems to go smoothly, even when the kernel was configured
+to crash with a SIGBUS (echo 4 > /proc/cpu/alignment) in case of an
+unaligned access.
 
 Architectures requiring strict access alignment are supported as well.
 Due to this, arquitectures with a high penalty in accessing unaligned
@@ -49,7 +49,7 @@ http://www.blosc.org/
 
 and proceed from there.  The github repository is over here:
 
-https://github.com/Blosc/c-blosc
+https://github.com/Blosc
 
 Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
 details.
