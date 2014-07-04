@@ -51,7 +51,7 @@ Announcing
 
 https://github.com/Blosc/c-blosc/wiki/Release-notes
 
-- Send an announcement to the blosc, pytables, carray and
+- Send an announcement to the blosc, pytables-dev, bcolz and
   comp.compression lists.  Use the ``ANNOUNCE.rst`` file as skeleton
   (possibly as the definitive version).
 
