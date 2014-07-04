@@ -1,4 +1,4 @@
-# Check if SSE instructions are available on the machine where 
+# Check if SSE/AVX instructions are available on the machine where
 # the project is compiled.
 
 IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -40,6 +40,14 @@ IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
    ELSE (SSE41_TRUE)
       set(SSE4_1_FOUND false CACHE BOOL "SSE4.1 available on host")
    ENDIF (SSE41_TRUE)
+
+   STRING(REGEX REPLACE "^.*(avx).*$" "\\1" SSE_THERE ${CPUINFO})
+   STRING(COMPARE EQUAL "avx" "${SSE_THERE}" AVX_TRUE)
+   IF (AVX_TRUE)
+      set(AVX_FOUND true CACHE BOOL "AVX available on host")
+   ELSE (AVX_TRUE)
+      set(AVX_FOUND false CACHE BOOL "AVX available on host")
+   ENDIF (AVX_TRUE)
 ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Darwin")
    EXEC_PROGRAM("/usr/sbin/sysctl -n machdep.cpu.features" OUTPUT_VARIABLE
       CPUINFO)
@@ -75,17 +83,27 @@ ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Darwin")
    ELSE (SSE41_TRUE)
       set(SSE4_1_FOUND false CACHE BOOL "SSE4.1 available on host")
    ENDIF (SSE41_TRUE)
+
+   STRING(REGEX REPLACE "^.*(AVX).*$" "\\1" SSE_THERE ${CPUINFO})
+   STRING(COMPARE EQUAL "AVX" "${SSE_THERE}" AVX_TRUE)
+   IF (AVX_TRUE)
+      set(AVX_FOUND true CACHE BOOL "AVX available on host")
+   ELSE (AVX_TRUE)
+      set(AVX_FOUND false CACHE BOOL "AVX available on host")
+   ENDIF (AVX_TRUE)
 ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Windows")
    # TODO
    set(SSE2_FOUND   true  CACHE BOOL "SSE2 available on host")
    set(SSE3_FOUND   false CACHE BOOL "SSE3 available on host")
    set(SSSE3_FOUND  false CACHE BOOL "SSSE3 available on host")
    set(SSE4_1_FOUND false CACHE BOOL "SSE4.1 available on host")
+   set(AVX_FOUND false CACHE BOOL "AVX available on host")
 ELSE(CMAKE_SYSTEM_NAME MATCHES "Linux")
    set(SSE2_FOUND   true  CACHE BOOL "SSE2 available on host")
    set(SSE3_FOUND   false CACHE BOOL "SSE3 available on host")
    set(SSSE3_FOUND  false CACHE BOOL "SSSE3 available on host")
    set(SSE4_1_FOUND false CACHE BOOL "SSE4.1 available on host")
+   set(AVX_FOUND false CACHE BOOL "AVX available on host")
 ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 if(NOT SSE2_FOUND)
@@ -100,5 +118,8 @@ endif(NOT SSSE3_FOUND)
 if(NOT SSE4_1_FOUND)
       MESSAGE(STATUS "Could not find hardware support for SSE4.1 on this machine.")
 endif(NOT SSE4_1_FOUND)
+if(NOT AVX_FOUND)
+      MESSAGE(STATUS "Could not find hardware support for AVX on this machine.")
+endif(NOT AVX_FOUND)
 
-mark_as_advanced(SSE2_FOUND SSE3_FOUND SSSE3_FOUND SSE4_1_FOUND)
+mark_as_advanced(SSE2_FOUND SSE3_FOUND SSSE3_FOUND SSE4_1_FOUND, AVX_FOUND)
