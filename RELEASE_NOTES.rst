@@ -11,11 +11,15 @@ Changes from 1.3.6 to 1.4.0
 ===========================
 
 * Support for non-Intel and non-SSE2 architectures has been added.  In
-  particular, Raspberry Pi (ARM) has been tested and all tests pass.
+  particular, the Raspberry Pi platform (ARM) has been tested and all
+  tests pass here.
 
 * Architectures requiring strict access alignment are supported as well.
   Due to this, arquitectures with a high penalty in accessing unaligned
   data (e.g. Raspberry Pi, ARMv6) can compress up to 2.5x faster.
+
+* LZ4 has been updated to r119 (1.2.0) so as to fix a possible security
+  breach.
 
 
 Changes from 1.3.5 to 1.3.6
