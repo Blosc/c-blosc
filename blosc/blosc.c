@@ -971,7 +971,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   int32_t leftover;           /* extra bytes at end of buffer */
   int32_t blocksize;          /* length of the block in bytes */
   int32_t ntbytes = 0;        /* the number of compressed bytes */
-  int32_t *ntbytes_;          /* placeholder for bytes in output buffer */
   int32_t maxbytes = (int32_t)destsize;  /* maximum size for dest buffer */
   int compressor_format = -1; /* the format for compressor */
   uint8_t *bstarts;           /* start pointers for each block */
