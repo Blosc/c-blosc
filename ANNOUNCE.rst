@@ -6,15 +6,7 @@
 What is new?
 ============
 
-Support for non-Intel and non-SSE2 architectures has been added.  In
-particular, c-blosc has been tested in a Raspberry Pi (ARM) and
-everything seems to go smoothly, even when the kernel was configured
-to crash with a SIGBUS (echo 4 > /proc/cpu/alignment) in case of an
-unaligned access.
-
-Architectures requiring strict access alignment are supported as well.
-Due to this, arquitectures with a high penalty in accessing unaligned
-data (e.g. Raspberry Pi, ARMv6) can compress up to 2.5x faster.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
