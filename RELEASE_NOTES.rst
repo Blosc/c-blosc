@@ -1,10 +1,16 @@
 ================================
- Release notes for c-blosc 1.4.1
+ Release notes for c-blosc 1.4.2
 ================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.io
 :URL: http://www.blosc.org
+
+
+Changes from 1.4.1 to 1.4.2
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.4.0 to 1.4.1
