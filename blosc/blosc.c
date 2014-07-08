@@ -1254,7 +1254,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
   versionlz += 0;                           /* shut up compiler warning */
   ctbytes += 0;                             /* shut up compiler warning */
 
-  _src += 4;
+  _src += 16;
   bstarts = _src;
   /* Compute some params */
   /* Total blocks */

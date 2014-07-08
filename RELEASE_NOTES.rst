@@ -10,7 +10,8 @@
 Changes from 1.4.0 to 1.4.1
 ===========================
 
-#XXX version-specific blurb XXX#
+* Fixed a bug in blosc_getitem() introduced in 1.4.0.  Added a test for
+  blosc_getitem() as well.
 
 
 Changes from 1.3.6 to 1.4.0
