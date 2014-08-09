@@ -85,6 +85,8 @@ option(PREFER_EXTERNAL_COMPLIBS
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+# differentiate debug library names
+set(CMAKE_DEBUG_POSTFIX _debug)
 
 if(NOT PREFER_EXTERNAL_COMPLIBS)
     message(STATUS "Finding external libraries disabled.  Using internal sources.")
