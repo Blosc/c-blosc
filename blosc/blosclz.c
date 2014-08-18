@@ -126,17 +126,11 @@ if ((len > 32) || (abs(op-ref) < CPYSIZE)) {  \
 }                                             \
 else BLOCK_COPY(op, ref, len, op_limit);
 
-
-
-static inline int32_t hash_function(uint8_t* p, uint8_t hash_log)
-{
-  int32_t v;
-
-  v = BLOSCLZ_READU16(p);
-  v ^= BLOSCLZ_READU16(p+1)^(v>>(16-hash_log));
-  v &= (1 << hash_log) - 1;
-  return v;
-}
+/* Simple, but pretty effective hash function for 3-byte sequence */
+#define HASH_FUNCTION(v,p,l) {	       \
+v = BLOSCLZ_READU16(p);                \
+v ^= BLOSCLZ_READU16(p+1)^(v>>(16-l)); \
+v &= (1 << l) - 1; }
 
 
 #define IP_BOUNDARY 2
@@ -151,7 +145,7 @@ int blosclz_compress(int opt_level, const void* input,
   uint8_t* op = (uint8_t*) output;
 
   /* Hash table depends on the opt level.  Hash_log cannot be larger than 15. */
-  int8_t hash_log_[10] = {-1, 8, 9, 9, 11, 11, 12, 13, 14, 15};
+  int8_t hash_log_[10] = {-1, 8, 9, 9, 11, 11, 12, 12, 12, 13};
   uint8_t hash_log = hash_log_[opt_level];
   uint16_t hash_size = 1 << hash_log;
   uint16_t *htab;
@@ -211,7 +205,7 @@ int blosclz_compress(int opt_level, const void* input,
     }
 
     /* find potential match */
-    hval = hash_function(ip, hash_log);
+    HASH_FUNCTION(hval, ip, hash_log);
     ref = ibase + htab[hval];
     /* update hash table */
     htab[hval] = (uint16_t)(anchor - ibase);
@@ -351,9 +345,9 @@ int blosclz_compress(int opt_level, const void* input,
     }
 
     /* update the hash at match boundary */
-    hval = hash_function(ip, hash_log);
+    HASH_FUNCTION(hval, ip, hash_log);
     htab[hval] = (uint16_t)(ip++ - ibase);
-    hval = hash_function(ip, hash_log);
+    HASH_FUNCTION(hval, ip, hash_log);
     htab[hval] = (uint16_t)(ip++ - ibase);
 
     /* assuming literal copy */
