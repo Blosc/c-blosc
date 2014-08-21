@@ -11,8 +11,13 @@
     
     or, if you don't have the blosc library installed:
 
-    gcc -O3 -msse2 many_compressors.c ../blosc/*.c -o many_compressors \
-        -lpthread -DHAVE_ZLIB -lz -DHAVE_LZ4 -llz4 -DHAVE_SNAPPY -lsnappy
+    gcc -O3 -msse2 many_compressors.c ../blosc/*.c -I../blosc \
+        -o many_compressors -lpthread \
+        -DHAVE_ZLIB -lz -DHAVE_LZ4 -llz4 -DHAVE_SNAPPY -lsnappy
+
+    Using MSVC on Windows:
+
+    cl /Ox /Femany_compressors.exe /Iblosc many_compressors.c blosc\*.c
     
     To run:
 

@@ -105,19 +105,19 @@ To compile using GCC (4.4 or higher recommended) on Unix:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -Iblosc -lpthread
 
 Using Windows and MINGW:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
+   $ gcc -O3 -msse2 -o myprog myprog.c -Iblosc blosc\*.c
 
 Using Windows and MSVC (2010 or higher recommended):
 
 .. code-block:: console
 
-  $ cl /Ox /Femyprog.exe myprog.c blosc\*.c
+  $ cl /Ox /Femyprog.exe /Iblosc myprog.c blosc\*.c
 
 In the `examples/ directory
 <https://github.com/Blosc/c-blosc/tree/master/examples>`_ you can find
@@ -151,7 +151,7 @@ Blosc but with added Zlib support do:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -DHAVE_ZLIB -lz
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -Iblosc -lpthread -DHAVE_ZLIB -lz
 
 In the `bench/ directory
 <https://github.com/Blosc/c-blosc/tree/master/bench>`_ there a couple

@@ -11,8 +11,12 @@
     
     or, if you don't have the blosc library installed:
 
-    gcc -O3 -msse2 simple.c ../blosc/*.c -o simple -lpthread
-    
+    gcc -O3 -msse2 simple.c ../blosc/*.c -I../blosc -o simple -lpthread
+
+    Using MSVC on Windows:
+
+    cl /Ox /Fesimple.exe /Iblosc simple.c blosc\*.c
+
     To run:
 
     $ ./simple

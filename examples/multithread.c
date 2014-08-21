@@ -5,13 +5,17 @@
 
     Example program demonstrating use of the Blosc filter from C code.
 
-    To compile this program:
+    To compile this program using gcc or clang:
 
-    gcc multithread.c -o multithread -lblosc -lpthread
-    
+    gcc/clang multithread.c -o multithread -lblosc -lpthread
+
     or, if you don't have the blosc library installed:
 
-    gcc -O3 -msse2 multithread.c ../blosc/*.c -o multithread -lpthread
+    gcc -O3 -msse2 multithread.c ../blosc/*.c  -I../blosc -o multithread -lpthread
+
+    Using MSVC on Windows:
+
+    cl /Ox /Femultithread.exe /Iblosc multithread.c blosc\*.c
     
     To run:
 
