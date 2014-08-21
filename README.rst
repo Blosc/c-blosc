@@ -90,14 +90,16 @@ similar solutions.
 Compiling your application with a minimalistic Blosc
 ====================================================
 
-The minimal Blosc consists of the next files (in blosc/ directory)::
+The minimal Blosc consists of the next files (in `blosc/ directory
+<https://github.com/Blosc/c-blosc/tree/master/blosc>`_)::
 
     blosc.h and blosc.c      -- the main routines
     shuffle.h and shuffle.c  -- the shuffle code
     blosclz.h and blosclz.c  -- the blosclz compressor
 
 Just add these files to your project in order to use Blosc.  For
-information on compression and decompression routines, see blosc.h.
+information on compression and decompression routines, see `blosc.h
+<https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`_.
 
 To compile using GCC (4.4 or higher recommended) on Unix:
 
