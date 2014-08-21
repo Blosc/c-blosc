@@ -138,9 +138,9 @@ Adding support for other compressors with a minimalistic Blosc
 The official cmake files (see below) for Blosc try hard to include
 support for LZ4, LZ4HC, Snappy, Zlib inside the Blosc library, so
 using them is just a matter of calling the appropriate
-`blosc_set_compressor()
-<https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`.  See an
-`example here
+`blosc_set_compressor() API call
+<https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`_.  See
+an `example here
 <https://github.com/Blosc/c-blosc/blob/master/examples/many_compressors.c>`_.
 
 Having said this, it is also easy to use a minimalistic Blosc and just
