@@ -125,7 +125,8 @@ more hints on how to link your app with Blosc.
 
 A simple usage example is the benchmark in the bench/bench.c file.
 Another example for using Blosc as a generic HDF5 filter is in the
-hdf5/ directory.
+`hdf5/ directory
+<https://github.com/Blosc/c-blosc/tree/master/hdf5>`_.
 
 I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
@@ -143,9 +144,11 @@ libraries. For example, for compiling Blosc with Zlib support do:
 
    $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -DHAVE_ZLIB -lz
 
-In the bench/ directory there a couple of Makefile files (one for UNIX
-and the other for MinGW) with more complete building examples, like
-selecting between libraries or internal sources for the compressors.
+In the `bench/ directory
+<https://github.com/Blosc/c-blosc/tree/master/bench>`_ there a couple
+of Makefile files (one for UNIX and the other for MinGW) with more
+complete building examples, like selecting between libraries or
+internal sources for the compressors.
 
 Compiling the Blosc library with CMake
 ======================================
