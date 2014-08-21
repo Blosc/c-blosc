@@ -11,7 +11,7 @@
     
     or, if you don't have the blosc library installed:
 
-    gcc multithread.c ../blosc/*.c -o multithread -lpthread
+    gcc -O3 -msse2 multithread.c ../blosc/*.c -o multithread -lpthread
     
     To run:
 

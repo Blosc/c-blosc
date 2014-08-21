@@ -132,13 +132,22 @@ I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
 
-Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors with a minimalistic Blosc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to add support for the LZ4, LZ4HC, Snappy or Zlib
-compressors, just add the symbols HAVE_LZ4 (will include both LZ4 and
-LZ4HC), HAVE_SNAPPY and HAVE_ZLIB during compilation and add the
-libraries. For example, for compiling Blosc with Zlib support do:
+The official cmake files (see below) for Blosc try hard to include
+support for LZ4, LZ4HC, Snappy, Zlib inside the Blosc library, so
+using them is just a matter of calling the appropriate
+`blosc_set_compressor()
+<https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`.  See an
+`example here
+<https://github.com/Blosc/c-blosc/blob/master/examples/many_compressors.c>`_.
+
+Having said this, it is also easy to use a minimalistic Blosc and just
+add the symbols HAVE_LZ4 (will include both LZ4 and LZ4HC),
+HAVE_SNAPPY and HAVE_ZLIB during compilation as well as the
+appropriate libraries. For example, for compiling with minimalistic
+Blosc but with added Zlib support do:
 
 .. code-block:: console
 
@@ -147,7 +156,7 @@ libraries. For example, for compiling Blosc with Zlib support do:
 In the `bench/ directory
 <https://github.com/Blosc/c-blosc/tree/master/bench>`_ there a couple
 of Makefile files (one for UNIX and the other for MinGW) with more
-complete building examples, like selecting between libraries or
+complete building examples, like switching between libraries or
 internal sources for the compressors.
 
 Compiling the Blosc library with CMake
@@ -199,13 +208,18 @@ CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
 
+Once you have compiled your Blosc library, you can easily link your
+apps with it as shown in the `example/ directory
+<https://github.com/Blosc/c-blosc/blob/master/examples>`_.
+
 Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib) with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The CMake files in Blosc are configured to automatically detect other
 compressors like LZ4, LZ4HC, Snappy or Zlib by default.  So as long as
 the libraries and the header files for these libraries are accessible,
-these will be used by default.
+these will be used by default.  See an `example here
+<https://github.com/Blosc/c-blosc/blob/master/examples/many_compressors.c>`_.
 
 *Note on Zlib*: the library should be easily found on UNIX systems,
 although on Windows, you can help CMake to find it by setting the

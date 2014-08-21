@@ -11,7 +11,8 @@
     
     or, if you don't have the blosc library installed:
 
-    gcc many_compressors.c ../blosc/*.c -o many_compressors -lpthread
+    gcc -O3 -msse2 many_compressors.c ../blosc/*.c -o many_compressors \
+        -lpthread -DHAVE_ZLIB -lz -DHAVE_LZ4 -llz4 -DHAVE_SNAPPY -lsnappy
     
     To run:
 

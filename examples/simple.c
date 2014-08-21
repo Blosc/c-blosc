@@ -11,7 +11,7 @@
     
     or, if you don't have the blosc library installed:
 
-    gcc simple.c ../blosc/*.c -o simple -lpthread
+    gcc -O3 -msse2 simple.c ../blosc/*.c -o simple -lpthread
     
     To run:
 
