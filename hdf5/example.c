@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2010  Francesc Alted
-    http://blosc.pytables.org
+    http://blosc.org
     License: MIT (see LICENSE.txt)
 
     Example program demonstrating use of the Blosc filter from C code.
@@ -9,8 +9,7 @@
 
     To compile this program:
 
-    h5cc [-DH5_USE_16_API] -lblosc blosc_filter.c example.c \
-         -o example -lpthread
+    h5cc blosc_filter.c example.c -o example -lblosc -lpthread
 
     To run:
 
