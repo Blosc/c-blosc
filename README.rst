@@ -119,6 +119,10 @@ Using Windows and MSVC (2010 or higher recommended):
 
   $ cl /Ox /Femyprog.exe myprog.c blosc\*.c
 
+In the `examples/ directory
+<https://github.com/Blosc/c-blosc/tree/master/examples>`_ you can find
+more hints on how to link your app with Blosc.
+
 A simple usage example is the benchmark in the bench/bench.c file.
 Another example for using Blosc as a generic HDF5 filter is in the
 hdf5/ directory.
