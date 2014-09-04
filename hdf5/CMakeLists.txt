@@ -23,10 +23,10 @@ endif(BUILD_STATIC)
 
 # install
 install(FILES blosc_filter.h DESTINATION include COMPONENT HDF5_FILTER_DEV)
-install(TARGETS blosc_filter_static DESTINATION lib COMPONENT HDF5_FILTER)
+install(TARGETS blosc_filter_shared DESTINATION lib COMPONENT HDF5_FILTER)
 if(BUILD_STATIC)
     install(
-        TARGETS blosc_filter_shared DESTINATION lib COMPONENT HDF5_FILTER_DEV)
+        TARGETS blosc_filter_static DESTINATION lib COMPONENT HDF5_FILTER_DEV)
 endif(BUILD_STATIC)
 
 
