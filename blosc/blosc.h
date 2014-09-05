@@ -50,8 +50,9 @@ extern "C" {
 /* Codes for internal flags (see blosc_cbuffer_metainfo) */
 #define BLOSC_DOSHUFFLE 0x1
 #define BLOSC_MEMCPYED  0x2
+#define BLOSC_CSTRINGS  0x4
 
-/* Codes for the different compressors shipped with Blosc */
+/* Enumerated codes for the different compressors shipped with Blosc (< 8) */
 #define BLOSC_BLOSCLZ   0
 #define BLOSC_LZ4       1
 #define BLOSC_LZ4HC     2
@@ -311,6 +312,23 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 char *blosc_cbuffer_complib(const void *cbuffer);
 
 
+/**
+  Enable the use of the cstrings filter.  max_string_size is the
+  maximum size for strings.  You need to manually call this before
+  decompression, with the appropriate max_string_size.
+
+  This function should always succeed.
+*/
+void blosc_set_cstrings(size_t max_string_size);
+
+
+/**
+  Disable the use of the cstrings filter.
+
+  This function should always succeed.
+*/
+void blosc_unset_cstrings(void);
+
 
 /*********************************************************************
 
@@ -323,7 +341,8 @@ char *blosc_cbuffer_complib(const void *cbuffer);
   Force the use of a specific blocksize.  If 0, an automatic
   blocksize will be used (the default).
   */
-void blosc_set_blocksize(size_t blocksize);
+void blosc_set_blocksize(size_t size);
+
 
 #ifdef __cplusplus
 }

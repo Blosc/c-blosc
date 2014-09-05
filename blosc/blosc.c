@@ -18,6 +18,7 @@
 #endif /*  USING_CMAKE */
 #include "blosc.h"
 #include "shuffle.h"
+#include "cstrings.h"
 #include "blosclz.h"
 #if defined(HAVE_LZ4)
   #include "lz4.h"
@@ -68,12 +69,14 @@ int blosc_set_nthreads_(int);
 /* Global variables for main logic */
 static int32_t init_temps_done = 0;    /* temp for compr/decompr initialized? */
 static int32_t force_blocksize = 0;    /* force the use of a blocksize? */
+static int32_t max_stringsize = 0;     /* max length of strings for cstrings filter */
 static int pid = 0;                    /* the PID for this process */
 static int init_lib = 0;               /* is library initalized? */
 
 /* Global variables for threads */
 static int32_t nthreads = 1;              /* number of desired threads in pool */
 static int32_t compressor = BLOSC_BLOSCLZ;  /* the compressor to use by default */
+static int32_t do_cstrings = 0;           /* cstrings filter activated? */
 static int32_t init_threads_done = 0;     /* pool of threads initialized? */
 static int32_t end_threads = 0;           /* should exisiting threads end? */
 static int32_t init_sentinels_done = 0;   /* sentinels initialized? */
@@ -141,7 +144,7 @@ static int rc;
 #define WAIT_INIT(RET_VAL)  \
   rc = pthread_barrier_wait(&barr_init); \
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
-    printf("Could not wait on barrier (init)\n"); \
+    fprintf(stderr, "Could not wait on barrier (init)\n");	\
     return((RET_VAL));				  \
   }
 #else
@@ -162,7 +165,7 @@ static int rc;
 #define WAIT_FINISH(RET_VAL)   \
   rc = pthread_barrier_wait(&barr_finish); \
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
-    printf("Could not wait on barrier (finish)\n"); \
+    fprintf(stderr, "Could not wait on barrier (finish)\n");	\
     return((RET_VAL));				    \
   }
 #else
@@ -199,7 +202,7 @@ static uint8_t *my_malloc(size_t size)
 #endif  /* _WIN32 */
 
   if (block == NULL || res != 0) {
-    printf("Error allocating memory!");
+    fprintf(stderr, "Error allocating memory!");
     return NULL;
   }
 
@@ -218,7 +221,7 @@ static void my_free(void *block)
 }
 
 
-/* Copy 4 bytes from `*pa` to int32_t, changing endianness if necessary. */
+/* Convert 4 bytes from `*pa` to int32_t, changing endianness if necessary. */
 static int32_t sw32_(uint8_t *pa)
 {
   int32_t idest;
@@ -244,7 +247,7 @@ static int32_t sw32_(uint8_t *pa)
 }
 
 
-/* Copy 4 bytes from `*pa` to `*dest`, changing endianness if necessary. */
+/* Copy 4 bytes from `a` to `*dest`, changing endianness if necessary. */
 static void _sw32(uint8_t* dest, int32_t a)
 {
   uint8_t *pa = (uint8_t *)&a;
@@ -478,12 +481,33 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
   int32_t maxout;
   int32_t typesize = params.typesize;
   uint8_t *_tmp;
+  int doshuffle = (params.flags & BLOSC_DOSHUFFLE) && (typesize > 1);
+  int docstrings = params.flags & BLOSC_CSTRINGS;
   char *compname;
 
-  if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
+  if (doshuffle) {
     /* Shuffle this block (this makes sense only if typesize > 1) */
     shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
+  }
+  else {
+    _tmp = src;
+  }
+
+  /* XXX Only works if SHUFFLE is not activated */
+  if (docstrings) {
+    /* Apply the cstrings filter to this block.  This can reduce the
+       size of the block in tmp. */
+    maxout = cstrings_encode(max_stringsize, blocksize, src, tmp);
+    /* printf("maxout: %d, ", maxout); */
+    if (maxout < 0) {
+      /* Uncompressible block */
+      _tmp = src;
+    }
+    else {
+      _tmp = tmp;
+      blocksize = maxout;
+    }
   }
   else {
     _tmp = src;
@@ -510,7 +534,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       /* TODO perhaps refactor this to keep the value stashed somewhere */
       maxout = snappy_max_compressed_length(neblock);
     }
-    #endif /*  HAVE_SNAPPY */
+    #endif /* HAVE_SNAPPY */
     if (ntbytes+maxout > maxbytes) {
       maxout = maxbytes - ntbytes;   /* avoid buffer overrun */
       if (maxout <= 0) {
@@ -530,19 +554,19 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                    (char *)dest, (size_t)maxout, params.clevel);
     }
-    #endif /*  HAVE_LZ4 */
+    #endif /* HAVE_LZ4 */
     #if defined(HAVE_SNAPPY)
     else if (compressor == BLOSC_SNAPPY) {
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                     (char *)dest, (size_t)maxout);
     }
-    #endif /*  HAVE_SNAPPY */
+    #endif /* HAVE_SNAPPY */
     #if defined(HAVE_ZLIB)
     else if (compressor == BLOSC_ZLIB) {
       cbytes = zlib_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                   (char *)dest, (size_t)maxout, params.clevel);
     }
-    #endif /*  HAVE_ZLIB */
+    #endif /* HAVE_ZLIB */
 
     else {
       blosc_compcode_to_compname(compressor, &compname);
@@ -590,9 +614,15 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
   uint8_t *_tmp;
   int32_t typesize = params.typesize;
   int compressor_format;
+  int doshuffle = (params.flags & BLOSC_DOSHUFFLE) && (typesize > 1);
+  int docstrings = params.flags & BLOSC_CSTRINGS;
   char *compname;
 
-  if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
+  if (doshuffle) {
+    _tmp = tmp;
+  }
+  else if (docstrings) {
+    /* XXX Only works if SHUFFLE is not activated */
     _tmp = tmp;
   }
   else {
@@ -601,6 +631,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
 
   compressor_format = (params.flags & 0xe0) >> 5;
 
+  printf("blocksize(0): %d, ", blocksize);
   /* Compress for each shuffled slice split for this block. */
   if ((typesize <= MAX_SPLITS) && (blocksize/typesize) >= MIN_BUFFERSIZE &&
       (!leftoverblock)) {
@@ -628,19 +659,19 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
         nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
                                      (char*)_tmp, (size_t)neblock);
       }
-      #endif /*  HAVE_LZ4 */
+      #endif /* HAVE_LZ4 */
       #if defined(HAVE_SNAPPY)
       else if (compressor_format == BLOSC_SNAPPY_FORMAT) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
                                         (char*)_tmp, (size_t)neblock);
       }
-      #endif /*  HAVE_SNAPPY */
+      #endif /* HAVE_SNAPPY */
       #if defined(HAVE_ZLIB)
       else if (compressor_format == BLOSC_ZLIB_FORMAT) {
         nbytes = zlib_wrap_decompress((char *)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
       }
-      #endif /*  HAVE_ZLIB */
+      #endif /* HAVE_ZLIB */
       else {
         blosc_compcode_to_compname(compressor_format, &compname);
         fprintf(stderr,
@@ -651,9 +682,10 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
       }
 
       /* Check that decompressed bytes number is correct */
-      if (nbytes != neblock) {
-	return -2;
-      }
+      /* XXX Disabled check */
+      /* if (nbytes != neblock) { */
+      /* 	return -2; */
+      /* } */
 
     }
     src += cbytes;
@@ -662,7 +694,20 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
+  /* XXX Only works if SHUFFLE is not activated */
+  if (docstrings) {
+    /* Apply the cstrings filter to this block */
+    if (max_stringsize == 0) {
+      fprintf(stderr,
+	      "you need to call blosc_set_cstrings() before decompressing");
+	return -3;
+    }
+    printf("max_stringsize, ntbytes: %d, %d, ", max_stringsize, ntbytes);
+    ntbytes = cstrings_decode(max_stringsize, ntbytes, tmp, dest);
+    printf("ntbytes (2): %d, ", ntbytes);
+  }
+
+  if (doshuffle) {
     if ((uintptr_t)dest % 16 == 0) {
       /* 16-bytes aligned dest.  SSE2 unshuffle will work. */
       unshuffle(typesize, blocksize, tmp, dest);
@@ -671,7 +716,7 @@ static int blosc_d(int32_t blocksize, int32_t leftoverblock,
       /* dest is not aligned.  Use tmp2, which is aligned, and copy. */
       unshuffle(typesize, blocksize, tmp, tmp2);
       if (tmp2 != dest) {
-        /* Copy only when dest is not tmp2 (e.g. not blosc_getitem())  */
+        /* Copy only when dest is not tmp2 (e.g. not blosc_getitem()) */
         memcpy(dest, tmp2, blocksize);
       }
     }
@@ -700,6 +745,7 @@ static int serial_blosc(void)
   uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
   uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
 
+  //printf("leftover: %d, ", leftover);
   for (j = 0; j < nblocks; j++) {
     if (compress && !(flags & BLOSC_MEMCPYED)) {
       _sw32(bstarts + j * 4, ntbytes);
@@ -866,20 +912,32 @@ static int do_job(void)
 static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
                                  int32_t nbytes)
 {
-  int32_t blocksize;
+  int32_t blocksize = nbytes;   /* Start by a whole buffer as blocksize */
+
+  if (max_stringsize) {
+    typesize = max_stringsize;
+    /* Check that forced typesize is not too small nor too large */
+    if (typesize < MIN_BUFFERSIZE) {
+      typesize = MIN_BUFFERSIZE;
+    }
+    if (typesize > BLOSC_MAX_BUFFERSIZE) {
+      typesize = BLOSC_MAX_BUFFERSIZE;
+    }
+  }
 
   /* Protection against very small buffers */
   if (nbytes < (int32_t)typesize) {
     return 1;
   }
 
-  blocksize = nbytes;           /* Start by a whole buffer as blocksize */
-
   if (force_blocksize) {
     blocksize = force_blocksize;
     /* Check that forced blocksize is not too small nor too large */
     if (blocksize < MIN_BUFFERSIZE) {
       blocksize = MIN_BUFFERSIZE;
+    }
+    if (blocksize > BLOSC_MAX_BUFFERSIZE) {
+      blocksize = BLOSC_MAX_BUFFERSIZE;
     }
   }
   else if (nbytes >= L1*4) {
@@ -893,7 +951,7 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
     }
 
     /* For LZ4HC, increase the block sizes in a factor of 8 because it
-       is meant for compression large blocks (it shows a big overhead
+       is meant for compressing large blocks (it shows a big overhead
        in compressing small ones). */
     if (compressor == BLOSC_LZ4HC) {
       blocksize *= 8;
@@ -950,6 +1008,7 @@ static int32_t compute_blocksize(int32_t clevel, int32_t typesize,
   if ((compressor == BLOSC_BLOSCLZ) && (blocksize / typesize) > 64*KB) {
     blocksize = 64 * KB * typesize;
   }
+  /* printf("blocksize: %d,", blocksize); */
 
   return blocksize;
 }
@@ -1061,8 +1120,13 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   }
 
   if (doshuffle == 1) {
-    /* Shuffle is active */
-    *flags |= BLOSC_DOSHUFFLE;          /* bit 0 set to one in flags */
+    /* Shuffle filter is active */
+    *flags |= BLOSC_DOSHUFFLE;
+  }
+
+  if (do_cstrings == 1) {
+    /* cstrings filter is active */
+    *flags |= BLOSC_CSTRINGS;
   }
 
   *flags |= compressor_format << 5;        /* compressor format start at bit 5 */
@@ -1869,6 +1933,37 @@ void blosc_set_blocksize(size_t size)
   pthread_mutex_lock(&global_comp_mutex);
 
   force_blocksize = (int32_t)size;
+
+   /* Release global lock  */
+  pthread_mutex_unlock(&global_comp_mutex);
+}
+
+/**
+  Enable the use of the cstrings filter.  max_string_size is the
+  maximum size for strings.
+*/
+void blosc_set_cstrings(size_t max_string_size)
+{
+  /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+
+  do_cstrings = 1;
+  max_stringsize = (int32_t)max_string_size;
+
+   /* Release global lock  */
+  pthread_mutex_unlock(&global_comp_mutex);
+}
+
+/**
+  Disable the use of the cstrings filter.
+*/
+void blosc_unset_cstrings(void)
+{
+  /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+
+  do_cstrings = 0;
+  max_stringsize = 0;
 
    /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);

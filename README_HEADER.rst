@@ -29,7 +29,7 @@ All entries are little endian.
     :bit 1 (``0x02``):
         Whether the internal buffer is a pure memcpy or not.
     :bit 2 (``0x04``):
-        Reserved
+        Whether the cstrings filter has been applied or not.
     :bit 3 (``0x08``):
         Reserved
     :bit 4 (``0x16``):
