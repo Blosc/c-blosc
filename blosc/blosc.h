@@ -5,16 +5,14 @@
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
+#ifndef BLOSC_H
+#define BLOSC_H
 
 #include <limits.h>
 #include <stdlib.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#ifndef BLOSC_H
-#define BLOSC_H
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
