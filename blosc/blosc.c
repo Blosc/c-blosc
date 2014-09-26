@@ -1693,7 +1693,10 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
   int clibcode;
   char *clibname;
   char *clibversion = "unknown";
+
+  #if (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || (defined(HAVE_SNAPPY) && defined(SNAPPY_VERSION))
   char sbuffer[256];
+  #endif
 
   clibcode = compname_to_clibcode(compname);
   clibname = clibcode_to_clibname(clibcode);
