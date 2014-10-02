@@ -1576,8 +1576,14 @@ static int init_threads(void)
 
 void blosc_init(void) {
   /* Init global lock  */
-  pthread_mutex_init(&global_comp_mutex, NULL);
-  init_lib = 1;
+  if (init_lib <= 0)
+  {
+    pthread_mutex_init(&global_comp_mutex, NULL);
+    /* This covers the case where blosc_destroy is called too many
+     times but then is reinitalized */
+    init_lib = 0;
+  }
+  init_lib += 1;
 }
 
 int blosc_set_nthreads(int nthreads_new)
@@ -1791,10 +1797,14 @@ int blosc_free_resources(void)
 }
 
 void blosc_destroy(void) {
-  /* Free the resources */
-  blosc_free_resources();
-  /* Destroy global lock */
-  pthread_mutex_destroy(&global_comp_mutex);
+  if (init_lib == 1)
+  {
+    /* Free the resources */
+    blosc_free_resources();
+    /* Destroy global lock */
+    pthread_mutex_destroy(&global_comp_mutex);
+  }
+  init_lib -= 1;
 }
 
 /* Return `nbytes`, `cbytes` and `blocksize` from a compressed buffer. */
