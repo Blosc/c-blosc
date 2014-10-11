@@ -87,11 +87,17 @@ set_target_properties(blosc_shared PROPERTIES
         VERSION ${version_string}
         SOVERSION 1  # Change this when an ABI change happens
     )
+if (MSVC)
+	set_target_properties (blosc_shared PROPERTIES COMPILE_FLAGS -DDLL_EXPORT=TRUE)
+endif(MSVC)
 target_link_libraries(blosc_shared ${LIBS})
 
 if(BUILD_STATIC)
     add_library(blosc_static STATIC ${SOURCES})
     set_target_properties(blosc_static PROPERTIES OUTPUT_NAME blosc)
+	if (MSVC)
+		set_target_properties(blosc_static PROPERTIES PREFIX lib)
+	endif()
     target_link_libraries(blosc_static ${LIBS})
 endif(BUILD_STATIC)
 
