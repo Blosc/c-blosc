@@ -102,23 +102,8 @@ extern "C" {
 
 
 /**
-  Initialize the Blosc library. You must call this previous to any
-  other Blosc call, and make sure that you call this in a non-threaded
-  environment.  Other Blosc calls can be called in a threaded
-  environment, if desired.
-  */
-DLL_EXPORT void blosc_init(void);
+  Serial interface to blosc compression. Does not require a call to blosc_init.
 
-
-/**
-  Destroy the Blosc library environment. You must call this after to
-  you are done with all the Blosc calls, and make sure that you call
-  this in a non-threaded environment.
-  */
-DLL_EXPORT void blosc_destroy(void);
-
-
-/**
   Compress a block of data in the `src` buffer and returns the size of
   compressed block.  The size of `src` buffer is specified by
   `nbytes`.  There is not a minimum for `src` buffer size (`nbytes`).
@@ -129,6 +114,12 @@ DLL_EXPORT void blosc_destroy(void);
   `doshuffle` specifies whether the shuffle compression preconditioner
   should be applied or not.  0 means not applying it and 1 means
   applying it.
+
+  `compressor` is the string representing the type of compressor to use.
+
+  `blocksize` is the requested size of the compressed blocks.
+
+  `numinternalthreads` number of threads to use internally.
 
   `typesize` is the number of bytes for the atomic type in binary
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
@@ -151,10 +142,17 @@ DLL_EXPORT void blosc_destroy(void);
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report it back
   together with the buffer data causing this and compression settings.
-  */
-DLL_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
-                   const void *src, void *dest, size_t destsize);
-
+*/
+DLL_EXPORT int sblosc_compress(int clevel,
+                                  int doshuffle,
+                                  size_t typesize,
+                                  size_t nbytes,
+                                  const void* src,
+                                  void* dest,
+                                  size_t destsize,
+                                  char* compressor,
+                                  size_t blocksize,
+                                  int numInternalThreads);
 
 /**
   Decompress a block of compressed data in `src`, put the result in
@@ -162,13 +160,46 @@ DLL_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t
 
   The `src` buffer and the `dest` buffer can not overlap.
 
+  `numinternalthreads` number of threads to use internally.
+
   Decompression is memory safe and guaranteed not to write the `dest`
   buffer more than what is specified in `destsize`.
 
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
   will be returned instead.
+*/
+DLL_EXPORT int sblosc_decompress(const void *src, void *dest, size_t destsize, int numInternalThreads);
+
+/**
+  Initialize the Blosc library. You must call this previous to any
+  other Blosc call, and make sure that you call this in a non-threaded
+  environment.  Other Blosc calls can be called in a threaded
+  environment, if desired.
   */
+DLL_EXPORT void blosc_init(void);
+
+
+/**
+  Destroy the Blosc library environment. You must call this after to
+  you are done with all the Blosc calls, and make sure that you call
+  this in a non-threaded environment.
+  */
+DLL_EXPORT void blosc_destroy(void);
+
+
+/**
+  Old interface to blosc compression. Kept for compatibility.
+  See sblosc_compress() for parameter details
+  */
+DLL_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
+                   const void *src, void *dest, size_t destsize);
+
+
+/**
+  Old interface to blosc decompression. Kept for compatibility.
+  See sblosc_decompress() for parameter details
+*/
 DLL_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
 
 
