@@ -150,7 +150,7 @@ DLL_EXPORT int sblosc_compress(int clevel,
                                   const void* src,
                                   void* dest,
                                   size_t destsize,
-                                  char* compressor,
+                                  const char* compressor,
                                   size_t blocksize,
                                   int numInternalThreads);
 
