@@ -1210,135 +1210,119 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
 /* Specific routine optimized for decompression a small number of
    items out of a compressed chunk.  This does not use threads because
    it would affect negatively to performance. */
-int blosc_getitem(const void *src, int start, int nitems, void *dest) { return -1; }
-//int blosc_getitem(const void *src, int start, int nitems, void *dest)
-//{
-//  uint8_t *_src=NULL;               /* current pos for source buffer */
-//  uint8_t version, versionlz;       /* versions for compressed header */
-//  uint8_t flags;                    /* flags for header */
-//  int32_t ntbytes = 0;              /* the number of uncompressed bytes */
-//  int32_t nblocks;                  /* number of total blocks in buffer */
-//  int32_t leftover;                 /* extra bytes at end of buffer */
-//  uint8_t *bstarts;                 /* start pointers for each block */
-//  uint8_t *tmp = g_params.tmp[0];     /* tmp for thread 0 */
-//  uint8_t *tmp2 = g_params.tmp2[0];   /* tmp2 for thread 0 */
-//  int tmp_init = 0;
-//  int32_t typesize, blocksize, nbytes, ctbytes;
-//  int32_t j, bsize, bsize2, leftoverblock;
-//  int32_t cbytes, startb, stopb;
-//  int stop = start + nitems;
-//
-//  _src = (uint8_t *)(src);
-//
-//  /* Take global lock  */
-//  pthread_mutex_lock(&g_global_comp_mutex);
-//
-//  /* Read the header block */
-//  version = _src[0];                        /* blosc format version */
-//  versionlz = _src[1];                      /* blosclz format version */
-//  flags = _src[2];                          /* flags */
-//  typesize = (int32_t)_src[3];              /* typesize */
-//  nbytes = sw32_(_src + 4);                 /* buffer size */
-//  blocksize = sw32_(_src + 8);              /* block size */
-//  ctbytes = sw32_(_src + 12);               /* compressed buffer size */
-//
-//  version += 0;                             /* shut up compiler warning */
-//  versionlz += 0;                           /* shut up compiler warning */
-//  ctbytes += 0;                             /* shut up compiler warning */
-//
-//  _src += 16;
-//  bstarts = _src;
-//  /* Compute some params */
-//  /* Total blocks */
-//  nblocks = nbytes / blocksize;
-//  leftover = nbytes % blocksize;
-//  nblocks = (leftover>0)? nblocks+1: nblocks;
-//  _src += sizeof(int32_t)*nblocks;
-//
-//  /* Check region boundaries */
-//  if ((start < 0) || (start*typesize > nbytes)) {
-//    fprintf(stderr, "`start` out of bounds");
-//    BLOSC_UNLOCK_RETURN(-1);
-//  }
-//
-//  if ((stop < 0) || (stop*typesize > nbytes)) {
-//    fprintf(stderr, "`start`+`nitems` out of bounds");
-//    BLOSC_UNLOCK_RETURN(-1);
-//  }
-//
-//  /* Parameters needed by blosc_d */
-//  g_params.typesize = typesize;
-//  g_params.flags = flags;
-//
-//  /* Initialize temporaries if needed */
-//  if (tmp == NULL || tmp2 == NULL || g_current_temp.blocksize < blocksize) {
-//    tmp = my_malloc(blocksize);
-//    if (tmp == NULL) {
-//      BLOSC_UNLOCK_RETURN(-1);
-//    }
-//    tmp2 = my_malloc(blocksize);
-//    if (tmp2 == NULL) {
-//      BLOSC_UNLOCK_RETURN(-1);
-//    }
-//    tmp_init = 1;
-//  }
-//
-//  for (j = 0; j < nblocks; j++) {
-//    bsize = blocksize;
-//    leftoverblock = 0;
-//    if ((j == nblocks - 1) && (leftover > 0)) {
-//      bsize = leftover;
-//      leftoverblock = 1;
-//    }
-//
-//    /* Compute start & stop for each block */
-//    startb = start * typesize - j * blocksize;
-//    stopb = stop * typesize - j * blocksize;
-//    if ((startb >= (int)blocksize) || (stopb <= 0)) {
-//      continue;
-//    }
-//    if (startb < 0) {
-//      startb = 0;
-//    }
-//    if (stopb > (int)blocksize) {
-//      stopb = blocksize;
-//    }
-//    bsize2 = stopb - startb;
-//
-//    /* Do the actual data copy */
-//    if (flags & BLOSC_MEMCPYED) {
-//      /* We want to memcpy only */
-//      memcpy((uint8_t *)dest + ntbytes,
-//          (uint8_t *)src + BLOSC_MAX_OVERHEAD + j*blocksize + startb,
-//             bsize2);
-//      cbytes = bsize2;
-//    }
-//    else {
-//      /* Regular decompression.  Put results in tmp2. */
-//      cbytes = blosc_d(bsize, leftoverblock,
-//                       (uint8_t *)src + sw32_(bstarts + j * 4),
-//                       tmp2, tmp, tmp2);
-//      if (cbytes < 0) {
-//        ntbytes = cbytes;
-//        break;
-//      }
-//      /* Copy to destination */
-//      memcpy((uint8_t *)dest + ntbytes, tmp2 + startb, bsize2);
-//      cbytes = bsize2;
-//    }
-//    ntbytes += cbytes;
-//  }
-//
-//  /* Release global lock */
-//  pthread_mutex_unlock(&g_global_comp_mutex);
-//
-//  if (tmp_init) {
-//    my_free(tmp);
-//    my_free(tmp2);
-//  }
-//
-//  return ntbytes;
-//}
+int blosc_getitem(const void *src, int start, int nitems, void *dest)
+{
+  uint8_t *_src=NULL;               /* current pos for source buffer */
+  uint8_t version, versionlz;       /* versions for compressed header */
+  uint8_t flags;                    /* flags for header */
+  int32_t ntbytes = 0;              /* the number of uncompressed bytes */
+  int32_t nblocks;                  /* number of total blocks in buffer */
+  int32_t leftover;                 /* extra bytes at end of buffer */
+  uint8_t *bstarts;                 /* start pointers for each block */
+  int tmp_init = 0;
+  int32_t typesize, blocksize, nbytes, ctbytes;
+  int32_t j, bsize, bsize2, leftoverblock;
+  int32_t cbytes, startb, stopb;
+  int stop = start + nitems;
+  uint8_t *tmp;
+  uint8_t *tmp2;
+  int32_t ebsize;
+
+  _src = (uint8_t *)(src);
+
+  /* Read the header block */
+  version = _src[0];                        /* blosc format version */
+  versionlz = _src[1];                      /* blosclz format version */
+  flags = _src[2];                          /* flags */
+  typesize = (int32_t)_src[3];              /* typesize */
+  nbytes = sw32_(_src + 4);                 /* buffer size */
+  blocksize = sw32_(_src + 8);              /* block size */
+  ctbytes = sw32_(_src + 12);               /* compressed buffer size */
+
+  ebsize = blocksize + typesize * (int32_t)sizeof(int32_t);
+  tmp = my_malloc(blocksize);     /* tmp for thread 0 */
+  tmp2 = my_malloc(ebsize);                /* tmp2 for thread 0 */
+
+  version += 0;                             /* shut up compiler warning */
+  versionlz += 0;                           /* shut up compiler warning */
+  ctbytes += 0;                             /* shut up compiler warning */
+
+  _src += 16;
+  bstarts = _src;
+  /* Compute some params */
+  /* Total blocks */
+  nblocks = nbytes / blocksize;
+  leftover = nbytes % blocksize;
+  nblocks = (leftover>0)? nblocks+1: nblocks;
+  _src += sizeof(int32_t)*nblocks;
+
+  /* Check region boundaries */
+  if ((start < 0) || (start*typesize > nbytes)) {
+    fprintf(stderr, "`start` out of bounds");
+    return -1;
+  }
+
+  if ((stop < 0) || (stop*typesize > nbytes)) {
+    fprintf(stderr, "`start`+`nitems` out of bounds");
+    return -1;
+  }
+
+  for (j = 0; j < nblocks; j++) {
+    bsize = blocksize;
+    leftoverblock = 0;
+    if ((j == nblocks - 1) && (leftover > 0)) {
+      bsize = leftover;
+      leftoverblock = 1;
+    }
+
+    /* Compute start & stop for each block */
+    startb = start * typesize - j * blocksize;
+    stopb = stop * typesize - j * blocksize;
+    if ((startb >= (int)blocksize) || (stopb <= 0)) {
+      continue;
+    }
+    if (startb < 0) {
+      startb = 0;
+    }
+    if (stopb > (int)blocksize) {
+      stopb = blocksize;
+    }
+    bsize2 = stopb - startb;
+
+    /* Do the actual data copy */
+    if (flags & BLOSC_MEMCPYED) {
+      /* We want to memcpy only */
+      memcpy((uint8_t *)dest + ntbytes,
+          (uint8_t *)src + BLOSC_MAX_OVERHEAD + j*blocksize + startb,
+             bsize2);
+      cbytes = bsize2;
+    }
+    else {
+      struct blosc_context context;
+      /* blosc_d only uses typesize and flags */
+      context.typesize = typesize;
+      context.header_flags = &flags;
+
+      /* Regular decompression.  Put results in tmp2. */
+      cbytes = blosc_d(&context, bsize, leftoverblock,
+                       (uint8_t *)src + sw32_(bstarts + j * 4),
+                       tmp2, tmp, tmp2);
+      if (cbytes < 0) {
+        ntbytes = cbytes;
+        break;
+      }
+      /* Copy to destination */
+      memcpy((uint8_t *)dest + ntbytes, tmp2 + startb, bsize2);
+      cbytes = bsize2;
+    }
+    ntbytes += cbytes;
+  }
+
+  my_free(tmp);
+  my_free(tmp2);
+
+  return ntbytes;
+}
 
 
 /* Decompress & unshuffle several blocks in a single thread */
