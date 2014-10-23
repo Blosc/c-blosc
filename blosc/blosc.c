@@ -559,7 +559,7 @@ static int blosc_c(int32_t blocksize, int32_t leftoverblock,
       /* cbytes should never be negative */
       return -2;
     }
-    else if (cbytes == 0) {
+    else if (cbytes == 0 || cbytes == neblock) {
       /* The compressor has been unable to compress data at all. */
       /* Before doing the copy, check that we are not running into a
          buffer overflow. */
