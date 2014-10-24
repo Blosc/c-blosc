@@ -138,8 +138,8 @@ int blosc_set_nthreads_(struct blosc_context*);
 #else
 #define WAIT_INIT(RET_VAL, CONTEXT_PTR)   \
   pthread_mutex_lock(&CONTEXT_PTR->count_threads_mutex); \
-  if (g_count_threads < g_nthreads) { \
-    g_count_threads++; \
+  if (CONTEXT_PTR->count_threads < CONTEXT_PTR->numthreads) { \
+    CONTEXT_PTR->count_threads++;  \
     pthread_cond_wait(&CONTEXT_PTR->count_threads_cv, &CONTEXT_PTR->count_threads_mutex); \
   } \
   else { \
@@ -159,8 +159,8 @@ int blosc_set_nthreads_(struct blosc_context*);
 #else
 #define WAIT_FINISH(RET_VAL, CONTEXT_PTR)			    \
   pthread_mutex_lock(&CONTEXT_PTR->count_threads_mutex); \
-  if (g_count_threads > 0) { \
-    g_count_threads--; \
+  if (CONTEXT_PTR->count_threads > 0) { \
+    CONTEXT_PTR->count_threads--; \
     pthread_cond_wait(&CONTEXT_PTR->count_threads_cv, &CONTEXT_PTR->count_threads_mutex); \
   } \
   else { \
@@ -747,6 +747,9 @@ static int serial_blosc(struct blosc_context* context)
 static int parallel_blosc(struct blosc_context* context)
 {
   int rc;
+  int32_t t;
+  void* status;
+  int rc2;
 
   /* Check whether we need to restart threads */
   blosc_set_nthreads_(context);
@@ -758,9 +761,6 @@ static int parallel_blosc(struct blosc_context* context)
   WAIT_FINISH(-1, context);
 
   /* Join exiting threads */
-  int32_t t;
-  void* status;
-  int rc2;
   for (t=0; t<context->numthreads; t++) {
     rc2 = pthread_join(context->threads[t], &status);
     if (rc2) {
@@ -971,11 +971,13 @@ int initalize_context_compression(struct blosc_context* context,
 
 int write_compression_header(struct blosc_context* context, int compression_level, int doshuffle)
 {
+  int32_t compressor_format;
+
   /* Write version header for this block */
   context->dest[0] = BLOSC_VERSION_FORMAT;              /* blosc format version */
 
   /* Write compressor format */
-  int32_t compressor_format = -1;
+  compressor_format = -1;
   switch (context->compressor_code)
   {
   case BLOSC_BLOSCLZ:
@@ -1133,6 +1135,10 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 int sblosc_decompress(const void *src, void *dest, size_t destsize, int numInternalThreads)
 {
   struct blosc_context context;
+  uint8_t version;
+  uint8_t versionlz;
+  uint32_t ctbytes;
+  int32_t ntbytes;
 
   context.compress = 0;
   context.src = (const uint8_t*)src;
@@ -1142,9 +1148,6 @@ int sblosc_decompress(const void *src, void *dest, size_t destsize, int numInter
   context.numthreads = numInternalThreads;
 
   /* Read the header block */
-  uint8_t version;
-  uint8_t versionlz;
-  uint32_t ctbytes;
   version = context.src[0];                        /* blosc format version */
   versionlz = context.src[1];                      /* blosclz format version */
 
@@ -1172,7 +1175,6 @@ int sblosc_decompress(const void *src, void *dest, size_t destsize, int numInter
   }
 
   /* Check whether this buffer is memcpy'ed */
-  int32_t ntbytes;
   if (*(context.header_flags) & BLOSC_MEMCPYED) {
     if (((context.sourcesize % L1) == 0) || (context.numthreads > 1)) {
       /* More effective with large buffers that are multiples of the
@@ -1495,6 +1497,8 @@ static int init_threads(struct blosc_context* context)
 {
   int32_t tid;
   int rc2;
+  int32_t ebsize;
+  struct thread_context* thread_context;
 
   /* Initialize mutex and condition variable objects */
   pthread_mutex_init(&context->count_mutex, NULL);
@@ -1524,11 +1528,11 @@ static int init_threads(struct blosc_context* context)
     context->tids[tid] = tid;
 
     /* Create a thread context thread owns context (will destroy when finished) */
-    struct thread_context* thread_context = (struct thread_context*)my_malloc(sizeof(struct thread_context));
+    thread_context = (struct thread_context*)my_malloc(sizeof(struct thread_context));
     thread_context->parent_context = context;
     thread_context->tid = tid;
 
-    int32_t ebsize = context->blocksize + context->typesize * (int32_t)sizeof(int32_t);
+    ebsize = context->blocksize + context->typesize * (int32_t)sizeof(int32_t);
     thread_context->tmp = my_malloc(context->blocksize);
     thread_context->tmp2 = my_malloc(ebsize);
 
