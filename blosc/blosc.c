@@ -131,6 +131,9 @@ static int32_t g_force_blocksize = 0;
 /* Wrapped function to adjust the number of threads used by blosc */
 int blosc_set_nthreads_(struct blosc_context*);
 
+/* Releases the global threadpool */
+int blosc_release_threadpool(struct blosc_context* context);
+
 /* Macros for synchronization */
 
 /* Wait until all threads are initialized */
@@ -1824,6 +1827,8 @@ int blosc_release_threadpool(struct blosc_context* context)
   }
 
   context->threads_started = 0;
+
+  return 1;
 }
 
 int blosc_free_resources(void) 
