@@ -853,7 +853,11 @@ static int do_job(void)
   /* Run the serial version when nthreads is 1 or when the buffers are
      not much larger than blocksize */
   if (nthreads == 1 || (params.nbytes / params.blocksize) <= 1) {
+    /* We are not going to overwrite global vars, so release the global lock */
+    pthread_mutex_unlock(&global_comp_mutex);
     ntbytes = serial_blosc();
+    /* We finish the work, so grab the global lock again */
+    pthread_mutex_lock(&global_comp_mutex);
   }
   else {
     ntbytes = parallel_blosc();
