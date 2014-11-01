@@ -70,6 +70,7 @@ static int32_t init_temps_done = 0;    /* temp for compr/decompr initialized? */
 static int32_t force_blocksize = 0;    /* force the use of a blocksize? */
 static int pid = 0;                    /* the PID for this process */
 static int init_lib = 0;               /* is library initalized? */
+static int serial_mode = 0;            /* serial mode enabled? */
 
 /* Global variables for threads */
 static int32_t nthreads = 1;              /* number of desired threads in pool */
@@ -1587,6 +1588,8 @@ void blosc_init(void) {
     /* This covers the case where blosc_destroy is called too many
      times but then is reinitalized */
     init_lib = 0;
+    /* Reset the serial mode to False */
+    serial_mode = 0;
   }
   init_lib += 1;
 }
@@ -1594,6 +1597,11 @@ void blosc_init(void) {
 int blosc_set_nthreads(int nthreads_new)
 {
   int ret;
+
+  /* This cannot have any effect in serial mode */
+  if (serial_mode) {
+    return(-2);
+  }
 
   /* Check if should initialize (implementing previous 1.2.3 behaviour,
      where calling blosc_set_nthreads was enough) */
@@ -1660,6 +1668,11 @@ int blosc_set_nthreads_(int nthreads_new)
 int blosc_set_compressor(const char *compname)
 {
   int code;
+
+  /* This cannot have any effect in serial mode */
+  if (serial_mode) {
+    return(-2);
+  }
 
   /* Check if should initialize */
   if (!init_lib) blosc_init();
@@ -1744,6 +1757,37 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
   return clibcode;
 }
 
+
+/* Set Blosc in serial mode (see blosc.h docstrings) */
+int blosc_set_serial_mode(void) {
+  int32_t t;
+  int ret;
+  void *status;
+
+   /* Take global lock  */
+  pthread_mutex_lock(&global_comp_mutex);
+
+  /* Release temporaries */
+  if (init_temps_done) {
+    release_temporaries();
+  }
+
+  /* Force the number of threads to be 1 */
+  ret = blosc_set_nthreads_(1);
+  if (ret) {
+    return(-1);
+  }
+
+  /* Set the serial_mode to True. */
+  serial_mode = 1;
+
+  /* Release global lock  */
+  pthread_mutex_unlock(&global_comp_mutex);
+
+  return(0);
+}
+
+
 /* Free possible memory temporaries and thread resources */
 int blosc_free_resources(void)
 {
@@ -1798,7 +1842,6 @@ int blosc_free_resources(void)
    /* Release global lock  */
   pthread_mutex_unlock(&global_comp_mutex);
   return(0);
-
 }
 
 void blosc_destroy(void) {
@@ -1883,6 +1926,12 @@ char *blosc_cbuffer_complib(const void *cbuffer)
    blocksize will be used (the default). */
 void blosc_set_blocksize(size_t size)
 {
+
+  /* This cannot have any effect in serial mode */
+  if (serial_mode) {
+    return;
+  }
+
   /* Take global lock  */
   pthread_mutex_lock(&global_comp_mutex);
 

@@ -189,7 +189,8 @@ DLL_EXPORT int blosc_getitem(const void *src, int start, int nitems, void *dest)
   previous existing pool is ended.  If this is not called, `nthreads`
   is set to 1 internally.
 
-  Returns the previous number of threads.
+  Returns the previous number of threads, -1 if the operation is not
+  successful or -2 if Blosc is in serial mode.
   */
 DLL_EXPORT int blosc_set_nthreads(int nthreads);
 
@@ -200,8 +201,8 @@ DLL_EXPORT int blosc_set_nthreads(int nthreads);
   called, then "blosclz" will be used.
 
   In case the compressor is not recognized, or there is not support
-  for it in this build, it returns a -1.  Else it returns the code for
-  the compressor (>=0).
+  for it in this build it returns -1.  If Blosc is in serial mode it
+  returns a -2.  Else it returns the code for the compressor (>=0).
   */
 DLL_EXPORT int blosc_set_compressor(const char* compname);
 
@@ -254,6 +255,26 @@ DLL_EXPORT char* blosc_list_compressors(void);
   (>=0).  If it is not supported, this function returns -1.
   */
 DLL_EXPORT int blosc_get_complib_info(char *compname, char **complib, char **version);
+
+
+/**
+  Set Blosc in pure serial mode.  Serial mode does release Blosc
+  internal global lock and it is specially meant to be used in already
+  multi-threaded applications so that they can leverage Blosc in every
+  thread *concurrently*.
+
+  Serial mode means that Blosc will only make use of one single thread
+  internally *and* that you cannot change its internal state by using
+  blosc_set_nthreads(), blosc_set_compressor(), blosc_set_blocksize()
+  or others.  Be sure to correctly set these properties *before*
+  entering serial mode.
+
+  If you want to exit this mode, just call the blosc_destroy() /
+  blosc_init() sequence.
+
+  Returns 0 if Blosc can be put in serial mode; else it returns -1.
+  */
+DLL_EXPORT int blosc_set_serial_mode(void);
 
 
 /**
@@ -328,6 +349,8 @@ DLL_EXPORT char *blosc_cbuffer_complib(const void *cbuffer);
 /**
   Force the use of a specific blocksize.  If 0, an automatic
   blocksize will be used (the default).
+
+  This does not have any effect if Blosc is in serial mode.
   */
 DLL_EXPORT void blosc_set_blocksize(size_t blocksize);
 
