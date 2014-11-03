@@ -1590,6 +1590,8 @@ int blosc_set_nthreads(int nthreads_new)
 {
   int ret = g_threads;
 
+  g_threads = nthreads_new;
+
 
   return ret;
 }
