@@ -125,6 +125,7 @@ static pthread_mutex_t global_comp_mutex;
 static int32_t g_compressor = BLOSC_BLOSCLZ;  /* the compressor to use by default */
 static int32_t g_threads = 1;
 static int32_t g_force_blocksize = 0;
+static int32_t g_initlib = 0;
 
 
 
@@ -1587,8 +1588,11 @@ int blosc_set_nthreads(int nthreads_new)
 {
   int ret = g_threads;
 
-  g_threads = nthreads_new;
+  /* Check if should initialize (implementing previous 1.2.3 behaviour,
+     where calling blosc_set_nthreads was enough) */
+  if (!g_initlib) blosc_init();
 
+  g_threads = nthreads_new;
 
   return ret;
 }
@@ -1623,6 +1627,10 @@ int blosc_set_compressor(const char *compname)
   int code = blosc_compname_to_compcode(compname);
 
   g_compressor = code;
+
+  /* Check if should initialize (implementing previous 1.2.3 behaviour,
+     where calling blosc_set_nthreads was enough) */
+  if (!g_initlib) blosc_init();
 
   return code;
 }
@@ -1773,10 +1781,12 @@ void blosc_init(void)
   pthread_mutex_init(&global_comp_mutex, NULL);
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
+  g_initlib = 1;
 }
 
 void blosc_destroy(void)
 {
+  g_initlib = 0;
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
   pthread_mutex_destroy(&global_comp_mutex);
