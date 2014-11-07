@@ -86,8 +86,8 @@ struct blosc_context {
   int32_t num_output_bytes;       /* Counter for the number of output bytes */
   int32_t destsize;               /* Maximum size for destination buffer */
   uint8_t* bstarts;               /* Start of the buffer past header info */
-  int32_t compressor_code;        /* Compressor code to use */
-  int clevel;          /* Compression level (1-9) */
+  int32_t compcode;               /* Compressor code to use */
+  int clevel;                     /* Compression level (1-9) */
 
   /* Threading */
   int32_t numthreads;
@@ -507,7 +507,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize, int32
     ctbytes += (int32_t)sizeof(int32_t);
     maxout = neblock;
     #if defined(HAVE_SNAPPY)
-    if (context->compressor_code == BLOSC_SNAPPY) {
+    if (context->compcode == BLOSC_SNAPPY) {
       /* TODO perhaps refactor this to keep the value stashed somewhere */
       maxout = snappy_max_compressed_length(neblock);
     }
@@ -518,35 +518,35 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize, int32
         return 0;                  /* non-compressible block */
       }
     }
-    if (context->compressor_code == BLOSC_BLOSCLZ) {
+    if (context->compcode == BLOSC_BLOSCLZ) {
       cbytes = blosclz_compress(context->clevel, _tmp+j*neblock, neblock,
                                 dest, maxout);
     }
     #if defined(HAVE_LZ4)
-    else if (context->compressor_code == BLOSC_LZ4) {
+    else if (context->compcode == BLOSC_LZ4) {
       cbytes = lz4_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                  (char *)dest, (size_t)maxout);
     }
-    else if (context->compressor_code == BLOSC_LZ4HC) {
+    else if (context->compcode == BLOSC_LZ4HC) {
       cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                    (char *)dest, (size_t)maxout, context->clevel);
     }
     #endif /*  HAVE_LZ4 */
     #if defined(HAVE_SNAPPY)
-    else if (context->compressor_code == BLOSC_SNAPPY) {
+    else if (context->compcode == BLOSC_SNAPPY) {
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                     (char *)dest, (size_t)maxout);
     }
     #endif /*  HAVE_SNAPPY */
     #if defined(HAVE_ZLIB)
-    else if (context->compressor_code == BLOSC_ZLIB) {
+    else if (context->compcode == BLOSC_ZLIB) {
       cbytes = zlib_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                   (char *)dest, (size_t)maxout, context->clevel);
     }
     #endif /*  HAVE_ZLIB */
 
     else {
-      blosc_compcode_to_compname(context->compressor_code, &compname);
+      blosc_compcode_to_compname(context->compcode, &compname);
       fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
       fprintf(stderr, "compression support.  Please use one having it.");
       return -5;    /* signals no compression support */
@@ -590,7 +590,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp;
   int32_t typesize = context->typesize;
-  int compressor_format;
+  int32_t compcode;
   char *compname;
 
   if ((*(context->header_flags) & BLOSC_DOSHUFFLE) && (typesize > 1)) {
@@ -600,7 +600,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     _tmp = dest;
   }
 
-  compressor_format = (*(context->header_flags) & 0xe0) >> 5;
+  compcode = (*(context->header_flags) & 0xe0) >> 5;
 
   /* Compress for each shuffled slice split for this block. */
   if ((typesize <= MAX_SPLITS) && (blocksize/typesize) >= MIN_BUFFERSIZE &&
@@ -621,29 +621,29 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
       nbytes = neblock;
     }
     else {
-      if (compressor_format == BLOSC_BLOSCLZ_FORMAT) {
+      if (compcode == BLOSC_BLOSCLZ_FORMAT) {
         nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
       }
       #if defined(HAVE_LZ4)
-      else if (compressor_format == BLOSC_LZ4_FORMAT) {
+      else if (compcode == BLOSC_LZ4_FORMAT) {
         nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
                                      (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_LZ4 */
       #if defined(HAVE_SNAPPY)
-      else if (compressor_format == BLOSC_SNAPPY_FORMAT) {
+      else if (compcode == BLOSC_SNAPPY_FORMAT) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
                                         (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_SNAPPY */
       #if defined(HAVE_ZLIB)
-      else if (compressor_format == BLOSC_ZLIB_FORMAT) {
+      else if (compcode == BLOSC_ZLIB_FORMAT) {
         nbytes = zlib_wrap_decompress((char *)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_ZLIB */
       else {
-        blosc_compcode_to_compname(compressor_format, &compname);
+        blosc_compcode_to_compname(compcode, &compname);
         fprintf(stderr,
                 "Blosc has not been compiled with decompression "
                 "support for '%s' format. ", compname);
@@ -825,14 +825,14 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     /* For Zlib, increase the block sizes in a factor of 8 because it
        is meant for compression large blocks (it shows a big overhead
        in compressing small ones). */
-    if (context->compressor_code == BLOSC_ZLIB) {
+    if (context->compcode == BLOSC_ZLIB) {
       blocksize *= 8;
     }
 
     /* For LZ4HC, increase the block sizes in a factor of 8 because it
        is meant for compression large blocks (it shows a big overhead
        in compressing small ones). */
-    if (context->compressor_code == BLOSC_LZ4HC) {
+    if (context->compcode == BLOSC_LZ4HC) {
       blocksize *= 8;
     }
 
@@ -884,7 +884,7 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
   /* blocksize must not exceed (64 KB * typesize) in order to allow
      BloscLZ to achieve better compression ratios (the ultimate reason
      for this is that hash_log in BloscLZ cannot be larger than 15) */
-  if ((context->compressor_code == BLOSC_BLOSCLZ) && (blocksize / typesize) > 64*KB) {
+  if ((context->compcode == BLOSC_BLOSCLZ) && (blocksize / typesize) > 64*KB) {
     blocksize = 64 * KB * typesize;
   }
 
@@ -911,7 +911,7 @@ int initialize_context_compression(struct blosc_context* context,
   context->destsize = (int32_t)destsize;
   context->sourcesize = sourcesize;
   context->typesize = typesize;
-  context->compressor_code = compressor;
+  context->compcode = compressor;
   context->numthreads = numthreads;
   context->end_threads = 0;
   context->clevel = clevel;
@@ -956,41 +956,41 @@ int initialize_context_compression(struct blosc_context* context,
 
 int write_compression_header(struct blosc_context* context, int clevel, int doshuffle)
 {
-  int32_t compressor_format;
+  int32_t compcode;
 
   /* Write version header for this block */
   context->dest[0] = BLOSC_VERSION_FORMAT;              /* blosc format version */
 
   /* Write compressor format */
-  compressor_format = -1;
-  switch (context->compressor_code)
+  compcode = -1;
+  switch (context->compcode)
   {
   case BLOSC_BLOSCLZ:
-    compressor_format = BLOSC_BLOSCLZ_FORMAT;
+    compcode = BLOSC_BLOSCLZ_FORMAT;
     context->dest[1] = BLOSC_BLOSCLZ_VERSION_FORMAT; /* blosclz format version */
     break;
 
 #if defined(HAVE_LZ4)
   case BLOSC_LZ4:
-    compressor_format = BLOSC_LZ4_FORMAT;
+    compcode = BLOSC_LZ4_FORMAT;
     context->dest[1] = BLOSC_LZ4_VERSION_FORMAT;  /* lz4 format version */
     break;
   case BLOSC_LZ4HC:
-    compressor_format = BLOSC_LZ4HC_FORMAT;
+    compcode = BLOSC_LZ4HC_FORMAT;
     context->dest[1] = BLOSC_LZ4HC_VERSION_FORMAT; /* lz4hc is the same as lz4 */
     break;
 #endif /*  HAVE_LZ4 */
 
 #if defined(HAVE_SNAPPY)
   case BLOSC_SNAPPY:
-    compressor_format = BLOSC_SNAPPY_FORMAT;
+    compcode = BLOSC_SNAPPY_FORMAT;
     context->dest[1] = BLOSC_SNAPPY_VERSION_FORMAT;    /* snappy format version */
     break;
 #endif /*  HAVE_SNAPPY */
 
 #if defined(HAVE_ZLIB)
   case BLOSC_ZLIB:
-    compressor_format = BLOSC_ZLIB_FORMAT;
+    compcode = BLOSC_ZLIB_FORMAT;
     context->dest[1] = BLOSC_ZLIB_VERSION_FORMAT;      /* zlib format version */
     break;
 #endif /*  HAVE_ZLIB */
@@ -998,7 +998,7 @@ int write_compression_header(struct blosc_context* context, int clevel, int dosh
   default:
   {
     char *compname;
-    blosc_compcode_to_compname(compressor_format, &compname);
+    blosc_compcode_to_compname(compcode, &compname);
     fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
     fprintf(stderr, "compression support.  Please use one having it.");
     return -5;    /* signals no compression support */
@@ -1029,7 +1029,7 @@ int write_compression_header(struct blosc_context* context, int clevel, int dosh
     *(context->header_flags) |= BLOSC_DOSHUFFLE;          /* bit 0 set to one in flags */
   }
 
-  *(context->header_flags) |= compressor_format << 5;        /* compressor format start at bit 5 */
+  *(context->header_flags) |= compcode << 5;              /* compressor format start at bit 5 */
 
   return 1;
 }
