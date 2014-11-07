@@ -17,7 +17,8 @@ See the new docstrings in blosc.h for how to use them.  The previous
 API should be completely unaffected.  Thanks to Christopher Speller!
 
 Also, the BloscLZ decompressor underwent some optimizations allowing
-up to 1.5x faster operation in some situations.
+up to 1.5x faster operation in some situations.  Moreover, LZ4 and
+LZ4HC internal compressors have been updated to version 1.3.1.
 
 For more info, please see the release notes in:
 

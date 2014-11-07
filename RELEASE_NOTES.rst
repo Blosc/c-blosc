@@ -23,6 +23,8 @@ Changes from 1.4.1 to 1.5.0
 * Optimized copies during BloscLZ decompression.  This can make BloscLZ
   to decompress up to 1.5x faster in some situations.
 
+* LZ4 and LZ4HC compressors updated to version 1.3.1.
+
 * Added an examples directory on how to link apps with Blosc.
 
 * stdlib.h moved from blosc.c to blosc.h as suggested by Rob Lathm.
