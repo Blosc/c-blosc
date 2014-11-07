@@ -1,10 +1,16 @@
 ================================
- Release notes for c-blosc 1.5.0
+ Release notes for c-blosc 1.5.1
 ================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.5.0 to 1.5.1
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.4.1 to 1.5.0
@@ -393,11 +399,3 @@ Changes from 0.8.0 to 0.9
   necessary on Mac because 16 bytes alignment is ensured by default.
   Thanks to Ivan Vilata.  Fixes #3.
 
-
-
-
-.. Local Variables:
-.. mode: rst
-.. coding: utf-8
-.. fill-column: 72
-.. End:
