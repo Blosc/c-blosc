@@ -8,7 +8,7 @@
     To compile this program:
 
     gcc simple.c -o simple -lblosc -lpthread
-    
+
     or, if you don't have the blosc library installed:
 
     gcc -O3 -msse2 simple.c ../blosc/*.c -I../blosc -o simple -lpthread
@@ -55,7 +55,11 @@ int main(){
 
   /* Compress with clevel=5 and shuffle active  */
   csize = blosc_compress(5, 1, sizeof(float), isize, data, data_out, osize);
-  if (csize < 0) {
+  if (csize == 0) {
+    printf("Buffer is uncompressible.  Giving up.\n");
+    return 1;
+  }
+  else if (csize < 0) {
     printf("Compression error.  Error code: %d\n", csize);
     return csize;
   }
