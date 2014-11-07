@@ -44,10 +44,10 @@ extern "C" {
    implementations */
 #define BLOSC_MAX_OVERHEAD BLOSC_MIN_HEADER_LENGTH
 
-/* Maximum buffer size to be compressed */
+/* Maximum source buffer size to be compressed */
 #define BLOSC_MAX_BUFFERSIZE (INT_MAX - BLOSC_MAX_OVERHEAD)
 
-/* Maximum typesize before considering buffer as a stream of bytes */
+/* Maximum typesize before considering source buffer as a stream of bytes */
 #define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
 
 /* The maximum number of threads (for some static arrays) */

@@ -814,7 +814,7 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
 
   if (forced_blocksize) {
     blocksize = forced_blocksize;
-    /* Check that forced blocksize is not too small nor too large */
+    /* Check that forced blocksize is not too small */
     if (blocksize < MIN_BUFFERSIZE) {
       blocksize = MIN_BUFFERSIZE;
     }
