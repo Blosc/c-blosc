@@ -179,6 +179,8 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     char *complist;
     char errmsg[256];
 
+    blosc_init();
+
     /* Filter params that are always set */
     typesize = cd_values[2];      /* The datatype size */
     outbuf_size = cd_values[3];   /* Precomputed buffer guess */
