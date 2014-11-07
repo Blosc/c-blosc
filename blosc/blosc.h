@@ -24,12 +24,12 @@ extern "C" {
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
-#define BLOSC_VERSION_MINOR    4    /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  2    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_MINOR    5    /* for minor interface/format changes  */
+#define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.4.2.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.5.0.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2014-07-08 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2014-11-07 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.0.3"   /* the internal compressor version */
 
@@ -102,7 +102,7 @@ extern "C" {
 
 
 /**
-  Serial interface to blosc compression. Does not require a call to blosc_init.
+  Context interface to blosc compression. Does not require a call to blosc_init.
 
   Compress a block of data in the `src` buffer and returns the size of
   compressed block.  The size of `src` buffer is specified by
@@ -119,7 +119,7 @@ extern "C" {
 
   `blocksize` is the requested size of the compressed blocks.
 
-  `numinternalthreads` number of threads to use internally.
+  `numinternalthreads` is the number of threads to use internally.
 
   `typesize` is the number of bytes for the atomic type in binary
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
@@ -143,16 +143,10 @@ extern "C" {
   should never happen.  If you see this, please report it back
   together with the buffer data causing this and compression settings.
 */
-DLL_EXPORT int sblosc_compress(int clevel,
-                                  int doshuffle,
-                                  size_t typesize,
-                                  size_t nbytes,
-                                  const void* src,
-                                  void* dest,
-                                  size_t destsize,
-                                  const char* compressor,
-                                  size_t blocksize,
-                                  int numInternalThreads);
+DLL_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
+                                  size_t nbytes, const void* src, void* dest,
+                                  size_t destsize, const char* compressor,
+                                  size_t blocksize, int numinternalthreads);
 
 /**
   Decompress a block of compressed data in `src`, put the result in
@@ -169,7 +163,8 @@ DLL_EXPORT int sblosc_compress(int clevel,
   output buffer is not large enough, then 0 (zero) or a negative value
   will be returned instead.
 */
-DLL_EXPORT int sblosc_decompress(const void *src, void *dest, size_t destsize, int numInternalThreads);
+DLL_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
+                                    size_t destsize, int numinternalthreads);
 
 /**
   Initialize the Blosc library. You must call this previous to any
@@ -192,8 +187,9 @@ DLL_EXPORT void blosc_destroy(void);
   Old interface to blosc compression. Kept for compatibility.
   See sblosc_compress() for parameter details
   */
-DLL_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
-                   const void *src, void *dest, size_t destsize);
+DLL_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
+                              size_t nbytes, const void *src, void *dest,
+                              size_t destsize);
 
 
 /**

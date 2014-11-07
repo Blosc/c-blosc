@@ -1077,22 +1077,17 @@ int blosc_compress_context(struct blosc_context* context)
   return ntbytes;
 }
 
-int sblosc_compress(int clevel,
-                        int doshuffle,
-                        size_t typesize,
-                        size_t nbytes,
-                        const void* src,
-                        void* dest,
-                        size_t destsize,
-                        const char* compressor,
-                        size_t blocksize,
-                        int numInternalThreads)
+/* The public routine for compression with context. */
+int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
+                       size_t nbytes, const void* src, void* dest,
+                       size_t destsize, const char* compressor,
+                       size_t blocksize, int numinternalthreads)
 {
   struct blosc_context context;
   context.threads_started = 0;
   int error = initialize_context_compression(&context, clevel, doshuffle, typesize, nbytes,
                                   src, dest, destsize, blosc_compname_to_compcode(compressor),
-                                  blocksize, numInternalThreads);
+                                  blocksize, numinternalthreads);
   if (error < 0) { return error; }
 
   error = write_compression_header(&context, clevel, doshuffle);
@@ -1100,7 +1095,7 @@ int sblosc_compress(int clevel,
 
   int result = blosc_compress_context(&context);
 
-  if (numInternalThreads > 1)
+  if (numinternalthreads > 1)
   {
     blosc_release_threadpool(&context);
   }
@@ -1135,7 +1130,7 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
 				    const void* src,
 				    void* dest,
 				    size_t destsize,
-				    int numInternalThreads)
+				    int numinternalthreads)
 {
   uint8_t version;
   uint8_t versionlz;
@@ -1147,7 +1142,7 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
   context->dest = (uint8_t*)dest;
   context->destsize = destsize;
   context->num_output_bytes = 0;
-  context->numthreads = numInternalThreads;
+  context->numthreads = numinternalthreads;
   context->end_threads = 0;
 
   /* Read the header block */
@@ -1204,12 +1199,14 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
   return ntbytes;
 }
 
-int sblosc_decompress(const void *src, void *dest, size_t destsize, int numInternalThreads)
+/* The public routine for decompression with context. */
+int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
+			 int numinternalthreads)
 {
   struct blosc_context context;
-  int result = blosc_run_decompression_with_context(&context, src, dest, destsize, numInternalThreads);
+  int result = blosc_run_decompression_with_context(&context, src, dest, destsize, numinternalthreads);
 
-  if (numInternalThreads > 1)
+  if (numinternalthreads > 1)
   {
     blosc_release_threadpool(&context);
   }
@@ -1778,7 +1775,7 @@ void blosc_init(void)
   g_global_context->threads_started = 0;
 }
 
-void blosc_destroy(void) 
+void blosc_destroy(void)
 {
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
@@ -1808,7 +1805,7 @@ int blosc_release_threadpool(struct blosc_context* context)
         fprintf(stderr, "\tError detail: %s\n", strerror(rc2));
       }
     }
-  
+
     /* Release mutex and condition variable objects */
     pthread_mutex_destroy(&context->count_mutex);
 
@@ -1833,7 +1830,7 @@ int blosc_release_threadpool(struct blosc_context* context)
   return 1;
 }
 
-int blosc_free_resources(void) 
+int blosc_free_resources(void)
 {
     blosc_release_threadpool(g_global_context);
 }
