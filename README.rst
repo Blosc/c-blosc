@@ -304,10 +304,15 @@ Other important contributions:
   script.
 
 * Thibault North, with ideas from Oscar Villellas, contributed a way
-  to call Blosc from different threads in a safe way.
+  to call Blosc from different threads in a safe way.  Christopher
+  Speller introduced contexts so that a global lock is not necessary
+  anymore.
 
 * The CMake support was initially contributed by Thibault North, and
   Antonio Valentino and Mark Wiebe made great enhancements to it.
+
+* Christopher Speller also introduced the two new '_ctx' calls to
+  avoid the use of the blosc_init() and blosc_destroy().
 
 
 ----
