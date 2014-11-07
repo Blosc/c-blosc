@@ -3,7 +3,7 @@ Releasing Blosc
 ================
 
 :Author: Francesc Alted
-:Contact: francesc@blosc.io
+:Contact: francesc@blosc.org
 :Date: 2014-01-15
 
 
