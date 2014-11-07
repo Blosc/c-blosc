@@ -119,7 +119,7 @@ struct thread_context {
   int32_t tmpblocksize; /* Used to keep track of how big the temporary buffers are */
 };
 
-/* Global context for old API */
+/* Global context for non-contextual API */
 static struct blosc_context* g_global_context;
 static pthread_mutex_t global_comp_mutex;
 static int32_t g_compressor = BLOSC_BLOSCLZ;  /* the compressor to use by default */
