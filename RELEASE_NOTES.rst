@@ -1,5 +1,5 @@
 ================================
- Release notes for c-blosc 1.4.2
+ Release notes for c-blosc 1.5.0
 ================================
 
 :Author: Francesc Alted
@@ -7,10 +7,31 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.4.1 to 1.4.2
+Changes from 1.4.1 to 1.5.0
 ===========================
 
-#XXX version-specific blurb XXX#
+* Added new calls for allowing Blosc to be used *simultaneously*
+  (i.e. lock free) from multi-threaded environments.  The new
+  functions are:
+
+  - blosc_compress_ctx(...)
+  - blosc_decompress_ctx(...)
+
+  See the new docstrings in blosc.h for how to use them.  The previous
+  API should be completely unaffected.  Thanks to Christopher Speller.
+
+* Optimized copies during BloscLZ decompression.  This can make BloscLZ
+  to decompress up to 1.5x faster in some situations.
+
+* Added an examples directory on how to link apps with Blosc.
+
+* stdlib.h moved from blosc.c to blosc.h as suggested by Rob Lathm.
+
+* Fix a warning for {snappy,lz4}-free compilation.  Thanks to Andrew Schaaf.
+
+* Several improvements for CMakeLists.txt (cmake).
+
+* Fixing C99 compatibility warnings.  Thanks to Christopher Speller.
 
 
 Changes from 1.4.0 to 1.4.1

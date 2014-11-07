@@ -1,12 +1,23 @@
 ===============================================================
- Announcing c-blosc 1.4.2
+ Announcing c-blosc 1.5.0
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+The most important addition for 1.5.0 is the support for internal
+contexts, allowing Blosc to be used *simultaneously* (i.e. lock free)
+from multi-threaded environments.  The new functions are:
+
+  - blosc_compress_ctx(...)
+  - blosc_decompress_ctx(...)
+
+See the new docstrings in blosc.h for how to use them.  The previous
+API should be completely unaffected.  Thanks to Christopher Speller!
+
+Also, the BloscLZ decompressor underwent some optimizations allowing
+up to 1.5x faster operation in some situations.
 
 For more info, please see the release notes in:
 
