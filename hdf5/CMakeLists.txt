@@ -5,7 +5,7 @@ include_directories("${PROJECT_SOURCE_DIR}/blosc")
 
 # dependencies
 find_package(HDF5 REQUIRED)
-include_directories(HDF5_INCLUDE_DIRS)
+include_directories(${HDF5_INCLUDE_DIRS})
 
 
 # targets
