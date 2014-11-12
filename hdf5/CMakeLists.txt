@@ -4,7 +4,8 @@ set(SOURCES blosc_filter.c)
 include_directories("${PROJECT_SOURCE_DIR}/blosc")
 
 # dependencies
-find_package(HDF5 REQUIRED)
+file(TO_CMAKE_PATH "$ENV{HDF5_ROOT_DIR_HINT}" HDF5_ENV_VAR_HINT)
+find_package(HDF5 REQUIRED HINTS ${HDF5_ENV_VAR_HINT})
 include_directories(${HDF5_INCLUDE_DIRS})
 
 
