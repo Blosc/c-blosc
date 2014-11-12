@@ -14,3 +14,6 @@ Here there go some random thoughts for Blosc 2.0:
 * Add more space in header for allowing more compressors and filters.
   Discuss how much should that space be in the mailing list.
 
+* Make two different versions of the header so that it supports 32-bit
+  sizes as well as 64-bit?  That would allow to compress buffers larger
+  than INT_MAX.
