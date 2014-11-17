@@ -18,7 +18,7 @@ if(BUILD_STATIC)
     add_library(blosc_filter_static ${SOURCES})
     set_target_properties(
         blosc_filter_static PROPERTIES OUTPUT_NAME blosc_filter)
-    target_link_libraries(blosc_filter_static blosc_static)
+    target_link_libraries(blosc_filter_static blosc_static ${HDF5_LIBRARIES})
 endif(BUILD_STATIC)
 
 
