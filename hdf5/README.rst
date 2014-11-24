@@ -50,6 +50,9 @@ Using Windows and MSVC (2008 or higher recommended):
 
 Intel ICC compilers should work too.
 
+On Windows, you'll need to copy hdf5.dll and possibly the msvc*.dll files
+to your filter's directory if you do not have HDF5 installed in your PATH.
+
 For activating the support for other compressors than the integrated
 BloscLZ (like LZ4, LZ4HC, Snappy or Zlib) see the README file in the
 main Blosc directory.
@@ -90,8 +93,8 @@ the release C run-time.
 * Configure and build c-blosc using the debug configuration. Ensure that
 CMake uses the installed release-configuration HDF5.
 
-* You may need to copy blosc.dll and hdf5.dll to the filter's binary
-directory.
+* You may need to copy hdf5.dll to the filter's binary directory if
+ the HDF5 bin directory is not in your PATH.
 
 * At this point, HDF5 will be using the release C run-time and c-blosc
 will be using the debug C run-time. You can confirm this using the
