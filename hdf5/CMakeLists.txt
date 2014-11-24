@@ -10,7 +10,8 @@ if(MSVC)
     # file can be updated for Windows.
     #
     # Note that you have to set this environment variable by hand.
-    file(TO_CMAKE_PATH "$ENV{HDF5_DIR}" HDF5_DIR)
+    file(TO_CMAKE_PATH "$ENV{HDF5_DIR}" HDF5_HINT)
+    set(HDF5_DIR ${HDF5_HINT} CACHE STRING "Path to HDF5 CMake config directory.")
     find_package(HDF5 REQUIRED HINTS ${HDF5_DIR})
 else(MSVC)
     find_package(HDF5 REQUIRED)
@@ -30,6 +31,16 @@ if(BUILD_STATIC)
     target_link_libraries(blosc_filter_static blosc_static ${HDF5_LIBRARIES})
 endif(BUILD_STATIC)
 
+# have to copy blosc dlls for Visual Studio
+if(MSVC)
+    add_custom_command(
+        TARGET      blosc_filter_shared
+        POST_BUILD
+        COMMAND     ${CMAKE_COMMAND}
+        ARGS        -E copy_if_different
+                    "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc.dll"
+                    "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc.dll")
+endif(MSVC)
 
 # install
 install(FILES blosc_filter.h DESTINATION include COMPONENT HDF5_FILTER_DEV)
