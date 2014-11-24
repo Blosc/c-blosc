@@ -128,3 +128,6 @@ Acknowledgments
 
 This HDF5 filter interface and its example is based in the LZF interface
 (http://h5py.alfven.org) by Andrew Collette.
+
+Dana Robinson made nice improvements on existing CMake files for
+Windows/MSVC.
