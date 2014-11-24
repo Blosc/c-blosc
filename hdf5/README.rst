@@ -86,19 +86,13 @@ fix in HDF5 1.8.15 (May 2015).
 To duplicate the problem
 ------------------------
 
-* Install the HDF5 binary distribution. The HDF5 binaries are built in
-release mode (even though they include debugging symbols) and link to
-the release C run-time.
+* Install the HDF5 binary distribution. The HDF5 binaries are built in release mode (even though they include debugging symbols) and link to the release C run-time.
 
-* Configure and build c-blosc using the debug configuration. Ensure that
-CMake uses the installed release-configuration HDF5.
+* Configure and build c-blosc using the debug configuration. Ensure that CMake uses the installed release-configuration HDF5.
 
-* You may need to copy hdf5.dll to the filter's binary directory if
- the HDF5 bin directory is not in your PATH.
+* You may need to copy hdf5.dll to the filter's binary directory if the HDF5 bin directory is not in your PATH.
 
-* At this point, HDF5 will be using the release C run-time and c-blosc
-will be using the debug C run-time. You can confirm this using the
-Visual Studio tool 'dumpbin /imports'.
+* At this point, HDF5 will be using the release C run-time and c-blosc will be using the debug C run-time. You can confirm this using the Visual Studio tool 'dumpbin /imports'.
 
 * Run example.exe. It should crash.
 
