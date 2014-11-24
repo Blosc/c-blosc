@@ -90,7 +90,7 @@ To duplicate the problem
 
 * Configure and build c-blosc using the debug configuration. Ensure that CMake uses the installed release-configuration HDF5.
 
-* You may need to copy hdf5.dll to the filter's binary directory if the HDF5 bin directory is not in your PATH.
+* You may need to copy hdf5.dll and the msvc*.dll libraries to the filter's binary directory if the HDF5 bin directory is not in your PATH.
 
 * At this point, HDF5 will be using the release C run-time and c-blosc will be using the debug C run-time. You can confirm this using the Visual Studio tool 'dumpbin /imports'.
 
