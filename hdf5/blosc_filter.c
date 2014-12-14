@@ -158,6 +158,9 @@ herr_t blosc_set_local(hid_t dcpl, hid_t type, hid_t space){
     r = H5Pmodify_filter(dcpl, FILTER_BLOSC, flags, nelements, values);
     if(r<0) return -1;
 
+    /* Initialize Blosc */
+    blosc_init();
+
     return 1;
 }
 

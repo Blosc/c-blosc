@@ -25,11 +25,11 @@ extern "C" {
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
 #define BLOSC_VERSION_MINOR    5    /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_RELEASE  1    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.5.0.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.5.1.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2014-11-07 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2014-12-14 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.0.3"   /* the internal compressor version */
 
@@ -171,12 +171,10 @@ DLL_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
 
   `compressor`: the string representing the type of compressor to use.
 
-  `blocksize`: the requested size of the compressed blocks.
+  `blocksize`: the requested size of the compressed blocks.  If 0, an
+   automatic blocksize will be used.
 
   `numinternalthreads`: the number of threads to use internally.
-
-  Note: This call may be removed in Blosc 2.0, but a proper
-  replacement for the same functionality should be in place by then.
 
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report it back
@@ -215,9 +213,6 @@ DLL_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
 
   Decompression is memory safe and guaranteed not to write the `dest`
   buffer more than what is specified in `destsize`.
-
-  Note: This call may be removed in Blosc 2.0, but a proper
-  replacement for the same functionality should be in place by then.
 
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
