@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+This is maintenance release, where quite a few improvements happened
+in the included HDF5 filter, better support for non SSE2 platforms and
+LZ4 sources have been updated to 1.5.0.
 
 For more info, please see the release notes in:
 

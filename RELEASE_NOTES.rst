@@ -10,7 +10,20 @@
 Changes from 1.5.0 to 1.5.1
 ===========================
 
-#XXX version-specific blurb XXX#
+* Updated to LZ4 1.5.0.  Closes #74.
+
+* Added the 'const' qualifier to non SSE2 shuffle functions. Closes #75.
+
+* Explicitly call blosc_init() in HDF5 blosc_filter.c, fixing a
+  segfault.
+
+* Quite a few improvements in cmake files for HDF5 support.  Thanks to
+  Dana Robinson (The HDF Group).
+
+* Variable 'class' caused problems compiling the HDF5 filter with g++.
+  Thanks to Laurent Chapon.
+
+* Small improvements on docstrings of c-blosc main functions.
 
 
 Changes from 1.4.1 to 1.5.0
