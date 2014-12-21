@@ -25,7 +25,7 @@
 
 /* Shuffle a block.  This can never fail. */
 static void _shuffle(size_t bytesoftype, size_t blocksize,
-	                 const uint8_t* _src, uint8_t* _dest)
+                     const uint8_t* _src, uint8_t* _dest)
 {
   size_t i, j, neblock, leftover;
 
@@ -490,12 +490,12 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
 #else   /* no __SSE2__ available */
 
 void shuffle(size_t bytesoftype, size_t blocksize,
-             uint8_t* _src, uint8_t* _dest) {
+             const uint8_t* _src, uint8_t* _dest) {
   _shuffle(bytesoftype, blocksize, _src, _dest);
 }
 
 void unshuffle(size_t bytesoftype, size_t blocksize,
-               uint8_t* _src, uint8_t* _dest) {
+               const uint8_t* _src, uint8_t* _dest) {
   _unshuffle(bytesoftype, blocksize, _src, _dest);
 }
 
