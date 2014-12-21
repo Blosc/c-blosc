@@ -1,14 +1,12 @@
 ===============================================================
- Announcing c-blosc 1.5.0
+ Announcing c-blosc 1.5.2
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-This is maintenance release, where quite a few improvements happened
-in the included HDF5 filter, better support for non SSE2 platforms and
-LZ4 sources have been updated to 1.5.0.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
