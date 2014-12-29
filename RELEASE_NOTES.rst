@@ -10,7 +10,12 @@
 Changes from 1.5.1 to 1.5.2
 ===========================
 
-#XXX version-specific blurb XXX#
+* Using blosc_compress_ctx() / blosc_decompress_ctx() inside the HDF5
+  compressor for allowing operation in multiprocess scenarios.  See:
+  https://github.com/PyTables/PyTables/issues/412
+
+  The drawback of this quick fix is that the Blosc filter will be only
+  able to use a single thread until another solution can be devised.
 
 
 Changes from 1.5.0 to 1.5.1
