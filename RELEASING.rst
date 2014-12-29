@@ -20,7 +20,7 @@ Testing
 
 Create a new build/ directory, change into it and issue::
 
-  $ cmake ..
+  $ cmake -DBUILD_HDF5_FILTER=TRUE ..
   $ make
   $ make test
 
