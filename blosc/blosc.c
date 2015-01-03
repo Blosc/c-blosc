@@ -32,7 +32,14 @@
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
-  #include "win32/stdint-windows.h"
+
+  /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1600
+    #include "win32/stdint-windows.h"
+  #else
+    #include <stdint.h>
+  #endif
+
   #include <process.h>
   #define getpid _getpid
 #else
