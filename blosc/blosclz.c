@@ -112,7 +112,7 @@
 }
 
 #define SAFE_COPY(op, ref, len, op_limit)     \
-if (abs(op-ref) < CPYSIZE) {                  \
+if (llabs(op-ref) < CPYSIZE) {                \
   for(; len; --len)                           \
     *op++ = *ref++;                           \
 }                                             \
@@ -120,7 +120,7 @@ else BLOCK_COPY(op, ref, len, op_limit);
 
 /* Copy optimized for GCC 4.8.  Seems like long copy loops are optimal. */
 #define GCC_SAFE_COPY(op, ref, len, op_limit) \
-if ((len > 32) || (abs(op-ref) < CPYSIZE)) {  \
+if ((len > 32) || (llabs(op-ref) < CPYSIZE)) { \
   for(; len; --len)                           \
     *op++ = *ref++;                           \
 }                                             \
