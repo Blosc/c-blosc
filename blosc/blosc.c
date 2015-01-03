@@ -48,6 +48,11 @@
   #include <pthread.h>
 #endif
 
+/* If C11 is supported, use it's built-in aligned allocation. */
+#if __STDC_VERSION__ >= 201112L
+  #include <stdalign.h>
+#endif
+
 
 /* Some useful units */
 #define KB 1024
@@ -186,7 +191,10 @@ static uint8_t *my_malloc(size_t size)
   void *block = NULL;
   int res = 0;
 
-#if defined(_WIN32)
+#if __STDC_VERSION__ >= 201112L
+  /* C11 aligned allocation. 'size' must be a multiple of the alignment. */
+  block = aligned_alloc(16, size);
+#elif defined(_WIN32)
   /* A (void *) cast needed for avoiding a warning with MINGW :-/ */
   block = (void *)_aligned_malloc(size, 16);
 #elif defined __APPLE__
