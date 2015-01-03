@@ -38,8 +38,8 @@ int main(){
   static float data[SIZE];
   static float data_out[SIZE];
   static float data_dest[SIZE];
-  int isize = SIZE*sizeof(float), osize = SIZE*sizeof(float);
-  int dsize = SIZE*sizeof(float), csize;
+  const size_t isize = SIZE*sizeof(float), osize = SIZE*sizeof(float);
+  const size_t dsize = SIZE*sizeof(float), csize;
   int i;
 
   for(i=0; i<SIZE; i++){
@@ -50,11 +50,9 @@ int main(){
   printf("Blosc version info: %s (%s)\n",
 	 BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
 
-  /* Initialize the Blosc compressor */
-  blosc_init();
-
-  /* Compress with clevel=5 and shuffle active  */
-  csize = blosc_compress(5, 1, sizeof(float), isize, data, data_out, osize);
+  /* Compress with clevel=5, shuffle active, blosclz compressor, and single-threaded  */
+  csize = blosc_compress_ctx(5, 1, sizeof(float), isize, data, data_out, osize,
+            BLOSC_BLOSCLZ_COMPNAME, 0, 1);
   if (csize == 0) {
     printf("Buffer is uncompressible.  Giving up.\n");
     return 1;
@@ -67,16 +65,13 @@ int main(){
   printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
 
   /* Decompress  */
-  dsize = blosc_decompress(data_out, data_dest, dsize);
+  dsize = blosc_decompress_ctx(data_out, data_dest, dsize, 1);
   if (dsize < 0) {
     printf("Decompression error.  Error code: %d\n", dsize);
     return dsize;
   }
 
   printf("Decompression succesful!\n");
-
-  /* After using it, destroy the Blosc environment */
-  blosc_destroy();
 
   for(i=0;i<SIZE;i++){
     if(data[i] != data_dest[i]) {

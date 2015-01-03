@@ -47,9 +47,12 @@ int main(){
   static float data[SIZE];
   static float data_out[SIZE];
   static float data_dest[SIZE];
-  int isize = SIZE*sizeof(float), osize = SIZE*sizeof(float);
-  int dsize = SIZE*sizeof(float), csize;
-  int nthreads, pnthreads, i;
+  const size_t isize = SIZE*sizeof(float), osize = SIZE*sizeof(float);
+  const size_t dsize = SIZE*sizeof(float), csize;
+  static const int clevel = 5;      /* Compression level */
+  static const int maxthreads = 4;  /* Maximum number of threads to use */
+  int nthreads;
+  int i;
 
   for(i=0; i<SIZE; i++){
     data[i] = i;
@@ -59,38 +62,31 @@ int main(){
   printf("Blosc version info: %s (%s)\n",
 	 BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
 
-  /* Initialize the Blosc compressor */
-  blosc_init();
-
   /* Tell Blosc to use some number of threads */
-  for (nthreads=1; nthreads <= 4; nthreads++) {
+  for (nthreads=1; nthreads <= maxthreads; nthreads++) {
+    printf("Using %d threads\n", nthreads);
 
-    pnthreads = blosc_set_nthreads(nthreads);
-    printf("Using %d threads (previously using %d)\n", nthreads, pnthreads);
-
-    /* Compress with clevel=5 and shuffle active  */
-    csize = blosc_compress(5, 1, sizeof(float), isize, data, data_out, osize);
+    /* Compress with specified clevel and shuffle active  */
+    csize = blosc_compress_ctx(clevel, 1, sizeof(float), isize, data, data_out, osize,
+              BLOSC_BLOSCLZ_COMPNAME, 0, nthreads);
     if (csize < 0) {
-      printf("Compression error.  Error code: %d\n", csize);
+      fprintf(stderr, "Compression error.  Error code: %d\n", csize);
       return csize;
     }
 
     printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
 
     /* Decompress  */
-    dsize = blosc_decompress(data_out, data_dest, dsize);
+    dsize = blosc_decompress_ctx(data_out, data_dest, dsize, nthreads);
     if (dsize < 0) {
-        printf("Decompression error.  Error code: %d\n", dsize);
+        fprintf(stderr, "Decompression error.  Error code: %d\n", dsize);
         return dsize;
     }
 
-    /* After using it, destroy the Blosc environment */
-    blosc_destroy();
-
     for(i=0;i<SIZE;i++){
       if(data[i] != data_dest[i]) {
-	printf("Decompressed data differs from original!\n");
-	return -1;
+        fprintf(stderr, "Decompressed data differs from original!\n");
+        return -1;
       }
     }
 
