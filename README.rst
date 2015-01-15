@@ -80,7 +80,7 @@ Other advantages of Blosc are:
   nthreads) additional bytes over the source buffer length are needed
   to compress *every* input.
 
-* Maximum destination length: contrarily to many other
+* Maximum destination length: contrary to many other
   compressors, both compression and decompression routines have
   support for maximum size lengths for the destination buffer.
 
@@ -230,7 +230,7 @@ directories are. Also, make sure that Zlib DDL library is in your
 However, the full sources for LZ4, LZ4HC, Snappy and Zlib have been
 included in Blosc too. So, in general, you should not worry about not
 having (or CMake not finding) the libraries in your system because in
-this case, their sources will be automaticall compiled for you. That
+this case, their sources will be automatically compiled for you. That
 effectively means that you can be confident in having a complete
 support for all the supported compression libraries in all supported
 platforms.
