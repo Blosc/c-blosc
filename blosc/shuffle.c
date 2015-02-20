@@ -725,6 +725,7 @@ shuffle_tiled(uint8_t* dest, const uint8_t* src, size_t size, size_t bytesoftype
     for (offset_into_type = 0; offset_into_type < bytesoftype;
       offset_into_type += (offset_into_type == 0 && vecs_per_el.rem > 0 ? vecs_per_el.rem : sizeof(__m128i))) {
       __m128i xmm0[16], xmm1[16];
+      int k, l;
 
       /* Fetch elements in groups of 256 bytes */
       const uint8_t* const src_with_offset = src + offset_into_type;
@@ -1011,7 +1012,7 @@ unshuffle_tiled(uint8_t* dest, const uint8_t* orig, size_t size, size_t bytesoft
   for (offset_into_type = 0; offset_into_type < bytesoftype;
     offset_into_type += (offset_into_type == 0 && vecs_per_el.rem > 0 ? vecs_per_el.rem : sizeof(__m128i))) {
     size_t i;
-    for (j = 0; i < num_elements; i += sizeof(__m128i)) {
+    for (i = 0; i < num_elements; i += sizeof(__m128i)) {
       __m128i xmm1[16], xmm2[16];
       int j;
 
