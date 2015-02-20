@@ -1017,7 +1017,7 @@ unshuffle_tiled(uint8_t* dest, const uint8_t* orig, size_t size, size_t bytesoft
       int j;
 
       /* Load the first 128 bytes in 16 XMM registers */
-      uint8_t* const src_for_ith_element = orig + i;
+      const uint8_t* const src_for_ith_element = orig + i;
       for (j = 0; j < 16; j++) {
         xmm1[j] = _mm_loadu_si128((__m128i*)(src_for_ith_element + (num_elements * (offset_into_type + j))));
       }
