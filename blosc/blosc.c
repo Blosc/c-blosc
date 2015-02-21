@@ -1605,9 +1605,9 @@ int blosc_set_nthreads(int nthreads_new)
 {
   int ret = g_threads;
 
-  /* Check if should initialize (implementing previous 1.2.3 behaviour,
-     where calling blosc_set_nthreads was enough) */
-  if (!g_initlib) blosc_init();
+  /* Re-initialize Blosc */
+  blosc_destroy();
+  blosc_init();
 
   g_threads = nthreads_new;
 
