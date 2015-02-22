@@ -882,8 +882,9 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     blocksize = nbytes;
   }
 
-  /* blocksize must be a multiple of both the typesize and the vector size */
-  if (blocksize > typesize) {
+  /* blocksize must be a multiple of both the typesize and the vector size
+     for maximum shuffle/unshuffle speed. */
+  if (blocksize > (16 * typesize)) {
     blocksize -= blocksize % (16 * typesize);
   }
 
@@ -894,6 +895,8 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     blocksize = 64 * KB * typesize;
   }
 
+  assert(blocksize > 0);
+  assert(blocksize <= nbytes);
   return blocksize;
 }
 
