@@ -166,9 +166,9 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   float tmemcpy, tshuf, tunshuf;
   int clevel, doshuffle=1;
   unsigned char *orig, *round;
-
-  blosc_set_nthreads(nthreads);
-  if(blosc_set_compressor(compressor) < 0){
+  
+  /* Determine if the selected compressor is supported. */
+  if(blosc_compname_to_compcode(compressor) < 0){
     printf("Compiled w/o support for compressor: '%s', so sorry.\n",
            compressor);
     exit(1);
@@ -229,8 +229,10 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
     gettimeofday(&last, NULL);
     for (i = 0; i < niter; i++) {
       for (j = 0; j < nchunks; j++) {
-        cbytes = blosc_compress(clevel, doshuffle, elsize, size, src,
-                                dest[j], size+BLOSC_MAX_OVERHEAD);
+        cbytes = blosc_compress_ctx(
+          clevel, doshuffle, elsize, size, src,
+          dest[j], size+BLOSC_MAX_OVERHEAD,
+          compressor, 0, nthreads);
       }
     }
     gettimeofday(&current, NULL);
@@ -258,7 +260,7 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
           nbytes = size;
         }
         else {
-          nbytes = blosc_decompress(dest[j], dest2, size);
+          nbytes = blosc_decompress_ctx(dest[j], dest2, size, nthreads);
         }
       }
     }
