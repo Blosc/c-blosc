@@ -652,8 +652,8 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
       unshuffle_tiled(_dest, _src, vectorizable_bytes, bytesoftype);
     }
     else {
-      /* Non-optimized shuffle */
-      _shuffle(bytesoftype, blocksize, _src, _dest);
+      /* Non-optimized unshuffle */
+      _unshuffle(bytesoftype, blocksize, _src, _dest);
       /* The non-optimized function covers the whole buffer,
          so we're done processing here. */
       return;
