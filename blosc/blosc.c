@@ -874,7 +874,8 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
   }
   else if (nbytes > (16 * 16))  {
     /* align to typesize to make use of vectorized shuffles */
-    if (typesize == 2 || typesize == 4 || typesize == 8 || typesize == 16 || typesize > 16) {
+    if ((typesize == 2 || typesize == 4 || typesize == 8 || typesize == 16 || typesize > 16) &&
+        (blocksize > (16 * typesize))) {
       blocksize -= blocksize % (16 * typesize);
     }
   }
