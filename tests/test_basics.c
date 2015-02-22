@@ -81,10 +81,7 @@ static char * test_shuffle()
       }
       blosc_compress(5, 1, t, t * n, d, o, t * n + BLOSC_MAX_OVERHEAD);
       blosc_decompress(o, d2, t * n);
-      ok = 1;
-      for (k = 0; ok && k < n; k++) {
-        ok = (d[k] == d2[k]);
-      }
+      ok = (memcmp(d, d2, t * n) == 0);
       free(d);
       free(d2);
       free(o);
@@ -113,10 +110,7 @@ static char * test_noshuffle()
       }
       blosc_compress(5, 0, t, t * n, d, o, t * n + BLOSC_MAX_OVERHEAD);
       blosc_decompress(o, d2, t * n);
-      ok = 1;
-      for (k = 0; ok && k < n; k++) {
-        ok = (d[k] == d2[k]);
-      }
+      ok = (memcmp(d, d2, t * n) == 0);
       free(d);
       free(d2);
       free(o);
@@ -145,10 +139,7 @@ static char * test_getitem()
       }
       blosc_compress(5, 1, t, t * n, d, o, t * n + BLOSC_MAX_OVERHEAD);
       blosc_getitem(o, 0, n, d2);
-      ok = 1;
-      for (k = 0; ok && k < n; k++) {
-        ok = (d[k] == d2[k]);
-      }
+      ok = (memcmp(d, d2, t * n) == 0);
       free(d);
       free(d2);
       free(o);
