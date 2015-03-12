@@ -27,6 +27,10 @@
   #else
     #include <stdint.h>
   #endif
+  /* llabs only available in VS2013 (VC++ 18.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1800
+    #define llabs(v) abs(v)
+  #endif
 #else
   #include <stdint.h>
 #endif  /* _WIN32 */
