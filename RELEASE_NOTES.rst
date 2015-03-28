@@ -1,10 +1,16 @@
 ================================
- Release notes for c-blosc 1.5.3
+ Release notes for c-blosc 1.5.4
 ================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.5.3 to 1.5.4
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.5.2 to 1.5.3
