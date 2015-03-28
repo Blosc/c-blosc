@@ -1,12 +1,14 @@
 ===============================================================
- Announcing c-blosc 1.5.2
+ Announcing c-blosc 1.5.3
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+This is a maintenance release.  There is better support for MSVC
+compilers, and it has been fixed an issue when changing the number of
+threads in the same process.
 
 For more info, please see the release notes in:
 
