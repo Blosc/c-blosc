@@ -175,15 +175,16 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   }
 
   /* Initialize buffers */
-  src = malloc(size);
   srccpy = malloc(size);
-  dest2 = malloc(size);
+  posix_memalign( (void **)(&src), 32, size);
+  posix_memalign( (void **)(&dest2), 32, size);
+
   /* zero src to initialize byte on it, and not only multiples of 4 */
   memset(src, 0, size);
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < nchunks; j++) {
-    dest[j] = malloc(size+BLOSC_MAX_OVERHEAD);
+     posix_memalign( (void **)(&dest[j]), 32, size+BLOSC_MAX_OVERHEAD);
   }
 
   /* Warm destination memory (memcpy() will go a bit faster later on) */

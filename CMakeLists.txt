@@ -52,6 +52,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(blosc)
 
+add_definitions(-march=core-avx2)
+
 # parse the full version numbers from blosc.h
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/blosc/blosc.h _blosc_h_contents)
 string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_MAJOR[ \t]+([0-9]+).*"
