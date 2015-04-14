@@ -60,6 +60,7 @@ double totalsize = 0.;          /* total compressed/decompressed size */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
 #include <windows.h>
+#include <malloc.h>
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
   #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
 #else
@@ -105,6 +106,12 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
   }
 
   return 0;
+}
+
+int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+	*memptr = _aligned_malloc(size, alignment);
+	return 0;
 }
 #endif   /* _WIN32 */
 
@@ -175,15 +182,16 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   }
 
   /* Initialize buffers */
-  src = malloc(size);
   srccpy = malloc(size);
-  dest2 = malloc(size);
+  posix_memalign( (void **)(&src), 32, size);
+  posix_memalign( (void **)(&dest2), 32, size);
+
   /* zero src to initialize byte on it, and not only multiples of 4 */
   memset(src, 0, size);
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < nchunks; j++) {
-    dest[j] = malloc(size+BLOSC_MAX_OVERHEAD);
+     posix_memalign( (void **)(&dest[j]), 32, size+BLOSC_MAX_OVERHEAD);
   }
 
   /* Warm destination memory (memcpy() will go a bit faster later on) */
