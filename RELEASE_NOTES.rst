@@ -14,6 +14,7 @@ Changes from 1.5.3 to 1.5.4
 
 * Better checks during testing.  Jack Pappas.
 
+* Dynamically loadable HDF5 filter plugin. Kiyo Masui.
 
 
 Changes from 1.5.2 to 1.5.3
