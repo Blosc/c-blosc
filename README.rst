@@ -41,7 +41,7 @@ details.
 
 .. [1] http://www.blosc.org
 .. [2] http://blosc.org/docs/StarvingCPUs-CISE-2010.pdf
-.. [3] http://blosc.org/trac/wiki/SyntheticBenchmarks
+.. [3] http://blosc.org/synthetic-benchmarks.html
 
 Meta-compression and other advantages over existing compressors
 ===============================================================
