@@ -10,7 +10,9 @@
 Changes from 1.5.3 to 1.5.4
 ===========================
 
-* Updated to LZ4 1.6.0 (r128)
+* Updated to LZ4 1.6.0 (r128).
+
+* Fix resource leak in t_blosc.  Jack Pappas.
 
 * Better checks during testing.  Jack Pappas.
 

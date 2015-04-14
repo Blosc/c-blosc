@@ -27,9 +27,9 @@ extern "C" {
 #define BLOSC_VERSION_MINOR    5    /* for minor interface/format changes  */
 #define BLOSC_VERSION_RELEASE  4    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.5.4.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.5.4"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2015-03-28 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2015-04-14 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.0.3"   /* the internal compressor version */
 
