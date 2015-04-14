@@ -66,7 +66,7 @@ static char *test_maxout_great() {
 static char * test_shuffle()
 {
   int sizes[] = {7, 64 * 3, 7*256, 500, 8000, 100000, 702713};
-  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 16};
+  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 11, 16, 22, 30, 32, 42, 48, 52, 53, 64, 80};
   int i, j, k;
   int ok;
   for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
@@ -95,7 +95,7 @@ static char * test_shuffle()
 static char * test_noshuffle()
 {
   int sizes[] = {7, 64 * 3, 7*256, 500, 8000, 100000, 702713};
-  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 16};
+  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 11, 16, 22, 30, 32, 42, 48, 52, 53, 64, 80};
   int i, j, k;
   int ok;
   for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
@@ -124,7 +124,7 @@ static char * test_noshuffle()
 static char * test_getitem()
 {
   int sizes[] = {7, 64 * 3, 7*256, 500, 8000, 100000, 702713};
-  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 16};
+  int types[] = {1, 2, 3, 4, 5, 6, 7, 8, 11, 16, 22, 30, 32, 42, 48, 52, 53, 64, 80};
   int i, j, k;
   int ok;
   for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
