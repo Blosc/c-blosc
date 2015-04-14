@@ -1391,7 +1391,7 @@ static void *t_blosc(void *ctxt)
 
     if(context->parent_context->end_threads)
     {
-      return(NULL);
+      break;
     }
 
     /* Get parameters for this thread before entering the main loop */
