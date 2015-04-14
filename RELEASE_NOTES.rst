@@ -10,7 +10,10 @@
 Changes from 1.5.3 to 1.5.4
 ===========================
 
-#XXX version-specific blurb XXX#
+* Updated to LZ4 1.6.0 (r128)
+
+* Better checks during testing.  Jack Pappas.
+
 
 
 Changes from 1.5.2 to 1.5.3
