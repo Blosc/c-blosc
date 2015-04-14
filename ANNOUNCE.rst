@@ -6,9 +6,7 @@
 What is new?
 ============
 
-Besides several small enhancements and a leak fix, this release
-includes a dynamically loadable HDF5 filter plugin (hdf5 directory) as
-well as an update to LZ4 1.6.0 (from 1.5.0).
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
