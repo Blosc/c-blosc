@@ -199,8 +199,7 @@ static uint8_t *my_malloc(size_t size)
   void *block = NULL;
   int res = 0;
 
-#ifdef __AVX2__
-
+/* Do an alignment to 32 bytes because AVX2 is supported */
 #if __STDC_VERSION__ >= 201112L
   /* C11 aligned allocation. 'size' must be a multiple of the alignment. */
   block = aligned_alloc(32, size);
@@ -209,32 +208,13 @@ static uint8_t *my_malloc(size_t size)
   block = (void *)_aligned_malloc(size, 32);
 #elif defined __APPLE__
   /* Mac OS X guarantees 16-byte alignment in small allocs */
-  posix_memalign( &block, 32, size);
+  block = malloc(size);
 #elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
   /* Platform does have an implementation of posix_memalign */
   res = posix_memalign(&block, 32, size);
 #else
   block = malloc(size);
 #endif  /* _WIN32 */
-
-#else  /* else __AVX2__ */
-
-#if __STDC_VERSION__ >= 201112L
-  /* C11 aligned allocation. 'size' must be a multiple of the alignment. */
-  block = aligned_alloc(16, size);
-#elif defined(_WIN32)
-  /* A (void *) cast needed for avoiding a warning with MINGW :-/ */
-  block = (void *)_aligned_malloc(size, 16);
-#elif defined __APPLE__
-  /* Mac OS X guarantees 16-byte alignment in small allocs */
-  block = malloc(size);
-#elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-  /* Platform does have an implementation of posix_memalign */
-  res = posix_memalign(&block, 16, size);
-#else
-  block = malloc(size);
-#endif  /* _WIN32 */
-#endif
 
   if (block == NULL || res != 0) {
     printf("Error allocating memory!");
