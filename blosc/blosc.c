@@ -873,19 +873,11 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     }
   }
   else if (nbytes > (16 * 16))  {
-      /* align to typesize to make use of vectorized shuffles */
-      if (typesize == 2) {
-          blocksize -= blocksize % (16 * 2);
-      }
-      else if (typesize == 4) {
-          blocksize -= blocksize % (16 * 4);
-      }
-      else if (typesize == 8) {
-          blocksize -= blocksize % (16 * 8);
-      }
-      else if (typesize == 16) {
-          blocksize -= blocksize % (16 * 16);
-      }
+    /* align to typesize to make use of vectorized shuffles */
+    if ((typesize == 2 || typesize == 4 || typesize == 8 || typesize == 16 || typesize > 16) &&
+        (blocksize > (16 * typesize))) {
+      blocksize -= blocksize % (16 * typesize);
+    }
   }
 
   /* Check that blocksize is not too large */
@@ -893,9 +885,10 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     blocksize = nbytes;
   }
 
-  /* blocksize must be a multiple of the typesize */
-  if (blocksize > typesize) {
-    blocksize = blocksize / typesize * typesize;
+  /* blocksize must be a multiple of both the typesize and the vector size
+     for maximum shuffle/unshuffle speed. */
+  if (blocksize > (16 * typesize)) {
+    blocksize -= blocksize % (16 * typesize);
   }
 
   /* blocksize must not exceed (64 KB * typesize) in order to allow
@@ -905,6 +898,8 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     blocksize = 64 * KB * typesize;
   }
 
+  assert(blocksize > 0);
+  assert(blocksize <= nbytes);
   return blocksize;
 }
 
