@@ -1,12 +1,17 @@
 ===============================================================
- Announcing c-blosc 1.5.4
+ Announcing c-blosc 1.6.0
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+Support for AVX2 is here!  The benchmarks with a 4-core Intel Haswell
+machine report that both compression and decompression are accelerated
+around a 10%, reaching peaks of 9.6 GB/s during compression and 26
+GB/s during decompression (memcpy() speed for this machine is 7.5 GB/s
+for writes and 11.7 GB/s for reads).  Many thanks to @littlezhou for
+this nice work.
 
 For more info, please see the release notes in:
 
