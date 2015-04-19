@@ -86,7 +86,7 @@ shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
   for( i=0;i<nitem;i++ ) {
     for( j=0;j<4;j++ )  {
       for(k=0;k<2;k++) {
-        a[k] = _mm256_load_si256( (__m256i*)(src + i*256 +j*64+k*32));
+        a[k] = _mm256_loadu_si256( (__m256i*)(src + i*256 +j*64+k*32));
         b[k] = _mm256_shuffle_epi8( a[k], shmask );
       }
       c[0] = _mm256_permute4x64_epi64( b[0], 0xD8);
@@ -141,7 +141,7 @@ shuffle4_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
   for (i = 0, j = 0; i < numof16belem; i++, j += 32*4) {
     /* Fetch and transpose bytes and words in groups of 64 bytes */
     for (k = 0; k < 4; k++) {
-      ymm0[k] = _mm256_load_si256((__m256i*)(src+j+k*32));
+      ymm0[k] = _mm256_loadu_si256((__m256i*)(src+j+k*32));
       ymm1[k] = _mm256_shuffle_epi32(ymm0[k], 0xd8);
       ymm0[k] = _mm256_shuffle_epi32(ymm0[k], 0x8d);
       ymm0[k] = _mm256_unpacklo_epi8(ymm1[k], ymm0[k]);
@@ -228,7 +228,7 @@ shuffle8_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*8*2) {
     /* Fetch and transpose bytes in groups of 128 bytes */
     for (k = 0; k < 8; k++) {
-      ymm0[k] = _mm256_load_si256((__m256i*)(src+j+k*32));
+      ymm0[k] = _mm256_loadu_si256((__m256i*)(src+j+k*32));
       ymm1[k] = _mm256_shuffle_epi32(ymm0[k], 0x4e);
       ymm1[k] = _mm256_unpacklo_epi8(ymm0[k], ymm1[k]);
     }
@@ -336,7 +336,7 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
   for (i = 0, j = 0; i < numof16belem; i++, j += 16*32) {
     /* Fetch elements in groups of 256 bytes */
     for (k = 0; k < 16; k++) {
-      ymm0[k] = _mm256_load_si256((__m256i*)(src+j+k*32));
+      ymm0[k] = _mm256_loadu_si256((__m256i*)(src+j+k*32));
     }
 
     /* Transpose bytes */
