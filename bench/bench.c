@@ -168,7 +168,7 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   void *src, *srccpy;
   void *dest[NCHUNKS], *dest2;
   int nbytes = 0, cbytes = 0;
-  int i, j;
+  int i, j, retcode;
   struct timeval last, current;
   float tmemcpy, tshuf, tunshuf;
   int clevel, doshuffle=1;
@@ -183,15 +183,15 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
 
   /* Initialize buffers */
   srccpy = malloc(size);
-  posix_memalign( (void **)(&src), 32, size);
-  posix_memalign( (void **)(&dest2), 32, size);
+  retcode = posix_memalign( (void **)(&src), 32, size);
+  retcode = posix_memalign( (void **)(&dest2), 32, size);
 
   /* zero src to initialize byte on it, and not only multiples of 4 */
   memset(src, 0, size);
   init_buffer(src, size, rshift);
   memcpy(srccpy, src, size);
   for (j = 0; j < nchunks; j++) {
-     posix_memalign( (void **)(&dest[j]), 32, size+BLOSC_MAX_OVERHEAD);
+     retcode = posix_memalign( (void **)(&dest[j]), 32, size+BLOSC_MAX_OVERHEAD);
   }
 
   /* Warm destination memory (memcpy() will go a bit faster later on) */
