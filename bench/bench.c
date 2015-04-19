@@ -194,11 +194,6 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
      retcode = posix_memalign( (void **)(&dest[j]), 32, size+BLOSC_MAX_OVERHEAD);
   }
 
-  /* Warm destination memory (memcpy() will go a bit faster later on) */
-  for (j = 0; j < nchunks; j++) {
-    memcpy(dest[j], src, size);
-  }
-
   fprintf(ofile, "--> %d, %d, %d, %d, %s\n", nthreads, size, elsize, rshift, compressor);
   fprintf(ofile, "********************** Run info ******************************\n");
   fprintf(ofile, "Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
