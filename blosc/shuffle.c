@@ -19,7 +19,8 @@
      targeting the minimum architecture level supporting SSE2.
      Other compilers define this as expected and emit warnings
      when it is re-defined. */
-  #if defined(_MSC_VER) && (defined(_M_X64) || (defined(_M_IX86) && _M_IX86_FP >= 2))
+  #if !defined(__SSE2__) && defined(_MSC_VER) && \
+      (defined(_M_X64) || (defined(_M_IX86) && _M_IX86_FP >= 2))
     #define __SSE2__
   #endif
 #else
@@ -65,7 +66,7 @@ static void _unshuffle(size_t bytesoftype, size_t blocksize,
 }
 
 
-#ifdef __AVX2__
+#if defined(__AVX2__)
 //#pragma message "Using AVX2 version shuffle/unshuffle"
 
 #include <immintrin.h>
@@ -527,7 +528,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
 }
 
 
-#elif __SSE2__
+#elif defined(__SSE2__)
 
 /* The SSE2 versions of shuffle and unshuffle */
 
