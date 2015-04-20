@@ -17,6 +17,13 @@ Changes from 1.5.4 to 1.6.0
   this machine is 7.5 GB/s for writes and 11.7 GB/s for reads).  Many
   thanks to @littlezhou for this nice work.
 
+* Support HPET (high precision timers) for the `bench` program.  This
+  is particularly important for microbenchmarks like bench is doing;
+  since they take so little time to run, the granularity of a
+  less-accurate timer may account for a significant portion of the
+  runtime of the benchmark itself, skewing the results.  Thanks to
+  Jack Pappas.
+
 
 Changes from 1.5.3 to 1.5.4
 ===========================
