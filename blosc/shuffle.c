@@ -71,6 +71,7 @@ static void _unshuffle(size_t bytesoftype, size_t blocksize,
 
 #include <immintrin.h>
 
+/* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
 static void
 shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 {
@@ -103,6 +104,8 @@ shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
   }
 }
 
+
+/* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
 static void
 unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 {
@@ -122,6 +125,7 @@ unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
     ((__m256i *)dest)[j+1] = b[1];
   }
 }
+
 
 /* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
 static void
@@ -171,6 +175,7 @@ shuffle4_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
   }
 }
 
+
 /* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
 static void
 unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
@@ -214,7 +219,6 @@ unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     ((__m256i *)dest)[k+3] = ymm1[3];
   }
 }
-
 
 
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
@@ -319,6 +323,7 @@ unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
   }
 }
 
+
 /* Routine optimized for shuffling a buffer for a type size of 16 bytes. */
 static void
 shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
@@ -366,7 +371,7 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
       ymm0[k*2+1] = _mm256_unpackhi_epi64(ymm1[k], ymm1[k+8]);
     }
 
-    for (k=0;k<16;k++) {
+    for (k = 0; k < 16; k++) {
       ymm0[k] = _mm256_permute4x64_epi64( ymm0[k], 0xD8);
       ymm0[k] = _mm256_shuffle_epi8( ymm0[k], shmask);
     }
@@ -377,6 +382,7 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
     }
   }
 }
+
 
 /* Routine optimized for unshuffling a buffer for a type size of 16 bytes. */
 static void
@@ -485,6 +491,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
   }
 }
 
+
 /* Unshuffle a block.  This can never fail. */
 void unshuffle(size_t bytesoftype, size_t blocksize,
                const uint8_t* _src, uint8_t* _dest) {
@@ -513,7 +520,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
     unshuffle16_AVX2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 2) {
-	unshuffle2_AVX2(_dest, _src, blocksize);
+    unshuffle2_AVX2(_dest, _src, blocksize);
   }
   else {
     /* Non-optimized unshuffle */
@@ -546,7 +553,7 @@ static void printxmm(__m128i xmm0)
 
 /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
 static void
-shuffle2(uint8_t* dest, const uint8_t* src, size_t size)
+shuffle2_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t numof16belem;
@@ -583,7 +590,7 @@ shuffle2(uint8_t* dest, const uint8_t* src, size_t size)
 
 /* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
 static void
-shuffle4(uint8_t* dest, const uint8_t* src, size_t size)
+shuffle4_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t numof16belem;
@@ -620,7 +627,7 @@ shuffle4(uint8_t* dest, const uint8_t* src, size_t size)
 
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
 static void
-shuffle8(uint8_t* dest, const uint8_t* src, size_t size)
+shuffle8_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k, l;
   size_t numof16belem;
@@ -660,7 +667,7 @@ shuffle8(uint8_t* dest, const uint8_t* src, size_t size)
 
 /* Routine optimized for shuffling a buffer for a type size of 16 bytes. */
 static void
-shuffle16(uint8_t* dest, const uint8_t* src, size_t size)
+shuffle16_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k, l;
   size_t numof16belem;
@@ -720,16 +727,16 @@ void shuffle(size_t bytesoftype, size_t blocksize,
   /* The buffer must be aligned on a 16 bytes boundary, have a power */
   /* of 2 size and be larger or equal than 256 bytes. */
   if (bytesoftype == 4) {
-    shuffle4(_dest, _src, blocksize);
+    shuffle4_SSE2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 8) {
-    shuffle8(_dest, _src, blocksize);
+    shuffle8_SSE2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 16) {
-    shuffle16(_dest, _src, blocksize);
+    shuffle16_SSE2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 2) {
-    shuffle2(_dest, _src, blocksize);
+    shuffle2_SSE2(_dest, _src, blocksize);
   }
   else {
     /* Non-optimized shuffle */
@@ -740,7 +747,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
 
 /* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
 static void
-unshuffle2(uint8_t* dest, const uint8_t* orig, size_t size)
+unshuffle2_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, k;
   size_t neblock, numof16belem;
@@ -766,7 +773,7 @@ unshuffle2(uint8_t* dest, const uint8_t* orig, size_t size)
 
 /* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
 static void
-unshuffle4(uint8_t* dest, const uint8_t* orig, size_t size)
+unshuffle4_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -804,7 +811,7 @@ unshuffle4(uint8_t* dest, const uint8_t* orig, size_t size)
 
 /* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
 static void
-unshuffle8(uint8_t* dest, const uint8_t* orig, size_t size)
+unshuffle8_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -853,7 +860,7 @@ unshuffle8(uint8_t* dest, const uint8_t* orig, size_t size)
 
 /* Routine optimized for unshuffling a buffer for a type size of 16 bytes. */
 static void
-unshuffle16(uint8_t* dest, const uint8_t* orig, size_t size)
+unshuffle16_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -934,16 +941,16 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
   /* The buffers must be aligned on a 16 bytes boundary, have a power */
   /* of 2 size and be larger or equal than 256 bytes. */
   if (bytesoftype == 4) {
-    unshuffle4(_dest, _src, blocksize);
+    unshuffle4_SSE2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 8) {
-    unshuffle8(_dest, _src, blocksize);
+    unshuffle8_SSE2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 16) {
-    unshuffle16(_dest, _src, blocksize);
+    unshuffle16_SSE2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 2) {
-    unshuffle2(_dest, _src, blocksize);
+    unshuffle2_SSE2(_dest, _src, blocksize);
   }
   else {
     /* Non-optimized unshuffle */
