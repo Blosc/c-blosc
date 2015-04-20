@@ -4,6 +4,9 @@ set(SOURCES bench.c)
 
 # targets
 add_executable(bench ${SOURCES})
+if(UNIX)
+  target_link_libraries(bench LINK_PRIVATE rt)
+endif(UNIX)
 target_link_libraries(bench blosc_shared)
 
 # have to copy blosc dlls for Visual Studio
