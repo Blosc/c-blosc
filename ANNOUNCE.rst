@@ -21,20 +21,15 @@ https://github.com/Blosc/c-blosc/wiki/Release-notes
 What is it?
 ===========
 
-Blosc (http://www.blosc.org) is a high performance compressor
+Blosc (http://www.blosc.org) is a high performance meta-compressor
 optimized for binary data.  It has been designed to transmit data to
 the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
 
-Blosc is the first compressor (that I'm aware of) that is meant not
-only to reduce the size of large datasets on-disk or in-memory, but
-also to accelerate object manipulations that are memory-bound.
-
-Blosc has a Python wrapper called python-blosc
-(https://github.com/Blosc/python-blosc) with a high-performance
-interface to NumPy too.  There is also a handy command line for Blosc
-called Bloscpack (https://github.com/Blosc/bloscpack) that allows you to
-compress large binary datafiles on-disk.
+Blosc has internal support for different compressors like its internal
+BloscLZ, but also LZ4, LZ4HC, Snappy and Zlib.  This way these can
+automatically leverage the multithreading and pre-filtering
+(shuffling) capabilities that comes with Blosc for free.
 
 
 Download sources
