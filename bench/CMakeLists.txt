@@ -5,7 +5,10 @@ set(SOURCES bench.c)
 # targets
 add_executable(bench ${SOURCES})
 if(UNIX)
-  target_link_libraries(bench LINK_PRIVATE rt)
+  # cmake is complaining about LINK_PRIVATE in original PR
+  # and removing it does not seem to hurt, so be it.
+  # target_link_libraries(bench LINK_PRIVATE rt)
+  target_link_libraries(bench rt)
 endif(UNIX)
 target_link_libraries(bench blosc_shared)
 
