@@ -1,10 +1,16 @@
 ================================
- Release notes for c-blosc 1.6.0
+ Release notes for c-blosc 1.6.1
 ================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.5.4 to 1.6.0
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.5.4 to 1.6.0
@@ -17,9 +23,9 @@ Changes from 1.5.4 to 1.6.0
   this machine is 7.5 GB/s for writes and 11.7 GB/s for reads).  Many
   thanks to @littlezhou for this nice work.
 
-* Support HPET (high precision timers) for the `bench` program.  This
-  is particularly important for microbenchmarks like bench is doing;
-  since they take so little time to run, the granularity of a
+* Support for HPET (high precision timers) for the `bench` program.
+  This is particularly important for microbenchmarks like bench is
+  doing; since they take so little time to run, the granularity of a
   less-accurate timer may account for a significant portion of the
   runtime of the benchmark itself, skewing the results.  Thanks to
   Jack Pappas.
