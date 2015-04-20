@@ -29,7 +29,7 @@
 #endif  /* _WIN32 */
 
 
-/* The non-SSE2 versions of shuffle and unshuffle */
+/* The non-SIMD versions of shuffle and unshuffle */
 
 /* Shuffle a block.  This can never fail. */
 static void _shuffle(size_t bytesoftype, size_t blocksize,
@@ -67,7 +67,7 @@ static void _unshuffle(size_t bytesoftype, size_t blocksize,
 
 
 #if defined(__AVX2__)
-//#pragma message "Using AVX2 version shuffle/unshuffle"
+/* #pragma message "Using AVX2 version shuffle/unshuffle" */
 
 #include <immintrin.h>
 
@@ -101,28 +101,6 @@ shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
       _mm256_store_si256((__m256i*)(dest+j*32+(size>>1)), d[1]);
     }
     dest += 128;
-  }
-}
-
-
-/* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
-static void
-unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
-{
-  size_t i, j;
-  size_t nitem;
-  __m256i a[2], b[2], c[2];
-
-  nitem = size/64;
-  for( i=0, j=0;i<nitem;i++,j+=2 ) {
-    a[0] = ((__m256i *)src)[0*nitem+i];
-    a[1] = ((__m256i *)src)[1*nitem+i];
-    a[0] = _mm256_permute4x64_epi64(a[0], 0xD8);
-    a[1] = _mm256_permute4x64_epi64(a[1], 0xD8);
-    b[0] = _mm256_unpacklo_epi8(a[0], a[1]);
-    b[1] = _mm256_unpackhi_epi8(a[0], a[1]);
-    ((__m256i *)dest)[j+0] = b[0];
-    ((__m256i *)dest)[j+1] = b[1];
   }
 }
 
@@ -176,51 +154,6 @@ shuffle4_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 }
 
 
-/* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
-static void
-unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
-{
-  size_t i, j, k;
-  size_t neblock, numof16belem;
-  __m256i ymm0[4], ymm1[4];
-
-  neblock = size / 4;
-  numof16belem = neblock / 32;
-  for (i = 0, k = 0; i < numof16belem; i++, k += 4) {
-    /* Load the first 64 bytes in 4 XMM registrers */
-    for (j = 0; j < 4; j++) {
-      ymm0[j] = ((__m256i *)orig)[j*numof16belem+i];
-    }
-    /* Shuffle bytes */
-    for (j = 0; j < 2; j++) {
-      /* Compute the low 32 bytes */
-      ymm1[j] = _mm256_unpacklo_epi8(ymm0[j*2], ymm0[j*2+1]);
-      /* Compute the hi 32 bytes */
-      ymm1[2+j] = _mm256_unpackhi_epi8(ymm0[j*2], ymm0[j*2+1]);
-    }
-
-    /* Shuffle 2-byte words */
-    for (j = 0; j < 2; j++) {
-      /* Compute the low 32 bytes */
-      ymm0[j] = _mm256_unpacklo_epi16(ymm1[j*2], ymm1[j*2+1]);
-      /* Compute the hi 32 bytes */
-      ymm0[2+j] = _mm256_unpackhi_epi16(ymm1[j*2], ymm1[j*2+1]);
-    }
-
-	ymm1[0] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x20);
-	ymm1[1] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x20);
-	ymm1[2] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x31);
-	ymm1[3] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x31);
-
-    /* Store the result vectors in proper order */
-    ((__m256i *)dest)[k+0] = ymm1[0];
-    ((__m256i *)dest)[k+1] = ymm1[1];
-    ((__m256i *)dest)[k+2] = ymm1[2];
-    ((__m256i *)dest)[k+3] = ymm1[3];
-  }
-}
-
-
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
 static void
 shuffle8_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
@@ -264,62 +197,6 @@ shuffle8_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
     for (k = 0; k < 8; k++) {
         ((__m256i *)dest)[k*numof16belem+i] = ymm0[k];
     }
-  }
-}
-
-
-/* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
-static void
-unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
-{
-  size_t i, j, k;
-  size_t neblock, numof16belem;
-  __m256i ymm0[8], ymm1[8];
-
-  neblock = size / 8;
-  numof16belem = neblock/32;
-  for (i = 0, k = 0; i < numof16belem; i++, k += 8) {
-    /* Load the first 64 bytes in 8 XMM registrers */
-    for (j = 0; j < 8; j++) {
-      ymm0[j] = ((__m256i *)orig)[j*numof16belem+i];
-    }
-    /* Shuffle bytes */
-    for (j = 0; j < 4; j++) {
-      /* Compute the low 32 bytes */
-      ymm1[j] = _mm256_unpacklo_epi8(ymm0[j*2], ymm0[j*2+1]);
-      /* Compute the hi 32 bytes */
-      ymm1[4+j] = _mm256_unpackhi_epi8(ymm0[j*2], ymm0[j*2+1]);
-    }
-    /* Shuffle 2-byte words */
-    for (j = 0; j < 4; j++) {
-      /* Compute the low 32 bytes */
-      ymm0[j] = _mm256_unpacklo_epi16(ymm1[j*2], ymm1[j*2+1]);
-      /* Compute the hi 32 bytes */
-      ymm0[4+j] = _mm256_unpackhi_epi16(ymm1[j*2], ymm1[j*2+1]);
-    }
-
-     for( j=0;j<8;j++)
-      {
-        ymm0[j] = _mm256_permute4x64_epi64(ymm0[j], 0xD8);
-      }
-
-    /* Shuffle 4-byte dwords */
-    for (j = 0; j < 4; j++) {
-      /* Compute the low 32 bytes */
-      ymm1[j] = _mm256_unpacklo_epi32(ymm0[j*2], ymm0[j*2+1]);
-      /* Compute the hi 32 bytes */
-      ymm1[4+j] = _mm256_unpackhi_epi32(ymm0[j*2], ymm0[j*2+1]);
-    }
-
-    /* Store the result vectors in proper order */
-      ((__m256i *)dest)[k+0] = ymm1[0];
-      ((__m256i *)dest)[k+1] = ymm1[2];
-      ((__m256i *)dest)[k+2] = ymm1[1];
-      ((__m256i *)dest)[k+3] = ymm1[3];
-      ((__m256i *)dest)[k+4] = ymm1[4];
-      ((__m256i *)dest)[k+5] = ymm1[6];
-      ((__m256i *)dest)[k+6] = ymm1[5];
-      ((__m256i *)dest)[k+7] = ymm1[7];
   }
 }
 
@@ -380,6 +257,166 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
     for (k = 0; k < 16; k++) {
       ((__m256i *)dest)[k*numof16belem+i] = ymm0[k];
     }
+  }
+}
+
+
+/* Shuffle a block.  This can never fail. */
+void shuffle(size_t bytesoftype, size_t blocksize,
+             const uint8_t* _src, uint8_t* _dest) {
+  int unaligned_src = (int)((uintptr_t)_src % 32);
+  int unaligned_dest = (int)((uintptr_t)_dest % 32);
+  int multiple_of_block = (blocksize % (32 * bytesoftype)) == 0;
+  int too_small = (blocksize < 256);
+
+  if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
+    /* _dest buffer is not aligned, not multiple of the vectorization size
+     * or is too small.  Call the non-simd version. */
+    _shuffle(bytesoftype, blocksize, _src, _dest);
+    return;
+  }
+
+  /* Optimized shuffle */
+  /* The buffer must be aligned on a 16 bytes boundary, have a power */
+  /* of 2 size and be larger or equal than 256 bytes. */
+  if (bytesoftype == 4) {
+    shuffle4_AVX2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 8) {
+    shuffle8_AVX2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 16) {
+    shuffle16_AVX2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 2) {
+    shuffle2_AVX2(_dest, _src, blocksize);
+  }
+  else {
+    /* Non-optimized shuffle */
+    _shuffle(bytesoftype, blocksize, _src, _dest);
+  }
+}
+
+
+/* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
+static void
+unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
+{
+  size_t i, j;
+  size_t nitem;
+  __m256i a[2], b[2], c[2];
+
+  nitem = size/64;
+  for( i=0, j=0;i<nitem;i++,j+=2 ) {
+    a[0] = ((__m256i *)src)[0*nitem+i];
+    a[1] = ((__m256i *)src)[1*nitem+i];
+    a[0] = _mm256_permute4x64_epi64(a[0], 0xD8);
+    a[1] = _mm256_permute4x64_epi64(a[1], 0xD8);
+    b[0] = _mm256_unpacklo_epi8(a[0], a[1]);
+    b[1] = _mm256_unpackhi_epi8(a[0], a[1]);
+    ((__m256i *)dest)[j+0] = b[0];
+    ((__m256i *)dest)[j+1] = b[1];
+  }
+}
+
+
+/* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
+static void
+unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
+{
+  size_t i, j, k;
+  size_t neblock, numof16belem;
+  __m256i ymm0[4], ymm1[4];
+
+  neblock = size / 4;
+  numof16belem = neblock / 32;
+  for (i = 0, k = 0; i < numof16belem; i++, k += 4) {
+    /* Load the first 64 bytes in 4 XMM registrers */
+    for (j = 0; j < 4; j++) {
+      ymm0[j] = ((__m256i *)orig)[j*numof16belem+i];
+    }
+    /* Shuffle bytes */
+    for (j = 0; j < 2; j++) {
+      /* Compute the low 32 bytes */
+      ymm1[j] = _mm256_unpacklo_epi8(ymm0[j*2], ymm0[j*2+1]);
+      /* Compute the hi 32 bytes */
+      ymm1[2+j] = _mm256_unpackhi_epi8(ymm0[j*2], ymm0[j*2+1]);
+    }
+
+    /* Shuffle 2-byte words */
+    for (j = 0; j < 2; j++) {
+      /* Compute the low 32 bytes */
+      ymm0[j] = _mm256_unpacklo_epi16(ymm1[j*2], ymm1[j*2+1]);
+      /* Compute the hi 32 bytes */
+      ymm0[2+j] = _mm256_unpackhi_epi16(ymm1[j*2], ymm1[j*2+1]);
+    }
+
+	ymm1[0] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x20);
+	ymm1[1] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x20);
+	ymm1[2] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x31);
+	ymm1[3] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x31);
+
+    /* Store the result vectors in proper order */
+    ((__m256i *)dest)[k+0] = ymm1[0];
+    ((__m256i *)dest)[k+1] = ymm1[1];
+    ((__m256i *)dest)[k+2] = ymm1[2];
+    ((__m256i *)dest)[k+3] = ymm1[3];
+  }
+}
+
+
+/* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
+static void
+unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
+{
+  size_t i, j, k;
+  size_t neblock, numof16belem;
+  __m256i ymm0[8], ymm1[8];
+
+  neblock = size / 8;
+  numof16belem = neblock/32;
+  for (i = 0, k = 0; i < numof16belem; i++, k += 8) {
+    /* Load the first 64 bytes in 8 XMM registrers */
+    for (j = 0; j < 8; j++) {
+      ymm0[j] = ((__m256i *)orig)[j*numof16belem+i];
+    }
+    /* Shuffle bytes */
+    for (j = 0; j < 4; j++) {
+      /* Compute the low 32 bytes */
+      ymm1[j] = _mm256_unpacklo_epi8(ymm0[j*2], ymm0[j*2+1]);
+      /* Compute the hi 32 bytes */
+      ymm1[4+j] = _mm256_unpackhi_epi8(ymm0[j*2], ymm0[j*2+1]);
+    }
+    /* Shuffle 2-byte words */
+    for (j = 0; j < 4; j++) {
+      /* Compute the low 32 bytes */
+      ymm0[j] = _mm256_unpacklo_epi16(ymm1[j*2], ymm1[j*2+1]);
+      /* Compute the hi 32 bytes */
+      ymm0[4+j] = _mm256_unpackhi_epi16(ymm1[j*2], ymm1[j*2+1]);
+    }
+
+     for( j=0;j<8;j++)
+      {
+        ymm0[j] = _mm256_permute4x64_epi64(ymm0[j], 0xD8);
+      }
+
+    /* Shuffle 4-byte dwords */
+    for (j = 0; j < 4; j++) {
+      /* Compute the low 32 bytes */
+      ymm1[j] = _mm256_unpacklo_epi32(ymm0[j*2], ymm0[j*2+1]);
+      /* Compute the hi 32 bytes */
+      ymm1[4+j] = _mm256_unpackhi_epi32(ymm0[j*2], ymm0[j*2+1]);
+    }
+
+    /* Store the result vectors in proper order */
+      ((__m256i *)dest)[k+0] = ymm1[0];
+      ((__m256i *)dest)[k+1] = ymm1[2];
+      ((__m256i *)dest)[k+2] = ymm1[1];
+      ((__m256i *)dest)[k+3] = ymm1[3];
+      ((__m256i *)dest)[k+4] = ymm1[4];
+      ((__m256i *)dest)[k+5] = ymm1[6];
+      ((__m256i *)dest)[k+6] = ymm1[5];
+      ((__m256i *)dest)[k+7] = ymm1[7];
   }
 }
 
@@ -455,43 +492,6 @@ unshuffle16_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
 }
 
 
-/* Shuffle a block.  This can never fail. */
-void shuffle(size_t bytesoftype, size_t blocksize,
-             const uint8_t* _src, uint8_t* _dest) {
-  int unaligned_src = (int)((uintptr_t)_src % 32);
-  int unaligned_dest = (int)((uintptr_t)_dest % 32);
-  int multiple_of_block = (blocksize % (32 * bytesoftype)) == 0;
-  int too_small = (blocksize < 256);
-
-  if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
-    /* _dest buffer is not aligned, not multiple of the vectorization size
-     * or is too small.  Call the non-sse2 version. */
-    _shuffle(bytesoftype, blocksize, _src, _dest);
-    return;
-  }
-
-  /* Optimized shuffle */
-  /* The buffer must be aligned on a 16 bytes boundary, have a power */
-  /* of 2 size and be larger or equal than 256 bytes. */
-  if (bytesoftype == 4) {
-    shuffle4_AVX2(_dest, _src, blocksize);
-  }
-  else if (bytesoftype == 8) {
-    shuffle8_AVX2(_dest, _src, blocksize);
-  }
-  else if (bytesoftype == 16) {
-    shuffle16_AVX2(_dest, _src, blocksize);
-  }
-  else if (bytesoftype == 2) {
-    shuffle2_AVX2(_dest, _src, blocksize);
-  }
-  else {
-    /* Non-optimized shuffle */
-    _shuffle(bytesoftype, blocksize, _src, _dest);
-  }
-}
-
-
 /* Unshuffle a block.  This can never fail. */
 void unshuffle(size_t bytesoftype, size_t blocksize,
                const uint8_t* _src, uint8_t* _dest) {
@@ -502,7 +502,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
 
   if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
     /* _src or _dest buffer is not aligned, not multiple of the vectorization
-     * size or is not too small.  Call the non-sse2 version. */
+     * size or is not too small.  Call the non-simd version. */
     _unshuffle(bytesoftype, blocksize, _src, _dest);
     return;
   }
@@ -530,6 +530,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
 
 
 #elif defined(__SSE2__)
+/* #pragma message "Using SSE2 version shuffle/unshuffle" */
 
 /* The SSE2 versions of shuffle and unshuffle */
 
