@@ -454,7 +454,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
              const uint8_t* _src, uint8_t* _dest) {
   int unaligned_src = (int)((uintptr_t)_src % 32);
   int unaligned_dest = (int)((uintptr_t)_dest % 32);
-  int multiple_of_block = (blocksize % (16 * bytesoftype)) == 0;
+  int multiple_of_block = (blocksize % (32 * bytesoftype)) == 0;
   int too_small = (blocksize < 256);
 
   if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
@@ -474,10 +474,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
     shuffle8_AVX2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 16) {
-	if(blocksize >= 512)
-		shuffle16_AVX2(_dest, _src, blocksize);
-	else
-		_shuffle(bytesoftype, blocksize, _src, _dest);
+    shuffle16_AVX2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 2) {
     shuffle2_AVX2(_dest, _src, blocksize);
@@ -493,7 +490,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
                const uint8_t* _src, uint8_t* _dest) {
   int unaligned_src = (int)((uintptr_t)_src % 32);
   int unaligned_dest = (int)((uintptr_t)_dest % 32);
-  int multiple_of_block = (blocksize % (16 * bytesoftype)) == 0;
+  int multiple_of_block = (blocksize % (32 * bytesoftype)) == 0;
   int too_small = (blocksize < 256);
 
   if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
@@ -513,10 +510,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
     unshuffle8_AVX2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 16) {
-	if(blocksize >= 512)
-    		unshuffle16_AVX2(_dest, _src, blocksize);
-	else
-		_unshuffle(bytesoftype, blocksize, _src, _dest);
+    unshuffle16_AVX2(_dest, _src, blocksize);
   }
   else if (bytesoftype == 2) {
 	unshuffle2_AVX2(_dest, _src, blocksize);
