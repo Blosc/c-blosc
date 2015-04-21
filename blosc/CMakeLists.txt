@@ -34,6 +34,7 @@ endif(NOT DEACTIVATE_ZLIB)
 # library sources
 set(SOURCES blosc.c blosclz.c shuffle.c)
 if(COMPILER_SUPPORT_AVX2)
+    message(STATUS "AVX2 is here.  Adding *runtime* support for it.")
     set(SOURCES ${SOURCES} shuffle-avx2.c)
 endif(COMPILER_SUPPORT_AVX2)
 
