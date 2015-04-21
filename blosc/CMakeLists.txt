@@ -34,7 +34,7 @@ endif(NOT DEACTIVATE_ZLIB)
 # library sources
 set(SOURCES blosc.c blosclz.c shuffle.c)
 if(COMPILER_SUPPORT_AVX2)
-    set(SOURCES ${SOURCES} avx2.c)
+    set(SOURCES ${SOURCES} shuffle-avx2.c)
 endif(COMPILER_SUPPORT_AVX2)
 
 # library install directory
@@ -96,7 +96,7 @@ if (MSVC)
 endif(MSVC)
 if(COMPILER_SUPPORT_AVX2)
     set_source_files_properties(shuffle.c PROPERTIES COMPILE_DEFINITIONS HAVE_AVX2=1)
-    set_source_files_properties(avx2.c PROPERTIES COMPILE_FLAGS -mavx2)
+    set_source_files_properties(shuffle-avx2.c PROPERTIES COMPILE_FLAGS -mavx2)
 endif(COMPILER_SUPPORT_AVX2)
 target_link_libraries(blosc_shared ${LIBS})
 
