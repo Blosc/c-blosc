@@ -170,11 +170,6 @@ endif (CMAKE_C_COMPILER_ID STREQUAL GNU)
 # Set the "-msse2" build flag only if the CMAKE_C_FLAGS is not already set.
 # Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
-     if(NOT CMAKE_C_FLAGS AND AVX2_TRUE AND COMPILER_SUPPORT_AVX2)
-         message(STATUS "AVX2 is here.  Adding support for it.")
-         set(CMAKE_C_FLAGS -march=core-avx2 CACHE STRING "C flags." FORCE)
-         set(RES_SUPPORT_AVX2 true)
-     endif(NOT CMAKE_C_FLAGS AND AVX2_TRUE AND COMPILER_SUPPORT_AVX2)
      if(NOT CMAKE_C_FLAGS AND SSE2_TRUE)
          message(STATUS "SSE2 is here.  Adding support for it.")
          set(CMAKE_C_FLAGS -msse2 CACHE STRING "C flags." FORCE)
