@@ -27,10 +27,10 @@ shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
       c[1] = _mm256_permute4x64_epi64( b[1], 0x8D);
 
       d[0] = _mm256_blend_epi32(c[0], c[1], 0xF0);
-      _mm256_store_si256((__m256i*)(dest+j*32), d[0]);
+      _mm256_storeu_si256((__m256i*)(dest+j*32), d[0]);
       c[0] = _mm256_blend_epi32(c[0], c[1], 0x0F);
       d[1] = _mm256_permute4x64_epi64( c[0], 0x4E);
-      _mm256_store_si256((__m256i*)(dest+j*32+(size>>1)), d[1]);
+      _mm256_storeu_si256((__m256i*)(dest+j*32+(size>>1)), d[1]);
     }
     dest += 128;
   }
@@ -80,7 +80,7 @@ shuffle4_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
     /* Store the result vectors */
     for (k = 0; k < 4; k++) {
-      ((__m256i *)dest)[k*numof16belem+i] = ymm0[k];
+      _mm256_storeu_si256((__m256i*)(dest) + k*numof16belem+i, ymm0[k]);
     }
   }
 }
@@ -127,7 +127,7 @@ shuffle8_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
     }
     /* Store the result vectors */
     for (k = 0; k < 8; k++) {
-        ((__m256i *)dest)[k*numof16belem+i] = ymm0[k];
+      _mm256_storeu_si256((__m256i*)(dest) + k*numof16belem+i, ymm0[k]);
     }
   }
 }
@@ -187,7 +187,7 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
     /* Store the result vectors */
     for (k = 0; k < 16; k++) {
-      ((__m256i *)dest)[k*numof16belem+i] = ymm0[k];
+      _mm256_storeu_si256((__m256i*)(dest) + k*numof16belem+i, ymm0[k]);
     }
   }
 }
@@ -203,14 +203,14 @@ unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
   nitem = size/64;
   for( i=0, j=0;i<nitem;i++,j+=2 ) {
-    a[0] = ((__m256i *)src)[0*nitem+i];
-    a[1] = ((__m256i *)src)[1*nitem+i];
+    a[0] = _mm256_loadu_si256(((__m256i*)src) + 0*nitem+i);
+    a[1] = _mm256_loadu_si256(((__m256i*)src) + 1*nitem+i);
     a[0] = _mm256_permute4x64_epi64(a[0], 0xD8);
     a[1] = _mm256_permute4x64_epi64(a[1], 0xD8);
     b[0] = _mm256_unpacklo_epi8(a[0], a[1]);
     b[1] = _mm256_unpackhi_epi8(a[0], a[1]);
-    ((__m256i *)dest)[j+0] = b[0];
-    ((__m256i *)dest)[j+1] = b[1];
+    _mm256_storeu_si256((__m256i*)(dest) + j+0, b[0]);
+    _mm256_storeu_si256((__m256i*)(dest) + j+1, b[1]);
   }
 }
 
@@ -228,7 +228,7 @@ unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
   for (i = 0, k = 0; i < numof16belem; i++, k += 4) {
     /* Load the first 64 bytes in 4 XMM registrers */
     for (j = 0; j < 4; j++) {
-      ymm0[j] = ((__m256i *)orig)[j*numof16belem+i];
+      ymm0[j] = _mm256_loadu_si256(((__m256i *)orig) + j*numof16belem+i);
     }
     /* Shuffle bytes */
     for (j = 0; j < 2; j++) {
@@ -246,16 +246,16 @@ unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
       ymm0[2+j] = _mm256_unpackhi_epi16(ymm1[j*2], ymm1[j*2+1]);
     }
 
-	ymm1[0] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x20);
-	ymm1[1] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x20);
-	ymm1[2] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x31);
-	ymm1[3] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x31);
+    ymm1[0] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x20);
+    ymm1[1] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x20);
+    ymm1[2] = _mm256_permute2x128_si256(ymm0[0], ymm0[2], 0x31);
+    ymm1[3] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x31);
 
     /* Store the result vectors in proper order */
-    ((__m256i *)dest)[k+0] = ymm1[0];
-    ((__m256i *)dest)[k+1] = ymm1[1];
-    ((__m256i *)dest)[k+2] = ymm1[2];
-    ((__m256i *)dest)[k+3] = ymm1[3];
+    _mm256_storeu_si256(((__m256i *)dest) + k+0, ymm1[0]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+1, ymm1[1]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+2, ymm1[2]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+3, ymm1[3]);
   }
 }
 
@@ -273,7 +273,7 @@ unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
   for (i = 0, k = 0; i < numof16belem; i++, k += 8) {
     /* Load the first 64 bytes in 8 XMM registrers */
     for (j = 0; j < 8; j++) {
-      ymm0[j] = ((__m256i *)orig)[j*numof16belem+i];
+      ymm0[j] = _mm256_loadu_si256(((__m256i *)orig) + j*numof16belem+i);
     }
     /* Shuffle bytes */
     for (j = 0; j < 4; j++) {
@@ -304,14 +304,14 @@ unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     }
 
     /* Store the result vectors in proper order */
-      ((__m256i *)dest)[k+0] = ymm1[0];
-      ((__m256i *)dest)[k+1] = ymm1[2];
-      ((__m256i *)dest)[k+2] = ymm1[1];
-      ((__m256i *)dest)[k+3] = ymm1[3];
-      ((__m256i *)dest)[k+4] = ymm1[4];
-      ((__m256i *)dest)[k+5] = ymm1[6];
-      ((__m256i *)dest)[k+6] = ymm1[5];
-      ((__m256i *)dest)[k+7] = ymm1[7];
+    _mm256_storeu_si256(((__m256i *)dest) + k+0, ymm1[0]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+1, ymm1[2]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+2, ymm1[1]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+3, ymm1[3]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+4, ymm1[4]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+5, ymm1[6]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+6, ymm1[5]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+7, ymm1[7]);
   }
 }
 
@@ -329,7 +329,7 @@ unshuffle16_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
   for (i = 0, k = 0; i < numof16belem; i++, k += 16) {
     /* Load the first 128 bytes in 16 XMM registrers */
     for (j = 0; j < 16; j++) {
-      ymm1[j] = ((__m256i *)orig)[j*numof16belem+i];
+      ymm1[j] = _mm256_loadu_si256(((__m256i *)orig) + j*numof16belem+i);
     }
     /* Shuffle bytes */
     for (j = 0; j < 8; j++) {
@@ -367,22 +367,22 @@ unshuffle16_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     }
 
     /* Store the result vectors in proper order */
-    ((__m256i *)dest)[k+0] = ymm2[0];
-    ((__m256i *)dest)[k+1] = ymm2[4];
-    ((__m256i *)dest)[k+2] = ymm2[2];
-    ((__m256i *)dest)[k+3] = ymm2[6];
-    ((__m256i *)dest)[k+4] = ymm2[1];
-    ((__m256i *)dest)[k+5] = ymm2[5];
-    ((__m256i *)dest)[k+6] = ymm2[3];
-    ((__m256i *)dest)[k+7] = ymm2[7];
-    ((__m256i *)dest)[k+8] = ymm2[8];
-    ((__m256i *)dest)[k+9] = ymm2[12];
-    ((__m256i *)dest)[k+10] = ymm2[10];
-    ((__m256i *)dest)[k+11] = ymm2[14];
-    ((__m256i *)dest)[k+12] = ymm2[9];
-    ((__m256i *)dest)[k+13] = ymm2[13];
-    ((__m256i *)dest)[k+14] = ymm2[11];
-    ((__m256i *)dest)[k+15] = ymm2[15];
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 0, ymm2[ 0]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 1, ymm2[ 4]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 2, ymm2[ 2]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 3, ymm2[ 6]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 4, ymm2[ 1]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 5, ymm2[ 5]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 6, ymm2[ 3]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 7, ymm2[ 7]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 8, ymm2[ 8]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+ 9, ymm2[12]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+10, ymm2[10]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+11, ymm2[14]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+12, ymm2[ 9]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+13, ymm2[13]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+14, ymm2[11]);
+    _mm256_storeu_si256(((__m256i *)dest) + k+15, ymm2[15]);
   }
 }
 
