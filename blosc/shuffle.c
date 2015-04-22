@@ -150,7 +150,7 @@ shuffle2_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
     }
     /* Store the result vectors */
     for (k = 0; k < 2; k++) {
-      ((__m128i *)dest)[k*numof16belem+i] = xmm1[k];
+      _mm_storeu_si128((__m128i*)(dest) + k*numof16belem+i, xmm1[k]);
     }
   }
 }
@@ -187,7 +187,7 @@ shuffle4_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
     }
     /* Store the result vectors */
     for (k = 0; k < 4; k++) {
-      ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
+      _mm_storeu_si128((__m128i*)(dest) + k*numof16belem+i, xmm0[k]);
     }
   }
 }
@@ -227,7 +227,7 @@ shuffle8_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
     }
     /* Store the result vectors */
     for (k = 0; k < 8; k++) {
-      ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
+      _mm_storeu_si128((__m128i*)(dest) + k*numof16belem+i, xmm0[k]);
     }
   }
 }
@@ -271,7 +271,7 @@ shuffle16_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
     }
     /* Store the result vectors */
     for (k = 0; k < 16; k++) {
-      ((__m128i *)dest)[k*numof16belem+i] = xmm0[k];
+      _mm_storeu_si128((__m128i*)(dest) + k*numof16belem+i, xmm0[k]);
     }
   }
 }
@@ -342,7 +342,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
 static void
 unshuffle2_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
-  size_t i, k;
+  size_t i, k, l;
   size_t neblock, numof16belem;
   __m128i xmm1[2], xmm2[2];
 
@@ -358,8 +358,9 @@ unshuffle2_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
     /* Compute the hi 32 bytes */
     xmm2[1] = _mm_unpackhi_epi8(xmm1[0], xmm1[1]);
     /* Store the result vectors in proper order */
-    ((__m128i *)dest)[k+0] = xmm2[0];
-    ((__m128i *)dest)[k+1] = xmm2[1];
+    for (l = 0; l < 2; l++) {
+      _mm_storeu_si128((__m128i*)(dest) + k + l, xmm2[k]);
+    }
   }
 }
 
@@ -394,10 +395,10 @@ unshuffle4_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
       xmm0[2+j] = _mm_unpackhi_epi16(xmm1[j*2], xmm1[j*2+1]);
     }
     /* Store the result vectors in proper order */
-    ((__m128i *)dest)[k+0] = xmm0[0];
-    ((__m128i *)dest)[k+1] = xmm0[2];
-    ((__m128i *)dest)[k+2] = xmm0[1];
-    ((__m128i *)dest)[k+3] = xmm0[3];
+    _mm_storeu_si128((__m128i*)(dest) + k + 0, xmm0[0]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 1, xmm0[2]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 2, xmm0[1]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 3, xmm0[3]);
   }
 }
 
@@ -439,14 +440,14 @@ unshuffle8_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
       xmm1[4+j] = _mm_unpackhi_epi32(xmm0[j*2], xmm0[j*2+1]);
     }
     /* Store the result vectors in proper order */
-    ((__m128i *)dest)[k+0] = xmm1[0];
-    ((__m128i *)dest)[k+1] = xmm1[4];
-    ((__m128i *)dest)[k+2] = xmm1[2];
-    ((__m128i *)dest)[k+3] = xmm1[6];
-    ((__m128i *)dest)[k+4] = xmm1[1];
-    ((__m128i *)dest)[k+5] = xmm1[5];
-    ((__m128i *)dest)[k+6] = xmm1[3];
-    ((__m128i *)dest)[k+7] = xmm1[7];
+    _mm_storeu_si128((__m128i*)(dest) + k + 0, xmm1[0]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 1, xmm1[4]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 2, xmm1[2]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 3, xmm1[6]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 4, xmm1[1]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 5, xmm1[5]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 6, xmm1[3]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 7, xmm1[7]);
   }
 }
 
@@ -495,22 +496,22 @@ unshuffle16_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
       xmm1[8+j] = _mm_unpackhi_epi64(xmm2[j*2], xmm2[j*2+1]);
     }
     /* Store the result vectors in proper order */
-    ((__m128i *)dest)[k+0] = xmm1[0];
-    ((__m128i *)dest)[k+1] = xmm1[8];
-    ((__m128i *)dest)[k+2] = xmm1[4];
-    ((__m128i *)dest)[k+3] = xmm1[12];
-    ((__m128i *)dest)[k+4] = xmm1[2];
-    ((__m128i *)dest)[k+5] = xmm1[10];
-    ((__m128i *)dest)[k+6] = xmm1[6];
-    ((__m128i *)dest)[k+7] = xmm1[14];
-    ((__m128i *)dest)[k+8] = xmm1[1];
-    ((__m128i *)dest)[k+9] = xmm1[9];
-    ((__m128i *)dest)[k+10] = xmm1[5];
-    ((__m128i *)dest)[k+11] = xmm1[13];
-    ((__m128i *)dest)[k+12] = xmm1[3];
-    ((__m128i *)dest)[k+13] = xmm1[11];
-    ((__m128i *)dest)[k+14] = xmm1[7];
-    ((__m128i *)dest)[k+15] = xmm1[15];
+    _mm_storeu_si128((__m128i*)(dest) + k + 0, xmm1[0]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 1, xmm1[8]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 2, xmm1[4]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 3, xmm1[12]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 4, xmm1[2]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 5, xmm1[10]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 6, xmm1[6]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 7, xmm1[14]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 8, xmm1[1]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 9, xmm1[9]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 10, xmm1[5]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 11, xmm1[13]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 12, xmm1[3]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 13, xmm1[11]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 14, xmm1[7]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 15, xmm1[15]);
   }
 }
 
