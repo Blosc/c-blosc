@@ -25,4 +25,8 @@ Other important contributions:
   specially with MS Visual C++ as well as high precision timers
   (HPET) for the benchmark program.
 
-* @littlezhou contributed the AVX2 version of shuffle routines.
+* @littlezhou implemented the AVX2 version of shuffle routines.
+
+* Julian Taylor contributed a way to detect AVX2 in runtime and
+  calling the appropriate routines only if the undelying hardware
+  supports it.
