@@ -280,15 +280,14 @@ shuffle16_SSE2(uint8_t* dest, const uint8_t* src, size_t size)
 /* Shuffle a block.  This can never fail. */
 void shuffle(size_t bytesoftype, size_t blocksize,
              const uint8_t* _src, uint8_t* _dest) {
-  int unaligned_dest = (int)((uintptr_t)_dest % 16);
   int multiple_of_block = have_avx2() ?
       (blocksize % (32 * bytesoftype)) == 0 :
       (blocksize % (16 * bytesoftype)) == 0;
   int too_small = (blocksize < 256);
 
-  if (unaligned_dest || !multiple_of_block || too_small) {
-    /* _dest buffer is not aligned, not multiple of the vectorization size
-     * or is too small.  Call the non-sse2 version. */
+  if (!multiple_of_block || too_small) {
+    /* _dest buffer is not multiple of the vectorization size
+     * or is too small.  Call the non-SIMD version. */
     _shuffle(bytesoftype, blocksize, _src, _dest);
     return;
   }
@@ -532,16 +531,14 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
 /* Unshuffle a block.  This can never fail. */
 void unshuffle(size_t bytesoftype, size_t blocksize,
                const uint8_t* _src, uint8_t* _dest) {
-  int unaligned_src = (int)((uintptr_t)_src % 16);
-  int unaligned_dest = (int)((uintptr_t)_dest % 16);
   int multiple_of_block = have_avx2() ?
       (blocksize % (32 * bytesoftype)) == 0 :
       (blocksize % (16 * bytesoftype)) == 0;
   int too_small = (blocksize < 256);
 
-  if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
-    /* _src or _dest buffer is not aligned, not multiple of the vectorization
-     * size or is not too small.  Call the non-sse2 version. */
+  if (!multiple_of_block || too_small) {
+    /* _src buffer is not multiple of the vectorization
+     * size or is not too small.  Call the non-SIMD version. */
     _unshuffle(bytesoftype, blocksize, _src, _dest);
     return;
   }
