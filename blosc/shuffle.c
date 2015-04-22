@@ -286,7 +286,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
   int too_small = (blocksize < 256);
 
   if (!multiple_of_block || too_small) {
-    /* _dest buffer is not multiple of the vectorization size
+    /* blocksize is not multiple of the vectorization size
      * or is too small.  Call the non-SIMD version. */
     _shuffle(bytesoftype, blocksize, _src, _dest);
     return;
@@ -537,7 +537,7 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
   int too_small = (blocksize < 256);
 
   if (!multiple_of_block || too_small) {
-    /* _src buffer is not multiple of the vectorization
+    /* blocksize is not multiple of the vectorization
      * size or is not too small.  Call the non-SIMD version. */
     _unshuffle(bytesoftype, blocksize, _src, _dest);
     return;
