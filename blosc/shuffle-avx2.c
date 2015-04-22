@@ -197,7 +197,7 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 void
 unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 {
-  size_t i, j;
+  size_t i, j, k;
   size_t nitem;
   __m256i a[2], b[2], c[2];
 
@@ -209,8 +209,9 @@ unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
     a[1] = _mm256_permute4x64_epi64(a[1], 0xD8);
     b[0] = _mm256_unpacklo_epi8(a[0], a[1]);
     b[1] = _mm256_unpackhi_epi8(a[0], a[1]);
-    _mm256_storeu_si256((__m256i*)(dest) + j+0, b[0]);
-    _mm256_storeu_si256((__m256i*)(dest) + j+1, b[1]);
+    for (k = 0; k < 2; k++) {
+      _mm256_storeu_si256((__m256i*)(dest) + j+k, b[k]);
+    }
   }
 }
 
@@ -219,7 +220,7 @@ unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 void
 unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
-  size_t i, j, k;
+  size_t i, j, k, l;
   size_t neblock, numof16belem;
   __m256i ymm0[4], ymm1[4];
 
@@ -252,10 +253,9 @@ unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     ymm1[3] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x31);
 
     /* Store the result vectors in proper order */
-    _mm256_storeu_si256(((__m256i *)dest) + k+0, ymm1[0]);
-    _mm256_storeu_si256(((__m256i *)dest) + k+1, ymm1[1]);
-    _mm256_storeu_si256(((__m256i *)dest) + k+2, ymm1[2]);
-    _mm256_storeu_si256(((__m256i *)dest) + k+3, ymm1[3]);
+    for (l = 0; l < 4; k++) {
+      _mm256_storeu_si256(((__m256i *)dest) + k+l, ymm1[l]);
+    }
   }
 }
 
@@ -385,4 +385,3 @@ unshuffle16_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     _mm256_storeu_si256(((__m256i *)dest) + k+15, ymm2[15]);
   }
 }
-
