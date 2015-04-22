@@ -350,8 +350,8 @@ unshuffle2_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
   numof16belem = neblock / 16;
   for (i = 0, k = 0; i < numof16belem; i++, k += 2) {
     /* Load the first 32 bytes in 2 XMM registrers */
-    xmm1[0] = ((__m128i *)orig)[0*numof16belem+i];
-    xmm1[1] = ((__m128i *)orig)[1*numof16belem+i];
+    xmm1[0] = _mm_loadu_si128((__m128i*)(orig) + 0*numof16belem+i);
+    xmm1[1] = _mm_loadu_si128((__m128i*)(orig) + 1*numof16belem+i);
     /* Shuffle bytes */
     /* Compute the low 32 bytes */
     xmm2[0] = _mm_unpacklo_epi8(xmm1[0], xmm1[1]);
@@ -378,7 +378,7 @@ unshuffle4_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
   for (i = 0, k = 0; i < numof16belem; i++, k += 4) {
     /* Load the first 64 bytes in 4 XMM registrers */
     for (j = 0; j < 4; j++) {
-      xmm0[j] = ((__m128i *)orig)[j*numof16belem+i];
+      xmm0[j] = _mm_loadu_si128((__m128i*)(orig) + j*numof16belem+i);
     }
     /* Shuffle bytes */
     for (j = 0; j < 2; j++) {
@@ -416,7 +416,7 @@ unshuffle8_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
   for (i = 0, k = 0; i < numof16belem; i++, k += 8) {
     /* Load the first 64 bytes in 8 XMM registrers */
     for (j = 0; j < 8; j++) {
-      xmm0[j] = ((__m128i *)orig)[j*numof16belem+i];
+      xmm0[j] = _mm_loadu_si128((__m128i*)(orig) + j*numof16belem+i);
     }
     /* Shuffle bytes */
     for (j = 0; j < 4; j++) {
@@ -465,7 +465,7 @@ unshuffle16_SSE2(uint8_t* dest, const uint8_t* orig, size_t size)
   for (i = 0, k = 0; i < numof16belem; i++, k += 16) {
     /* Load the first 128 bytes in 16 XMM registrers */
     for (j = 0; j < 16; j++) {
-      xmm1[j] = ((__m128i *)orig)[j*numof16belem+i];
+      xmm1[j] = _mm_loadu_si128((__m128i*)(orig) + j*numof16belem+i);
     }
     /* Shuffle bytes */
     for (j = 0; j < 8; j++) {
