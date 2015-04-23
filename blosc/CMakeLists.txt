@@ -98,7 +98,7 @@ set_target_properties(blosc_shared PROPERTIES
         SOVERSION 1  # Change this when an ABI change happens
     )
 if (MSVC)
-	set_target_properties (blosc_shared PROPERTIES COMPILE_FLAGS -DDLL_EXPORT=TRUE)
+	set_target_properties (blosc_shared PROPERTIES COMPILE_FLAGS -DBLOSC_DLL_EXPORT=TRUE)
 endif(MSVC)
 
 if(COMPILER_SUPPORT_SSE2)

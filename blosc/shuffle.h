@@ -31,8 +31,8 @@ extern "C" {
   calling the hardware-accelerated routines because this method is both cross-
   platform and future-proof.
 */
-DLL_EXPORT void shuffle(const size_t bytesoftype, const size_t blocksize,
-             const uint8_t* const _src, uint8_t* const _dest);
+BLOSC_DLL_EXPORT void shuffle(const size_t bytesoftype, const size_t blocksize,
+                              const uint8_t* const _src, uint8_t* const _dest);
 
 /**
   Primary unshuffle routine.
@@ -44,8 +44,8 @@ DLL_EXPORT void shuffle(const size_t bytesoftype, const size_t blocksize,
   calling the hardware-accelerated routines because this method is both cross-
   platform and future-proof.
 */
-DLL_EXPORT void unshuffle(const size_t bytesoftype, const size_t blocksize,
-               const uint8_t* const _src, uint8_t* const _dest);
+BLOSC_DLL_EXPORT void unshuffle(const size_t bytesoftype, const size_t blocksize,
+                                const uint8_t* const _src, uint8_t* const _dest);
 
 #ifdef __cplusplus
 }
