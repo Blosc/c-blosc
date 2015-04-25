@@ -49,7 +49,7 @@
 #    HDF5_FILTER_DEV: includes blosc_filter.h
 
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.10)
 project(blosc)
 
 # parse the full version numbers from blosc.h
@@ -134,32 +134,52 @@ if(NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-
-find_package(SSE)
-execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE CC_VERSION)
-if(CMAKE_C_COMPILER_ID STREQUAL GNU)
-     if (CC_VERSION VERSION_GREATER 4.7 OR CC_VERSION VERSION_EQUAL 4.7)
-          set(COMPILER_SUPPORT_AVX2 true)
-     else (CC_VERSION VERSION_GREATER 4.7 OR CC_VERSION VERSION_EQUAL 4.7)
-          set(COMPILER_SUPPORT_AVX2 false)
-          if(AVX2_TRUE)
-              message("AVX2 is available on this host, but this compiler does not support it!")
-              message("GCC>=4.7 needed!")
-           endif(AVX2_TRUE)
-     endif (CC_VERSION VERSION_GREATER 4.7 OR CC_VERSION VERSION_EQUAL 4.7)
-elseif(CMAKE_C_COMPILER_ID STREQUAL Intel)
-     if (CC_VERSION VERSION_GREATER 14.0 OR CC_VERSION VERSION_EQUAL 14.0)
-          set( COMPILER_SUPPORT_AVX2 true)
-     else (CC_VERSION VERSION_GREATER 14.0 OR CC_VERSION VERSION_EQUAL 14.0)
-          set(COMPILER_SUPPORT_AVX2 false)
-          if(AVX2_TRUE)
-              message("AVX2 is available on this host, but this compiler does not support it!")
-          endif(AVX2_TRUE)
-     endif (CC_VERSION VERSION_GREATER 14.0 OR CC_VERSION VERSION_EQUAL 14.0)
-else(CMAKE_C_COMPILER_ID STREQUAL GNU)
-     set(COMPILER_SUPPORT_AVX2 false)
-     message("AVX2 is available on this host, but compiler support it?? ")
-endif (CMAKE_C_COMPILER_ID STREQUAL GNU)
+# Based on the target system's processor and the compiler being used,
+# set build variables indicating which hardware features can be targeted
+# by the compiler. Note we DO NOT check which hardware features are supported
+# by this (the host) system, because we want to be able to support compiling
+# for newer hardware on older machines as well as cross-compilation.
+set(SYSTEM_PROCESSOR_INTEL_X86 ((CMAKE_SYSTEM_PROCESSOR STREQUAL i686) OR (CMAKE_SYSTEM_PROCESSOR STREQUAL x86) OR (CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)))
+if(SYSTEM_PROCESSOR_INTEL_X86)
+    if(CMAKE_C_COMPILER_ID STREQUAL GNU)
+        set(COMPILER_SUPPORT_SSE2 BOOL TRUE)
+        if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
+            set(COMPILER_SUPPORT_AVX2 BOOL TRUE)
+        else (CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
+            set(COMPILER_SUPPORT_AVX2 BOOL FALSE)
+        endif (CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
+    elseif(CMAKE_C_COMPILER_ID STREQUAL Clang)
+        set(COMPILER_SUPPORT_SSE2 BOOL TRUE)
+        if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 3.2 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 3.2)
+            set(COMPILER_SUPPORT_AVX2 BOOL TRUE)
+        else (CMAKE_C_COMPILER_VERSION VERSION_GREATER 3.2 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 3.2)
+            set(COMPILER_SUPPORT_AVX2 BOOL FALSE)
+        endif (CMAKE_C_COMPILER_VERSION VERSION_GREATER 3.2 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 3.2)
+    elseif(CMAKE_C_COMPILER_ID STREQUAL Intel)
+        set(COMPILER_SUPPORT_SSE2 BOOL TRUE)
+        if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 14.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 14.0)
+            set(COMPILER_SUPPORT_AVX2 BOOL TRUE)
+        else (CMAKE_C_COMPILER_VERSION VERSION_GREATER 14.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 14.0)
+            set(COMPILER_SUPPORT_AVX2 BOOL FALSE)
+        endif (CMAKE_C_COMPILER_VERSION VERSION_GREATER 14.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 14.0)
+    elseif(MSVC)
+        set(COMPILER_SUPPORT_SSE2 BOOL TRUE)
+        if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 18.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 18.0)
+            set(COMPILER_SUPPORT_AVX2 BOOL TRUE)
+        else (CMAKE_C_COMPILER_VERSION VERSION_GREATER 18.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 18.0)
+            set(COMPILER_SUPPORT_AVX2 BOOL FALSE)
+        endif (CMAKE_C_COMPILER_VERSION VERSION_GREATER 18.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 18.0)
+    else(CMAKE_C_COMPILER_ID STREQUAL GNU)
+        set(COMPILER_SUPPORT_SSE2 BOOL FALSE)
+        set(COMPILER_SUPPORT_AVX2 BOOL FALSE)
+        # Unrecognized compiler. Emit a warning message to let the user know hardware-acceleration won't be available.
+        message(WARNING "Unable to determine which ${CMAKE_SYSTEM_PROCESSOR} hardware features are supported by the C compiler (${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}).")
+    endif (CMAKE_C_COMPILER_ID STREQUAL GNU)
+else(SYSTEM_PROCESSOR_INTEL_X86)
+    # If the target system processor isn't recognized, emit a warning message to alert the user
+    # that hardware-acceleration support won't be available but allow configuration to proceed.
+    message(WARNING "Unrecognized system processor ${CMAKE_SYSTEM_PROCESSOR}. Cannot determine which hardware features (${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}) supports, so hardware-accelerated implementations will not be available.")
+endif(SYSTEM_PROCESSOR_INTEL_X86)
 
 # flags
 # @TODO: set -Wall
@@ -168,12 +188,11 @@ endif (CMAKE_C_COMPILER_ID STREQUAL GNU)
 # Set the "-msse2" build flag only if the CMAKE_C_FLAGS is not already set.
 # Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
-     if(NOT CMAKE_C_FLAGS AND SSE2_TRUE)
+     if(NOT CMAKE_C_FLAGS AND COMPILER_SUPPORT_SSE2)
          message(STATUS "SSE2 is here.  Adding support for it.")
          set(CMAKE_C_FLAGS -msse2 CACHE STRING "C flags." FORCE)
-     endif(NOT CMAKE_C_FLAGS AND SSE2_TRUE)
+     endif(NOT CMAKE_C_FLAGS AND COMPILER_SUPPORT_SSE2)
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
-
 
 if(MSVC)
     if(NOT CMAKE_C_FLAGS)
