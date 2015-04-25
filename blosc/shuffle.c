@@ -138,7 +138,7 @@ get_shuffle_implementation() {
 
   /* Using the gathered CPU information, determine which implementation to use. */
 #if defined(__AVX2__)
-  if (ymm_state_enabled && avx2_available) {
+  if (xmm_state_enabled && ymm_state_enabled && avx2_available) {
     shuffle_implementation_t impl_avx2;
     impl_avx2.name = "avx2";
     impl_avx2.shuffle = (shuffle_func)shuffle_avx2;
