@@ -63,18 +63,18 @@ __cpuidex(int32_t cpuInfo[4], int32_t function_id, uint32_t subfunction_id) {
   /*  Can't clobber ebx with PIC running under 32-bit, so it needs to be manually restored.
       https://software.intel.com/en-us/articles/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family
   */
-     "movl %%ebx, %%edi\n\t"
-     "cpuid\n\t"
-     "xchgl %%ebx, %%edi":
-     "=D" (cpuInfo[1]),
+    "movl %%ebx, %%edi\n\t"
+    "cpuid\n\t"
+    "xchgl %%ebx, %%edi":
+    "=D" (cpuInfo[1]),
 #else
-        "cpuid":
-        "=b" (cpuInfo[1]),
+    "cpuid":
+    "=b" (cpuInfo[1]),
 #endif  /* defined(__i386) && defined(__PIC__) */
-        "=a" (cpuInfo[0]),
-        "=c" (cpuInfo[2]),
-        "=d" (cpuInfo[3]) :
-        "a" (function_id), "c" (subfunction_id)
+    "=a" (cpuInfo[0]),
+    "=c" (cpuInfo[2]),
+    "=d" (cpuInfo[3]) :
+    "a" (function_id), "c" (subfunction_id)
     );
 }
 
