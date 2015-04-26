@@ -123,7 +123,12 @@ int posix_memalign(void **memptr, size_t alignment, size_t size)
 	return 0;
 }
 
-#endif
+/* Buffers allocated with _aligned_malloc need to be freed with _aligned_free. */
+#define aligned_free(memptr) _aligned_free(memptr)
+#else
+/* If not using MSVC, aligned memory can be freed in the usual way. */
+#define aligned_free(memptr) free(memptr)
+#endif  /* defined(_WIN32) && !defined(__MINGW32__) */
 
 int get_value(int i, int rshift) {
   int v;
@@ -296,9 +301,9 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
      compression levels */
   totalsize += (size * nchunks * niter * 10.);
 
-  free(src); free(srccpy); free(dest2);
+  aligned_free(src); free(srccpy); aligned_free(dest2);
   for (i = 0; i < nchunks; i++) {
-    free(dest[i]);
+    aligned_free(dest[i]);
   }
 
 }
