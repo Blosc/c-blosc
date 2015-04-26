@@ -139,6 +139,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 # by the compiler. Note we DO NOT check which hardware features are supported
 # by this (the host) system, because we want to be able to support compiling
 # for newer hardware on older machines as well as cross-compilation.
+message(STATUS "Using C compiler ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
 set(SYSTEM_PROCESSOR_INTEL_X86 ((CMAKE_SYSTEM_PROCESSOR STREQUAL i686) OR (CMAKE_SYSTEM_PROCESSOR STREQUAL x86) OR (CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)))
 if(SYSTEM_PROCESSOR_INTEL_X86)
     if(CMAKE_C_COMPILER_ID STREQUAL GNU)
