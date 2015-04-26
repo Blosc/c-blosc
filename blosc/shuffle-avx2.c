@@ -253,7 +253,7 @@ unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     ymm1[3] = _mm256_permute2x128_si256(ymm0[1], ymm0[3], 0x31);
 
     /* Store the result vectors in proper order */
-    for (l = 0; l < 4; k++) {
+    for (l = 0; l < 4; l++) {
       _mm256_storeu_si256(((__m256i *)dest) + k+l, ymm1[l]);
     }
   }
