@@ -14,11 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 
-/* If C11 is supported use it's built-in atomic support for initialization. */
-#if __STDC_VERSION__ >= 201112L
-  #include <stdatomic.h>
-#endif
-
 /*  Include hardware-accelerated shuffle/unshuffle routines based on
     the target architecture. Note that a target architecture may support
     more than one type of acceleration!*/
@@ -257,16 +252,8 @@ void init_shuffle_implementation() {
     /* Initialize the implementation. */
     host_implementation = get_shuffle_implementation();
 
-    /*  Set the flag indicating the implementation has been initialized.
-        Use an atomic exchange if supported; it's not strictly necessary
-        but helps avoid unnecessary re-initialization. */
-#if __STDC_VERSION__ >= 201112L
-    atomic_exchange(&implementation_initialized, 1);
-#elif defined(_MSC_VER)
-    _InterlockedExchange(&implementation_initialized, 1);
-#else
+    /*  Set the flag indicating the implementation has been initialized. */
     implementation_initialized = 1;
-#endif
   }
 }
 
