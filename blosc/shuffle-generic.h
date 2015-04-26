@@ -11,10 +11,10 @@
    for a particular platform; they are also used by the hardware-
    accelerated functions to handle any remaining elements in a block
    which isn't a multiple of the hardware's vector size. */
-   
+
 #ifndef SHUFFLE_GENERIC_H
 #define SHUFFLE_GENERIC_H
-   
+
 #include "shuffle-common.h"
 
 #ifdef __cplusplus
