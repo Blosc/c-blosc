@@ -11,6 +11,8 @@
 #include "shuffle-common.h"
 #include "shuffle-generic.h"
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
 /* If C11 is supported use it's built-in atomic support for initialization. */
 #if __STDC_VERSION__ >= 201112L
@@ -48,16 +50,16 @@ typedef struct shuffle_implementation {
     implementations supported by the host processor. */
 #if defined(__AVX2__) || defined(__SSE2__)    /* Intel/i686 */
 
-#include <immintrin.h>  /* Needed for _xgetbv */
-#if defined(_MSC_VER)
-  #include <intrin.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+  #include <immintrin.h>  /* Needed for _xgetbv */
+  #include <intrin.h>     /* Needed for __cpuid */
 #else
 
 /*  Implement the __cpuid and __cpuidex intrinsics for GCC, Clang,
     and others using inline assembly. */
 __attribute__((always_inline))
 static inline void
-__cpuidex(int32_t cpuInfo[4], int32_t function_id, uint32_t subfunction_id) {
+__cpuidex(int32_t cpuInfo[4], int32_t function_id, int32_t subfunction_id) {
   __asm__ __volatile__ (
 # if defined(__i386__) && defined (__PIC__)
   /*  Can't clobber ebx with PIC running under 32-bit, so it needs to be manually restored.
@@ -79,6 +81,27 @@ __cpuidex(int32_t cpuInfo[4], int32_t function_id, uint32_t subfunction_id) {
 }
 
 #define __cpuid(cpuInfo, function_id) __cpuidex(cpuInfo, function_id, 0)
+
+#define _XCR_XFEATURE_ENABLED_MASK 0
+
+/* Reads the content of an extended control register.
+   https://software.intel.com/en-us/articles/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family
+*/
+static inline uint64_t
+_xgetbv(uint32_t xcr) {
+  uint32_t eax, edx;
+  __asm__ __volatile__ (
+    /* "xgetbv"
+       This is specified as raw instruction bytes due to some older compilers
+       having issues with the mnemonic form.
+    */
+    ".byte 0x0f, 0x01, 0xd0":
+    "=a" (eax),
+    "=d" (edx) :
+    "c" (xcr)
+    );
+  return ((uint64_t)edx << 32) | eax;
+}
 
 #endif /* defined(_MSC_VER) */
 
@@ -135,6 +158,22 @@ get_shuffle_implementation() {
     zmm_state_enabled = (xcr0_contents & 0x70) == 0x70;
   }
 #endif /* defined(_XCR_XFEATURE_ENABLED_MASK) */
+
+#if defined(BLOSC_DUMP_CPU_INFO)
+  printf("Shuffle CPU Information:\n");
+  printf("SSE2 available: %s\n", sse2_available ? "True" : "False");
+  printf("SSE3 available: %s\n", sse3_available ? "True" : "False");
+  printf("SSSE3 available: %s\n", ssse3_available ? "True" : "False");
+  printf("SSE4.1 available: %s\n", sse41_available ? "True" : "False");
+  printf("SSE4.2 available: %s\n", sse42_available ? "True" : "False");
+  printf("AVX2 available: %s\n", avx2_available ? "True" : "False");
+  printf("AVX512BW available: %s\n", avx512bw_available ? "True" : "False");
+  printf("XSAVE available: %s\n", xsave_available ? "True" : "False");
+  printf("XSAVE enabled: %s\n", xsave_enabled_by_os ? "True" : "False");
+  printf("XMM state enabled: %s\n", xmm_state_enabled ? "True" : "False");
+  printf("YMM state enabled: %s\n", ymm_state_enabled ? "True" : "False");
+  printf("ZMM state enabled: %s\n", zmm_state_enabled ? "True" : "False");
+#endif /* defined(BLOSC_DUMP_CPU_INFO) */
 
   /* Using the gathered CPU information, determine which implementation to use. */
 #if defined(__AVX2__)
