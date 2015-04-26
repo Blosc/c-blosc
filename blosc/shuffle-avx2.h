@@ -11,11 +11,6 @@
 #ifndef SHUFFLE_AVX2_H
 #define SHUFFLE_AVX2_H
 
-/* Make sure AVX2 is available for the compilation target and compiler. */
-#if !defined(__AVX2__)
-  #error AVX2 is not supported by the target architecture/platform and/or this compiler.
-#endif
-
 #include "shuffle-common.h"
 
 #ifdef __cplusplus

@@ -22,13 +22,13 @@
 /*  Include hardware-accelerated shuffle/unshuffle routines based on
     the target architecture. Note that a target architecture may support
     more than one type of acceleration!*/
-#if defined(__AVX2__)
+#if defined(SHUFFLE_AVX2_ENABLED)
   #include "shuffle-avx2.h"
-#endif  /* defined(__AVX2__) */
+#endif  /* defined(SHUFFLE_AVX2_ENABLED) */
 
-#if defined(__SSE2__)
+#if defined(SHUFFLE_SSE2_ENABLED)
   #include "shuffle-sse2.h"
-#endif  /* defined(__SSE2__) */
+#endif  /* defined(SHUFFLE_SSE2_ENABLED) */
 
 
 /*  Define function pointer types for shuffle/unshuffle routines. */
@@ -48,7 +48,7 @@ typedef struct shuffle_implementation {
 
 /*  Detect hardware and set function pointers to the best shuffle/unshuffle
     implementations supported by the host processor. */
-#if defined(__AVX2__) || defined(__SSE2__)    /* Intel/i686 */
+#if defined(SHUFFLE_AVX2_ENABLED) || defined(SHUFFLE_SSE2_ENABLED)    /* Intel/i686 */
 
 #if defined(_MSC_VER) && !defined(__clang__)
   #include <immintrin.h>  /* Needed for _xgetbv */
@@ -176,7 +176,7 @@ get_shuffle_implementation() {
 #endif /* defined(BLOSC_DUMP_CPU_INFO) */
 
   /* Using the gathered CPU information, determine which implementation to use. */
-#if defined(__AVX2__)
+#if defined(SHUFFLE_AVX2_ENABLED)
   if (xmm_state_enabled && ymm_state_enabled && avx2_available) {
     shuffle_implementation_t impl_avx2;
     impl_avx2.name = "avx2";
@@ -184,9 +184,9 @@ get_shuffle_implementation() {
     impl_avx2.unshuffle = (unshuffle_func)unshuffle_avx2;
     return impl_avx2;
   }
-#endif  /* defined(__AVX2__) */
+#endif  /* defined(SHUFFLE_AVX2_ENABLED) */
 
-#if defined(__SSE2__)
+#if defined(SHUFFLE_SSE2_ENABLED)
   if (xmm_state_enabled && sse2_available) {
     shuffle_implementation_t impl_sse2;
     impl_sse2.name = "sse2";
@@ -194,7 +194,7 @@ get_shuffle_implementation() {
     impl_sse2.unshuffle = (unshuffle_func)unshuffle_sse2;
     return impl_sse2;
   }
-#endif  /* defined(__SSE2__) */
+#endif  /* defined(SHUFFLE_SSE2_ENABLED) */
 
   /*  Processor doesn't support any of the hardware-accelerated implementations,
       so use the generic implementation. */

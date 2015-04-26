@@ -110,6 +110,13 @@ if(COMPILER_SUPPORT_SSE2)
     else (MSVC)
         set_source_files_properties(shuffle-sse2.c PROPERTIES COMPILE_FLAGS -msse2)
     endif (MSVC)
+
+    # Define a symbol for the shuffle-dispatch implementation
+    # so it knows SSE2 is supported even though that file is
+    # compiled without SSE2 support (for portability).
+    set_property(
+        SOURCE shuffle.c
+        APPEND PROPERTY COMPILE_DEFINITIONS SHUFFLE_SSE2_ENABLED)
 endif(COMPILER_SUPPORT_SSE2)
 if(COMPILER_SUPPORT_AVX2)
     if (MSVC)
@@ -117,6 +124,13 @@ if(COMPILER_SUPPORT_AVX2)
     else (MSVC)
         set_source_files_properties(shuffle-avx2.c PROPERTIES COMPILE_FLAGS -mavx2)
     endif (MSVC)
+
+    # Define a symbol for the shuffle-dispatch implementation
+    # so it knows AVX2 is supported even though that file is
+    # compiled without AVX2 support (for portability).
+    set_property(
+        SOURCE shuffle.c
+        APPEND PROPERTY COMPILE_DEFINITIONS SHUFFLE_AVX2_ENABLED)
 endif(COMPILER_SUPPORT_AVX2)
 target_link_libraries(blosc_shared ${LIBS})
 

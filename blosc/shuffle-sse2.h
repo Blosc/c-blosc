@@ -11,11 +11,6 @@
 #ifndef SHUFFLE_SSE2_H
 #define SHUFFLE_SSE2_H
 
-/* Make sure SSE2 is available for the compilation target and compiler. */
-#if !defined(__SSE2__)
-  #error SSE2 is not supported by the target architecture/platform and/or this compiler.
-#endif
-
 #include "shuffle-common.h"
 
 #ifdef __cplusplus
