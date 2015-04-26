@@ -8,7 +8,14 @@
 
 #include "shuffle-generic.h"
 #include "shuffle-sse2.h"
+
+/* Make sure SSE2 is available for the compilation target and compiler. */
+#if !defined(__SSE2__)
+  #error SSE2 is not supported by the target architecture/platform and/or this compiler.
+#endif
+
 #include <emmintrin.h>
+
 
 /* The next is useful for debugging purposes */
 #if 0
