@@ -10,11 +10,12 @@
 #define SHUFFLE_COMMON_H
 
 /* Macro for specifying an exported function. */
-#ifdef DLL_EXPORT
+#if defined(_WIN32) && defined(DLL_EXPORT)
   #undef DLL_EXPORT
-	#define DLL_EXPORT __declspec(dllexport)
+  #define DLL_EXPORT __declspec(dllexport)
 #else
-	#define DLL_EXPORT
+  #undef DLL_EXPORT
+  #define DLL_EXPORT
 #endif
 
 /* Define the __SSE2__ symbol if compiling with Visual C++ and
@@ -32,6 +33,7 @@
   #include "win32/stdint-windows.h"
 #else
   #include <stdint.h>
+  #include <stddef.h>
   #include <inttypes.h>
 #endif  /* _WIN32 */
 

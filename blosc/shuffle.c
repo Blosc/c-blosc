@@ -211,7 +211,7 @@ void init_shuffle_implementation() {
      because we don't need to perform a volatile load on the initialization variable
      each time this function is called. */
 #if defined(__GNUC__) || defined(__clang__)
-  if (__builtin_expected(!implementation_initialized, 0)) {
+  if (__builtin_expect(!implementation_initialized, 0)) {
 #else
   if (!implementation_initialized) {
 #endif
