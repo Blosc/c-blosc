@@ -198,7 +198,9 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 #endif /* defined(BLOSC_DUMP_CPU_INFO) */
 
   /* Using the gathered CPU information, determine which implementation to use. */
-  if (xmm_state_enabled && sse2_available) {
+  /* technically could fail on sse2 cpu on os without xmm support, but that
+   * shouldn't exist anymore */
+  if (sse2_available) {
     result |= BLOSC_HAVE_SSE2;
   }
   if (xmm_state_enabled && ymm_state_enabled && avx2_available) {
