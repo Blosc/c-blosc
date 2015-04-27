@@ -1,5 +1,5 @@
 /*********************************************************************
-  Blosc - Blocked Suffling and Compression Library
+  Blosc - Blocked Shuffling and Compression Library
 
   Author: Francesc Alted <francesc@blosc.org>
 
