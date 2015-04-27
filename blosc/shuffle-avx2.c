@@ -1,11 +1,48 @@
-#include <stdint.h>
-/* #pragma message "Using AVX2 version shuffle/unshuffle" */
+/*********************************************************************
+  Blosc - Blocked Shuffling and Compression Library
+
+  Author: Francesc Alted <francesc@blosc.org>
+
+  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+**********************************************************************/
+
+#include "shuffle-generic.h"
+#include "shuffle-avx2.h"
+
+/* Make sure AVX2 is available for the compilation target and compiler. */
+#if !defined(__AVX2__)
+  #error AVX2 is not supported by the target architecture/platform and/or this compiler.
+#endif
 
 #include <immintrin.h>
 
+
+/* The next is useful for debugging purposes */
+#if 0
+#include <stdio.h>
+#include <string.h>
+
+static void printymm(__m256i ymm0)
+{
+  uint8_t buf[32];
+
+  ((__m256i *)buf)[0] = ymm0;
+  printf("%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n",
+          buf[0], buf[1], buf[2], buf[3],
+          buf[4], buf[5], buf[6], buf[7],
+          buf[8], buf[9], buf[10], buf[11],
+          buf[12], buf[13], buf[14], buf[15],
+          buf[16], buf[17], buf[18], buf[19],
+          buf[20], buf[21], buf[22], buf[23],
+          buf[24], buf[25], buf[26], buf[27],
+          buf[28], buf[29], buf[30], buf[31]);
+}
+#endif
+
+
 /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
-void
-shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
+static void
+shuffle2_avx2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t nitem;
@@ -38,8 +75,8 @@ shuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
-void
-shuffle4_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
+static void
+shuffle4_avx2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t numof16belem;
@@ -87,8 +124,8 @@ shuffle4_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
-void
-shuffle8_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
+static void
+shuffle8_avx2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k, l;
   size_t numof16belem;
@@ -134,8 +171,8 @@ shuffle8_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
 
 /* Routine optimized for shuffling a buffer for a type size of 16 bytes. */
-void
-shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
+static void
+shuffle16_avx2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k, l;
   size_t numof16belem;
@@ -194,8 +231,8 @@ shuffle16_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
-void
-unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
+static void
+unshuffle2_avx2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t nitem;
@@ -217,8 +254,8 @@ unshuffle2_AVX2(uint8_t* dest, const uint8_t* src, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
-void
-unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
+static void
+unshuffle4_avx2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k, l;
   size_t neblock, numof16belem;
@@ -261,8 +298,8 @@ unshuffle4_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
-void
-unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
+static void
+unshuffle8_avx2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -317,8 +354,8 @@ unshuffle8_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
 
 
 /* Routine optimized for unshuffling a buffer for a type size of 16 bytes. */
-void
-unshuffle16_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
+static void
+unshuffle16_avx2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -383,5 +420,78 @@ unshuffle16_AVX2(uint8_t* dest, const uint8_t* orig, size_t size)
     _mm256_storeu_si256(((__m256i *)dest) + k+13, ymm2[13]);
     _mm256_storeu_si256(((__m256i *)dest) + k+14, ymm2[11]);
     _mm256_storeu_si256(((__m256i *)dest) + k+15, ymm2[15]);
+  }
+}
+
+/* Shuffle a block.  This can never fail. */
+void
+shuffle_avx2(const size_t bytesoftype, const size_t blocksize,
+             const uint8_t* const _src, uint8_t* const _dest) {
+  int unaligned_dest = (int)((uintptr_t)_dest % 16);
+  int multiple_of_block = (blocksize % (32 * bytesoftype)) == 0;
+  int too_small = (blocksize < 256);
+
+  if (unaligned_dest || !multiple_of_block || too_small) {
+    /* _dest buffer is not aligned, not multiple of the vectorization size
+     * or is too small.  Call the generic routine. */
+    shuffle_generic(bytesoftype, blocksize, _src, _dest);
+    return;
+  }
+
+  /* Optimized shuffle */
+  /* The buffer must be aligned on a 16 bytes boundary, have a power */
+  /* of 2 size and be larger or equal than 256 bytes. */
+  if (bytesoftype == 4) {
+    shuffle4_avx2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 8) {
+    shuffle8_avx2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 16) {
+    shuffle16_avx2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 2) {
+    shuffle2_avx2(_dest, _src, blocksize);
+  }
+  else {
+    /* Non-optimized shuffle */
+    shuffle_generic(bytesoftype, blocksize, _src, _dest);
+  }
+}
+
+/* Unshuffle a block.  This can never fail. */
+void
+unshuffle_avx2(const size_t bytesoftype, const size_t blocksize,
+               const uint8_t* const _src, uint8_t* const _dest) {
+  int unaligned_src = (int)((uintptr_t)_src % 16);
+  int unaligned_dest = (int)((uintptr_t)_dest % 16);
+  int multiple_of_block = (blocksize % (32 * bytesoftype)) == 0;
+  int too_small = (blocksize < 256);
+
+  if (unaligned_src || unaligned_dest || !multiple_of_block || too_small) {
+    /* _src or _dest buffer is not aligned, not multiple of the vectorization
+     * size or is not too small.  Call the generic routine. */
+    unshuffle_generic(bytesoftype, blocksize, _src, _dest);
+    return;
+  }
+
+  /* Optimized unshuffle */
+  /* The buffers must be aligned on a 16 bytes boundary, have a power */
+  /* of 2 size and be larger or equal than 256 bytes. */
+  if (bytesoftype == 4) {
+    unshuffle4_avx2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 8) {
+    unshuffle8_avx2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 16) {
+    unshuffle16_avx2(_dest, _src, blocksize);
+  }
+  else if (bytesoftype == 2) {
+    unshuffle2_avx2(_dest, _src, blocksize);
+  }
+  else {
+    /* Non-optimized unshuffle */
+    unshuffle_generic(bytesoftype, blocksize, _src, _dest);
   }
 }
