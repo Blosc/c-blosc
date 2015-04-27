@@ -7,10 +7,14 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.5.4 to 1.6.0
+Changes from 1.6.0 to 1.6.1
 ===========================
 
-#XXX version-specific blurb XXX#
+* Support for *runtime* detection of AVX2 and SSE2 SIMD instructions.
+  These changes make it possible to compile one single binary that
+  runs on a system that supports SSE2 or AVX2 (or neither), so the
+  redistribution problem is fixed (see #101).  Thanks to Julian Taylor
+  and Jack Pappas.
 
 
 Changes from 1.5.4 to 1.6.0

@@ -22,8 +22,8 @@ Other important contributions:
   avoid the use of the blosc_init() and blosc_destroy().
 
 * Jack Pappas contributed important portability enhancements,
-  specially with MS Visual C++ as well as high precision timers
-  (HPET) for the benchmark program.
+  specially runtime and cross-platform detection of SSE2/AVX2 as well
+  as high precision timers (HPET) for the benchmark program.
 
 * @littlezhou implemented the AVX2 version of shuffle routines.
 
