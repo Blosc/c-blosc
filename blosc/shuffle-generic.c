@@ -10,7 +10,7 @@
 
 /* Shuffle a block.  This can never fail. */
 void shuffle_generic(const size_t bytesoftype, const size_t blocksize,
-              const uint8_t* const _src, uint8_t* const _dest)
+		     const uint8_t* const _src, uint8_t* const _dest)
 {
   size_t i, j, neblock, leftover;
 
@@ -39,5 +39,5 @@ void unshuffle_generic(const size_t bytesoftype, const size_t blocksize,
     }
   }
   leftover = blocksize % bytesoftype;
-  memcpy(_dest+neblock*bytesoftype, _src+neblock*bytesoftype, leftover);
+  memcpy(_dest + neblock*bytesoftype, _src + neblock*bytesoftype, leftover);
 }

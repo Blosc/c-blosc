@@ -35,6 +35,7 @@
   #include <stdint.h>
   #include <stddef.h>
   #include <inttypes.h>
+  #include <string.h>
 #endif  /* _WIN32 */
 
 #endif  /* SHUFFLE_COMMON_H */
