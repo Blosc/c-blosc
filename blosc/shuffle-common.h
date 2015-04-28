@@ -10,12 +10,12 @@
 #define SHUFFLE_COMMON_H
 
 /* Macro for specifying an exported function. */
-#if defined(_WIN32) && defined(DLL_EXPORT)
-  #undef DLL_EXPORT
-  #define DLL_EXPORT __declspec(dllexport)
+#if defined(_WIN32) && defined(BLOSC_DLL_EXPORT)
+  #undef BLOSC_DLL_EXPORT
+  #define BLOSC_DLL_EXPORT __declspec(dllexport)
 #else
-  #undef DLL_EXPORT
-  #define DLL_EXPORT
+  #undef BLOSC_DLL_EXPORT
+  #define BLOSC_DLL_EXPORT
 #endif
 
 /* Define the __SSE2__ symbol if compiling with Visual C++ and
