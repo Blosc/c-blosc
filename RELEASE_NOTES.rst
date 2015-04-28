@@ -16,6 +16,9 @@ Changes from 1.6.0 to 1.6.1
   redistribution problem is fixed (see #101).  Thanks to Julian Taylor
   and Jack Pappas.
 
+* Added support for MinGW and TDM-GCC compilers for Windows.  Thanks
+  to yasushima-gd.
+
 
 Changes from 1.5.4 to 1.6.0
 ===========================

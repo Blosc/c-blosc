@@ -219,7 +219,7 @@ BLOSC_DLL_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsi
   will be returned instead.
 */
 BLOSC_DLL_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
-                                    size_t destsize, int numinternalthreads);
+                                          size_t destsize, int numinternalthreads);
 
 /**
   Get `nitems` (of typesize size) in `src` buffer starting in `start`.
