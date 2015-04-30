@@ -14,8 +14,13 @@
   #undef BLOSC_DLL_EXPORT
   #define BLOSC_DLL_EXPORT __declspec(dllexport)
 #else
+#if (defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)
+  #undef BLOSC_DLL_EXPORT
+  #define BLOSC_DLL_EXPORT __attribute__((visibility("hidden")))
+#else
   #undef BLOSC_DLL_EXPORT
   #define BLOSC_DLL_EXPORT
+#endif
 #endif
 
 /* Define the __SSE2__ symbol if compiling with Visual C++ and

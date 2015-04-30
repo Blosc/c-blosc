@@ -14,6 +14,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+    __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
+#define HAVE_CPU_FEAT_INTRIN
+#endif
+
 /*  Include hardware-accelerated shuffle/unshuffle routines based on
     the target architecture. Note that a target architecture may support
     more than one type of acceleration!*/
@@ -40,10 +45,28 @@ typedef struct shuffle_implementation {
   unshuffle_func unshuffle;
 } shuffle_implementation_t;
 
+typedef enum {
+  BLOSC_HAVE_NOTHING = 0,
+  BLOSC_HAVE_SSE2 = 1,
+  BLOSC_HAVE_AVX2 = 2
+} blosc_cpu_features;
 
 /*  Detect hardware and set function pointers to the best shuffle/unshuffle
     implementations supported by the host processor. */
 #if defined(SHUFFLE_AVX2_ENABLED) || defined(SHUFFLE_SSE2_ENABLED)    /* Intel/i686 */
+
+#ifdef HAVE_CPU_FEAT_INTRIN
+static blosc_cpu_features blosc_get_cpu_features(void) {
+  blosc_cpu_features r = BLOSC_HAVE_NOTHING;
+  if (__builtin_cpu_supports("sse2")) {
+    r |= BLOSC_HAVE_SSE2;
+  }
+  if (__builtin_cpu_supports("avx2")) {
+    r |= BLOSC_HAVE_AVX2;
+  }
+  return r;
+}
+#else
 
 #if defined(_MSC_VER) && !defined(__clang__)
   #include <immintrin.h>  /* Needed for _xgetbv */
@@ -100,8 +123,12 @@ _xgetbv(uint32_t xcr) {
 
 #endif /* defined(_MSC_VER) */
 
-static shuffle_implementation_t
-get_shuffle_implementation() {
+#ifndef _XCR_XFEATURE_ENABLED_MASK
+#define _XCR_XFEATURE_ENABLED_MASK 0x0
+#endif
+
+static blosc_cpu_features blosc_get_cpu_features(void) {
+  blosc_cpu_features result = BLOSC_HAVE_NOTHING;
   /* Holds the values of eax, ebx, ecx, edx set by the `cpuid` instruction */
   int32_t cpu_info[4];
 
@@ -171,8 +198,32 @@ get_shuffle_implementation() {
 #endif /* defined(BLOSC_DUMP_CPU_INFO) */
 
   /* Using the gathered CPU information, determine which implementation to use. */
-#if defined(SHUFFLE_AVX2_ENABLED)
+  /* technically could fail on sse2 cpu on os without xmm support, but that
+   * shouldn't exist anymore */
+  if (sse2_available) {
+    result |= BLOSC_HAVE_SSE2;
+  }
   if (xmm_state_enabled && ymm_state_enabled && avx2_available) {
+    result |= BLOSC_HAVE_AVX2;
+  }
+  return result;
+}
+#endif
+
+#else   /* No hardware acceleration supported for the target architecture. */
+  #if defined(_MSC_VER)
+  #pragma message("Hardware-acceleration detection not implemented for the target architecture. Only the generic shuffle/unshuffle routines will be available.")
+  #else
+  #warning Hardware-acceleration detection not implemented for the target architecture. Only the generic shuffle/unshuffle routines will be available.
+  #endif
+
+#endif
+
+static shuffle_implementation_t
+get_shuffle_implementation() {
+  blosc_cpu_features f = blosc_get_cpu_features();
+#if defined(SHUFFLE_AVX2_ENABLED)
+  if (f & BLOSC_HAVE_AVX2) {
     shuffle_implementation_t impl_avx2;
     impl_avx2.name = "avx2";
     impl_avx2.shuffle = (shuffle_func)shuffle_avx2;
@@ -182,7 +233,7 @@ get_shuffle_implementation() {
 #endif  /* defined(SHUFFLE_AVX2_ENABLED) */
 
 #if defined(SHUFFLE_SSE2_ENABLED)
-  if (xmm_state_enabled && sse2_available) {
+  if (f & BLOSC_HAVE_SSE2) {
     shuffle_implementation_t impl_sse2;
     impl_sse2.name = "sse2";
     impl_sse2.shuffle = (shuffle_func)shuffle_sse2;
@@ -199,24 +250,6 @@ get_shuffle_implementation() {
   impl_generic.unshuffle = (unshuffle_func)unshuffle_generic;
   return impl_generic;
 }
-
-#else   /* No hardware acceleration supported for the target architecture. */
-  #if defined(_MSC_VER)
-  #pragma message("Hardware-acceleration detection not implemented for the target architecture. Only the generic shuffle/unshuffle routines will be available.")
-  #else
-  #warning Hardware-acceleration detection not implemented for the target architecture. Only the generic shuffle/unshuffle routines will be available.
-  #endif
-
-static shuffle_implementation_t
-get_shuffle_implementation() {
-  /* No hardware detection available, so just use the generic implementation. */
-  shuffle_implementation_t impl;
-  impl.shuffle = (shuffle_func)shuffle_generic;
-  impl.unshuffle = (unshuffle_func)unshuffle_generic;
-  return impl;
-}
-
-#endif
 
 
 /*  Flag indicating whether the implementation has been initialized.
