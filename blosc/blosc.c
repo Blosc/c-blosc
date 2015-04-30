@@ -908,7 +908,7 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
   return blocksize;
 }
 
-int initialize_context_compression(struct blosc_context* context,
+static int initialize_context_compression(struct blosc_context* context,
                           int clevel,
                           int doshuffle,
                           size_t typesize,
@@ -971,7 +971,7 @@ int initialize_context_compression(struct blosc_context* context,
   return 1;
 }
 
-int write_compression_header(struct blosc_context* context, int clevel, int doshuffle)
+static int write_compression_header(struct blosc_context* context, int clevel, int doshuffle)
 {
   int32_t compcode;
 
