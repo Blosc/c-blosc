@@ -498,11 +498,11 @@ static char *all_tests() {
 
   /* Roundtrip test with generic shuffle/unshuffle routines. */
   mu_run_test(test_shuffle_generic_then_unshuffle_generic);
-  
+
 #if defined(SHUFFLE_SSE2_ENABLED)
   /* One-way comparison between generic and SSE shuffles. */
   mu_run_test(test_shuffle_sse2_vs_shuffle_generic);
-  
+
   /* Roundtrip tests between generic and SSE2 shuffle/unshuffle routines. */
   mu_run_test(test_shuffle_generic_then_unshuffle_sse2);
   mu_run_test(test_shuffle_sse2_then_unshuffle_generic);
