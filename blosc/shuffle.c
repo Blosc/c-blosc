@@ -57,14 +57,14 @@ typedef enum {
 
 #ifdef HAVE_CPU_FEAT_INTRIN
 static blosc_cpu_features blosc_get_cpu_features(void) {
-  blosc_cpu_features r = BLOSC_HAVE_NOTHING;
+  blosc_cpu_features cpu_features = BLOSC_HAVE_NOTHING;
   if (__builtin_cpu_supports("sse2")) {
-    r |= BLOSC_HAVE_SSE2;
+    cpu_features |= BLOSC_HAVE_SSE2;
   }
   if (__builtin_cpu_supports("avx2")) {
-    r |= BLOSC_HAVE_AVX2;
+    cpu_features |= BLOSC_HAVE_AVX2;
   }
-  return r;
+  return cpu_features;
 }
 #else
 
@@ -221,9 +221,9 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 
 static shuffle_implementation_t
 get_shuffle_implementation() {
-  blosc_cpu_features f = blosc_get_cpu_features();
+  blosc_cpu_features cpu_features = blosc_get_cpu_features();
 #if defined(SHUFFLE_AVX2_ENABLED)
-  if (f & BLOSC_HAVE_AVX2) {
+  if (cpu_features & BLOSC_HAVE_AVX2) {
     shuffle_implementation_t impl_avx2;
     impl_avx2.name = "avx2";
     impl_avx2.shuffle = (shuffle_func)shuffle_avx2;
@@ -233,7 +233,7 @@ get_shuffle_implementation() {
 #endif  /* defined(SHUFFLE_AVX2_ENABLED) */
 
 #if defined(SHUFFLE_SSE2_ENABLED)
-  if (f & BLOSC_HAVE_SSE2) {
+  if (cpu_features & BLOSC_HAVE_SSE2) {
     shuffle_implementation_t impl_sse2;
     impl_sse2.name = "sse2";
     impl_sse2.shuffle = (shuffle_func)shuffle_sse2;
