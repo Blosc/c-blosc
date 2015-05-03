@@ -9,19 +9,7 @@
 #ifndef SHUFFLE_COMMON_H
 #define SHUFFLE_COMMON_H
 
-/* Macro for specifying an exported function. */
-#if defined(_WIN32) && defined(BLOSC_DLL_EXPORT)
-  #undef BLOSC_DLL_EXPORT
-  #define BLOSC_DLL_EXPORT __declspec(dllexport)
-#else
-#if (defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)
-  #undef BLOSC_DLL_EXPORT
-  #define BLOSC_DLL_EXPORT __attribute__((visibility("hidden")))
-#else
-  #undef BLOSC_DLL_EXPORT
-  #define BLOSC_DLL_EXPORT
-#endif
-#endif
+#include "blosc-export.h"
 
 /* Define the __SSE2__ symbol if compiling with Visual C++ and
    targeting the minimum architecture level supporting SSE2.

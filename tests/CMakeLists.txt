@@ -17,10 +17,10 @@ foreach(source ${SOURCES})
             POST_BUILD
             COMMAND     ${CMAKE_COMMAND}
             ARGS        -E copy_if_different
-                        "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc.dll"
-                        "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc.dll")   
+                        "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc_testing.dll"
+                        "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc_testing.dll")
     endif(MSVC)
 
-    target_link_libraries(${target} blosc_shared)
+    target_link_libraries(${target} blosc_testing)
     add_test(test_${target} ${target})
 endforeach(source)

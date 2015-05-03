@@ -3,6 +3,12 @@ add_definitions(-DUSING_CMAKE)
 
 set(INTERNAL_LIBS ${CMAKE_SOURCE_DIR}/internal-complibs)
 
+# Hide symbols by default unless they're specifically exported.
+# This makes it easier to keep the set of exported symbols the
+# same across all compilers/platforms.
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 # includes
 if(NOT DEACTIVATE_LZ4)
     if (LZ4_FOUND)
@@ -89,7 +95,6 @@ if(NOT DEACTIVATE_ZLIB)
     endif(ZLIB_FOUND)
 endif(NOT DEACTIVATE_ZLIB)
 
-
 # targets
 add_library(blosc_shared SHARED ${SOURCES})
 set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)
@@ -97,10 +102,13 @@ set_target_properties(blosc_shared PROPERTIES
         VERSION ${version_string}
         SOVERSION 1  # Change this when an ABI change happens
     )
-if (MSVC)
-	set_target_properties (blosc_shared PROPERTIES COMPILE_FLAGS -DBLOSC_DLL_EXPORT=TRUE)
-endif(MSVC)
+set_property(
+    TARGET blosc_shared
+    APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_SHARED_LIBRARY)
 
+# Based on the target architecture and hardware features supported
+# by the C compiler, set hardware architecture optimization flags
+# for specific shuffle implementations.
 if(COMPILER_SUPPORT_SSE2)
     if (MSVC)
         # MSVC targets SSE2 by default on 64-bit configurations, but not 32-bit configurations.
@@ -132,20 +140,38 @@ if(COMPILER_SUPPORT_AVX2)
         SOURCE shuffle.c
         APPEND PROPERTY COMPILE_DEFINITIONS SHUFFLE_AVX2_ENABLED)
 endif(COMPILER_SUPPORT_AVX2)
+
+# When the option has been selected to compile the test suite,
+# compile an additional version of blosc_shared which exports
+# some normally-hidden symbols (to facilitate unit testing).
+if (BUILD_TESTS)
+    add_library(blosc_testing SHARED ${SOURCES})
+    set_target_properties(blosc_testing PROPERTIES OUTPUT_NAME blosc_testing)
+    set_property(
+        TARGET blosc_testing
+        APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_SHARED_LIBRARY)
+    set_property(
+        TARGET blosc_testing
+        APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_TESTING)
+endif()
+
 target_link_libraries(blosc_shared ${LIBS})
+if (blosc_testing)
+    target_link_libraries(blosc_testing ${LIBS})
+endif()
 
 if(BUILD_STATIC)
     add_library(blosc_static STATIC ${SOURCES})
     set_target_properties(blosc_static PROPERTIES OUTPUT_NAME blosc)
-	if (MSVC)
-		set_target_properties(blosc_static PROPERTIES PREFIX lib)
-	endif()
+    if (MSVC)
+        set_target_properties(blosc_static PROPERTIES PREFIX lib)
+    endif()
     target_link_libraries(blosc_static ${LIBS})
 endif(BUILD_STATIC)
 
 
 # install
-install(FILES blosc.h DESTINATION include COMPONENT DEV)
+install(FILES blosc.h blosc-export.h DESTINATION include COMPONENT DEV)
 install(TARGETS blosc_shared DESTINATION ${lib_dir} COMPONENT LIB)
 if(BUILD_STATIC)
     install(TARGETS blosc_static DESTINATION ${lib_dir} COMPONENT DEV)

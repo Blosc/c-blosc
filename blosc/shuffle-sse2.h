@@ -20,13 +20,13 @@ extern "C" {
 /**
   SSE2-accelerated shuffle routine.
 */
-BLOSC_DLL_EXPORT void shuffle_sse2(const size_t bytesoftype, const size_t blocksize,
+BLOSC_NO_EXPORT void shuffle_sse2(const size_t bytesoftype, const size_t blocksize,
                                    const uint8_t* const _src, uint8_t* const _dest);
 
 /**
   SSE2-accelerated unshuffle routine.
 */
-BLOSC_DLL_EXPORT void unshuffle_sse2(const size_t bytesoftype, const size_t blocksize,
+BLOSC_NO_EXPORT void unshuffle_sse2(const size_t bytesoftype, const size_t blocksize,
                                      const uint8_t* const _src, uint8_t* const _dest);
 
 #ifdef __cplusplus
