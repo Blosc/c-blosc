@@ -171,10 +171,9 @@ int blosclz_compress(int opt_level, const void* input,
   }
   op_limit = op + maxlength;
 
-  /* output buffer cannot be less than 66 bytes or we can get into problems.
-     As output is usually the same length than input, we take input length. */
-  if (length < 66) {
-    return 0;                   /* Mark this as uncompressible */
+  /* output buffer cannot be less than 66 bytes or we can get into trouble */
+  if (maxlength < 66) {
+    return 0;                   /* mark this as uncompressible */
   }
 
   htab = (uint16_t *) calloc(hash_size, sizeof(uint16_t));
