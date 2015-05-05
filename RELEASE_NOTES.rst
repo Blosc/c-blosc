@@ -19,6 +19,9 @@ Changes from 1.6.0 to 1.6.1
 * Added support for MinGW and TDM-GCC compilers for Windows.  Thanks
   to yasushima-gd.
 
+* Fixed a bug in blosclz that could potentially overwrite an area
+  beyond the output buffer.  See #113.
+
 
 Changes from 1.5.4 to 1.6.0
 ===========================
