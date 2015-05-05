@@ -155,7 +155,13 @@ int blosclz_compress(int opt_level, const void* input,
   uint8_t* op = (uint8_t*) output;
 
   /* Hash table depends on the opt level.  Hash_log cannot be larger than 15. */
-  int8_t hash_log_[10] = {-1, 8, 9, 9, 11, 11, 12, 12, 12, 13};
+  /* The parametrization below is made from playing with the bench suite, like:
+     $ bench/bench blosclz single 4
+     $ bench/bench blosclz single 4 4194280 12 25
+     and taking the minimum times on a i5-3380M @ 2.90GHz.
+     Curiously enough, values >= 14 does not always
+     get maximum compression, even with large blocksizes. */
+  int8_t hash_log_[10] = {-1, 11, 12, 13, 14, 13, 13, 13, 13, 13};
   uint8_t hash_log = hash_log_[opt_level];
   uint16_t hash_size = 1 << hash_log;
   uint16_t *htab;
