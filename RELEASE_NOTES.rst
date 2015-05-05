@@ -1,10 +1,17 @@
 ================================
- Release notes for c-blosc 1.4.2
+ Release notes for c-blosc 1.4.3
 ================================
 
 :Author: Francesc Alted
-:Contact: francesc@blosc.io
+:Contact: faltet@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.4.2 to 1.4.3
+===========================
+
+* Fixed a bug in blosclz that could potentially overwrite an area
+  beyond the output buffer.  See #113.
 
 
 Changes from 1.4.1 to 1.4.2
@@ -16,6 +23,7 @@ Changes from 1.4.1 to 1.4.2
 * Use multithreaded or single-threaded code depending on Blosc version.
   This is mainly useful for compiling HDF5 apps with non-included Blosc
   libraries.
+
 
 Changes from 1.4.0 to 1.4.1
 ===========================
