@@ -836,8 +836,8 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
       blocksize = MIN_BUFFERSIZE;
     }
   }
-  else if (nbytes >= L1*4) {
-    blocksize = L1 * 4;
+  else if (nbytes >= L1 * typesize) {
+    blocksize = L1 * typesize;
 
     /* For Zlib, increase the block sizes in a factor of 8 because it
        is meant for compression large blocks (it shows a big overhead
@@ -896,13 +896,6 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
   /* blocksize must be a multiple of the typesize */
   if (blocksize > typesize) {
     blocksize = blocksize / typesize * typesize;
-  }
-
-  /* blocksize must not exceed (64 KB * typesize) in order to allow
-     BloscLZ to achieve better compression ratios (the ultimate reason
-     for this is that hash_log in BloscLZ cannot be larger than 15) */
-  if ((context->compcode == BLOSC_BLOSCLZ) && (blocksize / typesize) > 64*KB) {
-    blocksize = 64 * KB * typesize;
   }
 
   return blocksize;
