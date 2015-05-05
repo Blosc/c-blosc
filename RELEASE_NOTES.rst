@@ -22,6 +22,14 @@ Changes from 1.6.0 to 1.6.1
 * Fixed a bug in blosclz that could potentially overwrite an area
   beyond the output buffer.  See #113.
 
+* New computation for blocksize so that larger typesizes (> 8 bytes)
+  would benefit of much better compression ratios.  Speed is not
+  penalized too much.
+
+* New parametrization of the hash table for blosclz codec.  This
+  allows better compression in many scenarios, while slightly
+  increasing the speed.
+
 
 Changes from 1.5.4 to 1.6.0
 ===========================
