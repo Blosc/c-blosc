@@ -6,7 +6,16 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+Fixed a subtle, but long-standing bug in the blosclz codec that could
+potentially overwrite an area beyond the output buffer.
+
+Support for *runtime* detection of AVX2 and SSE2 SIMD instructions,
+allowing running AVX2 capable c-blosc libraries to run on machines
+with no AVX2 available (will use SSE2 instead).
+
+Finally, a new blocksize computation allows for better compression
+ratios for larger typesizes (> 8 bytes), without not penalizing the
+speed too much (at least on modern CPUs).
 
 For more info, please see the release notes in:
 
