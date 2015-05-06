@@ -1,10 +1,19 @@
 ================================
- Release notes for c-blosc 1.4.3
+ Release notes for c-blosc 1.4.4
 ================================
 
 :Author: Francesc Alted
 :Contact: faltet@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.4.3 to 1.4.4
+===========================
+
+* New computation of blocksize to be in sync with c-blosc 1.6.1
+
+* New parametrization of the hash table for blosclz (synced with c-blosc
+  1.6.1)
 
 
 Changes from 1.4.2 to 1.4.3
