@@ -33,7 +33,7 @@ direct memory fetch approach via a memcpy() OS call.
 Blosc has internal support for different compressors like its internal
 BloscLZ, but also LZ4, LZ4HC, Snappy and Zlib.  This way these can
 automatically leverage the multithreading and pre-filtering
-(shuffling) capabilities that comes with Blosc for free.
+(shuffling) capabilities that comes with Blosc.
 
 
 Download sources
