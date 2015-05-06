@@ -1,6 +1,6 @@
 ===============================================================
  Announcing c-blosc 1.6.1
- A blocking, shuffling and lossless compression library
+ A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
