@@ -1,10 +1,16 @@
 ================================
- Release notes for c-blosc 1.6.1
+ Release notes for c-blosc 1.6.2
 ================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.6.1 to 1.6.2
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.6.0 to 1.6.1
