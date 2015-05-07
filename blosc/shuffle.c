@@ -217,6 +217,10 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
   #warning Hardware-acceleration detection not implemented for the target architecture. Only the generic shuffle/unshuffle routines will be available.
   #endif
 
+static blosc_cpu_features blosc_get_cpu_features(void) {
+  return BLOSC_HAVE_NOTHING;
+}
+
 #endif
 
 static shuffle_implementation_t
