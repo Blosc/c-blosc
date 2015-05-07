@@ -10,7 +10,8 @@
 Changes from 1.6.1 to 1.6.2
 ===========================
 
-#XXX version-specific blurb XXX#
+* Fixed compilation on non-Intel archs (tested on ARM).  Thanks to 
+  Zbyszek Szmek.
 
 
 Changes from 1.6.0 to 1.6.1
