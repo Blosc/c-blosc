@@ -1,5 +1,13 @@
 # AppVeyor CI build configuration for c-blosc
 
+# Before cloning the repo, configure git to handle line endings correctly.
+init:
+  - git config --global core.autocrlf input
+
+# This is the build version displayed on AppVeyor's UI.
+# It's incrementally automatically like travis-ci but allows custom formatting.
+version: '{build}'
+
 build_script:
   - cmd: mkdir build
   - cmd: cd build
@@ -7,4 +15,4 @@ build_script:
   - cmd: cmake --build . --config Release
 
 test_script:
-  - cmd: cmake --build . --config Release --target test
+  - cmd: ctest
