@@ -13,6 +13,7 @@ build_script:
   - cmd: cd build
   - cmd: cmake -G "Visual Studio 12 Win64" ..
   - cmd: cmake --build . --config Release
+  - cmd: cpack
 
 test_script:
   - cmd: ctest
