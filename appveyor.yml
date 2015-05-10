@@ -13,7 +13,9 @@ build_script:
   - cmd: cd build
   - cmd: cmake -G "Visual Studio 12 Win64" ..
   - cmd: cmake --build . --config Release
-  - cmd: cpack
+  # Disable CPack for now as it conflicts with the Chocolatey 'cpack' alias
+  # for 'choco pack' and causes the build to fail.
+  #- cmd: cpack
 
 test_script:
   - cmd: ctest
