@@ -21,4 +21,4 @@ before_script:
 
 script:
   - cmake --build . --config Release
-  - cmake --build . --config Release --target test
+  - ctest

@@ -199,7 +199,7 @@ Build, test and install Blosc:
 .. code-block:: console
 
   $ cmake --build .
-  $ cmake --build . --target test
+  $ ctest
   $ cmake --build . --target install
 
 The static and dynamic version of the Blosc library, together with
