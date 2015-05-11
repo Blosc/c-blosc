@@ -19,4 +19,6 @@ before_script:
   - cd build
   - cmake -DBUILD_HDF5_FILTER=TRUE ..
 
-script: make && make test
+script:
+  - cmake --build . --config Release
+  - ctest

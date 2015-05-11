@@ -198,9 +198,9 @@ Build, test and install Blosc:
 
 .. code-block:: console
 
-  $ make
-  $ make test
-  $ make install
+  $ cmake --build .
+  $ ctest
+  $ cmake --build . --target install
 
 The static and dynamic version of the Blosc library, together with
 header files, will be installed into the specified
