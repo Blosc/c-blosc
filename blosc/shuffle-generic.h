@@ -24,13 +24,13 @@ extern "C" {
 /**
   Generic (non-hardware-accelerated) shuffle routine.
 */
-BLOSC_DLL_EXPORT void shuffle_generic(const size_t bytesoftype, const size_t blocksize,
+BLOSC_NO_EXPORT void shuffle_generic(const size_t bytesoftype, const size_t blocksize,
                                       const uint8_t* const _src, uint8_t* const _dest);
 
 /**
   Generic (non-hardware-accelerated) unshuffle routine.
 */
-BLOSC_DLL_EXPORT void unshuffle_generic(const size_t bytesoftype, const size_t blocksize,
+BLOSC_NO_EXPORT void unshuffle_generic(const size_t bytesoftype, const size_t blocksize,
                                         const uint8_t* const _src, uint8_t* const _dest);
 
 #ifdef __cplusplus
