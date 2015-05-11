@@ -1,0 +1,21 @@
+# AppVeyor CI build configuration for c-blosc
+
+# Before cloning the repo, configure git to handle line endings correctly.
+init:
+  - git config --global core.autocrlf input
+
+# This is the build version displayed on AppVeyor's UI.
+# It's incrementally automatically like travis-ci but allows custom formatting.
+version: '{build}'
+
+build_script:
+  - cmd: mkdir build
+  - cmd: cd build
+  - cmd: cmake -G "Visual Studio 12 Win64" ..
+  - cmd: cmake --build . --config Release
+  # Disable CPack for now as it conflicts with the Chocolatey 'cpack' alias
+  # for 'choco pack' and causes the build to fail.
+  #- cmd: cpack
+
+test_script:
+  - cmd: ctest
