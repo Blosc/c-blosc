@@ -24,6 +24,12 @@ foreach(source ${SOURCES})
     get_filename_component(target ${source} NAME_WE)
     add_executable(${target} ${source})
 
+    # Define the BLOSC_TESTING symbol so normally-hidden functions
+    # aren't hidden from the view of the test programs.
+    set_property(
+        TARGET ${target}
+        APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_TESTING)
+
     # have to copy dlls for Visual Studio
     if(MSVC)
         add_custom_command(
