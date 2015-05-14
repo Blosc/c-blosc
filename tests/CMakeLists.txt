@@ -7,8 +7,28 @@ link_directories(${PROJECT_BINARY_DIR}/blosc)
 
 # targets and tests
 foreach(source ${SOURCES})
+    # Enable support for testing accelerated shuffles
+    if(COMPILER_SUPPORT_SSE2)
+        # Define a symbol so tests for SSE2 shuffle/unshuffle will be compiled in.
+        set_property(
+            SOURCE ${source}
+            APPEND PROPERTY COMPILE_DEFINITIONS SHUFFLE_SSE2_ENABLED)
+    endif(COMPILER_SUPPORT_SSE2)
+#    if(COMPILER_SUPPORT_AVX2)
+#        # Define a symbol so tests for AVX2 shuffle/unshuffle will be compiled in.
+#        set_property(
+#            SOURCE ${source}
+#            APPEND PROPERTY COMPILE_DEFINITIONS SHUFFLE_AVX2_ENABLED)
+#    endif(COMPILER_SUPPORT_AVX2)
+
     get_filename_component(target ${source} NAME_WE)
     add_executable(${target} ${source})
+
+    # Define the BLOSC_TESTING symbol so normally-hidden functions
+    # aren't hidden from the view of the test programs.
+    set_property(
+        TARGET ${target}
+        APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_TESTING)
 
     # have to copy dlls for Visual Studio
     if(MSVC)
