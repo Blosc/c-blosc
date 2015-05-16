@@ -124,15 +124,21 @@ endif(NOT DEACTIVATE_ZLIB)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
+
 # now make sure that you set the build directory on your "Include" path when compiling
 include_directories("${PROJECT_BINARY_DIR}/blosc/")
 
-# force the default build type to Release.
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-        "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
-        FORCE)
-endif(NOT CMAKE_BUILD_TYPE)
+# If the build type is not set, default to Release.
+set(BLOSC_DEFAULT_BUILD_TYPE Release)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "No build type specified. Defaulting to '${BLOSC_DEFAULT_BUILD_TYPE}'.")
+    set(CMAKE_BUILD_TYPE ${BLOSC_DEFAULT_BUILD_TYPE} CACHE STRING
+        "Choose the type of build." FORCE)
+
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+        "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
 
 # Based on the target system's processor and the compiler being used,
 # set build variables indicating which hardware features can be targeted
