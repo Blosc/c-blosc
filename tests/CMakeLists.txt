@@ -42,5 +42,47 @@ foreach(source ${SOURCES})
     endif(MSVC)
 
     target_link_libraries(${target} blosc_testing)
-    add_test(test_${target} ${target})
+
+    # If there's a CSV file present for this test, read it to get the list
+    # of test parameters then add a test for each parameter set.
+    # Otherwise, this is a simple test so just add it once.
+    get_filename_component(source_extension ${source} EXT)
+    string(REGEX REPLACE "${source_extension}$" ".csv"
+        test_params_file ${source})
+    if (EXISTS "${test_params_file}")
+        # Read the file contents into a CMake list
+        file(READ "${test_params_file}" test_params_contents)
+
+        string(REGEX REPLACE ";" "\\\\;"
+            test_params_contents "${test_params_contents}")
+        string(REGEX REPLACE "\n" ";"
+            test_params_contents "${test_params_contents}")
+
+        # How many parameter sets for this test?
+        # If there's not at least one (accounting for the CSV header line),
+        # that's probably not correct so emit an error and stop configuring.
+        list(LENGTH test_params_contents test_params_count)
+        if ("${test_params_count}" LESS 2)
+            message(ERROR "Invalid test parameters file: ${test_params_file}")
+        endif()
+
+        # Remove the header line.
+        list(REMOVE_AT test_params_contents 0)
+
+        # Add a test for each parameter set in the file.
+        foreach(test_params_raw ${test_params_contents})
+            string(REGEX REPLACE "," " " test_params "${test_params_raw}")
+
+            # Create the test name.
+            # NOTE: The documentation for add_test says the test name "may not contain
+            # spaces, quotes, or other characters special in CMake syntax."
+            string(REGEX REPLACE "\"| " "_" test_name_params "${test_params}")
+            set(test_name "${target}_${test_name_params}")
+
+            separate_arguments(test_params)
+            add_test(${test_name} ${target} ${test_params})
+        endforeach()
+    else()
+        add_test(${target} ${target})
+    endif()
 endforeach(source)
