@@ -23,6 +23,7 @@
   #include <time.h>
   #include "win32/stdint-windows.h"
 #else
+  #include <stdint.h>
   #include <unistd.h>
   #include <sys/time.h>
 #endif
@@ -97,8 +98,9 @@ static void blosc_test_free(void* ptr)
 /** Fills a buffer with random values. */
 static void blosc_test_fill_random(void* const ptr, const size_t size)
 {
+  size_t k;
   uint8_t* const byte_ptr = (uint8_t*)ptr;
-  for (size_t k = 0; k < size; k++) {
+  for (k = 0; k < size; k++) {
     byte_ptr[k] = rand();
   }
 }
