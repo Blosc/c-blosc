@@ -16,10 +16,67 @@
 #define SHUFFLE_GENERIC_H
 
 #include "shuffle-common.h"
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+  Generic (non-hardware-accelerated) shuffle routine.
+  This is the pure element-copying nested loop. It is used by the
+  generic shuffle implementation and also by the vectorized shuffle
+  implementations to process any remaining elements in a block which
+  is not a multiple of (type_size * vector_size).
+*/
+static void shuffle_generic_inline(const size_t type_size,
+  const size_t vectorizable_blocksize, const size_t blocksize,
+	const uint8_t* const _src, uint8_t* const _dest)
+{
+  size_t i, j;
+
+  /* Calculate the number of elements in the block. */
+  const lldiv_t neblock = lldiv(blocksize, type_size);
+  const size_t vectorizable_elements = vectorizable_blocksize / type_size;
+
+  /* Non-optimized shuffle */
+  for (j = 0; j < type_size; j++) {
+    for (i = vectorizable_elements; i < (size_t)neblock.quot; i++) {
+      _dest[j*neblock.quot+i] = _src[i*type_size+j];
+    }
+  }
+
+  /* Copy any leftover bytes in the block without shuffling them. */
+  memcpy(_dest + (blocksize - neblock.rem), _src + (blocksize - neblock.rem), neblock.rem);
+}
+
+/**
+  Generic (non-hardware-accelerated) unshuffle routine.
+  This is the pure element-copying nested loop. It is used by the
+  generic unshuffle implementation and also by the vectorized unshuffle
+  implementations to process any remaining elements in a block which
+  is not a multiple of (type_size * vector_size).
+*/
+static void unshuffle_generic_inline(const size_t type_size,
+  const size_t vectorizable_blocksize, const size_t blocksize,
+  const uint8_t* const _src, uint8_t* const _dest)
+{
+  size_t i, j;
+
+  /* Calculate the number of elements in the block. */
+  const lldiv_t neblock = lldiv(blocksize, type_size);
+  const size_t vectorizable_elements = vectorizable_blocksize / type_size;
+
+  /* Non-optimized unshuffle */
+  for (i = vectorizable_elements; i < (size_t)neblock.quot; i++) {
+    for (j = 0; j < type_size; j++) {
+      _dest[i*type_size+j] = _src[j*neblock.quot+i];
+    }
+  }
+
+  /* Copy any leftover bytes in the block without unshuffling them. */
+  memcpy(_dest + (blocksize - neblock.rem), _src + (blocksize - neblock.rem), neblock.rem);
+}
 
 /**
   Generic (non-hardware-accelerated) shuffle routine.
