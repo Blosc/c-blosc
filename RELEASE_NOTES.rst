@@ -10,8 +10,12 @@
 Changes from 1.6.1 to 1.6.2
 ===========================
 
-* Fixed compilation on non-Intel archs (tested on ARM).  Thanks to 
+* Fixed compilation on non-Intel archs (tested on ARM).  Thanks to
   Zbyszek Szmek.
+
+* 'test_basic' suite has been split in components for a much better
+  granularity on what's a possibly failing test.  Also, lots of new
+  tests have been added.  Thanks to Jack Pappas.
 
 
 Changes from 1.6.0 to 1.6.1
