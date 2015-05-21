@@ -4,12 +4,12 @@ set(SOURCES bench.c)
 
 # targets
 add_executable(bench ${SOURCES})
-if(UNIX)
+if(UNIX AND NOT APPLE)
   # cmake is complaining about LINK_PRIVATE in original PR
   # and removing it does not seem to hurt, so be it.
   # target_link_libraries(bench LINK_PRIVATE rt)
   target_link_libraries(bench rt)
-endif(UNIX)
+endif(UNIX AND NOT APPLE)
 target_link_libraries(bench blosc_shared)
 
 # have to copy blosc dlls for Visual Studio
