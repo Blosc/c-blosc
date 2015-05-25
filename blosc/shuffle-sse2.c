@@ -213,8 +213,8 @@ unshuffle2_sse2(uint8_t* dest, const uint8_t* orig, size_t size)
     /* Compute the hi 32 bytes */
     xmm2[1] = _mm_unpackhi_epi8(xmm1[0], xmm1[1]);
     /* Store the result vectors in proper order */
-    _mm_storeu_si128((__m128i*)(dest) + k + 0, xmm2[k]);
-    _mm_storeu_si128((__m128i*)(dest) + k + 1, xmm2[k]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 0, xmm2[0]);
+    _mm_storeu_si128((__m128i*)(dest) + k + 1, xmm2[1]);
   }
 }
 
