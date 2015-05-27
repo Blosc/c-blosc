@@ -395,11 +395,11 @@ return code;
 
 #if defined(HAVE_LZ4)
 static int lz4_wrap_compress(const char* input, size_t input_length,
-                             char* output, size_t maxout)
+                             char* output, size_t maxout, int accel)
 {
   int cbytes;
-  cbytes = LZ4_compress_limitedOutput(input, output, (int)input_length,
-                                      (int)maxout);
+  cbytes = LZ4_compress_fast(input, output, (int)input_length, (int)maxout,
+                             accel);
   return cbytes;
 }
 
@@ -489,17 +489,25 @@ static int zlib_wrap_decompress(const char* input, size_t compressed_length,
 static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
   int32_t typesize = context->typesize;
-  /* Compute the power of 2. See:
-   * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
-   */
-  int32_t tspow2 = ((typesize != 0) && !(typesize & (typesize - 1)));
 
   if (clevel == 9) {
     return 1;
   }
-  if ((context->compcode == BLOSC_BLOSCLZ) && tspow2 && typesize < 32) {
+  if (context->compcode == BLOSC_BLOSCLZ) {
+    /* Compute the power of 2. See:
+     * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
+     */
+    int32_t tspow2 = ((typesize != 0) && !(typesize & (typesize - 1)));
+    if (tspow2 && typesize < 32) {
       return 32;
     }
+  }
+  else if (context->compcode == BLOSC_LZ4) {
+    /* This acceleration setting based on discussions held in:
+     * https://groups.google.com/forum/#!topic/lz4c/zosy90P8MQw
+     */
+    return (10 - clevel);
+  }
   return 1;
 }
 
@@ -564,7 +572,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     #if defined(HAVE_LZ4)
     else if (context->compcode == BLOSC_LZ4) {
       cbytes = lz4_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
-                                 (char *)dest, (size_t)maxout);
+                                 (char *)dest, (size_t)maxout, accel);
     }
     else if (context->compcode == BLOSC_LZ4HC) {
       cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
