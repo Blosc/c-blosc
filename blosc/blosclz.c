@@ -143,7 +143,9 @@ else BLOCK_COPY(op, ref, len, op_limit);
     v &= (1 << l) - 1;                                 \
 }
 
-/* Another version which seems to be a bit more effective than the above */
+/* Another version which seems to be a bit more effective than the above,
+ * but a bit slower.  Could be interesting for high comp_level.
+ */
 #define MINMATCH 3
 #define HASH_FUNCTION2(v, p, l) {                       \
   v = BLOSCLZ_READU16(p);				\

@@ -34,7 +34,8 @@ extern "C" {
 
   The acceleration parameter is related with the frequency for
   updating the internal hash.  An acceleration of 1 means that the
-  internal hash is updated at full rate.  A value < 1 is not allowed.
+  internal hash is updated at full rate.  A value < 1 is not allowed
+  and will be silently set to 1.
 
   The input buffer and the output buffer can not overlap.
 */
