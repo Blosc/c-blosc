@@ -137,16 +137,27 @@ if ((len > 32) || (llabs(op-ref) < CPYSIZE)) { \
 else BLOCK_COPY(op, ref, len, op_limit);
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
-#define HASH_FUNCTION(v,p,l) {	       \
-v = BLOSCLZ_READU16(p);                \
-v ^= BLOSCLZ_READU16(p+1)^(v>>(16-l)); \
-v &= (1 << l) - 1; }
+#define HASH_FUNCTION(v, p, l) {                       \
+    v = BLOSCLZ_READU16(p);                            \
+    v ^= BLOSCLZ_READU16(p + 1) ^ ( v >> (16 - l));    \
+    v &= (1 << l) - 1;                                 \
+}
 
+/* Another version which seems to be a bit more effective than the above,
+ * but a bit slower.  Could be interesting for high comp_level.
+ */
+#define MINMATCH 3
+#define HASH_FUNCTION2(v, p, l) {                       \
+  v = BLOSCLZ_READU16(p);				\
+  v = (v * 2654435761U) >> ((MINMATCH * 8) - (l + 1));  \
+  v &= (1 << l) - 1;					\
+}
 
 #define IP_BOUNDARY 2
 
-int blosclz_compress(int opt_level, const void* input,
-                     int length, void* output, int maxout)
+
+int blosclz_compress(int opt_level, const void* input, int length,
+		     void* output, int maxout, int accel)
 {
   uint8_t* ip = (uint8_t*) input;
   uint8_t* ibase = (uint8_t*) input;
@@ -161,7 +172,7 @@ int blosclz_compress(int opt_level, const void* input,
      and taking the minimum times on a i5-3380M @ 2.90GHz.
      Curiously enough, values >= 14 does not always
      get maximum compression, even with large blocksizes. */
-  int8_t hash_log_[10] = {-1, 11, 12, 13, 14, 13, 13, 13, 13, 13};
+  int8_t hash_log_[10] = {-1, 11, 11, 11, 12, 13, 13, 13, 13, 13};
   uint8_t hash_log = hash_log_[opt_level];
   uint16_t hash_size = 1 << hash_log;
   uint16_t *htab;
@@ -170,7 +181,7 @@ int blosclz_compress(int opt_level, const void* input,
   int32_t hval;
   uint8_t copy;
 
-  double maxlength_[10] = {-1, .1, .15, .2, .5, .7, .85, .925, .975, 1.0};
+  double maxlength_[10] = {-1, .1, .1, .15, .2, .5, .6, .75, .9, 1.0};
   int32_t maxlength = (int32_t) (length * maxlength_[opt_level]);
   if (maxlength > (int32_t) maxout) {
     maxlength = (int32_t) maxout;
@@ -198,6 +209,10 @@ int blosclz_compress(int opt_level, const void* input,
     else goto out;
   }
 
+  /* prepare the acceleration to be used in condition */
+  accel = accel < 1 ? 1 : accel;
+  accel -= 1;
+
   /* we start with literal copy */
   copy = 2;
   *op++ = MAX_COPY-1;
@@ -221,12 +236,15 @@ int blosclz_compress(int opt_level, const void* input,
 
     /* find potential match */
     HASH_FUNCTION(hval, ip, hash_log);
+    /* hval = hash_sequence(ip, hash_log, hash_size); */
     ref = ibase + htab[hval];
-    /* update hash table */
-    htab[hval] = (uint16_t)(anchor - ibase);
 
     /* calculate distance to the match */
     distance = (int32_t)(anchor - ref);
+
+    /* update hash table if necessary */
+    if ((distance & accel) == 0)
+      htab[hval] = (uint16_t)(anchor - ibase);
 
     /* is this a match? check the first 3 bytes */
     if (distance==0 || (distance >= MAX_FARDISTANCE) ||
