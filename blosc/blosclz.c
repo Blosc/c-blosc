@@ -137,16 +137,25 @@ if ((len > 32) || (llabs(op-ref) < CPYSIZE)) { \
 else BLOCK_COPY(op, ref, len, op_limit);
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
-#define HASH_FUNCTION(v,p,l) {	       \
-v = BLOSCLZ_READU16(p);                \
-v ^= BLOSCLZ_READU16(p+1)^(v>>(16-l)); \
-v &= (1 << l) - 1; }
+#define HASH_FUNCTION(v, p, l) {                       \
+    v = BLOSCLZ_READU16(p);                            \
+    v ^= BLOSCLZ_READU16(p + 1) ^ ( v >> (16 - l));    \
+    v &= (1 << l) - 1;                                 \
+}
 
+/* Another version which seems to be a bit more effective than the above */
+#define MINMATCH 3
+#define HASH_FUNCTION2(v, p, l) {                       \
+  v = BLOSCLZ_READU16(p);				\
+  v = (v * 2654435761U) >> ((MINMATCH * 8) - (l + 1));  \
+  v &= (1 << l) - 1;					\
+}
 
 #define IP_BOUNDARY 2
 
-int blosclz_compress(int opt_level, const void* input,
-                     int length, void* output, int maxout)
+
+int blosclz_compress(int opt_level, const void* input, int length,
+		     void* output, int maxout, int accel)
 {
   uint8_t* ip = (uint8_t*) input;
   uint8_t* ibase = (uint8_t*) input;
@@ -220,13 +229,16 @@ int blosclz_compress(int opt_level, const void* input,
     }
 
     /* find potential match */
-    HASH_FUNCTION(hval, ip, hash_log);
+    HASH_FUNCTION2(hval, ip, hash_log);
+    /* hval = hash_sequence(ip, hash_log, hash_size); */
     ref = ibase + htab[hval];
-    /* update hash table */
-    htab[hval] = (uint16_t)(anchor - ibase);
 
     /* calculate distance to the match */
     distance = (int32_t)(anchor - ref);
+
+    /* update hash table */
+    if ((distance % accel) == 0)
+      htab[hval] = (uint16_t)(anchor - ibase);
 
     /* is this a match? check the first 3 bytes */
     if (distance==0 || (distance >= MAX_FARDISTANCE) ||

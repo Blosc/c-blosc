@@ -32,11 +32,15 @@ extern "C" {
   bytes, the return value will be 0 and you will have to discard the
   output buffer.
 
+  The acceleration parameter is related with the frequency for
+  updating the internal hash.  An acceleration of 1 means that the
+  internal hash is updated at full rate.  A value < 1 is not allowed.
+
   The input buffer and the output buffer can not overlap.
 */
 
 int blosclz_compress(int opt_level, const void* input, int length,
-                     void* output, int maxout);
+                     void* output, int maxout, int accel);
 
 /**
   Decompress a block of compressed data and returns the size of the
