@@ -1,5 +1,5 @@
 ================================
- Release notes for c-blosc 1.6.2
+ Release notes for c-blosc 1.7.0
 ================================
 
 :Author: Francesc Alted
@@ -7,15 +7,28 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.6.1 to 1.6.2
+Changes from 1.6.1 to 1.7.0
 ===========================
 
-* Fixed compilation on non-Intel archs (tested on ARM).  Thanks to
-  Zbyszek Szmek.
+* New acceleration mode for LZ4 and BloscLZ codecs that enters in
+  operation with complevel < 9.  This allows for an important boost in
+  speed with minimal compression ratio loss.  Francesc Alted.
+
+* LZ4 codec updated to 1.7.0 (r129).
+
+* Implemented SSE2 shuffle support for buffers containing a number of
+  elements which is not a multiple of (typesize * vectorsize).  Jack
+  Pappas.
+
+* Added SSE2 shuffle/unshuffle routines for types larger than 16
+  bytes.  Jack Pappas.
 
 * 'test_basic' suite has been split in components for a much better
   granularity on what's a possibly failing test.  Also, lots of new
-  tests have been added.  Thanks to Jack Pappas.
+  tests have been added.  Jack Pappas.
+
+* Fixed compilation on non-Intel archs (tested on ARM).  Zbyszek
+  Szmek.
 
 
 Changes from 1.6.0 to 1.6.1

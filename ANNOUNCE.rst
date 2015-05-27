@@ -1,21 +1,23 @@
 ===============================================================
- Announcing c-blosc 1.6.2
+ Announcing c-blosc 1.7.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Fixed a subtle, but long-standing bug in the blosclz codec that could
-potentially overwrite an area beyond the output buffer.
+A new internal acceleration mode for LZ4 (updated internally to 1.7.0)
+and BloscLZ codecs that enters in operation with all compression
+levels except for the highest (9).  This allows for an important boost
+in speed with minimal compression ratio loss.
 
-Support for *runtime* detection of AVX2 and SSE2 SIMD instructions,
-allowing running AVX2 capable c-blosc libraries to run on machines
-with no AVX2 available (will use SSE2 instead).
+Also, Jack Pappas made great contributions allowing SSE2 operation in
+more scenarios (like types larger than 16 bytes or buffers not being a
+multiple of typesize * vectorsize).  Another contribution is a much
+more comprehensive test suite for SSE2 and AVX2 operation.
 
-Finally, a new blocksize computation allows for better compression
-ratios for larger typesizes (> 8 bytes), without not penalizing the
-speed too much (at least on modern CPUs).
+Finally Zbyszek Szmek fixed compilation on non-Intel archs (tested on
+ARM).
 
 For more info, please see the release notes in:
 
