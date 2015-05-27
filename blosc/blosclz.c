@@ -207,6 +207,10 @@ int blosclz_compress(int opt_level, const void* input, int length,
     else goto out;
   }
 
+  /* prepare the acceleration to be used in condition */
+  accel = accel < 1 ? 1 : accel;
+  accel -= 1;
+
   /* we start with literal copy */
   copy = 2;
   *op++ = MAX_COPY-1;
@@ -229,15 +233,15 @@ int blosclz_compress(int opt_level, const void* input, int length,
     }
 
     /* find potential match */
-    HASH_FUNCTION2(hval, ip, hash_log);
+    HASH_FUNCTION(hval, ip, hash_log);
     /* hval = hash_sequence(ip, hash_log, hash_size); */
     ref = ibase + htab[hval];
 
     /* calculate distance to the match */
     distance = (int32_t)(anchor - ref);
 
-    /* update hash table */
-    if ((distance % accel) == 0)
+    /* update hash table if necessary */
+    if ((distance & accel) == 0)
       htab[hval] = (uint16_t)(anchor - ibase);
 
     /* is this a match? check the first 3 bytes */
