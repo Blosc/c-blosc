@@ -188,8 +188,6 @@ int blosclz_compress(int opt_level, const void* input, int length,
   }
   op_limit = op + maxlength;
 
-  htab = (uint16_t *) calloc(hash_size, sizeof(uint16_t));
-
   /* sanity check */
   if(BLOSCLZ_UNEXPECT_CONDITIONAL(length < 4)) {
     if(length) {
@@ -198,15 +196,18 @@ int blosclz_compress(int opt_level, const void* input, int length,
       ip_bound++;
       while(ip <= ip_bound)
         *op++ = *ip++;
-      free(htab);
       return length+1;
     }
-    else goto out;
+    else {
+      return 0;
+    }
   }
 
   /* prepare the acceleration to be used in condition */
   accel = accel < 1 ? 1 : accel;
   accel -= 1;
+
+  htab = (uint16_t *) calloc(hash_size, sizeof(uint16_t));
 
   /* we start with literal copy */
   copy = 2;
