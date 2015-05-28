@@ -30,6 +30,9 @@ Changes from 1.6.1 to 1.7.0
 * Fixed compilation on non-Intel archs (tested on ARM).  Zbyszek
   Szmek.
 
+* Removed the output buffer length < 66 bytes limitation on the
+  blosclz codec.  Francesc Alted.
+
 
 Changes from 1.6.0 to 1.6.1
 ===========================
