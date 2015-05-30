@@ -12,7 +12,7 @@ if(UNIX AND NOT APPLE)
 endif(UNIX AND NOT APPLE)
 target_link_libraries(bench blosc_shared)
 
-# have to copy blosc dlls for Visual Studio
+# have to copy blosc dlls on Windows
 if(MSVC)
     add_custom_command(
         TARGET      bench
@@ -21,8 +21,15 @@ if(MSVC)
         ARGS        -E copy_if_different
                     "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc.dll"
                     "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc.dll")
-endif(MSVC)
-
+elseif(MINGW)
+    add_custom_command(
+        TARGET      bench
+        POST_BUILD
+        COMMAND     ${CMAKE_COMMAND}
+        ARGS        -E copy_if_different
+                    "${PROJECT_BINARY_DIR}/blosc/libblosc.dll"
+                    "${CMAKE_CURRENT_BINARY_DIR}/libblosc.dll")
+endif()
 
 # tests
 if(BUILD_TESTS)
