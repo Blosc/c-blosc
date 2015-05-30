@@ -46,18 +46,19 @@ shuffle2_avx2(uint8_t* const dest, const uint8_t* const src,
   const size_t vectorizable_elements, const size_t total_elements)
 {
   static const size_t bytesoftype = 2;
-  static const uint8_t b_mask[] = {
-    0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E,
-    0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F,
-    0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E,
-    0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F
-  };
-
   size_t j;
   int k;
   __m256i ymm0[2], ymm1[2];
 
-  const __m256i shmask = _mm256_loadu_si256((__m256i*)b_mask);
+  /* Create the shuffle mask.
+     NOTE: The XMM/YMM 'set' intrinsics require the arguments to be ordered from
+     most to least significant (i.e., their order is reversed when compared to
+     loading the mask from an array). */
+  const __m256i shmask = _mm256_set_epi8(
+    0x0f, 0x0d, 0x0b, 0x09, 0x07, 0x05, 0x03, 0x01,
+    0x0e, 0x0c, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x00,
+    0x0f, 0x0d, 0x0b, 0x09, 0x07, 0x05, 0x03, 0x01,
+    0x0e, 0x0c, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x00);
 
   for (j = 0; j < vectorizable_elements; j += sizeof(__m256i)) {
     /* Fetch 32 elements (64 bytes) then transpose bytes, words and double words. */
@@ -88,21 +89,16 @@ shuffle4_avx2(uint8_t* const dest, const uint8_t* const src,
   const size_t vectorizable_elements, const size_t total_elements)
 {
   static const size_t bytesoftype = 4;
-  static const uint8_t b_mask[] = {
-    0x00, 0x00, 0x00, 0x00,
-    0x04, 0x00, 0x00, 0x00,
-    0x01, 0x00, 0x00, 0x00,
-    0x05, 0x00, 0x00, 0x00,
-    0x02, 0x00, 0x00, 0x00,
-    0x06, 0x00, 0x00, 0x00,
-    0x03, 0x00, 0x00, 0x00,
-    0x07, 0x00, 0x00, 0x00
-  };
-
   size_t i;
   int j;
   __m256i ymm0[4], ymm1[4];
-  const __m256i mask = _mm256_loadu_si256((__m256i*)b_mask);
+  
+  /* Create the shuffle mask.
+     NOTE: The XMM/YMM 'set' intrinsics require the arguments to be ordered from
+     most to least significant (i.e., their order is reversed when compared to
+     loading the mask from an array). */
+  const __m256i mask = _mm256_set_epi32(
+    0x07, 0x03, 0x06, 0x02, 0x05, 0x01, 0x04, 0x00);
 
   for (i = 0; i < vectorizable_elements; i += sizeof(__m256i)) {
     /* Fetch 32 elements (128 bytes) then transpose bytes and words. */
@@ -189,17 +185,19 @@ shuffle16_avx2(uint8_t* const dest, const uint8_t* const src,
   const size_t vectorizable_elements, const size_t total_elements)
 {
   static const size_t bytesoftype = 16;
-  static const uint8_t b_mask[] = {
-    0x00, 0x08, 0x01, 0x09, 0x02, 0x0A, 0x03, 0x0B,
-    0x04, 0x0C, 0x05, 0x0D, 0x06, 0x0E, 0x07, 0x0F,
-    0x00, 0x08, 0x01, 0x09, 0x02, 0x0A, 0x03, 0x0B,
-    0x04, 0x0C, 0x05, 0x0D, 0x06, 0x0E, 0x07, 0x0F
-  };
-
   size_t j;
   int k, l;
   __m256i ymm0[16], ymm1[16];
-  const __m256i shmask = _mm256_loadu_si256((__m256i*)b_mask);
+  
+  /* Create the shuffle mask.
+     NOTE: The XMM/YMM 'set' intrinsics require the arguments to be ordered from
+     most to least significant (i.e., their order is reversed when compared to
+     loading the mask from an array). */
+  const __m256i shmask = _mm256_set_epi8(
+    0x0f, 0x07, 0x0e, 0x06, 0x0d, 0x05, 0x0c, 0x04,
+    0x0b, 0x03, 0x0a, 0x02, 0x09, 0x01, 0x08, 0x00,
+    0x0f, 0x07, 0x0e, 0x06, 0x0d, 0x05, 0x0c, 0x04,
+    0x0b, 0x03, 0x0a, 0x02, 0x09, 0x01, 0x08, 0x00);
 
   for (j = 0; j < vectorizable_elements; j += sizeof(__m256i)) {
     /* Fetch 32 elements (512 bytes) into 16 YMM registers. */
