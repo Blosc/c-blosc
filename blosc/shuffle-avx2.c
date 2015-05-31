@@ -39,9 +39,9 @@ static void printymm(__m256i ymm0)
 }
 #endif
 
-/* GCC and older versions of Clang don't include the split load/store
-   intrinsics needed for the tiled shuffle, so defined them here if necessary. */
-#if !defined(_mm256_loadu2_m128i)
+/* GCC doesn't include the split load/store intrinsics
+   needed for the tiled shuffle, so define them here. */
+#if defined(__GNUC__)
 static inline __m256i
 __attribute__((__always_inline__, __nodebug__))
 _mm256_loadu2_m128i(const __m128i* const hiaddr, const __m128i* const loaddr)
@@ -49,9 +49,7 @@ _mm256_loadu2_m128i(const __m128i* const hiaddr, const __m128i* const loaddr)
   return _mm256_inserti128_si256(
     _mm256_castsi128_si256(_mm_loadu_si128(loaddr)), _mm_loadu_si128(hiaddr), 1);
 }
-#endif
 
-#if !defined(_mm256_storeu2_m128i)
 static inline void
 __attribute__((__always_inline__, __nodebug__))
 _mm256_storeu2_m128i(__m128i* const hiaddr, __m128i* const loaddr, const __m256i a)
@@ -59,7 +57,7 @@ _mm256_storeu2_m128i(__m128i* const hiaddr, __m128i* const loaddr, const __m256i
   _mm_storeu_si128(loaddr, _mm256_castsi256_si128(a));
   _mm_storeu_si128(hiaddr, _mm256_extracti128_si256(a, 1));
 }
-#endif
+#endif  /* defined(__GNUC__) */
 
 /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
 static void
