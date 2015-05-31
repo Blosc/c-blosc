@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
   /* For QueryPerformanceCounter(), etc. */
   #include <windows.h>
 #elif defined(__MACH__)
@@ -70,7 +70,7 @@ int niter = 3;                  /* default number of iterations */
 double totalsize = 0.;          /* total compressed/decompressed size */
 
 /* System-specific high-precision timing functions. */
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
 
 /* The type of timestamp used on this system. */
 #define blosc_timestamp_t LARGE_INTEGER
@@ -129,7 +129,7 @@ double get_usec_chunk(blosc_timestamp_t last, blosc_timestamp_t current, int nit
 }
 
 /* Define posix_memalign for Windows */
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
 #include <malloc.h>
 
 int posix_memalign(void **memptr, size_t alignment, size_t size)

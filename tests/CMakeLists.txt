@@ -39,7 +39,15 @@ foreach(source ${SOURCES})
             ARGS        -E copy_if_different
                         "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc_testing.dll"
                         "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc_testing.dll")
-    endif(MSVC)
+    elseif(MINGW)
+        add_custom_command(
+            TARGET      ${target}
+            POST_BUILD
+            COMMAND     ${CMAKE_COMMAND}
+            ARGS        -E copy_if_different
+                        "${PROJECT_BINARY_DIR}/blosc/libblosc_testing.dll"
+                        "${CMAKE_CURRENT_BINARY_DIR}/libblosc_testing.dll")
+    endif()
 
     target_link_libraries(${target} blosc_testing)
 
