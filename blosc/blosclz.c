@@ -188,6 +188,11 @@ int blosclz_compress(int opt_level, const void* input, int length,
   }
   op_limit = op + maxlength;
 
+  /* output buffer cannot be less than 66 bytes or we can get into trouble */
+  if (maxlength < 66) {
+    return 0;                   /* mark this as uncompressible */
+  }
+
   /* sanity check */
   if(BLOSCLZ_UNEXPECT_CONDITIONAL(length < 4)) {
     if(length) {
