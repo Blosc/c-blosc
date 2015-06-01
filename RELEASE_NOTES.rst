@@ -14,7 +14,7 @@ Changes from 1.6.1 to 1.7.0
   operation with complevel < 9.  This allows for an important boost in
   speed with minimal compression ratio loss.  Francesc Alted.
 
-* LZ4 codec updated to 1.7.0 (r129).
+* LZ4 codec updated to 1.7.0 (r130).
 
 * Implemented SSE2 shuffle support for buffers containing a number of
   elements which is not a multiple of (typesize * vectorsize).  Jack
