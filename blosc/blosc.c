@@ -1740,8 +1740,8 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
   }
 #endif /*  HAVE_ZLIB */
 
-  *complib = strdup(clibname);
-  *version = strdup(clibversion);
+  *complib = _strdup(clibname);
+  *version = _strdup(clibversion);
   return clibcode;
 }
 
