@@ -58,7 +58,7 @@ static void* blosc_test_malloc(const size_t alignment, const size_t size)
   void *block = NULL;
   int32_t res = 0;
 
-#if __STDC_VERSION__ >= 201112L
+#if _ISOC11_SOURCE
   /* C11 aligned allocation. 'size' must be a multiple of the alignment. */
   block = aligned_alloc(alignment, size);
 #elif defined(_WIN32)

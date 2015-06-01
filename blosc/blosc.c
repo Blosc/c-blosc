@@ -200,7 +200,7 @@ static uint8_t *my_malloc(size_t size)
   int res = 0;
 
 /* Do an alignment to 32 bytes because AVX2 is supported */
-#if __STDC_VERSION__ >= 201112L
+#if _ISOC11_SOURCE
   /* C11 aligned allocation. 'size' must be a multiple of the alignment. */
   block = aligned_alloc(32, size);
 #elif defined(_WIN32)
