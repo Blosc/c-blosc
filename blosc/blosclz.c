@@ -45,7 +45,7 @@
 #undef BLOSCLZ_STRICT_ALIGN
 #elif defined(__i486__) || defined(__i586__) || defined(__i686__)  /* GNU C */
 #undef BLOSCLZ_STRICT_ALIGN
-#elif defined(_M_IX86) /* Intel, MSVC */
+#elif defined(_M_IX86) || defined(_M_X64)   /* Intel, MSVC */
 #undef BLOSCLZ_STRICT_ALIGN
 #elif defined(__386)
 #undef BLOSCLZ_STRICT_ALIGN
