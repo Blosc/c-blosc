@@ -489,7 +489,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout)
         /* copy from reference */
         ref--;
         len += 3;
-#if defined(__GCC__) || !defined(__clang__)
+#if !defined(_WIN32) && (defined(__GCC__) || !defined(__clang__))
         GCC_SAFE_COPY(op, ref, len, op_limit);
 #else
         SAFE_COPY(op, ref, len, op_limit);
