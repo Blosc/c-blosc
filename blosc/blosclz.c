@@ -241,7 +241,6 @@ int blosclz_compress(int opt_level, const void* input, int length,
 
     /* find potential match */
     HASH_FUNCTION(hval, ip, hash_log);
-    /* hval = hash_sequence(ip, hash_log, hash_size); */
     ref = ibase + htab[hval];
 
     /* calculate distance to the match */
@@ -306,7 +305,6 @@ int blosclz_compress(int opt_level, const void* input, int length,
       for(;;) {
         /* safe because the outer check against ip limit */
         while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
-          if (*ref++ != *ip++) break;
 #if !defined(BLOSCLZ_STRICT_ALIGN)
           if (((int64_t *)ref)[0] != ((int64_t *)ip)[0]) {
 #endif
