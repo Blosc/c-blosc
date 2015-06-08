@@ -99,7 +99,11 @@
 /*
  * Fast copy macros
  */
-#define CPYSIZE              8
+#if defined(_WIN32)
+  #define CPYSIZE              32
+#else
+  #define CPYSIZE              8
+#endif
 #define MCPY(d,s)            { memcpy(d, s, CPYSIZE); d+=CPYSIZE; s+=CPYSIZE; }
 #define FASTCOPY(d,s,e)      { do { MCPY(d,s) } while (d<e); }
 #define SAFECOPY(d,s,e)      { while (d<e) { MCPY(d,s) } }
