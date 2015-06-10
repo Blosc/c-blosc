@@ -40,7 +40,7 @@ extern "C" {
   The input buffer and the output buffer can not overlap.
 */
 
-int blosclz_compress(int opt_level, const void* input, int length,
+int blosclz_compress(const int opt_level, const void* input, int length,
                      void* output, int maxout, int accel);
 
 /**

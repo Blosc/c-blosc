@@ -160,8 +160,8 @@ else BLOCK_COPY(op, ref, len, op_limit);
 #define IP_BOUNDARY 2
 
 
-int blosclz_compress(int opt_level, const void* input, int length,
-		     void* output, int maxout, int accel)
+int blosclz_compress(const int opt_level, const void* input, int length,
+                     void* output, int maxout, int accel)
 {
   uint8_t* ip = (uint8_t*) input;
   uint8_t* ibase = (uint8_t*) input;
@@ -241,7 +241,7 @@ int blosclz_compress(int opt_level, const void* input, int length,
       goto literal;
 
     /* far, needs at least 5-byte match */
-    if (distance >= MAX_DISTANCE) {
+    if (opt_level >= 5 && distance >= MAX_DISTANCE) {
       if (*ip++ != *ref++ || *ip++ != *ref++)
         goto literal;
       len += 2;
