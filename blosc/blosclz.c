@@ -148,13 +148,28 @@ else BLOCK_COPY(op, ref, len, op_limit);
 }
 
 /* Another version which seems to be a bit more effective than the above,
- * but a bit slower.  Could be interesting for high comp_level.
+ * but a bit slower.  Could be interesting for high opt_level.
  */
 #define MINMATCH 3
 #define HASH_FUNCTION2(v, p, l) {                       \
   v = BLOSCLZ_READU16(p);				\
   v = (v * 2654435761U) >> ((MINMATCH * 8) - (l + 1));  \
   v &= (1 << l) - 1;					\
+}
+
+#define LITERAL(ip, op, op_limit, anchor, copy) {        \
+  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op+2 > op_limit)) {   \
+    free(htab);                                          \
+    return 0;                                            \
+  }                                                      \
+  *op++ = *anchor++;                                     \
+  ip = anchor;                                           \
+  copy++;                                                \
+  if(BLOSCLZ_UNEXPECT_CONDITIONAL(copy == MAX_COPY)) {   \
+    copy = 0;                                            \
+    *op++ = MAX_COPY-1;                                  \
+  }                                                      \
+  continue;                                              \
 }
 
 #define IP_BOUNDARY 2
@@ -238,12 +253,12 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     /* is this a match? check the first 3 bytes */
     if (distance==0 || (distance >= MAX_FARDISTANCE) ||
         *ref++ != *ip++ || *ref++!=*ip++ || *ref++!=*ip++)
-      goto literal;
+      LITERAL(ip, op, op_limit, anchor, copy);
 
     /* far, needs at least 5-byte match */
     if (opt_level >= 5 && distance >= MAX_DISTANCE) {
       if (*ip++ != *ref++ || *ip++ != *ref++)
-        goto literal;
+        LITERAL(ip, op, op_limit, anchor, copy);
       len += 2;
     }
 
@@ -373,18 +388,6 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 
     /* assuming literal copy */
     *op++ = MAX_COPY-1;
-
-    continue;
-
-  literal:
-    if (BLOSCLZ_UNEXPECT_CONDITIONAL(op+2 > op_limit)) goto out;
-    *op++ = *anchor++;
-    ip = anchor;
-    copy++;
-    if(BLOSCLZ_UNEXPECT_CONDITIONAL(copy == MAX_COPY)) {
-      copy = 0;
-      *op++ = MAX_COPY-1;
-    }
   }
 
   /* left-over as literal copy */
