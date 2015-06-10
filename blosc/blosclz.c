@@ -158,10 +158,8 @@ else BLOCK_COPY(op, ref, len, op_limit);
 }
 
 #define LITERAL(ip, op, op_limit, anchor, copy) {        \
-  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op+2 > op_limit)) {   \
-    free(htab);                                          \
-    return 0;                                            \
-  }                                                      \
+  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op+2 > op_limit))     \
+    goto out;                                            \
   *op++ = *anchor++;                                     \
   ip = anchor;                                           \
   copy++;                                                \
