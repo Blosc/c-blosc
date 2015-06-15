@@ -16,7 +16,7 @@
 
     To run:
 
-    $ ./win-dynamic-linking.exe
+    $ win-dynamic-linking.exe
     Blosc version info: 1.7.0.dev
     Compression: 400000000 -> 19928862 (20.1x)
     Decompression succesful!
