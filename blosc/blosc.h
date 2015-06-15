@@ -281,6 +281,13 @@ BLOSC_EXPORT int blosc_compname_to_compcode(const char *compname);
   */
 BLOSC_EXPORT char* blosc_list_compressors(void);
 
+/**
+  Return the version of blosc in string format.
+
+  Useful for dynamic libraries.
+*/
+BLOSC_EXPORT char* blosc_get_version_string(void);
+
 
 /**
   Get info from compression libraries included in the current build.

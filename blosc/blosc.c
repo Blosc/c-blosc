@@ -1700,6 +1700,13 @@ char* blosc_list_compressors(void)
   return ret;
 }
 
+char* blosc_get_version_string(void)
+{
+  static char ret[256];
+  strcpy(ret, BLOSC_VERSION_STRING);
+  return ret;
+}
+
 int blosc_get_complib_info(char *compname, char **complib, char **version)
 {
   int clibcode;

@@ -30,6 +30,10 @@ Changes from 1.6.1 to 1.7.0
 * Fixed compilation on non-Intel archs (tested on ARM).  Zbyszek
   Szmek.
 
+* New blosc_get_version_string() function for retrieving the version
+  of the c-blosc library.  Useful when linking with dynamic libraries
+  and one want to know its version.
+
 
 Changes from 1.6.0 to 1.6.1
 ===========================
