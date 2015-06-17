@@ -123,11 +123,6 @@ In the `examples/ directory
 <https://github.com/Blosc/c-blosc/tree/master/examples>`_ you can find
 more hints on how to link your app with Blosc.
 
-A simple usage example is the benchmark in the bench/bench.c file.
-Another example for using Blosc as a generic HDF5 filter is in the
-`hdf5/ directory
-<https://github.com/Blosc/c-blosc/tree/master/hdf5>`_.
-
 I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
@@ -277,8 +272,10 @@ https://github.com/Blosc/bloscpack
 Filter for HDF5
 ===============
 
-For those that want to use Blosc as a filter in the HDF5 library,
-there is a sample implementation in the hdf5/ directory.
+For those who want to use Blosc as a filter in the HDF5 library,
+there is a sample implementation in the blosc/hdf5 project in:
+
+https://github.com/Blosc/hdf5
 
 Mailing list
 ============

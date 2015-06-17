@@ -35,7 +35,7 @@ Changes from 1.6.1 to 1.7.0
 
 * Added a replacement for stdbool.h for Visual Studio < 2013.
 
-* blosclz coded adds Win64/Intel as a platform supporting unaligned
+* blosclz codec adds Win64/Intel as a platform supporting unaligned
   addressing.  That leads to a speed-up of 2.2x in decompression.
 
 * New blosc_get_version_string() function for retrieving the version
@@ -48,6 +48,9 @@ Changes from 1.6.1 to 1.7.0
 * The `context.threads_started` is initialized now when decompressing.
   This could cause crashes in case you decompressed before compressing
   (e.g. directly deserializing blosc buffers).  @atchouprakov.
+
+* The HDF5 filter has been removed from c-blosc and moved into its own
+  repo at: https://github.com/Blosc/hdf5
 
 
 Changes from 1.6.0 to 1.6.1

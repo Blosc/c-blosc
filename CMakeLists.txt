@@ -5,8 +5,6 @@
 #
 #   BUILD_STATIC: default ON
 #       build the static version of the Blosc library
-#   BUILD_HDF5_FILTER: default OFF
-#       build the compression filter for the HDF5 library
 #   BUILD_TESTS: default ON
 #       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
@@ -45,8 +43,6 @@
 #
 #    LIB: includes blosc.so
 #    DEV: static includes blosc.a and blosc.h
-#    HDF5_FILTER: includes blosc_filter.so
-#    HDF5_FILTER_DEV: includes blosc_filter.h
 
 
 cmake_minimum_required(VERSION 2.8.10)
@@ -68,8 +64,6 @@ message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 # options
 option(BUILD_STATIC
     "Build a static version of the blosc library." ON)
-option(BUILD_HDF5_FILTER
-    "Build a blosc based compression filter for the HDF5 library" OFF)
 option(BUILD_TESTS
     "Build test programs form the blosc compression library" ON)
 option(BUILD_BENCHMARKS
@@ -229,10 +223,6 @@ if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif(BUILD_TESTS)
-
-if(BUILD_HDF5_FILTER)
-    add_subdirectory(hdf5)
-endif(BUILD_HDF5_FILTER)
 
 if(BUILD_BENCHMARKS)
     add_subdirectory(bench)
