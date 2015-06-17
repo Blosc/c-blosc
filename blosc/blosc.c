@@ -1248,6 +1248,7 @@ int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
 			 int numinternalthreads)
 {
   struct blosc_context context;
+  context.threads_started = 0;
   int result = blosc_run_decompression_with_context(&context, src, dest, destsize, numinternalthreads);
 
   if (numinternalthreads > 1)
