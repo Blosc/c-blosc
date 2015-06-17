@@ -34,6 +34,10 @@ Changes from 1.6.1 to 1.7.0
   of the c-blosc library.  Useful when linking with dynamic libraries
   and one want to know its version.
 
+* The `context.threads_started` is initialized now when decompressing.
+  This could cause crashes in case you decompressed before compressing
+  (e.g. directly deserializing blosc buffers).
+
 
 Changes from 1.6.0 to 1.6.1
 ===========================
