@@ -1,6 +1,6 @@
-================================
+=================================
  Release notes for c-blosc 1.7.0
-================================
+=================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
@@ -30,13 +30,24 @@ Changes from 1.6.1 to 1.7.0
 * Fixed compilation on non-Intel archs (tested on ARM).  Zbyszek
   Szmek.
 
+* Modifyied cmake files in order to inform that AVX2 on Visual Studio
+  is supported only in 2013 update 2 and higher.
+
+* Added a replacement for stdbool.h for Visual Studio < 2013.
+
+* blosclz coded adds Win64/Intel as a platform supporting unaligned
+  addressing.  That leads to a speed-up of 2.2x in decompression.
+
 * New blosc_get_version_string() function for retrieving the version
   of the c-blosc library.  Useful when linking with dynamic libraries
   and one want to know its version.
 
+* New example (win-dynamic-linking.c) that shows how to link a Blosc
+  DLL dynamically in run-time (Windows only).
+
 * The `context.threads_started` is initialized now when decompressing.
   This could cause crashes in case you decompressed before compressing
-  (e.g. directly deserializing blosc buffers).
+  (e.g. directly deserializing blosc buffers).  @atchouprakov.
 
 
 Changes from 1.6.0 to 1.6.1
