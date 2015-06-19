@@ -5,6 +5,10 @@
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+:Appveyor: |appveyor|
+           
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/gccmb03j8ghbj0ig/branch/master?svg=true
+        :target: https://ci.appveyor.com/project/esc/c-blosc/branch/master
 
 What is it?
 ===========
