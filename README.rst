@@ -5,6 +5,10 @@
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+:Travis CI: |travis|
+
+.. |travis| image:: https://travis-ci.org/Blosc/c-blosc.svg?branch=master
+        :target: https://travis-ci.org/Blosc/c-blosc
 
 What is it?
 ===========
