@@ -60,8 +60,9 @@ extern "C" {
  *
  */
 BLOSC_NO_EXPORT int64_t bshuf_trans_bit_elem(void* in, void* out,
-					     const size_t size,
-					     const size_t elem_size);
+                                             const size_t size,
+                                             const size_t elem_size,
+                                             void *tmp_buf);
 
 
 /* Unshuffle bitshuffled data.
@@ -84,9 +85,9 @@ BLOSC_NO_EXPORT int64_t bshuf_trans_bit_elem(void* in, void* out,
  *
  */
 BLOSC_NO_EXPORT int64_t bshuf_untrans_bit_elem(void* in, void* out,
-					       const size_t size,
-					       const size_t elem_size,
-					       void *tmp_buf);
+                                               const size_t size,
+                                               const size_t elem_size,
+                                               void *tmp_buf);
 
 
 #ifdef __cplusplus
