@@ -186,7 +186,7 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   unsigned char *orig, *round;
   blosc_timestamp_t last, current;
   double tmemcpy, tshuf, tunshuf;
-  int clevel, doshuffle=1;
+  int clevel, doshuffle=2;
 
   blosc_set_nthreads(nthreads);
   if(blosc_set_compressor(compressor) < 0){

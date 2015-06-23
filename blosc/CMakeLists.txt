@@ -46,7 +46,7 @@ if(COMPILER_SUPPORT_AVX2)
     message(STATUS "Adding run-time support for AVX2.")
     set(SOURCES ${SOURCES} shuffle-avx2.c)
 endif(COMPILER_SUPPORT_AVX2)
-set(SOURCES ${SOURCES} shuffle.c)
+set(SOURCES ${SOURCES} shuffle.c bitshuffle.c)
 
 # library install directory
 set(lib_dir lib${LIB_SUFFIX})

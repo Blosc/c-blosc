@@ -18,6 +18,7 @@
 #endif /*  USING_CMAKE */
 #include "blosc.h"
 #include "shuffle.h"
+#include "bitshuffle.h"
 #include "blosclz.h"
 #if defined(HAVE_LZ4)
   #include "lz4.h"
@@ -89,8 +90,9 @@ struct blosc_context {
   const uint8_t* src;
   uint8_t* dest;                  /* The current pos in the destination buffer */
   uint8_t* header_flags;          /* Flags for header.  Currently booked:
-                                    - 0: shuffled?
-                                    - 1: memcpy'ed? */
+                                    - 0: byte-shuffled?
+                                    - 1: memcpy'ed?
+                                    - 2: bit-shuffled? */
   int32_t sourcesize;             /* Number of bytes in source buffer (or uncompressed bytes in compressed file) */
   int32_t nblocks;                /* Number of total blocks in buffer */
   int32_t leftover;               /* Extra bytes at end of buffer */
@@ -521,17 +523,21 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   int32_t ctbytes = 0;              /* number of compressed bytes in block */
   int32_t maxout;
   int32_t typesize = context->typesize;
-  const uint8_t *_tmp;
+  const uint8_t *_tmp = src;
   char *compname;
   int accel;
 
-  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) && (typesize > 1)) {
-    /* Shuffle this block (this makes sense only if typesize > 1) */
-    shuffle(typesize, blocksize, src, tmp);
-    _tmp = tmp;
-  }
-  else {
-    _tmp = src;
+  if (typesize > 1) {
+    /* Shuffling only makes sense if typesize > 1 */
+    if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
+      shuffle(typesize, blocksize, src, tmp);
+      _tmp = tmp;
+    }
+    /* We don't allow more than 1 filter at the same time (yet) */
+    else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
+      bshuf_trans_bit_elem((void*)src, (void*)tmp, blocksize, typesize);
+      _tmp = tmp;
+    }
   }
 
   /* Calculate acceleration for different compressors */
@@ -635,16 +641,14 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   int32_t cbytes;                /* number of compressed bytes in split */
   int32_t ctbytes = 0;           /* number of compressed bytes in block */
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
-  uint8_t *_tmp;
+  uint8_t *_tmp = dest;
   int32_t typesize = context->typesize;
   int32_t compcode;
   char *compname;
 
-  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) && (typesize > 1)) {
+  if ((typesize > 1) && (*(context->header_flags) & BLOSC_DOSHUFFLE) && \
+      (*(context->header_flags) & BLOSC_DOBITSHUFFLE)) {
     _tmp = tmp;
-  }
-  else {
-    _tmp = dest;
   }
 
   compcode = (*(context->header_flags) & 0xe0) >> 5;
@@ -710,18 +714,12 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) && (typesize > 1)) {
-    if ((uintptr_t)dest % 16 == 0) {
-      /* 16-bytes aligned dest.  SSE2 unshuffle will work. */
+  if (typesize > 1) {
+    if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
       unshuffle(typesize, blocksize, tmp, dest);
     }
-    else {
-      /* dest is not aligned.  Use tmp2, which is aligned, and copy. */
-      unshuffle(typesize, blocksize, tmp, tmp2);
-      if (tmp2 != dest) {
-        /* Copy only when dest is not tmp2 (e.g. not blosc_getitem())  */
-        memcpy(dest, tmp2, blocksize);
-      }
+    else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
+      bshuf_untrans_bit_elem(tmp, dest, blocksize, typesize);
     }
   }
 
@@ -973,8 +971,8 @@ static int initialize_context_compression(struct blosc_context* context,
   }
 
   /* Shuffle */
-  if (doshuffle != 0 && doshuffle != 1) {
-    fprintf(stderr, "`shuffle` parameter must be either 0 or 1!\n");
+  if (doshuffle != 0 && doshuffle != 1 && doshuffle != 2) {
+    fprintf(stderr, "`shuffle` parameter must be either 0, 1 or 2!\n");
     return -10;
   }
 
@@ -1066,11 +1064,16 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
   }
 
   if (doshuffle == 1) {
-    /* Shuffle is active */
-    *(context->header_flags) |= BLOSC_DOSHUFFLE;          /* bit 0 set to one in flags */
+    /* Byte-shuffle is active */
+    *(context->header_flags) |= BLOSC_DOSHUFFLE;     /* bit 0 set to one in flags */
   }
 
-  *(context->header_flags) |= compcode << 5;              /* compressor format start at bit 5 */
+  if (doshuffle == 2) {
+    /* Bit-shuffle is active */
+    *(context->header_flags) |= BLOSC_DOBITSHUFFLE;  /* bit 2 set to one in flags */
+  }
+
+  *(context->header_flags) |= compcode << 5;      /* compressor format start at bit 5 */
 
   return 1;
 }
