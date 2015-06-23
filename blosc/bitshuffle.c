@@ -1051,8 +1051,8 @@ int64_t bshuf_untrans_bit_elem_AVX(void* in, void* out, const size_t size,
  */
 
 
-void bshuf_trans_bit_elem(void* in, void* out, const size_t size,
-			  const size_t elem_size) {
+int64_t bshuf_trans_bit_elem(void* in, void* out, const size_t size,
+			     const size_t elem_size) {
   int64_t count;
 
 #ifdef USEAVX2
@@ -1062,11 +1062,12 @@ void bshuf_trans_bit_elem(void* in, void* out, const size_t size,
 #else
     count = bshuf_trans_bit_elem_scal(in, out, size, elem_size);
 #endif
+    return count;
 }
 
 
-void bshuf_untrans_bit_elem(void* in, void* out, const size_t size,
-			    const size_t elem_size) {
+int64_t bshuf_untrans_bit_elem(void* in, void* out, const size_t size,
+			       const size_t elem_size) {
   int64_t count;
 
 #ifdef USEAVX2
@@ -1076,6 +1077,7 @@ void bshuf_untrans_bit_elem(void* in, void* out, const size_t size,
 #else
     count = bshuf_untrans_bit_elem_scal(in, out, size, elem_size);
 #endif
+    return count;
 }
 
 
