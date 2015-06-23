@@ -535,7 +535,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     }
     /* We don't allow more than 1 filter at the same time (yet) */
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bshuf_trans_bit_elem((void*)src, (void*)tmp, blocksize, typesize);
+      bshuf_trans_bit_elem((void*)src, (void*)tmp, blocksize / typesize, typesize);
       _tmp = tmp;
     }
   }
@@ -719,7 +719,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
       unshuffle(typesize, blocksize, tmp, dest);
     }
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bshuf_untrans_bit_elem(tmp, dest, blocksize, typesize);
+      bshuf_untrans_bit_elem(tmp, dest, blocksize / typesize, typesize);
     }
   }
 

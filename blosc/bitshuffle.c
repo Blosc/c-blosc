@@ -13,6 +13,7 @@
 
 #include "bitshuffle.h"
 
+#include <stdio.h>  		/* for debugging purposes */
 
 #if defined(__AVX2__)
 #define USEAVX2
