@@ -5,7 +5,7 @@
  * Website: http://www.github.com/kiyo-masui/bitshuffle
  * Created: 2014
  *
- * Note: Trimmed off and adapted for c-blosc by Francesc Alted.
+ * Note: Adapted for c-blosc by Francesc Alted.
  *
  * See LICENSE file for details about copyright and rights to use.
  *
@@ -276,20 +276,15 @@ int64_t bshuf_shuffle_bit_eightelem_scal(void* in, void* out,
 
 /* Untranspose bits within elements. */
 int64_t bshuf_untrans_bit_elem_scal(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+				    const size_t elem_size, void* tmp_buf) {
 
     int64_t count;
 
     CHECK_MULT_EIGHT(size);
 
-    void* tmp_buf = malloc(size * elem_size);
-    if (tmp_buf == NULL) return -1;
-
     count = bshuf_trans_byte_bitrow_scal(in, tmp_buf, size, elem_size);
     CHECK_ERR_FREE(count, tmp_buf);
     count =  bshuf_shuffle_bit_eightelem_scal(tmp_buf, out, size, elem_size);
-
-    free(tmp_buf);
 
     return count;
 }
@@ -715,20 +710,15 @@ int64_t bshuf_shuffle_bit_eightelem_SSE(void* in, void* out, const size_t size,
 
 /* Untranspose bits within elements. */
 int64_t bshuf_untrans_bit_elem_SSE(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+				   const size_t elem_size, void* tmp_buf) {
 
     int64_t count;
 
     CHECK_MULT_EIGHT(size);
 
-    void* tmp_buf = malloc(size * elem_size);
-    if (tmp_buf == NULL) return -1;
-
     count = bshuf_trans_byte_bitrow_SSE(in, tmp_buf, size, elem_size);
     CHECK_ERR_FREE(count, tmp_buf);
-    count =  bshuf_shuffle_bit_eightelem_SSE(tmp_buf, out, size, elem_size);
-
-    free(tmp_buf);
+    count = bshuf_shuffle_bit_eightelem_SSE(tmp_buf, out, size, elem_size);
 
     return count;
 }
@@ -737,7 +727,7 @@ int64_t bshuf_untrans_bit_elem_SSE(void* in, void* out, const size_t size,
 
 
 int64_t bshuf_untrans_bit_elem_SSE(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+				   const size_t elem_size, void* tmp_buf) {
     return -11;
 }
 
@@ -992,20 +982,16 @@ int64_t bshuf_shuffle_bit_eightelem_AVX(void* in, void* out, const size_t size,
 
 /* Untranspose bits within elements. */
 int64_t bshuf_untrans_bit_elem_AVX(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+				   const size_t elem_size, void* tmp_buf) {
 
     int64_t count;
 
     CHECK_MULT_EIGHT(size);
 
-    void* tmp_buf = malloc(size * elem_size);
-    if (tmp_buf == NULL) return -1;
-
     count = bshuf_trans_byte_bitrow_AVX(in, tmp_buf, size, elem_size);
     CHECK_ERR_FREE(count, tmp_buf);
     count =  bshuf_shuffle_bit_eightelem_AVX(tmp_buf, out, size, elem_size);
 
-    free(tmp_buf);
     return count;
 }
 
@@ -1037,7 +1023,7 @@ int64_t bshuf_shuffle_bit_eightelem_AVX(void* in, void* out, const size_t size,
 
 
 int64_t bshuf_untrans_bit_elem_AVX(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+				   const size_t elem_size, void* tmp_buf) {
     return -12;
 }
 
@@ -1067,15 +1053,15 @@ int64_t bshuf_trans_bit_elem(void* in, void* out, const size_t size,
 
 
 int64_t bshuf_untrans_bit_elem(void* in, void* out, const size_t size,
-			       const size_t elem_size) {
+			       const size_t elem_size, void* tmp_buf) {
   int64_t count;
 
 #ifdef USEAVX2
-    count = bshuf_untrans_bit_elem_AVX(in, out, size, elem_size);
+  count = bshuf_untrans_bit_elem_AVX(in, out, size, elem_size, tmp_buf);
 #elif defined(USESSE2)
-    count = bshuf_untrans_bit_elem_SSE(in, out, size, elem_size);
+  count = bshuf_untrans_bit_elem_SSE(in, out, size, elem_size, tmp_buf);
 #else
-    count = bshuf_untrans_bit_elem_scal(in, out, size, elem_size);
+  count = bshuf_untrans_bit_elem_scal(in, out, size, elem_size, tmp_buf);
 #endif
     return count;
 }

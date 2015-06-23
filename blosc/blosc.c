@@ -538,7 +538,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
       bscount = bshuf_trans_bit_elem((void*)src, (void*)tmp, blocksize / typesize, typesize);
       if (bscount <= 0)
-        return (int)bscount;
+        return (int)bscount;                  /* error in bitshuffle */
       _tmp = tmp;
     }
   }
@@ -723,7 +723,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
       unshuffle(typesize, blocksize, tmp, dest);
     }
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bscount = bshuf_untrans_bit_elem(tmp, dest, blocksize / typesize, typesize);
+      bscount = bshuf_untrans_bit_elem(tmp, dest, blocksize / typesize, typesize, (void*)tmp2);
       if (bscount < 0)
 	return (int)bscount;
     }
