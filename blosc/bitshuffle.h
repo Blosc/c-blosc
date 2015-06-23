@@ -31,7 +31,7 @@
 #include "shuffle-common.h"
 
 
-// Keep in sync with upstream
+/*  Keep in sync with upstream */
 #ifndef BSHUF_VERSION_MAJOR
 #define BSHUF_VERSION_MAJOR 0
 #define BSHUF_VERSION_MINOR 2
@@ -91,7 +91,7 @@ BLOSC_NO_EXPORT int64_t bshuf_untrans_bit_elem(void* in, void* out,
 
 
 #ifdef __cplusplus
-} // extern "C"
+} /*  extern "C" */
 #endif
 
-#endif  // BITSHUFFLE_H
+#endif  /*  BITSHUFFLE_H */

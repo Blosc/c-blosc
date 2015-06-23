@@ -24,7 +24,7 @@
 #endif
 
 
-// Conditional includes for SSE2 and AVX2.
+/*  Conditional includes for SSE2 and AVX2. */
 #ifdef USEAVX2
 #include <immintrin.h>
 #elif defined USESSE2
@@ -32,7 +32,7 @@
 #endif
 
 
-// Macros.
+/*  Macros. */
 #define CHECK_MULT_EIGHT(n) if (n % 8) return -80;
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
@@ -102,8 +102,8 @@ int64_t bshuf_trans_byte_elem_remainder(void* in, void* out, const size_t size,
     CHECK_MULT_EIGHT(start);
 
     if (size > start) {
-        // ii loop separated into 2 loops so the compiler can unroll
-        // the inner one.
+        /*  ii loop separated into 2 loops so the compiler can unroll */
+        /*  the inner one. */
         for (ii = start; ii + 7 < size; ii += 8) {
             for (jj = 0; jj < elem_size; jj++) {
                 for (kk = 0; kk < 8; kk++) {
@@ -444,7 +444,7 @@ int64_t bshuf_trans_byte_elem_SSE(void* in, void* out, const size_t size,
 
     int64_t count;
 
-    // Trivial cases: power of 2 bytes.
+    /*  Trivial cases: power of 2 bytes. */
     switch (elem_size) {
         case 1:
             count = bshuf_copy(in, out, size, elem_size);
@@ -460,14 +460,14 @@ int64_t bshuf_trans_byte_elem_SSE(void* in, void* out, const size_t size,
             return count;
     }
 
-    // Worst case: odd number of bytes. Turns out that this is faster for
-    // (odd * 2) byte elements as well (hence % 4).
+    /*  Worst case: odd number of bytes. Turns out that this is faster for */
+    /*  (odd * 2) byte elements as well (hence % 4). */
     if (elem_size % 4) {
         count = bshuf_trans_byte_elem_scal(in, out, size, elem_size);
         return count;
     }
 
-    // Multiple of power of 2: transpose hierarchically.
+    /*  Multiple of power of 2: transpose hierarchically. */
     {
         size_t nchunk_elem;
 
@@ -484,7 +484,7 @@ int64_t bshuf_trans_byte_elem_SSE(void* in, void* out, const size_t size,
                     size * nchunk_elem);
             bshuf_trans_elem(tmp_buf, out, 4, nchunk_elem, size);
         } else {
-            // Not used since scalar algorithm is faster.
+            /*  Not used since scalar algorithm is faster. */
             nchunk_elem = elem_size / 2;
             TRANS_ELEM_TYPE(in, out, size, nchunk_elem, int16_t);
             count = bshuf_trans_byte_elem_SSE_16(out, tmp_buf,
@@ -611,8 +611,8 @@ int64_t bshuf_trans_byte_bitrow_SSE(void* in, void* out, const size_t size,
             g1 = _mm_unpacklo_epi32(g0, h0);
             h1 = _mm_unpackhi_epi32(g0, h0);
 
-            // We don't have a storeh instruction for integers, so interpret
-            // as a float. Have a storel (_mm_storel_epi64).
+            /*  We don't have a storeh instruction for integers, so interpret */
+            /*  as a float. Have a storel (_mm_storel_epi64). */
             as = (__m128 *) &a1;
             bs = (__m128 *) &b1;
             cs = (__m128 *) &c1;
@@ -661,8 +661,8 @@ int64_t bshuf_shuffle_bit_eightelem_SSE(void* in, void* out, const size_t size,
 
     CHECK_MULT_EIGHT(size);
 
-    // With a bit of care, this could be written such that such that it is
-    // in_buf = out_buf safe.
+    /*  With a bit of care, this could be written such that such that it is */
+    /*  in_buf = out_buf safe. */
     char* in_b = (char*) in;
     uint16_t* out_ui16 = (uint16_t*) out;
 
@@ -707,7 +707,7 @@ int64_t bshuf_untrans_bit_elem_SSE(void* in, void* out, const size_t size,
     return count;
 }
 
-#else // #ifdef USESSE2
+#else /*  #ifdef USESSE2 */
 
 
 int64_t bshuf_untrans_bit_elem_SSE(void* in, void* out, const size_t size,
@@ -761,7 +761,7 @@ int64_t bshuf_shuffle_bit_eightelem_SSE(void* in, void* out, const size_t size,
 }
 
 
-#endif // #ifdef USESSE2
+#endif /*  #ifdef USESSE2 */
 
 
 /* ---- Code that requires AVX2. Intel Haswell (2013) and later. ---- */
@@ -928,8 +928,8 @@ int64_t bshuf_shuffle_bit_eightelem_AVX(void* in, void* out, const size_t size,
 
     CHECK_MULT_EIGHT(size);
 
-    // With a bit of care, this could be written such that such that it is
-    // in_buf = out_buf safe.
+    /*  With a bit of care, this could be written such that such that it is */
+    /*  in_buf = out_buf safe. */
     char* in_b = (char*) in;
     char* out_b = (char*) out;
 
@@ -975,7 +975,7 @@ int64_t bshuf_untrans_bit_elem_AVX(void* in, void* out, const size_t size,
 }
 
 
-#else // #ifdef USEAVX2
+#else /*  #ifdef USEAVX2 */
 
 int64_t bshuf_trans_bit_byte_AVX(void* in, void* out, const size_t size,
          const size_t elem_size) {
@@ -1006,7 +1006,7 @@ int64_t bshuf_untrans_bit_elem_AVX(void* in, void* out, const size_t size,
     return -12;
 }
 
-#endif // #ifdef USEAVX2
+#endif /*  #ifdef USEAVX2 */
 
 
 /* ---- Public functions ----
