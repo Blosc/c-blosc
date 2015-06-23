@@ -7,7 +7,8 @@
  *
  * Note: Adapted for c-blosc by Francesc Alted.
  *
- * See LICENSE file for details about copyright and rights to use.
+ * See LICENSES/BITSHUFFLE.txt file for details about copyright and
+ * rights to use.
  *
  */
 
