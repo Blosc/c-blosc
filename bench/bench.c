@@ -187,16 +187,16 @@ void do_bench(char *compressor, char *shuffle, int nthreads, int size, int elsiz
   unsigned char *orig, *round;
   blosc_timestamp_t last, current;
   double tmemcpy, tshuf, tunshuf;
-  int clevel, ishuffle;
+  int clevel, doshuffle;
 
-  if (strcmp(shuffle, "byteshuf") == 0) {
-      ishuffle = 1;
+  if (strcmp(shuffle, "byteshuffle") == 0) {
+      doshuffle = BLOSC_BYTESHUFFLE;
     }
-  else if (strcmp(shuffle, "bitshuf") == 0) {
-      ishuffle = 2;
+  else if (strcmp(shuffle, "bitshuffle") == 0) {
+      doshuffle = BLOSC_BITSHUFFLE;
     }
-  else if (strcmp(shuffle, "noshuf") == 0) {
-      ishuffle = 0;
+  else if (strcmp(shuffle, "noshuffle") == 0) {
+      doshuffle = BLOSC_NOSHUFFLE;
     }
 
   blosc_set_nthreads(nthreads);
@@ -257,7 +257,7 @@ void do_bench(char *compressor, char *shuffle, int nthreads, int size, int elsiz
     blosc_set_timestamp(&last);
     for (i = 0; i < niter; i++) {
       for (j = 0; j < nchunks; j++) {
-        cbytes = blosc_compress(clevel, ishuffle, elsize, size, src,
+        cbytes = blosc_compress(clevel, doshuffle, elsize, size, src,
                                 dest[j], size+BLOSC_MAX_OVERHEAD);
       }
     }
@@ -378,7 +378,7 @@ void print_compress_info(void)
 
 int main(int argc, char *argv[]) {
   char compressor[32];
-  char shuffle[32] = "byteshuf";
+  char shuffle[32] = "byteshuffle";
   char bsuite[32];
   int single = 1;
   int suite = 0;
@@ -399,7 +399,7 @@ int main(int argc, char *argv[]) {
   print_compress_info();
 
   strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib] "
-	  "[noshuf | byteshuf | bitshuf] "
+	  "[noshuffle | byteshuffle | bitshuffle] "
           "[single | suite | hardsuite | extremesuite | debugsuite] "
           "[nthreads] [bufsize(bytes)] [typesize] [sbits]", 255);
 
@@ -422,9 +422,9 @@ int main(int argc, char *argv[]) {
 
   if (argc >= 3) {
       strcpy(shuffle, argv[2]);
-      if (strcmp(shuffle, "byteshuf") != 0 &&
-          strcmp(shuffle, "bitshuf") != 0 &&
-          strcmp(shuffle, "noshuf") != 0) {
+      if (strcmp(shuffle, "byteshuffle") != 0 &&
+          strcmp(shuffle, "bitshuffle") != 0 &&
+          strcmp(shuffle, "noshuffle") != 0) {
 	printf("No such shuffler: '%s'\n", shuffle);
 	printf("%s\n", usage);
 	exit(2);

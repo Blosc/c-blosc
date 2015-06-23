@@ -47,6 +47,11 @@ extern "C" {
 /* The maximum number of threads (for some static arrays) */
 #define BLOSC_MAX_THREADS 256
 
+/* Codes for shuffling (see blosc_compress) */
+#define BLOSC_NOSHUFFLE   0  /* no shuffle */
+#define BLOSC_BYTESHUFFLE 1  /* byte-wise shuffle */
+#define BLOSC_BITSHUFFLE  2  /* bit-wise shuffle */
+
 /* Codes for internal flags (see blosc_cbuffer_metainfo) */
 #define BLOSC_DOSHUFFLE    0x1	/* byte-wise shuffle */
 #define BLOSC_MEMCPYED     0x2	/* plain copy */
@@ -126,8 +131,9 @@ BLOSC_EXPORT void blosc_destroy(void);
   between 0 (no compression) and 9 (maximum compression).
 
   `doshuffle` specifies whether the shuffle compression preconditioner
-  should be applied or not.  0 means not applying it, 1 means
-  applying it at a byte level and 2 at a bit level (slower).
+  should be applied or not.  BLOSC_NOSHUFFLE means not applying it,
+  BLOSC_BYTESHUFFLE means applying it at a byte level and
+  BLOSC_BITSHUFFLE at a bit level (slower).
 
   `typesize` is the number of bytes for the atomic type in binary
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
