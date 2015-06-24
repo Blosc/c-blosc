@@ -172,7 +172,7 @@ int64_t bshuf_trans_byte_elem_SSE_64(void* in, void* out, const size_t size) {
 
 /* Memory copy with bshuf call signature. */
 int64_t bshuf_copy(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+                   const size_t elem_size) {
 
     char* in_b = (char*) in;
     char* out_b = (char*) out;
@@ -184,7 +184,7 @@ int64_t bshuf_copy(void* in, void* out, const size_t size,
 
 /* Transpose bytes within elements using best SSE algorithm available. */
 int64_t bshuf_trans_byte_elem_sse2(void* in, void* out, const size_t size,
-                                  const size_t elem_size, void* tmp_buf) {
+                                   const size_t elem_size, void* tmp_buf) {
 
     int64_t count;
 

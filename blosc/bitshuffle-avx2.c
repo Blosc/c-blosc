@@ -13,6 +13,7 @@
  */
 
 #include "bitshuffle-generic.h"
+#include "bitshuffle-sse2.h"
 #include "bitshuffle-avx2.h"
 
 
