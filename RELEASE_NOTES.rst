@@ -12,12 +12,12 @@ Changes from 1.6.1 to 1.7.0
 
 * Added a new 'bitshuffle' filter so that the shuffle takes place at a
   bit level and not just at a byte one, which is what it does the
-  previous shuffle filter, which has been renamed to 'byteshuffle'.
+  previous 'shuffle' filter.
 
   For activating this new bit-level filter you only have to pass the
   symbol BLOSC_BITSHUFFLE to `blosc_compress()`.  For the previous
-  byte-level one, pass BLOSC_BYTESHUFFLE.  For disabling the shuffle,
-  pass BLOSC_NOSHUFFLE.
+  byte-level one, pass BLOSC_SHUFFLE.  For disabling the shuffle, pass
+  BLOSC_NOSHUFFLE.
 
   This is a port of the existing filter in
   https://github.com/kiyo-masui/bitshuffle.  Thanks to Kiyo Masui for

@@ -189,8 +189,8 @@ void do_bench(char *compressor, char *shuffle, int nthreads, int size, int elsiz
   double tmemcpy, tshuf, tunshuf;
   int clevel, doshuffle;
 
-  if (strcmp(shuffle, "byteshuffle") == 0) {
-      doshuffle = BLOSC_BYTESHUFFLE;
+  if (strcmp(shuffle, "shuffle") == 0) {
+      doshuffle = BLOSC_SHUFFLE;
     }
   else if (strcmp(shuffle, "bitshuffle") == 0) {
       doshuffle = BLOSC_BITSHUFFLE;
@@ -378,7 +378,7 @@ void print_compress_info(void)
 
 int main(int argc, char *argv[]) {
   char compressor[32];
-  char shuffle[32] = "byteshuffle";
+  char shuffle[32] = "shuffle";
   char bsuite[32];
   int single = 1;
   int suite = 0;
@@ -399,7 +399,7 @@ int main(int argc, char *argv[]) {
   print_compress_info();
 
   strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib] "
-	  "[noshuffle | byteshuffle | bitshuffle] "
+	  "[noshuffle | shuffle | bitshuffle] "
           "[single | suite | hardsuite | extremesuite | debugsuite] "
           "[nthreads] [bufsize(bytes)] [typesize] [sbits]", 255);
 
@@ -422,7 +422,7 @@ int main(int argc, char *argv[]) {
 
   if (argc >= 3) {
       strcpy(shuffle, argv[2]);
-      if (strcmp(shuffle, "byteshuffle") != 0 &&
+      if (strcmp(shuffle, "shuffle") != 0 &&
           strcmp(shuffle, "bitshuffle") != 0 &&
           strcmp(shuffle, "noshuffle") != 0) {
 	printf("No such shuffler: '%s'\n", shuffle);

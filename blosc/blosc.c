@@ -1070,7 +1070,7 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
     *(context->header_flags) |= BLOSC_MEMCPYED;
   }
 
-  if (doshuffle == BLOSC_BYTESHUFFLE) {
+  if (doshuffle == BLOSC_SHUFFLE) {
     /* Byte-shuffle is active */
     *(context->header_flags) |= BLOSC_DOSHUFFLE;     /* bit 0 set to one in flags */
   }

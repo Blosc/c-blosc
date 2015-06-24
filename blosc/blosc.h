@@ -49,7 +49,7 @@ extern "C" {
 
 /* Codes for shuffling (see blosc_compress) */
 #define BLOSC_NOSHUFFLE   0  /* no shuffle */
-#define BLOSC_BYTESHUFFLE 1  /* byte-wise shuffle */
+#define BLOSC_SHUFFLE 1      /* byte-wise shuffle */
 #define BLOSC_BITSHUFFLE  2  /* bit-wise shuffle */
 
 /* Codes for internal flags (see blosc_cbuffer_metainfo) */
@@ -132,8 +132,8 @@ BLOSC_EXPORT void blosc_destroy(void);
 
   `doshuffle` specifies whether the shuffle compression preconditioner
   should be applied or not.  BLOSC_NOSHUFFLE means not applying it,
-  BLOSC_BYTESHUFFLE means applying it at a byte level and
-  BLOSC_BITSHUFFLE at a bit level (slower).
+  BLOSC_SHUFFLE means applying it at a byte level and BLOSC_BITSHUFFLE
+  at a bit level (slower but may achieve better entropy alignment).
 
   `typesize` is the number of bytes for the atomic type in binary
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
