@@ -42,7 +42,7 @@ int64_t bshuf_trans_byte_elem_remainder(void* in, void* out, const size_t size,
 
 /* Transpose bytes within elements. */
 int64_t bshuf_trans_byte_elem_scal(void* in, void* out, const size_t size,
-         const size_t elem_size) {
+				   const size_t elem_size) {
 
     return bshuf_trans_byte_elem_remainder(in, out, size, elem_size, 0);
 }

@@ -67,7 +67,7 @@ int64_t bshuf_trans_bit_elem_avx2(void* in, void* out, const size_t size,
 
     CHECK_MULT_EIGHT(size);
 
-    count = bshuf_trans_byte_elem_sse2(in, out, size, elem_size);
+    count = bshuf_trans_byte_elem_sse2(in, out, size, elem_size, tmp_buf);
     CHECK_ERR(count);
     count = bshuf_trans_bit_byte_avx2(out, tmp_buf, size, elem_size);
     CHECK_ERR(count);

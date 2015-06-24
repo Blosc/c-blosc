@@ -93,6 +93,32 @@ static void printymm(__m256i ymm0)
     }
 
 
+/* Private functions */
+BLOSC_NO_EXPORT int64_t
+bshuf_trans_byte_elem_remainder(void* in, void* out, const size_t size,
+                                const size_t elem_size, const size_t start);
+
+BLOSC_NO_EXPORT int64_t
+bshuf_trans_byte_elem_scal(void* in, void* out, const size_t size,
+                           const size_t elem_size);
+
+BLOSC_NO_EXPORT int64_t
+bshuf_trans_bit_byte_remainder(void* in, void* out, const size_t size,
+                               const size_t elem_size, const size_t start_byte);
+
+BLOSC_NO_EXPORT int64_t
+bshuf_trans_elem(void* in, void* out, const size_t lda,
+                 const size_t ldb, const size_t elem_size);
+
+BLOSC_NO_EXPORT int64_t
+bshuf_trans_bitrow_eight(void* in, void* out, const size_t size,
+                         const size_t elem_size);
+
+BLOSC_NO_EXPORT int64_t
+bshuf_shuffle_bit_eightelem_scal(void* in, void* out,
+                                 const size_t size, const size_t elem_size);
+
+
 /* Bitshuffle the data.
  *
  * Transpose the bits within elements.
@@ -111,8 +137,9 @@ static void printymm(__m256i ymm0)
  *
  */
 
-int64_t bshuf_trans_bit_elem_scal(void* in, void* out, const size_t size,
-                                  const size_t elem_size, void* tmp_buf);
+BLOSC_NO_EXPORT int64_t
+bshuf_trans_bit_elem_scal(void* in, void* out, const size_t size,
+                          const size_t elem_size, void* tmp_buf);
 
 /* Unshuffle bitshuffled data.
  *
@@ -135,8 +162,9 @@ int64_t bshuf_trans_bit_elem_scal(void* in, void* out, const size_t size,
  *
  */
 
-int64_t bshuf_untrans_bit_elem_scal(void* in, void* out, const size_t size,
-                                    const size_t elem_size, void* tmp_buf);
+BLOSC_NO_EXPORT int64_t
+bshuf_untrans_bit_elem_scal(void* in, void* out, const size_t size,
+                            const size_t elem_size, void* tmp_buf);
 
 
 #ifdef __cplusplus
