@@ -18,7 +18,6 @@
 #endif /*  USING_CMAKE */
 #include "blosc.h"
 #include "shuffle.h"
-#include "bitshuffle.h"
 #include "blosclz.h"
 #if defined(HAVE_LZ4)
   #include "lz4.h"
@@ -536,9 +535,8 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     }
     /* We don't allow more than 1 filter at the same time (yet) */
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bscount = bshuf_trans_bit_elem((void*)src, (void*)tmp, blocksize / typesize,
-                                     typesize, (void*)dest);
-      if (bscount <= 0)
+      bscount = bitshuffle(typesize, blocksize, src, tmp, dest);
+      if (bscount < 0)
         return (int)bscount;                  /* error in bitshuffle */
       _tmp = tmp;
     }
@@ -724,7 +722,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
       unshuffle(typesize, blocksize, tmp, dest);
     }
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bscount = bshuf_untrans_bit_elem(tmp, dest, blocksize / typesize, typesize, (void*)tmp2);
+      bscount = bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
       if (bscount < 0)
         return (int)bscount;
     }
