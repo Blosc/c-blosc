@@ -10,6 +10,7 @@
 #include "shuffle.h"
 #include "shuffle-common.h"
 #include "shuffle-generic.h"
+#include "bitshuffle-generic.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -35,16 +36,20 @@ static const bool true = 1;
     more than one type of acceleration!*/
 #if defined(SHUFFLE_AVX2_ENABLED)
   #include "shuffle-avx2.h"
+  #include "bitshuffle-avx2.h"
 #endif  /* defined(SHUFFLE_AVX2_ENABLED) */
 
 #if defined(SHUFFLE_SSE2_ENABLED)
   #include "shuffle-sse2.h"
+  #include "bitshuffle-sse2.h"
 #endif  /* defined(SHUFFLE_SSE2_ENABLED) */
 
 
 /*  Define function pointer types for shuffle/unshuffle routines. */
-typedef void(*shuffle_func)(size_t, size_t, const uint8_t* const, uint8_t* const);
-typedef void(*unshuffle_func)(size_t, size_t, const uint8_t* const, uint8_t* const);
+typedef void(*shuffle_func)(const size_t, const size_t, const uint8_t*, const uint8_t*);
+typedef void(*unshuffle_func)(const size_t, const size_t, const uint8_t*, const uint8_t*);
+typedef int64_t(*bitshuffle_func)(void*, void*, const size_t, const size_t, void*);
+typedef int64_t(*bitunshuffle_func)(void*, void*, const size_t, const size_t, void*);
 
 /* An implementation of shuffle/unshuffle routines. */
 typedef struct shuffle_implementation {
@@ -54,6 +59,10 @@ typedef struct shuffle_implementation {
   shuffle_func shuffle;
   /* Function pointer to the unshuffle routine for this implementation. */
   unshuffle_func unshuffle;
+  /* Function pointer to the bitshuffle routine for this implementation. */
+  bitshuffle_func bitshuffle;
+  /* Function pointer to the bitunshuffle routine for this implementation. */
+  bitunshuffle_func bitunshuffle;
 } shuffle_implementation_t;
 
 typedef enum {
@@ -243,6 +252,8 @@ get_shuffle_implementation() {
     impl_avx2.name = "avx2";
     impl_avx2.shuffle = (shuffle_func)shuffle_avx2;
     impl_avx2.unshuffle = (unshuffle_func)unshuffle_avx2;
+    impl_avx2.bitshuffle = (bitshuffle_func)bshuf_trans_bit_elem_avx2;
+    impl_avx2.bitunshuffle = (bitunshuffle_func)bshuf_untrans_bit_elem_avx2;
     return impl_avx2;
   }
 #endif  /* defined(SHUFFLE_AVX2_ENABLED) */
@@ -253,6 +264,8 @@ get_shuffle_implementation() {
     impl_sse2.name = "sse2";
     impl_sse2.shuffle = (shuffle_func)shuffle_sse2;
     impl_sse2.unshuffle = (unshuffle_func)unshuffle_sse2;
+    impl_sse2.bitshuffle = (bitshuffle_func)bshuf_trans_bit_elem_sse2;
+    impl_sse2.bitunshuffle = (bitunshuffle_func)bshuf_untrans_bit_elem_sse2;
     return impl_sse2;
   }
 #endif  /* defined(SHUFFLE_SSE2_ENABLED) */
@@ -263,6 +276,8 @@ get_shuffle_implementation() {
   impl_generic.name = "generic";
   impl_generic.shuffle = (shuffle_func)shuffle_generic;
   impl_generic.unshuffle = (unshuffle_func)unshuffle_generic;
+  impl_generic.bitshuffle = (bitshuffle_func)bshuf_trans_bit_elem_scal;
+  impl_generic.bitunshuffle = (bitunshuffle_func)bshuf_untrans_bit_elem_scal;
   return impl_generic;
 }
 
@@ -286,12 +301,14 @@ __forceinline
 inline
 #endif
 void init_shuffle_implementation() {
-  /* Initialization could (in rare cases) take place concurrently on multiple threads,
-     but it shouldn't matter because the initialization should return the same result
-     on each thread (so the implementation will be the same). Since that's the case
-     we can avoid complicated synchronization here and get a small performance benefit
-     because we don't need to perform a volatile load on the initialization variable
-     each time this function is called. */
+  /* Initialization could (in rare cases) take place concurrently on
+     multiple threads, but it shouldn't matter because the
+     initialization should return the same result on each thread (so
+     the implementation will be the same). Since that's the case we
+     can avoid complicated synchronization here and get a small
+     performance benefit because we don't need to perform a volatile
+     load on the initialization variable each time this function is
+     called. */
 #if defined(__GNUC__) || defined(__clang__)
   if (__builtin_expect(!implementation_initialized, 0)) {
 #else
@@ -309,7 +326,7 @@ void init_shuffle_implementation() {
     hardware-accelerated routine at run-time. */
 void
 shuffle(const size_t bytesoftype, const size_t blocksize,
-         const uint8_t* const _src, uint8_t* const _dest) {
+        const uint8_t* const _src, const uint8_t* _dest) {
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
 
@@ -322,11 +339,41 @@ shuffle(const size_t bytesoftype, const size_t blocksize,
     hardware-accelerated routine at run-time. */
 void
 unshuffle(const size_t bytesoftype, const size_t blocksize,
-               const uint8_t* const _src, uint8_t* const _dest) {
+          const uint8_t* _src, const uint8_t* _dest) {
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
 
   /*  The implementation is initialized.
       Dispatch to it's unshuffle routine. */
   (host_implementation.unshuffle)(bytesoftype, blocksize, _src, _dest);
+}
+
+/*  Bit-shuffle a block by dynamically dispatching to the appropriate
+    hardware-accelerated routine at run-time. */
+int64_t
+bitshuffle(const size_t bytesoftype, const size_t blocksize,
+           const uint8_t* const _src, const uint8_t* _dest, const uint8_t* _tmp) {
+  /* Initialize the shuffle implementation if necessary. */
+  init_shuffle_implementation();
+
+  /*  The implementation is initialized.
+      Dispatch to it's shuffle routine. */
+  return (host_implementation.bitshuffle)((void*)_src, (void*)_dest,
+                                          blocksize / bytesoftype,
+                                          bytesoftype, (void*)_tmp);
+}
+
+/*  Bit-unshuffle a block by dynamically dispatching to the appropriate
+    hardware-accelerated routine at run-time. */
+int64_t
+bitunshuffle(const size_t bytesoftype, const size_t blocksize,
+             const uint8_t* const _src, const uint8_t* _dest, const uint8_t* _tmp) {
+  /* Initialize the shuffle implementation if necessary. */
+  init_shuffle_implementation();
+
+  /*  The implementation is initialized.
+      Dispatch to it's unshuffle routine. */
+  return (host_implementation.bitunshuffle)((void*)_src, (void*)_dest,
+                                            blocksize / bytesoftype,
+                                            bytesoftype, (void*)_tmp);
 }

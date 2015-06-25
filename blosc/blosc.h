@@ -47,9 +47,15 @@ extern "C" {
 /* The maximum number of threads (for some static arrays) */
 #define BLOSC_MAX_THREADS 256
 
+/* Codes for shuffling (see blosc_compress) */
+#define BLOSC_NOSHUFFLE   0  /* no shuffle */
+#define BLOSC_SHUFFLE 1      /* byte-wise shuffle */
+#define BLOSC_BITSHUFFLE  2  /* bit-wise shuffle */
+
 /* Codes for internal flags (see blosc_cbuffer_metainfo) */
-#define BLOSC_DOSHUFFLE 0x1
-#define BLOSC_MEMCPYED  0x2
+#define BLOSC_DOSHUFFLE    0x1	/* byte-wise shuffle */
+#define BLOSC_MEMCPYED     0x2	/* plain copy */
+#define BLOSC_DOBITSHUFFLE 0x4  /* bit-wise shuffle */
 
 /* Codes for the different compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ   0
@@ -125,8 +131,9 @@ BLOSC_EXPORT void blosc_destroy(void);
   between 0 (no compression) and 9 (maximum compression).
 
   `doshuffle` specifies whether the shuffle compression preconditioner
-  should be applied or not.  0 means not applying it and 1 means
-  applying it.
+  should be applied or not.  BLOSC_NOSHUFFLE means not applying it,
+  BLOSC_SHUFFLE means applying it at a byte level and BLOSC_BITSHUFFLE
+  at a bit level (slower but may achieve better entropy alignment).
 
   `typesize` is the number of bytes for the atomic type in binary
   `src` buffer.  This is mainly useful for the shuffle preconditioner.
@@ -151,8 +158,8 @@ BLOSC_EXPORT void blosc_destroy(void);
   together with the buffer data causing this and compression settings.
   */
 BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
-                                    size_t nbytes, const void *src, void *dest,
-                                    size_t destsize);
+				size_t nbytes, const void *src, void *dest,
+				size_t destsize);
 
 
 /**
@@ -175,9 +182,9 @@ BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
   together with the buffer data causing this and compression settings.
 */
 BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
-                                        size_t nbytes, const void* src, void* dest,
-                                        size_t destsize, const char* compressor,
-                                        size_t blocksize, int numinternalthreads);
+				    size_t nbytes, const void* src, void* dest,
+				    size_t destsize, const char* compressor,
+				    size_t blocksize, int numinternalthreads);
 
 /**
   Decompress a block of compressed data in `src`, put the result in
@@ -327,7 +334,7 @@ BLOSC_EXPORT int blosc_free_resources(void);
   This function should always succeed.
   */
 BLOSC_EXPORT void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
-                                          size_t *cbytes, size_t *blocksize);
+				      size_t *cbytes, size_t *blocksize);
 
 
 /**
@@ -338,14 +345,15 @@ BLOSC_EXPORT void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
     * bit 0: whether the shuffle filter has been applied or not
     * bit 1: whether the internal buffer is a pure memcpy or not
 
-  You can use the `BLOSC_DOSHUFFLE` and `BLOSC_MEMCPYED` symbols for
-  extracting the interesting bits (e.g. ``flags & BLOSC_DOSHUFFLE``
-  says whether the buffer is shuffled or not).
+  You can use the `BLOSC_DOSHUFFLE`, `BLOSC_DOBITSHUFFLE` and
+  `BLOSC_MEMCPYED` symbols for extracting the interesting bits
+  (e.g. ``flags & BLOSC_DOSHUFFLE`` says whether the buffer is
+  byte-shuffled or not).
 
   This function should always succeed.
   */
 BLOSC_EXPORT void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
-                                             int *flags);
+					 int *flags);
 
 
 /**

@@ -139,7 +139,7 @@ endif()
 # by the compiler. Note we DO NOT check which hardware features are supported
 # by this (the host) system, because we want to be able to support compiling
 # for newer hardware on older machines as well as cross-compilation.
-message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}.")
+message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}")
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL i686 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 OR
@@ -193,7 +193,6 @@ endif()
 # Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
      if(NOT CMAKE_C_FLAGS AND COMPILER_SUPPORT_SSE2)
-         message(STATUS "SSE2 is here.  Adding support for it.")
          set(CMAKE_C_FLAGS -msse2 CACHE STRING "C flags." FORCE)
      endif(NOT CMAKE_C_FLAGS AND COMPILER_SUPPORT_SSE2)
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)

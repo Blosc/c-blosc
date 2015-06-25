@@ -46,6 +46,7 @@
 struct bench_wrap_args
 {
   char *compressor;
+  char *shuffle;
   int nthreads;
   int size;
   int elsize;
@@ -177,7 +178,7 @@ void init_buffer(void *src, int size, int rshift) {
 }
 
 
-void do_bench(char *compressor, int nthreads, int size, int elsize,
+void do_bench(char *compressor, char *shuffle, int nthreads, int size, int elsize,
               int rshift, FILE * ofile) {
   void *src, *srccpy;
   void *dest[NCHUNKS], *dest2;
@@ -186,7 +187,17 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
   unsigned char *orig, *round;
   blosc_timestamp_t last, current;
   double tmemcpy, tshuf, tunshuf;
-  int clevel, doshuffle=1;
+  int clevel, doshuffle;
+
+  if (strcmp(shuffle, "shuffle") == 0) {
+      doshuffle = BLOSC_SHUFFLE;
+    }
+  else if (strcmp(shuffle, "bitshuffle") == 0) {
+      doshuffle = BLOSC_BITSHUFFLE;
+    }
+  else if (strcmp(shuffle, "noshuffle") == 0) {
+      doshuffle = BLOSC_NOSHUFFLE;
+    }
 
   blosc_set_nthreads(nthreads);
   if(blosc_set_compressor(compressor) < 0){
@@ -208,7 +219,7 @@ void do_bench(char *compressor, int nthreads, int size, int elsize,
      retcode = posix_memalign( (void **)(&dest[j]), 32, size+BLOSC_MAX_OVERHEAD);
   }
 
-  fprintf(ofile, "--> %d, %d, %d, %d, %s\n", nthreads, size, elsize, rshift, compressor);
+  fprintf(ofile, "--> %d, %d, %d, %d, %s, %s\n", nthreads, size, elsize, rshift, compressor, shuffle);
   fprintf(ofile, "********************** Run info ******************************\n");
   fprintf(ofile, "Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   fprintf(ofile, "Using synthetic data with %d significant bits (out of 32)\n", rshift);
@@ -337,7 +348,7 @@ int get_nchunks(int size_, int ws) {
 void *bench_wrap(void * args)
 {
     struct bench_wrap_args * arg = (struct bench_wrap_args *) args;
-    do_bench(arg->compressor, arg->nthreads, arg->size, arg->elsize,
+    do_bench(arg->compressor, arg->shuffle, arg->nthreads, arg->size, arg->elsize,
              arg->rshift, arg->output_file);
     return 0;
 }
@@ -367,6 +378,7 @@ void print_compress_info(void)
 
 int main(int argc, char *argv[]) {
   char compressor[32];
+  char shuffle[32] = "shuffle";
   char bsuite[32];
   int single = 1;
   int suite = 0;
@@ -387,8 +399,9 @@ int main(int argc, char *argv[]) {
   print_compress_info();
 
   strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib] "
-          "[[single | suite | hardsuite | extremesuite | debugsuite] "
-          "[nthreads [bufsize(bytes) [typesize [sbits ]]]]]", 255);
+	  "[noshuffle | shuffle | bitshuffle] "
+          "[single | suite | hardsuite | extremesuite | debugsuite] "
+          "[nthreads] [bufsize(bytes)] [typesize] [sbits]", 255);
 
   if (argc < 2) {
     printf("%s\n", usage);
@@ -403,13 +416,25 @@ int main(int argc, char *argv[]) {
       strcmp(compressor, "snappy") != 0 &&
       strcmp(compressor, "zlib") != 0) {
     printf("No such compressor: '%s'\n", compressor);
+    printf("%s\n", usage);
     exit(2);
   }
 
-  if (argc < 3)
+  if (argc >= 3) {
+      strcpy(shuffle, argv[2]);
+      if (strcmp(shuffle, "shuffle") != 0 &&
+          strcmp(shuffle, "bitshuffle") != 0 &&
+          strcmp(shuffle, "noshuffle") != 0) {
+	printf("No such shuffler: '%s'\n", shuffle);
+	printf("%s\n", usage);
+	exit(2);
+     }
+  }
+
+  if (argc < 4)
     strcpy(bsuite, "single");
   else
-    strcpy(bsuite, argv[2]);
+    strcpy(bsuite, argv[3]);
 
   if (strcmp(bsuite, "single") == 0) {
     single = 1;
@@ -453,22 +478,23 @@ int main(int argc, char *argv[]) {
   }
 
   printf("Using compressor: %s\n", compressor);
+  printf("Using shuffle type: %s\n", shuffle);
   printf("Running suite: %s\n", bsuite);
 
-  if (argc >= 4) {
-    nthreads = atoi(argv[3]);
-  }
   if (argc >= 5) {
-    size = atoi(argv[4]);
+    nthreads = atoi(argv[4]);
   }
   if (argc >= 6) {
-    elsize = atoi(argv[5]);
+    size = atoi(argv[5]);
   }
   if (argc >= 7) {
-    rshift = atoi(argv[6]);
+    elsize = atoi(argv[6]);
+  }
+  if (argc >= 8) {
+    rshift = atoi(argv[7]);
   }
 
-  if ((argc >= 8) || !(single || suite || hard_suite || extreme_suite)) {
+  if ((argc >= 9) || !(single || suite || hard_suite || extreme_suite)) {
     printf("%s\n", usage);
     exit(1);
   }
@@ -480,7 +506,7 @@ int main(int argc, char *argv[]) {
 
   if (suite) {
     for (nthreads_=1; nthreads_ <= nthreads; nthreads_++) {
-      do_bench(compressor, nthreads_, size, elsize, rshift, output_file);
+      do_bench(compressor, shuffle, nthreads_, size, elsize, rshift, output_file);
     }
   }
   else if (hard_suite) {
@@ -495,7 +521,7 @@ int main(int argc, char *argv[]) {
             nchunks = get_nchunks(size_+i, workingset);
     	    niter = 1;
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(compressor, nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(compressor, shuffle, nthreads_, size_+i, elsize_, rshift_, output_file);
               blosc_set_timestamp(&current);
               totaltime = (float)getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -514,7 +540,7 @@ int main(int argc, char *argv[]) {
           for (size_ = 32*KB; size_ <= size; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = 1; nthreads_ <= nthreads; nthreads_++) {
-              do_bench(compressor, nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(compressor, shuffle, nthreads_, size_+i, elsize_, rshift_, output_file);
               blosc_set_timestamp(&current);
               totaltime = (float)getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -533,7 +559,7 @@ int main(int argc, char *argv[]) {
           for (size_ = size; size_ <= 16*MB; size_ *= 2) {
             nchunks = get_nchunks(size_+i, workingset);
             for (nthreads_ = nthreads; nthreads_ <= 6; nthreads_++) {
-              do_bench(compressor, nthreads_, size_+i, elsize_, rshift_, output_file);
+              do_bench(compressor, shuffle, nthreads_, size_+i, elsize_, rshift_, output_file);
               blosc_set_timestamp(&current);
               totaltime = (float)getseconds(last, current);
               printf("Elapsed time:\t %6.1f s.  Processed data: %.1f GB\n",
@@ -546,7 +572,7 @@ int main(int argc, char *argv[]) {
   }
   /* Single mode */
   else {
-    do_bench(compressor, nthreads, size, elsize, rshift, output_file);
+    do_bench(compressor, shuffle, nthreads, size, elsize, rshift, output_file);
   }
 
   /* Print out some statistics */
