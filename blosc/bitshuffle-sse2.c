@@ -22,6 +22,25 @@
 
 #include <emmintrin.h>
 
+/* The next is useful for debugging purposes */
+#if 0
+#include <stdio.h>
+#include <string.h>
+
+
+static void printxmm(__m128i xmm0)
+{
+  uint8_t buf[32];
+
+  ((__m128i *)buf)[0] = xmm0;
+  printf("%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n",
+          buf[0], buf[1], buf[2], buf[3],
+          buf[4], buf[5], buf[6], buf[7],
+          buf[8], buf[9], buf[10], buf[11],
+          buf[12], buf[13], buf[14], buf[15]);
+}
+#endif
+
 
 /* ---- Worker code that requires SSE2. Intel Petium 4 (2000) and later. ---- */
 
