@@ -525,7 +525,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   const uint8_t *_tmp = src;
   char *compname;
   int accel;
-  int64_t bscount;
+  int bscount;
 
   if (typesize > 1) {
     /* Shuffling only makes sense if typesize > 1 */
@@ -537,7 +537,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
       bscount = bitshuffle(typesize, blocksize, src, tmp, dest);
       if (bscount < 0)
-        return (int)bscount;                  /* error in bitshuffle */
+        return bscount;
       _tmp = tmp;
     }
   }
@@ -647,7 +647,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   int32_t typesize = context->typesize;
   int32_t compcode;
   char *compname;
-  int64_t bscount;
+  int bscount;
 
   if ((typesize > 1) && ((*(context->header_flags) & BLOSC_DOSHUFFLE) || \
                          (*(context->header_flags) & BLOSC_DOBITSHUFFLE))) {
@@ -724,7 +724,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
       bscount = bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
       if (bscount < 0)
-        return (int)bscount;
+        return bscount;
     }
   }
 
