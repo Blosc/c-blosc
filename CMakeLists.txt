@@ -16,13 +16,20 @@
 #   DEACTIVATE_ZLIB: default OFF
 #       do not include support for the Zlib library
 #   PREFER_EXTERNAL_COMPLIBS: default ON
-#       when found, use the installed compression libs instead of included sources
-#   TEST_INCLUDE_BENCH_SINGLE_1: default ON
-#       add a test that runs the benchmark program passing "single" with 1 thread
-#       as first parameter
-#   TEST_INCLUDE_BENCH_SINGLE_N: default ON
-#       add a test that runs the benchmark program passing "single" with all threads
-#       as first parameter
+#       when found, use the installed compression libs instead of included
+#       sources
+#   TEST_INCLUDE_BENCH_SHUFFLE_1: default ON
+#       add a test that runs the benchmark program passing "shuffle" with 1
+#       thread as second parameter
+#   TEST_INCLUDE_BENCH_SHUFFLE_N: default ON
+#       add a test that runs the benchmark program passing "shuffle" with all
+#       threads as second parameter
+#   TEST_INCLUDE_BENCH_BITSHUF_1: default ON
+#       add a test that runs the benchmark program passing "bitshuffle" with 1
+#       thread as second parameter
+#   TEST_INCLUDE_BENCH_BITSHUF_N: default ON
+#       add a test that runs the benchmark program passing "bitshuffle" with
+#       all threads as second parameter
 #   TEST_INCLUDE_BENCH_SUITE: default OFF
 #       add a test that runs the benchmark program passing "suite"
 #       as first parameter
