@@ -29,6 +29,13 @@ Changes from 1.6.1 to 1.7.0
 
 * LZ4 codec updated to 1.7.0 (r130).
 
+* PREFER_EXTERNAL_COMPLIBS cmake option has been removed and replaced
+  by the more fine grained PREFER_EXTERNAL_LZ4, PREFER_EXTERNAL_SNAPPY
+  and PREFER_EXTERNAL_ZLIB.  In order to allow the use of the new API
+  introduced in LZ4 1.7.0, PREFER_EXTERNAL_LZ4 has been set to OFF by
+  default, whereas PREFER_EXTERNAL_SNAPPY and PREFER_EXTERNAL_ZLIB
+  continues to be ON.
+
 * Implemented SSE2 shuffle support for buffers containing a number of
   elements which is not a multiple of (typesize * vectorsize).  Jack
   Pappas.

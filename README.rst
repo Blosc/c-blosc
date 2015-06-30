@@ -234,13 +234,12 @@ effectively means that you can be confident in having a complete
 support for all the supported compression libraries in all supported
 platforms.
 
-If you want to force Blosc to use the included compression sources
-instead of trying to find the libraries in the system first, you can
-switch off the PREFER_EXTERNAL_COMPLIBS CMake option:
+If you want to force Blosc to use external libraries instead of
+the included compression sources:
 
 .. code-block:: console
 
-  $ cmake -DPREFER_EXTERNAL_COMPLIBS=OFF ..
+  $ cmake -DPREFER_EXTERNAL_LZ4=ON ..
 
 You can also disable support for some compression libraries:
 

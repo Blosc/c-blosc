@@ -15,8 +15,14 @@
 #       do not include support for the Snappy library
 #   DEACTIVATE_ZLIB: default OFF
 #       do not include support for the Zlib library
-#   PREFER_EXTERNAL_COMPLIBS: default ON
-#       when found, use the installed compression libs instead of included
+#   PREFER_EXTERNAL_LZ4: default OFF
+#       when found, use the installed LZ4 libs instead of included
+#       sources
+#   PREFER_EXTERNAL_SNAPPY: default ON
+#       when found, use the installed Snappy libs instead of included
+#       sources
+#   PREFER_EXTERNAL_ZLIB: default ON
+#       when found, use the installed zlib libs instead of included
 #       sources
 #   TEST_INCLUDE_BENCH_SHUFFLE_1: default ON
 #       add a test that runs the benchmark program passing "shuffle" with 1
@@ -81,29 +87,33 @@ option(DEACTIVATE_SNAPPY
     "Do not include support for the SNAPPY library." OFF)
 option(DEACTIVATE_ZLIB
     "Do not include support for the ZLIB library." OFF)
-option(PREFER_EXTERNAL_COMPLIBS
-    "When found, use the installed compression libs instead of included sources." ON)
+option(PREFER_EXTERNAL_LZ4
+    "Find and use external LZ4 library instead of included sources." OFF)
+option(PREFER_EXTERNAL_SNAPPY
+    "Find and use external Snappy library instead of included sources." ON)
+option(PREFER_EXTERNAL_ZLIB
+    "Find and use external zlib library instead of included sources." ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-if(NOT PREFER_EXTERNAL_COMPLIBS)
-    message(STATUS "Finding external libraries disabled.  Using internal sources.")
-endif(NOT PREFER_EXTERNAL_COMPLIBS)
-
 
 if(NOT DEACTIVATE_LZ4)
-    if(PREFER_EXTERNAL_COMPLIBS)
+    if(PREFER_EXTERNAL_LZ4)
         find_package(LZ4)
-    endif(PREFER_EXTERNAL_COMPLIBS)
+    else()
+        message(STATUS "Using LZ4 internal sources.")
+    endif(PREFER_EXTERNAL_LZ4)
     # HAVE_LZ4 will be set to true because even if the library is
     # not found, we will use the included sources for it
     set(HAVE_LZ4 TRUE)
 endif(NOT DEACTIVATE_LZ4)
 
 if(NOT DEACTIVATE_SNAPPY)
-    if(PREFER_EXTERNAL_COMPLIBS)
+    if(PREFER_EXTERNAL_SNAPPY)
         find_package(Snappy)
-    endif(PREFER_EXTERNAL_COMPLIBS)
+    else()
+        message(STATUS "Using Snappy internal sources.")
+    endif(PREFER_EXTERNAL_SNAPPY)
     # HAVE_SNAPPY will be set to true because even if the library is not found,
     # we will use the included sources for it
     set(HAVE_SNAPPY TRUE)
@@ -111,13 +121,15 @@ endif(NOT DEACTIVATE_SNAPPY)
 
 if(NOT DEACTIVATE_ZLIB)
     # import the ZLIB_ROOT environment variable to help finding the zlib library
-    if(PREFER_EXTERNAL_COMPLIBS)
+    if(PREFER_EXTERNAL_ZLIB)
         set(ZLIB_ROOT $ENV{ZLIB_ROOT})
-        find_package( ZLIB )
+        find_package(ZLIB)
         if (NOT ZLIB_FOUND )
             message(STATUS "No zlib found.  Using internal sources.")
         endif (NOT ZLIB_FOUND )
-    endif(PREFER_EXTERNAL_COMPLIBS)
+    else()
+        message(STATUS "Using zlib internal sources.")
+    endif(PREFER_EXTERNAL_ZLIB)
     # HAVE_ZLIB will be set to true because even if the library is not found,
     # we will use the included sources for it
     set(HAVE_ZLIB TRUE)
