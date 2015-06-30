@@ -43,19 +43,6 @@
 #endif
 
 
-struct bench_wrap_args
-{
-  char *compressor;
-  char *shuffle;
-  int nthreads;
-  int size;
-  int elsize;
-  int rshift;
-  FILE * output_file;
-};
-
-void *bench_wrap(void * args);
-
 #include "../blosc/blosc.h"
 
 #define KB  1024
@@ -343,14 +330,6 @@ int get_nchunks(int size_, int ws) {
   if (nchunks > NCHUNKS) nchunks = NCHUNKS;
   if (nchunks < 1) nchunks = 1;
   return nchunks;
-}
-
-void *bench_wrap(void * args)
-{
-    struct bench_wrap_args * arg = (struct bench_wrap_args *) args;
-    do_bench(arg->compressor, arg->shuffle, arg->nthreads, arg->size, arg->elsize,
-             arg->rshift, arg->output_file);
-    return 0;
 }
 
 void print_compress_info(void)
