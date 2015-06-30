@@ -24,10 +24,10 @@
 #   TEST_INCLUDE_BENCH_SHUFFLE_N: default ON
 #       add a test that runs the benchmark program passing "shuffle" with all
 #       threads as second parameter
-#   TEST_INCLUDE_BENCH_BITSHUF_1: default ON
+#   TEST_INCLUDE_BENCH_BITSHUFFLE_1: default ON
 #       add a test that runs the benchmark program passing "bitshuffle" with 1
 #       thread as second parameter
-#   TEST_INCLUDE_BENCH_BITSHUF_N: default ON
+#   TEST_INCLUDE_BENCH_BITSHUFFLE_N: default ON
 #       add a test that runs the benchmark program passing "bitshuffle" with
 #       all threads as second parameter
 #   TEST_INCLUDE_BENCH_SUITE: default OFF
