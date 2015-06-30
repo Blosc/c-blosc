@@ -30,3 +30,6 @@ Other important contributions:
 * Julian Taylor contributed a way to detect AVX2 in runtime and
   calling the appropriate routines only if the undelying hardware
   supports it.
+
+* Kiyo Masui for relicensing his bitshuffle project for allowing the
+  inclusion of part of his code in Blosc.
