@@ -418,6 +418,10 @@ int main(int argc, char *argv[]) {
   if (strcmp(bsuite, "single") == 0) {
     single = 1;
   }
+  else if (strcmp(bsuite, "test") == 0) {
+    single = 1;
+    workingset = 128*MB;
+  }
   else if (strcmp(bsuite, "suite") == 0) {
     suite = 1;
   }
