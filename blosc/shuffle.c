@@ -326,7 +326,7 @@ void init_shuffle_implementation() {
     hardware-accelerated routine at run-time. */
 void
 shuffle(const size_t bytesoftype, const size_t blocksize,
-        const uint8_t* const _src, const uint8_t* _dest) {
+        const uint8_t* _src, const uint8_t* _dest) {
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
 

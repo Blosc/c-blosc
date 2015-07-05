@@ -267,16 +267,13 @@ int64_t bshuf_trans_bit_byte_sse2(void* in, void* out, const size_t size,
     char* in_b = (char*) in;
     char* out_b = (char*) out;
     uint16_t* out_ui16;
-
     int64_t count;
-
     size_t nbyte = elem_size * size;
-
-    CHECK_MULT_EIGHT(nbyte);
-
     __m128i xmm;
     int32_t bt;
     size_t ii, kk;
+
+    CHECK_MULT_EIGHT(nbyte);
 
     for (ii = 0; ii + 15 < nbyte; ii += 16) {
         xmm = _mm_loadu_si128((__m128i *) &in_b[ii]);
@@ -318,9 +315,6 @@ int64_t bshuf_trans_byte_bitrow_sse2(void* in, void* out, const size_t size,
 
     char* in_b = (char*) in;
     char* out_b = (char*) out;
-
-    CHECK_MULT_EIGHT(size);
-
     size_t nrows = 8 * elem_size;
     size_t nbyte_row = size / 8;
     size_t ii, jj;
@@ -328,6 +322,8 @@ int64_t bshuf_trans_byte_bitrow_sse2(void* in, void* out, const size_t size,
     __m128i a0, b0, c0, d0, e0, f0, g0, h0;
     __m128i a1, b1, c1, d1, e1, f1, g1, h1;
     __m128 *as, *bs, *cs, *ds, *es, *fs, *gs, *hs;
+
+    CHECK_MULT_EIGHT(size);
 
     for (ii = 0; ii + 7 < nrows; ii += 8) {
         for (jj = 0; jj + 15 < nbyte_row; jj += 16) {
@@ -421,9 +417,6 @@ int64_t bshuf_trans_byte_bitrow_sse2(void* in, void* out, const size_t size,
 /* Shuffle bits within the bytes of eight element blocks. */
 int64_t bshuf_shuffle_bit_eightelem_sse2(void* in, void* out, const size_t size,
 					 const size_t elem_size) {
-
-    CHECK_MULT_EIGHT(size);
-
     /*  With a bit of care, this could be written such that such that it is */
     /*  in_buf = out_buf safe. */
     char* in_b = (char*) in;
@@ -434,6 +427,9 @@ int64_t bshuf_shuffle_bit_eightelem_sse2(void* in, void* out, const size_t size,
     __m128i xmm;
     int32_t bt;
     size_t ii, jj, kk;
+    size_t ind;
+
+    CHECK_MULT_EIGHT(size);
 
     if (elem_size % 2) {
         bshuf_shuffle_bit_eightelem_scal(in, out, size, elem_size);
@@ -445,7 +441,7 @@ int64_t bshuf_shuffle_bit_eightelem_sse2(void* in, void* out, const size_t size,
                 for (kk = 0; kk < 8; kk++) {
                     bt = _mm_movemask_epi8(xmm);
                     xmm = _mm_slli_epi16(xmm, 1);
-                    size_t ind = (ii + jj / 8 + (7 - kk) * elem_size);
+                    ind = (ii + jj / 8 + (7 - kk) * elem_size);
                     out_ui16[ind / 2] = bt;
                 }
             }
