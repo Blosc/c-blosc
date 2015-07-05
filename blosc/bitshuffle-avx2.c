@@ -107,11 +107,11 @@ int64_t bshuf_trans_byte_bitrow_avx2(void* in, void* out, const size_t size,
     char* in_b = (char*) in;
     char* out_b = (char*) out;
 
-    CHECK_MULT_EIGHT(size);
-
     size_t nrows = 8 * elem_size;
     size_t nbyte_row = size / 8;
     size_t ii, jj, kk, hh, mm;
+
+    CHECK_MULT_EIGHT(size);
 
     if (elem_size % 4)
       return bshuf_trans_byte_bitrow_sse2(in, out, size, elem_size);
