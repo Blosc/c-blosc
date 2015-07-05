@@ -30,24 +30,25 @@ extern "C" {
   is not a multiple of (type_size * vector_size).
 */
 static void shuffle_generic_inline(const size_t type_size,
-  const size_t vectorizable_blocksize, const size_t blocksize,
-	const uint8_t* const _src, uint8_t* const _dest)
+    const size_t vectorizable_blocksize, const size_t blocksize,
+    const uint8_t* const _src, uint8_t* const _dest)
 {
   size_t i, j;
-
   /* Calculate the number of elements in the block. */
-  const lldiv_t neblock = lldiv(blocksize, type_size);
+  const size_t neblock_quot = blocksize / type_size;
+  const size_t neblock_rem = blocksize % type_size;
   const size_t vectorizable_elements = vectorizable_blocksize / type_size;
+
 
   /* Non-optimized shuffle */
   for (j = 0; j < type_size; j++) {
-    for (i = vectorizable_elements; i < (size_t)neblock.quot; i++) {
-      _dest[j*neblock.quot+i] = _src[i*type_size+j];
+    for (i = vectorizable_elements; i < (size_t)neblock_quot; i++) {
+      _dest[j*neblock_quot+i] = _src[i*type_size+j];
     }
   }
 
   /* Copy any leftover bytes in the block without shuffling them. */
-  memcpy(_dest + (blocksize - neblock.rem), _src + (blocksize - neblock.rem), neblock.rem);
+  memcpy(_dest + (blocksize - neblock_rem), _src + (blocksize - neblock_rem), neblock_rem);
 }
 
 /**
@@ -64,18 +65,19 @@ static void unshuffle_generic_inline(const size_t type_size,
   size_t i, j;
 
   /* Calculate the number of elements in the block. */
-  const lldiv_t neblock = lldiv(blocksize, type_size);
+  const size_t neblock_quot = blocksize / type_size;
+  const size_t neblock_rem = blocksize % type_size;
   const size_t vectorizable_elements = vectorizable_blocksize / type_size;
 
   /* Non-optimized unshuffle */
-  for (i = vectorizable_elements; i < (size_t)neblock.quot; i++) {
+  for (i = vectorizable_elements; i < (size_t)neblock_quot; i++) {
     for (j = 0; j < type_size; j++) {
-      _dest[i*type_size+j] = _src[j*neblock.quot+i];
+      _dest[i*type_size+j] = _src[j*neblock_quot+i];
     }
   }
 
   /* Copy any leftover bytes in the block without unshuffling them. */
-  memcpy(_dest + (blocksize - neblock.rem), _src + (blocksize - neblock.rem), neblock.rem);
+  memcpy(_dest + (blocksize - neblock_rem), _src + (blocksize - neblock_rem), neblock_rem);
 }
 
 /**
