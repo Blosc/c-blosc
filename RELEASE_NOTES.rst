@@ -72,6 +72,9 @@ Changes from 1.6.1 to 1.7.0
 * The HDF5 filter has been removed from c-blosc and moved into its own
   repo at: https://github.com/Blosc/hdf5
 
+* The MS Visual Studio 2008 has been tested with c-blosc for ensuring
+  compatibility with extensions for Python 2.6 and up.
+
 
 Changes from 1.6.0 to 1.6.1
 ===========================

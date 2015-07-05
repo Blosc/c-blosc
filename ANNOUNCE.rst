@@ -6,18 +6,25 @@
 What is new?
 ============
 
-A new internal acceleration mode for LZ4 (updated internally to 1.7.0)
-and BloscLZ codecs that enters in operation with all compression
-levels except for the highest (9).  This allows for an important boost
-in speed with minimal compression ratio loss.
+This is a quite big release introducing some exciting new features:
 
-Also, Jack Pappas made great contributions allowing SSE2 operation in
-more scenarios (like types larger than 16 bytes or buffers not being a
-multiple of typesize * vectorsize).  Another contribution is a much
-more comprehensive test suite for SSE2 and AVX2 operation.
+* A new 'bitshuffle' filter is here.  This is similar that the
+  existing 'shuffle' filter, but the shuffle takes place at bit level,
+  and not at byte level.  With it you can expect higher compression
+  ratios but still having pretty good speed.  For more info, see:
+  http://blosc.org/blog/new-bitshuffle-filter.html
 
-Finally Zbyszek Szmek fixed compilation on non-Intel archs (tested on
-ARM).
+* Implemented a new acceleration mode for LZ4 (updated to 1.7.0) and
+  BloscLZ codecs that enters in operation with all compression levels
+  except for the highest (9).  This allows for an important boost in
+  speed with minimal compression ratio loss.
+
+* Jack Pappas made great contributions allowing SSE2 operation in more
+  scenarios (like types larger than 16 bytes or buffers not being a
+  multiple of typesize * vectorsize).  Another contribution is a much
+  more comprehensive test suite for SSE2 and AVX2 operation.
+
+* Zbyszek Szmek fixed compilation on non-Intel archs (tested on ARM).
 
 For more info, please see the release notes in:
 
