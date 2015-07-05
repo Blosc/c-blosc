@@ -15,7 +15,7 @@
 
     Using MSVC on Windows:
 
-    cl /Ox /Fesimple.exe /Iblosc simple.c blosc\*.c
+    cl /arch:SSE2 /Ox /Fesimple.exe /Iblosc examples\simple.c blosc\blosc.c blosc\blosclz.c blosc\shuffle.c blosc\shuffle-sse2.c blosc\shuffle-generic.c blosc\bitshuffle-generic.c blosc\bitshuffle-sse2.c
 
     To run:
 
