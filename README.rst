@@ -6,11 +6,10 @@
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
 :Travis CI: |travis|
+:Appveyor: |appveyor|
 
 .. |travis| image:: https://travis-ci.org/Blosc/c-blosc.svg?branch=master
         :target: https://travis-ci.org/Blosc/c-blosc
-
-:Appveyor: |appveyor|
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/gccmb03j8ghbj0ig/branch/master?svg=true
         :target: https://ci.appveyor.com/project/FrancescAlted/c-blosc/branch/master
