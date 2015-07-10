@@ -30,18 +30,19 @@ activity on the memory bus as much as possible. In short, this
 technique works by dividing datasets in blocks that are small enough
 to fit in caches of modern processors and perform compression /
 decompression there.  It also leverages, if available, SIMD
-instructions (SSE2) and multi-threading capabilities of CPUs, in order
-to accelerate the compression / decompression process to a maximum.
+instructions (SSE2, AVX2) and multi-threading capabilities of CPUs, in
+order to accelerate the compression / decompression process to a
+maximum.
 
-Blosc is actually a metacompressor, that meaning that it can use a range
-of compression libraries for performing the actual
+Blosc is actually a metacompressor, that meaning that it can use a
+range of compression libraries for performing the actual
 compression/decompression. Right now, it comes with integrated support
-for BloscLZ (the original one), LZ4, LZ4HC, Snappy and Zlib. Blosc comes
-with full sources for all compressors, so in case it does not find the
-libraries installed in your system, it will compile from the included
-sources and they will be integrated into the Blosc library anyway. That
-means that you can trust in having all supported compressors integrated
-in Blosc in all supported platforms.
+for BloscLZ (the original one), LZ4, LZ4HC, Snappy and Zlib. Blosc
+comes with full sources for all compressors, so in case it does not
+find the libraries installed in your system, it will compile from the
+included sources and they will be integrated into the Blosc library
+anyway. That means that you can trust in having all supported
+compressors integrated in Blosc in all supported platforms.
 
 You can see some benchmarks about Blosc performance in [3]_
 
@@ -55,27 +56,27 @@ details.
 Meta-compression and other advantages over existing compressors
 ===============================================================
 
-Blosc is not like other compressors: it should rather be called a
+C-Blosc is not like other compressors: it should rather be called a
 meta-compressor.  This is so because it can use different compressors
-and pre-conditioners (programs that generally improve compression
-ratio).  At any rate, it can also be called a compressor because it
-happens that it already integrates one compressor and one
-pre-conditioner, so it can actually work like so.
+and filters (programs that generally improve compression ratio).  At
+any rate, it can also be called a compressor because it happens that
+it already comes with several compressor and filters, so it can
+actually work like so.
 
-Currently it comes with support of BloscLZ, a compressor heavily based
-on FastLZ (http://fastlz.org/), LZ4 and LZ4HC
-(http://fastcompression.blogspot.com.es/p/lz4.html), Snappy
+Currently C-Blosc comes with support of BloscLZ, a compressor heavily
+based on FastLZ (http://fastlz.org/), LZ4 and LZ4HC
+(https://github.com/Cyan4973/lz4), Snappy
 (https://github.com/google/snappy) and Zlib (http://www.zlib.net/), as
-well as a highly optimized (it can use SSE2 instructions, if
-available) Shuffle pre-conditioner (for info on how it works, see
-slide 17 of http://www.slideshare.net/PyData/blosc-py-data-2014).
-However, different compressors or pre-conditioners may be added in the
-future.
+well as a highly optimized (it can use SSE2 or AVX2 instructions, if
+available) shuffle and bitshuffle filters (for info on how and why
+shuffling works, see slide 17 of
+http://www.slideshare.net/PyData/blosc-py-data-2014).  However,
+different compressors or filters may be added in the future.
 
-Blosc is in charge of coordinating the compressor and pre-conditioners
-so that they can leverage the blocking technique (described above) as
-well as multi-threaded execution (if several cores are available)
-automatically. That makes that every compressor and pre-conditioner
+C-Blosc is in charge of coordinating the different compressor and
+filters so that they can leverage the blocking technique (described
+above) as well as multi-threaded execution (if several cores are
+available) automatically. That makes that every compressor and filter
 will work at very high speeds, even if it was not initially designed
 for doing blocking or multi-threading.
 
@@ -83,15 +84,15 @@ Other advantages of Blosc are:
 
 * Meant for binary data: can take advantage of the type size
   meta-information for improved compression ratio (using the
-  integrated shuffle pre-conditioner).
+  integrated shuffle and bitshuffle filters).
 
 * Small overhead on non-compressible data: only a maximum of (16 + 4 *
   nthreads) additional bytes over the source buffer length are needed
-  to compress *every* input.
+  to compress *any kind of input*.
 
-* Maximum destination length: contrary to many other
-  compressors, both compression and decompression routines have
-  support for maximum size lengths for the destination buffer.
+* Maximum destination length: contrarily to many other compressors,
+  both compression and decompression routines have support for maximum
+  size lengths for the destination buffer.
 
 When taken together, all these features set Blosc apart from other
 similar solutions.
@@ -102,27 +103,27 @@ Compiling your application with a minimalistic Blosc
 The minimal Blosc consists of the next files (in `blosc/ directory
 <https://github.com/Blosc/c-blosc/tree/master/blosc>`_)::
 
-    blosc.h and blosc.c      -- the main routines
-    shuffle.h and shuffle.c  -- the shuffle code
-    blosclz.h and blosclz.c  -- the blosclz compressor
+    blosc.h and blosc.c        -- the main routines
+    shuffle*.h and shuffle*.c  -- the shuffle code
+    blosclz.h and blosclz.c    -- the blosclz compressor
 
 Just add these files to your project in order to use Blosc.  For
 information on compression and decompression routines, see `blosc.h
 <https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`_.
 
-To compile using GCC (4.4 or higher recommended) on Unix:
+To compile using GCC (4.9 or higher recommended) on Unix:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -Iblosc -lpthread
+   $ gcc -O3 -mavx2 -o myprog myprog.c blosc/*.c -Iblosc -lpthread
 
 Using Windows and MINGW:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c -Iblosc blosc\*.c
+   $ gcc -O3 -mavx2 -o myprog myprog.c -Iblosc blosc\*.c
 
-Using Windows and MSVC (2010 or higher recommended):
+Using Windows and MSVC (2013 or higher recommended):
 
 .. code-block:: console
 
@@ -167,10 +168,11 @@ Compiling the Blosc library with CMake
 ======================================
 
 Blosc can also be built, tested and installed using CMake_. Although
-this procedure is a bit more invloved than the one described above, it
-is the most general because it allows to integrate other compressors
-than BloscLZ either from libraries or from internal sources. Hence,
-serious library developers should use this way.
+this procedure might seem a bit more involved than the one described
+above, it is the most general because it allows to integrate other
+compressors than BloscLZ either from libraries or from internal
+sources. Hence, serious library developers are encouraged to use this
+way.
 
 The following procedure describes the "out of source" build.
 
