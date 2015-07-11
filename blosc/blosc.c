@@ -870,8 +870,8 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
       blocksize = MIN_BUFFERSIZE;
     }
   }
-  else if (nbytes >= L1 * typesize) {
-    blocksize = L1 * typesize;
+  else if (nbytes >= L1) {
+    blocksize = L1;
 
     /* For Zlib, increase the block sizes in a factor of 8 because it
        is meant for compression large blocks (it shows a big overhead
@@ -888,33 +888,28 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
     }
 
     if (clevel == 0) {
-      blocksize /= 16;
-    }
-    else if (clevel <= 3) {
-      blocksize /= 8;
-    }
-    else if (clevel <= 5) {
       blocksize /= 4;
     }
-    else if (clevel <= 6) {
+    else if (clevel <= 3) {
       blocksize /= 2;
     }
-    else if (clevel < 9) {
+    else if (clevel <= 5) {
       blocksize *= 1;
     }
+    else if (clevel <= 6) {
+      blocksize * 2;
+    }
+    else if (clevel < 9) {
+      blocksize *= 4;
+    }
     else {
-      blocksize *= 2;
+      blocksize *= 8;
     }
   }
 
   /* Check that blocksize is not too large */
   if (blocksize > (int32_t)nbytes) {
     blocksize = nbytes;
-  }
-
-  /* blocksize must be a multiple of the typesize */
-  if (blocksize > typesize) {
-    blocksize = blocksize / typesize * typesize;
   }
 
   return blocksize;

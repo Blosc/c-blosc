@@ -10,7 +10,10 @@
 Changes from 1.7.0 to 1.7.1
 ===========================
 
-#XXX version-specific blurb XXX#
+* New parametrization of the blocksize to be independent of the typesize.
+  This allows a speed that is smoother throughout all typesizes.  This
+  is possible due to the recent improvement of being able to shuffle
+  even if the blocksize is not an exact multiple of typesize.
 
 
 Changes from 1.6.1 to 1.7.0
