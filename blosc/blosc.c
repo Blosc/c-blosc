@@ -897,7 +897,7 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, 
       blocksize *= 1;
     }
     else if (clevel <= 6) {
-      blocksize * 2;
+      blocksize *= 2;
     }
     else if (clevel < 9) {
       blocksize *= 4;
