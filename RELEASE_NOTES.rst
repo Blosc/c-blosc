@@ -15,6 +15,8 @@ Changes from 1.7.0 to 1.7.1
   is possible due to the recent improvement of being able to shuffle
   even if the blocksize is not an exact multiple of typesize.
 
+* Allow bitshuffle to run on 1-byte typesizes.
+
 
 Changes from 1.6.1 to 1.7.0
 ===========================
