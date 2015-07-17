@@ -527,19 +527,17 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   int accel;
   int bscount;
 
-  if (typesize > 1) {
-    /* Shuffling only makes sense if typesize > 1 */
-    if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
-      shuffle(typesize, blocksize, src, tmp);
-      _tmp = tmp;
-    }
-    /* We don't allow more than 1 filter at the same time (yet) */
-    else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bscount = bitshuffle(typesize, blocksize, src, tmp, dest);
-      if (bscount < 0)
-        return bscount;
-      _tmp = tmp;
-    }
+  if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
+    /* Byte shuffling only makes sense if typesize > 1 */
+    shuffle(typesize, blocksize, src, tmp);
+    _tmp = tmp;
+  }
+  /* We don't allow more than 1 filter at the same time (yet) */
+  else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
+    bscount = bitshuffle(typesize, blocksize, src, tmp, dest);
+    if (bscount < 0)
+      return bscount;
+    _tmp = tmp;
   }
 
   /* Calculate acceleration for different compressors */
@@ -649,8 +647,8 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   char *compname;
   int bscount;
 
-  if ((typesize > 1) && ((*(context->header_flags) & BLOSC_DOSHUFFLE) || \
-                         (*(context->header_flags) & BLOSC_DOBITSHUFFLE))) {
+  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) || \
+      (*(context->header_flags) & BLOSC_DOBITSHUFFLE)) {
     _tmp = tmp;
   }
 
@@ -717,15 +715,13 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if (typesize > 1) {
-    if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
-      unshuffle(typesize, blocksize, tmp, dest);
-    }
-    else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
-      bscount = bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
-      if (bscount < 0)
-        return bscount;
-    }
+  if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
+    unshuffle(typesize, blocksize, tmp, dest);
+  }
+  else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
+    bscount = bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
+    if (bscount < 0)
+      return bscount;
   }
 
   /* Return the number of uncompressed bytes */
