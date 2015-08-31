@@ -164,6 +164,14 @@ of Makefile files (one for UNIX and the other for MinGW) with more
 complete building examples, like switching between libraries or
 internal sources for the compressors.
 
+Supported platforms
+~~~~~~~~~~~~~~~~~~~
+
+Blosc is meant to support all platforms where a C89 compliant C
+compiler can be found.  The ones that are mostly tested are Intel
+(Linux, Mac OSX and Windows) and ARM (Linux), but exotic ones as IBM
+Blue Gene Q embedded "A2" processor are reported to work too.
+
 Compiling the Blosc library with CMake
 ======================================
 
@@ -255,7 +263,7 @@ You can also disable support for some compression libraries:
   $ cmake -DDEACTIVATE_SNAPPY=ON ..
 
 Mac OSX troubleshooting
-=======================
+~~~~~~~~~~~~~~~~~~~~~~~
 
 If you run into compilation troubles when using Mac OSX, please make
 sure that you have installed the command line developer tools.  You
