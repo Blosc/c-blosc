@@ -18,8 +18,20 @@ before_script:
   - cd build_release
   - build_release_folder=`pwd`
   - cmake ..
+  
+  # Steps needed for coverage collection
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then cd ..; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then mkdir build_debug; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then cd build_debug; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then build_debug_folder=`pwd`; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ..; fi
 
 script:
   - cd ${build_release_folder}
   - cmake --build ../build_release --config Release
   - ctest
+  
+  # Report coverage
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then cd ${build_debug_folder}; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then make; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' && $CC == 'gcc' ]]; then make coveralls; fi
