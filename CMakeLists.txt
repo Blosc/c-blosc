@@ -93,9 +93,15 @@ option(PREFER_EXTERNAL_SNAPPY
     "Find and use external Snappy library instead of included sources." ON)
 option(PREFER_EXTERNAL_ZLIB
     "Find and use external zlib library instead of included sources." ON)
+# We probably don't want this to run on every build.
+option(COVERALLS "Generate coveralls data" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+if (COVERALLS)
+    include(Coveralls)
+    coveralls_turn_on_coverage()
+endif()
 
 if(NOT DEACTIVATE_LZ4)
     if(PREFER_EXTERNAL_LZ4)
@@ -259,6 +265,14 @@ configure_file(
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
+# Setup the coveralls target and tell it to gather
+# coverage data for all the lib sources.
+if (COVERALLS)
+    coveralls_setup(
+        "${LIB_SRC}" 
+        ${COVERALLS_UPLOAD}                 
+        "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
+endif()
 
 # packaging
 include(InstallRequiredSystemLibraries)
