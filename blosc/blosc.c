@@ -1616,11 +1616,12 @@ int blosc_set_nthreads(int nthreads_new)
 {
   int ret = g_threads;
 
-  /* Re-initialize Blosc */
-  blosc_destroy();
-  blosc_init();
-
-  g_threads = nthreads_new;
+  if (nthreads_new != ret){
+    /* Re-initialize Blosc */
+    blosc_destroy();
+    blosc_init();
+    g_threads = nthreads_new;
+  }
 
   return ret;
 }
