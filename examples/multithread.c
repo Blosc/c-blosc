@@ -83,9 +83,6 @@ int main(){
         return dsize;
     }
 
-    /* After using it, destroy the Blosc environment */
-    blosc_destroy();
-
     for(i=0;i<SIZE;i++){
       if(data[i] != data_dest[i]) {
 	printf("Decompressed data differs from original!\n");
@@ -95,6 +92,9 @@ int main(){
 
     printf("Succesful roundtrip!\n");
   }
+
+  /* After using it, destroy the Blosc environment */
+  blosc_destroy();
 
   return 0;
 }
