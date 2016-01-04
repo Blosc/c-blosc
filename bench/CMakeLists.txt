@@ -85,7 +85,7 @@ if(BUILD_TESTS)
 
     option(TEST_INCLUDE_BENCH_BITSHUFFLE_N "Include bench bitshuffle (multithread) in the tests" ON)
     if(TEST_INCLUDE_BENCH_BITSHUFFLE_N)
-        set(BITSHUFFLE_N_OPTS bitshuffle test 2 2097152 3 19)  # typesize=3
+        set(BITSHUFFLE_N_OPTS bitshuffle test)
         add_test(test_blosclz_bitshuffle_n bench blosclz ${BITSHUFFLE_N_OPTS})
         if (HAVE_LZ4)
             add_test(test_lz4_bitshuffle_n bench lz4 ${BITSHUFFLE_N_OPTS})
