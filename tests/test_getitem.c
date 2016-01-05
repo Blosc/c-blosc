@@ -14,7 +14,7 @@
 
 /** Test the blosc_getitem function. */
 static int test_getitem(size_t type_size, size_t num_elements,
-  size_t buffer_alignment, int compression_level, bool do_shuffle)
+  size_t buffer_alignment, int compression_level, int do_shuffle)
 {
   size_t buffer_size = type_size * num_elements;
 
@@ -96,15 +96,13 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  bool shuffle_enabled;
+  uint32_t shuffle_enabled;
   {
-    uint32_t shuffle_enabled_raw;
-    if (!blosc_test_parse_uint32_t(argv[5], &shuffle_enabled_raw) || (shuffle_enabled_raw > 1))
+    if (!blosc_test_parse_uint32_t(argv[5], &shuffle_enabled) || (shuffle_enabled > 2))
     {
       blosc_test_print_bad_arg_msg(5);
       return EXIT_FAILURE;
     }
-    shuffle_enabled = shuffle_enabled_raw == 0 ? false : true;
   }
 
   uint32_t blosc_thread_count;

@@ -10,13 +10,16 @@
 Changes from 1.7.0 to 1.7.1
 ===========================
 
+* Fixed a bug preventing bitshuffle to work correctly on getitem().
+  Now, everything with bitshuffle seems to work correctly.
+
+* Allow bitshuffle to run on 1-byte typesizes.
+
 * New parametrization of the blocksize to be independent of the
   typesize.  This allows a speed that is smoother throughout all
   typesizes.  This is possible now due to the recent improvement of
   being able to shuffle even if the blocksize is not an exact multiple
   of typesize.
-
-* Allow bitshuffle to run on 1-byte typesizes.
 
 
 Changes from 1.6.1 to 1.7.0
