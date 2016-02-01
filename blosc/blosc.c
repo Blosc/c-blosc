@@ -1116,8 +1116,8 @@ int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
                        size_t blocksize, int numinternalthreads)
 {
   int error, result;
-
   struct blosc_context context;
+
   context.threads_started = 0;
   error = initialize_context_compression(&context, clevel, doshuffle, typesize, nbytes,
                                   src, dest, destsize, blosc_compname_to_compcode(compressor),
@@ -1237,9 +1237,11 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
 int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
                          int numinternalthreads)
 {
+  int result;
   struct blosc_context context;
-  int result = blosc_run_decompression_with_context(&context, src, dest, destsize, numinternalthreads);
+
   context.threads_started = 0;
+  result = blosc_run_decompression_with_context(&context, src, dest, destsize, numinternalthreads);
 
   if (numinternalthreads > 1)
   {
