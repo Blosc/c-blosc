@@ -13,15 +13,22 @@ Changes from 1.7.0 to 1.7.1
 * Fixed a bug preventing bitshuffle to work correctly on getitem().
   Now, everything with bitshuffle seems to work correctly.
 
+* Fixed the thread initialization for blosc_decompress_ctx().  Issue
+  #158.  Thanks to Chris Webers.
+
+* Fixed a bug in the blocksize computation introduced in 1.7.0.  This
+  could have been creating segfaults.
+
 * Allow bitshuffle to run on 1-byte typesizes.
 
 * New parametrization of the blocksize to be independent of the
-  typesize.  This allows a speed that is smoother throughout all
-  typesizes.  This is possible now due to the recent improvement of
-  being able to shuffle even if the blocksize is not an exact multiple
-  of typesize.
+  typesize.  This allows a smoother speed throughout all typesizes.
 
 * lz4 and lz4hc codecs upgraded to 1.7.2 (from 1.7.0).
+
+* When calling set_nthreads() but not actually changing the number of
+  threads in the internal pool does not teardown and setup it anymore.
+  PR #153.  Thanks to Santi Villalba.
 
 
 Changes from 1.6.1 to 1.7.0
