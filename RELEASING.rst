@@ -47,13 +47,10 @@ Tagging
 Announcing
 ----------
 
-- Update the release notes in the github wiki:
-
-https://github.com/Blosc/c-blosc/wiki/Release-notes
-
 - Send an announcement to the blosc, pytables-dev, bcolz and
   comp.compression lists.  Use the ``ANNOUNCE.rst`` file as skeleton
   (possibly as the definitive version).
+
 
 Post-release actions
 --------------------

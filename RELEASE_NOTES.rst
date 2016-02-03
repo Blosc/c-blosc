@@ -1,10 +1,16 @@
 =================================
- Release notes for c-blosc 1.7.1
+ Release notes for c-blosc 1.7.2
 =================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.7.2 to 1.7.1
+===========================
+
+  #XXX version-specific blurb XXX#
 
 
 Changes from 1.7.0 to 1.7.1

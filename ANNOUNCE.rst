@@ -1,15 +1,12 @@
 ===============================================================
- Announcing c-blosc 1.7.1
+ Announcing c-blosc 1.7.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-In this release some bugs has been fixed (specially a nasty one in
-getitem() combined with bitshuffle).  Also, there is a new
-parametrization favouring better compression and smoother speed along
-different type sizes.
+  #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
