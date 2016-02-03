@@ -21,6 +21,8 @@ Changes from 1.7.0 to 1.7.1
   being able to shuffle even if the blocksize is not an exact multiple
   of typesize.
 
+* lz4 and lz4hc codecs upgraded to 1.7.2 (from 1.7.0).
+
 
 Changes from 1.6.1 to 1.7.0
 ===========================
