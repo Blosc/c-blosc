@@ -6,11 +6,14 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+In this release some bugs has been fixed (specially a nasty one in
+getitem() combined with bitshuffle).  Also, there is a new
+parametrization favouring better compression and smoother speed along
+different type sizes.
 
 For more info, please see the release notes in:
 
-https://github.com/Blosc/c-blosc/wiki/Release-notes
+https://github.com/Blosc/c-blosc/blob/master/RELEASE_NOTES.rst
 
 
 What is it?
