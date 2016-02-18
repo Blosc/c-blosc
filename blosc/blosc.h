@@ -71,7 +71,7 @@ extern "C" {
 #define BLOSC_SNAPPY_COMPNAME    "snappy"
 #define BLOSC_ZLIB_COMPNAME      "zlib"
 
-/* Codes for the different compression libraries shipped with Blosc */
+/* Codes for compression libraries shipped with Blosc (code must be < 8) */
 #define BLOSC_BLOSCLZ_LIB   0
 #define BLOSC_LZ4_LIB       1
 #define BLOSC_SNAPPY_LIB    2
@@ -83,7 +83,7 @@ extern "C" {
 #define BLOSC_SNAPPY_LIBNAME    "Snappy"
 #define BLOSC_ZLIB_LIBNAME      "Zlib"
 
-/* The codes for compressor formats shipped with Blosc (code must be < 8) */
+/* The codes for compressor formats shipped with Blosc */
 #define BLOSC_BLOSCLZ_FORMAT  BLOSC_BLOSCLZ_LIB
 #define BLOSC_LZ4_FORMAT      BLOSC_LZ4_LIB
     /* LZ4HC and LZ4 share the same format */
