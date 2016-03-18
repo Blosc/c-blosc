@@ -1,19 +1,16 @@
 ===============================================================
- Announcing c-blosc 1.4.4
+ Announcing c-blosc 1.4.5
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-* New computation of blocksize to be in sync with c-blosc 1.6.1.
-
-* New parametrization of the hash table for blosclz (synced with c-blosc
-  1.6.1)
+* LZ4 upgraded to 1.7.2 (r131).
 
 For more info, please see the release notes in:
 
-https://github.com/Blosc/c-blosc/wiki/Release-notes
+https://github.com/Blosc/c-blosc/blob/blosc-1.4.x/RELEASE_NOTES.rst
 
 
 What is it?

@@ -1,11 +1,16 @@
 ================================
- Release notes for c-blosc 1.4.4
+ Release notes for c-blosc 1.4.5
 ================================
 
 :Author: Francesc Alted
 :Contact: faltet@blosc.org
 :URL: http://www.blosc.org
 
+
+Changes from 1.4.4 to 1.4.5
+===========================
+
+* LZ4 upgraded to 1.7.2 (r131).
 
 Changes from 1.4.3 to 1.4.4
 ===========================
