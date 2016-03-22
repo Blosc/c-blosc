@@ -89,8 +89,49 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 #else
 
 #if defined(_MSC_VER) && !defined(__clang__)
-  #include <immintrin.h>  /* Needed for _xgetbv */
   #include <intrin.h>     /* Needed for __cpuid */
+
+/*  _xgetbv is only supported by VS2010 SP1 and newer versions of VS. */
+#if _MSC_FULL_VER >= 160040219
+  #include <immintrin.h>  /* Needed for _xgetbv */
+#elif defined(_M_IX86)
+
+/*  Implement _xgetbv for VS2008 and VS2010 RTM with 32-bit (x86) targets. */
+
+static inline uint64_t
+_xgetbv(uint32_t xcr) {
+    uint32_t xcr0, xcr1;
+    __asm {
+        mov        ecx, xcr
+        _asm _emit 0x0f _asm _emit 0x01 _asm _emit 0xd0
+        mov        xcr0, eax
+        mov        xcr1, edx
+    }
+    return ((uint64_t)xcr1 << 32) | xcr0;
+}
+
+#elif defined(_M_X64)
+
+/*  Implement _xgetbv for VS2008 and VS2010 RTM with 64-bit (x64) targets.
+    These compilers don't support any of the newer acceleration ISAs
+    (e.g., AVX2) supported by blosc, and all x64 hardware supports SSE2
+    which means we can get away with returning a hard-coded value from
+    this implementation of _xgetbv. */
+
+static inline uint64_t
+_xgetbv(uint32_t xcr) {
+    /* A 64-bit OS must have XMM save support. */
+    return xcr == 0 ? (1UL << 1) : 0UL;
+}
+
+#else
+
+/* Hardware detection for any other MSVC targets (e.g., ARM)
+   isn't implemented at this time. */
+#error This version of c-blosc only supports x86 and x64 targets with MSVC.
+
+#endif /* _MSC_FULL_VER >= 160040219 */
+  
 #else
 
 /*  Implement the __cpuid and __cpuidex intrinsics for GCC, Clang,
@@ -141,7 +182,7 @@ _xgetbv(uint32_t xcr) {
   return ((uint64_t)edx << 32) | eax;
 }
 
-#endif /* defined(_MSC_VER) */
+#endif /* defined(_MSC_FULL_VER) */
 
 #ifndef _XCR_XFEATURE_ENABLED_MASK
 #define _XCR_XFEATURE_ENABLED_MASK 0x0
