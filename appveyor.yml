@@ -8,14 +8,30 @@ init:
 # It's incrementally automatically like travis-ci but allows custom formatting.
 version: '{build}'
 
+environment:
+  matrix:
+    - GENERATOR: "Visual Studio 9 2008"
+      CONFIG: Release
+
+    - GENERATOR: "Visual Studio 9 2008 Win64"
+      CONFIG: Release
+
+    - GENERATOR: "Visual Studio 10 2010"
+      CONFIG: Release
+
+    - GENERATOR: "Visual Studio 10 2010 Win64"
+      CONFIG: Release
+
+    - GENERATOR: "Visual Studio 12 2013"
+      CONFIG: Release
+
+    - GENERATOR: "Visual Studio 12 Win64"
+      CONFIG: Release
+
 build_script:
-  - cmd: mkdir build
-  - cmd: cd build
-  - cmd: cmake -G "Visual Studio 12 Win64" ..
-  - cmd: cmake --build . --config Release
-  # Disable CPack for now as it conflicts with the Chocolatey 'cpack' alias
-  # for 'choco pack' and causes the build to fail.
-  #- cmd: cpack
+  - cmake "-G%GENERATOR%" -H. -B_builds
+  - cmake --build _builds --config "%CONFIG%"
 
 test_script:
-  - cmd: ctest
+  - ps: cd _builds
+  - ctest -VV -C "%CONFIG%"
