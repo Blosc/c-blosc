@@ -14,7 +14,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -110,18 +109,18 @@ static void blosc_test_fill_random(void* const ptr, const size_t size)
 */
 
 /** Parse a `int32_t` value from a string, checking for overflow. */
-static bool blosc_test_parse_uint32_t(const char* const str, uint32_t* value)
+static int blosc_test_parse_uint32_t(const char* const str, uint32_t* value)
 {
   char* str_end;
   int32_t signed_value = strtol(str, &str_end, 10);
   if (signed_value < 0 || *str_end)
   {
-    return false;
+    return 0;
   }
   else
   {
     *value = (uint32_t)signed_value;
-    return true;
+    return 1;
   }
 }
 
