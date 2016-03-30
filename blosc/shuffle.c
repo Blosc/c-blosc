@@ -98,8 +98,7 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 
 /*  Implement _xgetbv for VS2008 and VS2010 RTM with 32-bit (x86) targets. */
 
-static inline uint64_t
-_xgetbv(uint32_t xcr) {
+static uint64_t _xgetbv(uint32_t xcr) {
     uint32_t xcr0, xcr1;
     __asm {
         mov        ecx, xcr
@@ -190,27 +189,39 @@ _xgetbv(uint32_t xcr) {
 
 static blosc_cpu_features blosc_get_cpu_features(void) {
   blosc_cpu_features result = BLOSC_HAVE_NOTHING;
+  int32_t max_basic_function_id;
   /* Holds the values of eax, ebx, ecx, edx set by the `cpuid` instruction */
   int32_t cpu_info[4];
+  int sse2_available;
+  int sse3_available;
+  int ssse3_available;
+  int sse41_available;
+  int sse42_available;
+  int xsave_available;
+  int xsave_enabled_by_os;
+  int avx2_available = 0;
+  int avx512bw_available = 0;
+  int xmm_state_enabled = 0;
+  int ymm_state_enabled = 0;
+  int zmm_state_enabled = 0;
+  uint64_t xcr0_contents;
 
   /* Get the number of basic functions available. */
   __cpuid(cpu_info, 0);
-  int32_t max_basic_function_id = cpu_info[0];
+  max_basic_function_id = cpu_info[0];
 
   /* Check for SSE-based features and required OS support */
   __cpuid(cpu_info, 1);
-  const bool sse2_available = (cpu_info[3] & (1 << 26)) != 0;
-  const bool sse3_available = (cpu_info[2] & (1 << 0)) != 0;
-  const bool ssse3_available = (cpu_info[2] & (1 << 9)) != 0;
-  const bool sse41_available = (cpu_info[2] & (1 << 19)) != 0;
-  const bool sse42_available = (cpu_info[2] & (1 << 20)) != 0;
+  sse2_available = (cpu_info[3] & (1 << 26)) != 0;
+  sse3_available = (cpu_info[2] & (1 << 0)) != 0;
+  ssse3_available = (cpu_info[2] & (1 << 9)) != 0;
+  sse41_available = (cpu_info[2] & (1 << 19)) != 0;
+  sse42_available = (cpu_info[2] & (1 << 20)) != 0;
 
-  const bool xsave_available = (cpu_info[2] & (1 << 26)) != 0;
-  const bool xsave_enabled_by_os = (cpu_info[2] & (1 << 27)) != 0;
+  xsave_available = (cpu_info[2] & (1 << 26)) != 0;
+  xsave_enabled_by_os = (cpu_info[2] & (1 << 27)) != 0;
 
   /* Check for AVX-based features, if the processor supports extended features. */
-  bool avx2_available = false;
-  bool avx512bw_available = false;
   if (max_basic_function_id >= 7) {
     __cpuid(cpu_info, 7);
     avx2_available = (cpu_info[1] & (1 << 5)) != 0;
@@ -221,17 +232,13 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
       by the OS (in which case using them would crash the process or system).
       If xsave is available and enabled by the OS, check the contents of the
       extended control register XCR0 to see if the CPU features are enabled. */
-  bool xmm_state_enabled = false;
-  bool ymm_state_enabled = false;
-  bool zmm_state_enabled = false;
-
 #if defined(_XCR_XFEATURE_ENABLED_MASK)
   if (xsave_available && xsave_enabled_by_os && (
       sse2_available || sse3_available || ssse3_available
       || sse41_available || sse42_available
       || avx2_available || avx512bw_available)) {
     /* Determine which register states can be restored by the OS. */
-    uint64_t xcr0_contents = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+    xcr0_contents = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
 
     xmm_state_enabled = (xcr0_contents & (1UL << 1)) != 0;
     ymm_state_enabled = (xcr0_contents & (1UL << 2)) != 0;
@@ -284,9 +291,10 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 
 #endif
 
-static shuffle_implementation_t
-get_shuffle_implementation() {
+static shuffle_implementation_t get_shuffle_implementation() {
   blosc_cpu_features cpu_features = blosc_get_cpu_features();
+  shuffle_implementation_t impl_generic;
+
 #if defined(SHUFFLE_AVX2_ENABLED)
   if (cpu_features & BLOSC_HAVE_AVX2) {
     shuffle_implementation_t impl_avx2;
@@ -313,7 +321,6 @@ get_shuffle_implementation() {
 
   /*  Processor doesn't support any of the hardware-accelerated implementations,
       so use the generic implementation. */
-  shuffle_implementation_t impl_generic;
   impl_generic.name = "generic";
   impl_generic.shuffle = (shuffle_func)shuffle_generic;
   impl_generic.unshuffle = (unshuffle_func)unshuffle_generic;
