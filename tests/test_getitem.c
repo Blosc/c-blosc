@@ -17,6 +17,7 @@ static int test_getitem(size_t type_size, size_t num_elements,
   size_t buffer_alignment, int compression_level, int do_shuffle)
 {
   size_t buffer_size = type_size * num_elements;
+  int exit_code;
 
   /* Allocate memory for the test. */
   void* original = blosc_test_malloc(buffer_alignment, buffer_size);
@@ -34,7 +35,7 @@ static int test_getitem(size_t type_size, size_t num_elements,
 
   /* The round-tripped data matches the original data when the
      result of memcmp is 0. */
-  int exit_code = memcmp(original, result, buffer_size) ?
+  exit_code = memcmp(original, result, buffer_size) ?
     EXIT_FAILURE : EXIT_SUCCESS;
 
   /* Free allocated memory. */
@@ -50,6 +51,14 @@ static int test_getitem(size_t type_size, size_t num_elements,
 
 int main(int argc, char **argv)
 {
+  uint32_t type_size;
+  uint32_t num_elements;
+  uint32_t buffer_align_size;
+  uint32_t compression_level;
+  uint32_t shuffle_enabled;
+  uint32_t blosc_thread_count;
+  int result;
+
   /*  argv[1]: sizeof(element type)
       argv[2]: number of elements
       argv[3]: buffer alignment
@@ -66,21 +75,18 @@ int main(int argc, char **argv)
   }
 
   /* Parse arguments */
-  uint32_t type_size;
   if (!blosc_test_parse_uint32_t(argv[1], &type_size) || (type_size < 1))
   {
     blosc_test_print_bad_arg_msg(1);
     return EXIT_FAILURE;
   }
 
-  uint32_t num_elements;
   if (!blosc_test_parse_uint32_t(argv[2], &num_elements) || (num_elements < 1))
   {
     blosc_test_print_bad_arg_msg(2);
     return EXIT_FAILURE;
   }
 
-  uint32_t buffer_align_size;
   if (!blosc_test_parse_uint32_t(argv[3], &buffer_align_size)
     || (buffer_align_size & (buffer_align_size - 1))
     || (buffer_align_size < sizeof(void*)))
@@ -89,14 +95,12 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  uint32_t compression_level;
   if (!blosc_test_parse_uint32_t(argv[4], &compression_level) || (compression_level > 9))
   {
     blosc_test_print_bad_arg_msg(4);
     return EXIT_FAILURE;
   }
 
-  uint32_t shuffle_enabled;
   {
     if (!blosc_test_parse_uint32_t(argv[5], &shuffle_enabled) || (shuffle_enabled > 2))
     {
@@ -105,7 +109,6 @@ int main(int argc, char **argv)
     }
   }
 
-  uint32_t blosc_thread_count;
   if (!blosc_test_parse_uint32_t(argv[6], &blosc_thread_count) || (blosc_thread_count < 1))
   {
     blosc_test_print_bad_arg_msg(6);
@@ -117,7 +120,7 @@ int main(int argc, char **argv)
   blosc_set_nthreads(blosc_thread_count);
 
   /* Run the test. */
-  int result = test_getitem(type_size, num_elements, buffer_align_size,
+  result = test_getitem(type_size, num_elements, buffer_align_size,
     compression_level, shuffle_enabled);
 
   /* Cleanup blosc resources. */

@@ -87,6 +87,11 @@ static int test_shuffle_roundtrip_avx2(size_t type_size, size_t num_elements,
 
 int main(int argc, char **argv)
 {
+  uint32_t type_size;
+  uint32_t num_elements;
+  uint32_t buffer_align_size;
+  uint32_t test_type;
+
   /*  argv[1]: sizeof(element type)
       argv[2]: number of elements
       argv[3]: buffer alignment
@@ -101,21 +106,18 @@ int main(int argc, char **argv)
   }
 
   /* Parse arguments */
-  uint32_t type_size;
   if (!blosc_test_parse_uint32_t(argv[1], &type_size) || (type_size < 1))
   {
     blosc_test_print_bad_arg_msg(1);
     return EXIT_FAILURE;
   }
 
-  uint32_t num_elements;
   if (!blosc_test_parse_uint32_t(argv[2], &num_elements) || (num_elements < 1))
   {
     blosc_test_print_bad_arg_msg(2);
     return EXIT_FAILURE;
   }
 
-  uint32_t buffer_align_size;
   if (!blosc_test_parse_uint32_t(argv[3], &buffer_align_size)
     || (buffer_align_size & (buffer_align_size - 1))
     || (buffer_align_size < sizeof(void*)))
@@ -124,7 +126,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  uint32_t test_type;
   if (!blosc_test_parse_uint32_t(argv[4], &test_type) || (test_type > 2))
   {
     blosc_test_print_bad_arg_msg(4);
