@@ -1119,9 +1119,10 @@ int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
   struct blosc_context context;
 
   context.threads_started = 0;
-  error = initialize_context_compression(&context, clevel, doshuffle, typesize, nbytes,
-                                  src, dest, destsize, blosc_compname_to_compcode(compressor),
-                                  blocksize, numinternalthreads);
+  error = initialize_context_compression(&context, clevel, doshuffle, typesize,
+					 nbytes, src, dest, destsize,
+					 blosc_compname_to_compcode(compressor),
+					 blocksize, numinternalthreads);
   if (error < 0) { return error; }
 
   error = write_compression_header(&context, clevel, doshuffle);
@@ -1255,7 +1256,16 @@ int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
 /* The public routine for decompression.  See blosc.h for docstrings. */
 int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
-  return blosc_run_decompression_with_context(g_global_context, src, dest, destsize, g_threads);
+  int result;
+
+  pthread_mutex_lock(&global_comp_mutex);
+
+  result = blosc_run_decompression_with_context(g_global_context, src, dest,
+						destsize, g_threads);
+
+  pthread_mutex_unlock(&global_comp_mutex);
+
+  return result;
 }
 
 
