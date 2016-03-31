@@ -1,5 +1,5 @@
 =================================
- Release notes for c-blosc 1.7.2
+ Release notes for c-blosc 1.8.0
 =================================
 
 :Author: Francesc Alted
@@ -7,10 +7,19 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.7.2 to 1.7.1
+Changes from 1.7.1 to 1.8.0
 ===========================
 
-  #XXX version-specific blurb XXX#
+* The code is (again) compatible with VS2008 and VS2010.  This is
+  important for compatibility with Python 2.6/2.7/3.3/3.4.
+
+* Introduced a new global lock during blosc_decompress() operation.
+  As the blosc_compress() was already guarded by a global lock, this
+  means that the compression/decompression is again thread safe.
+  However, when using C-Blosc from multi-threaded environments, it is
+  important to keep using the *_ctx() functions for performance
+  reasons.  NOTE: _ctx() functions will be replaced by more powerful
+  ones in C-Blosc 2.0.
 
 
 Changes from 1.7.0 to 1.7.1

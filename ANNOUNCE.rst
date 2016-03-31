@@ -1,12 +1,22 @@
 ===============================================================
- Announcing c-blosc 1.7.2
+ Announcing c-blosc 1.8.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+This version introduces a new global lock during blosc_decompress()
+operation.  As the blosc_compress() was already guarded by a global
+lock, this means that the compression/decompression is again thread
+safe.  However, when using C-Blosc from multi-threaded environments,
+it is important to keep using the *_ctx() functions for performance
+reasons.  NOTE: _ctx() functions will be replaced by more powerful
+ones in C-Blosc 2.0.
+
+Last but not least, the code is (again) compatible with VS2008 and
+VS2010.  This is important for compatibility with Python
+2.6/2.7/3.3/3.4 which use those compilers.
 
 For more info, please see the release notes in:
 
