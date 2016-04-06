@@ -75,7 +75,13 @@ typedef enum {
     implementations supported by the host processor. */
 #if defined(SHUFFLE_AVX2_ENABLED) || defined(SHUFFLE_SSE2_ENABLED)    /* Intel/i686 */
 
-#ifdef HAVE_CPU_FEAT_INTRIN
+/*  Disabled the __builtin_cpu_supports() call, as it has issues with
+    new versions of gcc (like 5.3.1 in forthcoming ubuntu/xenial:
+      "undefined symbol: __cpu_model"
+    For a similar report, see:
+    https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/ZM2L65WIZEEQHHLFERZYD5FAG7QY2OGB/
+*/
+#if defined(HAVE_CPU_FEAT_INTRIN) && 0
 static blosc_cpu_features blosc_get_cpu_features(void) {
   blosc_cpu_features cpu_features = BLOSC_HAVE_NOTHING;
   if (__builtin_cpu_supports("sse2")) {

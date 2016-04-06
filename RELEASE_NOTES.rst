@@ -10,7 +10,9 @@
 Changes from 1.8.0 to 1.8.1
 ===========================
 
-#XXX version-specific blurb XXX#
+* Disable the use of __builtin_cpu_supports() for GCC 5.3.1
+  compatibility.  Details in:
+  https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/ZM2L65WIZEEQHHLFERZYD5FAG7QY2OGB/
 
 
 Changes from 1.7.1 to 1.8.0
