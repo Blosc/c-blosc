@@ -31,8 +31,6 @@
 #include <blosc.h>
 
 #define SIZE 100*100*100
-#define SHAPE {100,100,100}
-#define CHUNKSHAPE {1,100,100}
 
 int main(){
   static float data[SIZE];
