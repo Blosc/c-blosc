@@ -1,10 +1,16 @@
-=================================
- Release notes for C-Blosc 1.8.1
-=================================
+===========================
+ Release notes for C-Blosc
+===========================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.8.1 to 1.8.2
+===========================
+
+#XXX version-specific blurb XXX#
 
 
 Changes from 1.8.0 to 1.8.1

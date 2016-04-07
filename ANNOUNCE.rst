@@ -1,14 +1,12 @@
 ===============================================================
- Announcing c-blosc 1.8.1
+ Announcing c-blosc 1.8.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a patch release for disabling the use of
-__builtin_cpu_supports() call for comaptibilty with GCC 5.3.1 (the one
-in forthcoming Ubuntu/Xenial).  Details in:
+ #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
