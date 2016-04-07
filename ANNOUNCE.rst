@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+This is a patch release for disabling the use of
+__builtin_cpu_supports() call for comaptibilty with GCC 5.3.1 (the one
+in forthcoming Ubuntu/Xenial).  Details in:
 
 For more info, please see the release notes in:
 
