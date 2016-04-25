@@ -153,6 +153,18 @@ BLOSC_EXPORT void blosc_destroy(void);
   value is zero and you should discard the contents of the `dest`
   buffer.
 
+  NOTE 1: Since C-Blosc 1.8.2, setting the BLOSC_NOLOCK environment
+  variable will make blosc_compress() to call blosc_compress_ctx()
+  under the hood, with the `compressor`, `blocksize` and
+  `numinternalthreads` parameters set to the same as the last calls to
+  blosc_set_compressor(), blosc_set_blocksize() and
+  blosc_set_nthreads().
+
+  NOTE 2: Since C-Blosc 1.8.2, setting the BLOSC_NTHREADS environment
+  variable to an integer will call blosc_set_nthreads(BLOSC_NTHREADS)
+  under the hood before the proper compression process starts, so
+  making blosc_compress() to use this number of threads internally.
+
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report it back
   together with the buffer data causing this and compression settings.
@@ -180,13 +192,6 @@ BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
   A negative return value means that an internal error happened.  This
   should never happen.  If you see this, please report it back
   together with the buffer data causing this and compression settings.
-
-  NOTE: Since C-Blosc 1.8.2, setting the BLOSC_NOLOCK environment
-  variable will make blosc_compress() to call blosc_compress_ctx()
-  under the hood, with the `compressor`, `blocksize` and
-  `numinternalthreads` parameters set to the same as the last calls to
-  blosc_set_compressor(), blosc_set_blocksize() and
-  blosc_set_nthreads().
 */
 BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
                                     size_t nbytes, const void* src, void* dest,
@@ -201,6 +206,16 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
 
   Decompression is memory safe and guaranteed not to write the `dest`
   buffer more than what is specified in `destsize`.
+
+  NOTE1: Since C-Blosc 1.8.2, setting the BLOSC_NOLOCK environment
+  variable will make blosc_decompress() to call blosc_decompress_ctx()
+  under the hood, with the `numinternalthreads` parameter set to the
+  same value as the last call to blosc_set_nthreads().
+
+  NOTE 2: Since C-Blosc 1.8.2, setting the BLOSC_NTHREADS environment
+  variable to an integer will call blosc_set_nthreads(BLOSC_NTHREADS)
+  under the hood before the proper decompression process starts, so
+  making blosc_decompress() to use this number of threads internally.
 
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
@@ -225,11 +240,6 @@ BLOSC_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
   will be returned instead.
-
-  NOTE: Since C-Blosc 1.8.2, setting the BLOSC_NOLOCK environment
-  variable will make blosc_decompress() to call blosc_decompress_ctx()
-  under the hood, with the `numinternalthreads` parameter set to the
-  same value as the last call to blosc_set_nthreads().
 */
 BLOSC_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
                                       size_t destsize, int numinternalthreads);

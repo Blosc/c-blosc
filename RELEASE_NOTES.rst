@@ -14,14 +14,20 @@ Changes from 1.8.1 to 1.8.2
   will be used internally during compression/decompression (set by
   existing blosc_set_nthreads()).
 
-* From now on, when the BLOSC_NOLOCK environment variable is set (to
-  any value), the calls to blosc_compress() and blosc_decompress()
-  will call blosc_compress_ctx() and blosc_decompress_ctx() under the
-  hood so as to avoid the internal locks.  See blosc.h for details.
-  This allows multi-threaded apps calling the non _ctx() functions to
-  avoid the internal locks in C-Blosc.  For the not multi-threaded app
+* Now, when the BLOSC_NOLOCK environment variable is set (to any
+  value), the calls to blosc_compress() and blosc_decompress() will
+  call blosc_compress_ctx() and blosc_decompress_ctx() under the hood
+  so as to avoid the internal locks.  See blosc.h for details.  This
+  allows multi-threaded apps calling the non _ctx() functions to avoid
+  the internal locks in C-Blosc.  For the not multi-threaded app
   though, it is in general slower to call the _ctx() functions so the
   use of BLOSC_NOLOCK is discouraged.
+
+* In the same vein, from now on, when the BLOSC_NTHREADS environment
+  variable is set to an integer, every call to blosc_compress() and
+  blosc_decompress() will call blosc_set_nthreads(BLOSC_NTHREADS)
+  before the actuall compression/decompression process.  See blosc.h
+  for details.
 
 
 Changes from 1.8.0 to 1.8.1

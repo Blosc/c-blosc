@@ -9,6 +9,8 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1144,6 +1146,18 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 {
   int error;
   int result;
+  char* nthreads_str;
+  long nthreads;
+
+  /* Check for a BLOSC_NTHREADS environment variable */
+  nthreads_str = getenv("BLOSC_NTHREADS");
+  if (nthreads_str != NULL) {
+    nthreads = strtol(nthreads_str, NULL, 10);
+    if ((nthreads != EINVAL) && (nthreads > 0)) {
+      result = blosc_set_nthreads((int)nthreads);
+      if (result < 0) { return result; }
+    }
+  }
 
   /* Check for a BLOSC_NOLOCK environment variable */
   if (getenv("BLOSC_NOLOCK") != NULL) {
@@ -1267,6 +1281,18 @@ int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
 int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   int result;
+  char* nthreads_str;
+  long nthreads;
+
+  /* Check for a BLOSC_NTHREADS environment variable */
+  nthreads_str = getenv("BLOSC_NTHREADS");
+  if (nthreads_str != NULL) {
+    nthreads = strtol(nthreads_str, NULL, 10);
+    if ((nthreads != EINVAL) && (nthreads > 0)) {
+      result = blosc_set_nthreads((int)nthreads);
+      if (result < 0) { return result; }
+    }
+  }
 
   /* Check for a BLOSC_NOLOCK environment variable */
   if (getenv("BLOSC_NOLOCK") != NULL) {
