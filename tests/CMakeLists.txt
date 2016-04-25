@@ -7,6 +7,14 @@ link_directories(${PROJECT_BINARY_DIR}/blosc)
 
 # targets and tests
 foreach(source ${SOURCES})
+    get_filename_component(target ${source} NAME_WE)
+
+    # test_nolock will be enable only for Unix
+    if(target STREQUAL test_nolock AND WIN32)
+        message("Skipping ${source} test on Windows systems")
+        continue()
+    endif()
+
     # Enable support for testing accelerated shuffles
     if(COMPILER_SUPPORT_SSE2)
         # Define a symbol so tests for SSE2 shuffle/unshuffle will be compiled in.
@@ -21,7 +29,6 @@ foreach(source ${SOURCES})
 #            APPEND PROPERTY COMPILE_DEFINITIONS SHUFFLE_AVX2_ENABLED)
 #    endif(COMPILER_SUPPORT_AVX2)
 
-    get_filename_component(target ${source} NAME_WE)
     add_executable(${target} ${source})
 
     # Define the BLOSC_TESTING symbol so normally-hidden functions

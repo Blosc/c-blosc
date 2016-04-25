@@ -1145,6 +1145,16 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   int error;
   int result;
 
+  /* Check for a BLOSC_NOLOCK environment variable */
+  if (getenv("BLOSC_NOLOCK") != NULL) {
+    char *compname;
+    blosc_compcode_to_compname(g_compressor, &compname);
+    result = blosc_compress_ctx(clevel, doshuffle, typesize,
+				nbytes, src, dest, destsize,
+				compname, g_force_blocksize, g_threads);
+    return result;
+  }
+
   pthread_mutex_lock(&global_comp_mutex);
 
   error = initialize_context_compression(g_global_context, clevel, doshuffle, typesize, nbytes,
@@ -1257,6 +1267,12 @@ int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
 int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   int result;
+
+  /* Check for a BLOSC_NOLOCK environment variable */
+  if (getenv("BLOSC_NOLOCK") != NULL) {
+    result = blosc_decompress_ctx(src, dest, destsize, g_threads);
+    return result;
+  }
 
   pthread_mutex_lock(&global_comp_mutex);
 
