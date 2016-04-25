@@ -234,6 +234,13 @@ BLOSC_EXPORT int blosc_getitem(const void *src, int start, int nitems, void *des
 
 
 /**
+  Returns the current number of threads that are used for
+  compression/decompression.
+  */
+BLOSC_EXPORT int blosc_get_nthreads(void);
+
+
+/**
   Initialize a pool of threads for compression/decompression.  If
   `nthreads` is 1, then the serial version is chosen and a possible
   previous existing pool is ended.  If this is not called, `nthreads`

@@ -1633,6 +1633,13 @@ static int init_threads(struct blosc_context* context)
   return(0);
 }
 
+int blosc_get_nthreads(void)
+{
+  int ret = g_threads;
+
+  return ret;
+}
+
 int blosc_set_nthreads(int nthreads_new)
 {
   int ret = g_threads;

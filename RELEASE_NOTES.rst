@@ -10,7 +10,9 @@
 Changes from 1.8.1 to 1.8.2
 ===========================
 
-#XXX version-specific blurb XXX#
+* New blosc_get_nthreads() function to get the number of threads that
+  will be used internally during compression/decompression (set by
+  existing blosc_set_nthreads()).
 
 
 Changes from 1.8.0 to 1.8.1
