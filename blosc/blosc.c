@@ -9,6 +9,8 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1144,6 +1146,46 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 {
   int error;
   int result;
+  char* envvar;
+
+  /* Check for a BLOSC_COMPRESSOR environment variable */
+  envvar = getenv("BLOSC_COMPRESSOR");
+  if (envvar != NULL) {
+    result = blosc_set_compressor(envvar);
+    if (result < 0) { return result; }
+  }
+
+  /* Check for a BLOSC_COMPRESSOR environment variable */
+  envvar = getenv("BLOSC_BLOCKSIZE");
+  if (envvar != NULL) {
+    long blocksize;
+    blocksize = strtol(envvar, NULL, 10);
+    if ((blocksize != EINVAL) && (blocksize > 0)) {
+      blosc_set_blocksize((size_t)blocksize);
+    }
+  }
+
+  /* Check for a BLOSC_NTHREADS environment variable */
+  envvar = getenv("BLOSC_NTHREADS");
+  if (envvar != NULL) {
+    long nthreads;
+    nthreads = strtol(envvar, NULL, 10);
+    if ((nthreads != EINVAL) && (nthreads > 0)) {
+      result = blosc_set_nthreads((int)nthreads);
+      if (result < 0) { return result; }
+    }
+  }
+
+  /* Check for a BLOSC_NOLOCK environment variable */
+  envvar = getenv("BLOSC_NOLOCK");
+  if (envvar != NULL) {
+    char *compname;
+    blosc_compcode_to_compname(g_compressor, &compname);
+    result = blosc_compress_ctx(clevel, doshuffle, typesize,
+				nbytes, src, dest, destsize,
+				compname, g_force_blocksize, g_threads);
+    return result;
+  }
 
   pthread_mutex_lock(&global_comp_mutex);
 
@@ -1257,6 +1299,25 @@ int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
 int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   int result;
+  char* envvar;
+  long nthreads;
+
+  /* Check for a BLOSC_NTHREADS environment variable */
+  envvar = getenv("BLOSC_NTHREADS");
+  if (envvar != NULL) {
+    nthreads = strtol(envvar, NULL, 10);
+    if ((nthreads != EINVAL) && (nthreads > 0)) {
+      result = blosc_set_nthreads((int)nthreads);
+      if (result < 0) { return result; }
+    }
+  }
+
+  /* Check for a BLOSC_NOLOCK environment variable */
+  envvar = getenv("BLOSC_NOLOCK");
+  if (envvar != NULL) {
+    result = blosc_decompress_ctx(src, dest, destsize, g_threads);
+    return result;
+  }
 
   pthread_mutex_lock(&global_comp_mutex);
 
@@ -1679,6 +1740,14 @@ int blosc_set_nthreads_(struct blosc_context* context)
   return context->numthreads;
 }
 
+char* blosc_get_compressor(void)
+{
+  char* compname;
+  blosc_compcode_to_compname(g_compressor, &compname);
+
+  return compname;
+}
+
 int blosc_set_compressor(const char *compname)
 {
   int code = blosc_compname_to_compcode(compname);
@@ -1832,6 +1901,12 @@ char *blosc_cbuffer_complib(const void *cbuffer)
   return complib;
 }
 
+/* Get the internal blocksize to be used during compression.  0 means
+   that an automatic blocksize is computed internally. */
+int blosc_get_blocksize(void)
+{
+  return (int)g_force_blocksize;
+}
 
 /* Force the use of a specific blocksize.  If 0, an automatic
    blocksize will be used (the default). */
