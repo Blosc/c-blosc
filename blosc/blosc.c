@@ -1901,6 +1901,12 @@ char *blosc_cbuffer_complib(const void *cbuffer)
   return complib;
 }
 
+/* Get the internal blocksize to be used during compression.  0 means
+   that an automatic blocksize is computed internally. */
+int blosc_get_blocksize(void)
+{
+  return (int)g_force_blocksize;
+}
 
 /* Force the use of a specific blocksize.  If 0, an automatic
    blocksize will be used (the default). */

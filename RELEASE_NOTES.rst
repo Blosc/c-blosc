@@ -12,11 +12,15 @@ Changes from 1.8.1 to 1.8.2
 
 * New blosc_get_nthreads() function to get the number of threads that
   will be used internally during compression/decompression (set by
-  existing blosc_set_nthreads()).
+  already existing blosc_set_nthreads()).
 
 * New blosc_get_compressor() function to get the compressor that will
-  be used internally during compression (set by existing
+  be used internally during compression (set by already existing
   blosc_set_compressor()).
+
+* New blosc_get_blocksize() function to get the internal blocksize to
+  be used during compression (set by already existing
+  blosc_set_blocksize()).
 
 * Now, when the BLOSC_NOLOCK environment variable is set (to any
   value), the calls to blosc_compress() and blosc_decompress() will

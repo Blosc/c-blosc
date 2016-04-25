@@ -75,6 +75,18 @@ static char *test_nthreads() {
   return 0;
 }
 
+static char *test_blocksize() {
+  int blocksize;
+
+  blocksize = blosc_get_blocksize();
+  mu_assert("ERROR: get_blocksize incorrect", blocksize == 0);
+
+  blosc_set_blocksize(4096);
+  blocksize = blosc_get_blocksize();
+  mu_assert("ERROR: get_blocksize incorrect", blocksize == 4096);
+  return 0;
+}
+
 
 static char *all_tests() {
   mu_run_test(test_cbuffer_sizes);
@@ -82,6 +94,7 @@ static char *all_tests() {
   mu_run_test(test_cbuffer_versions);
   mu_run_test(test_cbuffer_complib);
   mu_run_test(test_nthreads);
+  mu_run_test(test_blocksize);
   return 0;
 }
 

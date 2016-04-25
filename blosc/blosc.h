@@ -434,6 +434,9 @@ BLOSC_EXPORT char *blosc_cbuffer_complib(const void *cbuffer);
 
 *********************************************************************/
 
+/* Get the internal blocksize to be used during compression.  0 means
+   that an automatic blocksize is computed internally. */
+BLOSC_EXPORT int blosc_get_blocksize(void);
 
 /**
   Force the use of a specific blocksize.  If 0, an automatic
