@@ -14,6 +14,10 @@ Changes from 1.8.1 to 1.8.2
   will be used internally during compression/decompression (set by
   existing blosc_set_nthreads()).
 
+* New blosc_get_compressor() function to get the compressor that will
+  be used internally during compression (set by existing
+  blosc_set_compressor()).
+
 * Now, when the BLOSC_NOLOCK environment variable is set (to any
   value), the calls to blosc_compress() and blosc_decompress() will
   call blosc_compress_ctx() and blosc_decompress_ctx() under the hood

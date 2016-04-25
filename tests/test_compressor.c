@@ -1,7 +1,7 @@
 /*********************************************************************
   Blosc - Blocked Shuffling and Compression Library
 
-  Unit tests for BLOSC_NTHREADS environment variable in Blosc.
+  Unit tests for BLOSC_COMPRESSOR environment variable in Blosc.
 
   Creation date: 2016-04-25
   Author: Francesc Alted <francesc@blosc.org>
@@ -25,20 +25,21 @@ size_t size = 4 * 1000 * 1000;             /* must be divisible by 4 */
 
 /* Check just compressing */
 static char *test_compress() {
-  int nthreads;
+  char* compressor;
 
-  /* Before any blosc_compress() or blosc_decompress() the number of
-     threads must be 1 */
-  nthreads = blosc_get_nthreads();
-  mu_assert("ERROR: get_nthreads (compress, before) incorrect", nthreads == 1);
+  /* Before any blosc_compress() the compressor must be blosclz */
+  compressor = blosc_get_compressor();
+  mu_assert("ERROR: get_compressor (compress, before) incorrect",
+	    strcmp(compressor, "blosclz") == 0);
 
   /* Get a compressed buffer */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
                           dest, size+15);
   mu_assert("ERROR: cbytes is not 0", cbytes == 0);
 
-  nthreads = blosc_get_nthreads();
-  mu_assert("ERROR: get_nthreads (compress, after) incorrect", nthreads == 3);
+  compressor = blosc_get_compressor();
+  mu_assert("ERROR: get_compressor (compress, after) incorrect",
+	    strcmp(compressor, "lz4") == 0);
 
   return 0;
 }
@@ -46,25 +47,28 @@ static char *test_compress() {
 
 /* Check compressing + decompressing */
 static char *test_compress_decompress() {
-  int nthreads;
+  char* compressor;
 
-  nthreads = blosc_get_nthreads();
-  mu_assert("ERROR: get_nthreads incorrect", nthreads == 3);
+  compressor = blosc_get_compressor();
+  mu_assert("ERROR: get_compressor incorrect",
+	    strcmp(compressor, "lz4") == 0);
 
   /* Get a compressed buffer */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
                           dest, size+16);
   mu_assert("ERROR: cbytes is not correct", cbytes == size+16);
 
-  nthreads = blosc_get_nthreads();
-  mu_assert("ERROR: get_nthreads incorrect", nthreads == 3);
+  compressor = blosc_get_compressor();
+  mu_assert("ERROR: get_compressor incorrect",
+	    strcmp(compressor, "lz4") == 0);
 
   /* Decompress the buffer */
   nbytes = blosc_decompress(dest, dest2, size);
   mu_assert("ERROR: nbytes incorrect(1)", nbytes == size);
 
-  nthreads = blosc_get_nthreads();
-  mu_assert("ERROR: get_nthreads incorrect", nthreads == 3);
+  compressor = blosc_get_compressor();
+  mu_assert("ERROR: get_compressor incorrect",
+	    strcmp(compressor, "lz4") == 0);
 
   return 0;
 }
@@ -83,15 +87,14 @@ int main(int argc, char **argv) {
   int32_t *_src;
   char *result;
   size_t i;
-  int pid, nchildren = 4;
 
   printf("STARTING TESTS for %s", argv[0]);
 
-  /* Activate the BLOSC_NTHREADS variable */
-  setenv("BLOSC_NTHREADS", "3", 0);
+  /* Activate the BLOSC_COMPRESSOR variable */
+  setenv("BLOSC_COMPRESSOR", "lz4", 0);
 
   blosc_init();
-  blosc_set_nthreads(1);
+  blosc_set_compressor("blosclz");
 
   /* Initialize buffers */
   src = blosc_test_malloc(BUFFER_ALIGN_SIZE, size);

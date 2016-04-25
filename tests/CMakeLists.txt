@@ -9,9 +9,15 @@ link_directories(${PROJECT_BINARY_DIR}/blosc)
 foreach(source ${SOURCES})
     get_filename_component(target ${source} NAME_WE)
 
-    # test_nolock will be enable only for Unix
+    # test_nolock will be enabled only for Unix
     if(target STREQUAL test_nolock AND WIN32)
-        message("Skipping ${source} test on Windows systems")
+        message("Skipping ${target} on Windows systems")
+        continue()
+    endif()
+
+    # test_compressor will be enabled only when LZ4 support is in
+    if(target STREQUAL test_compressor AND DEACTIVATE_LZ4)
+        message("Skipping ${target} on non-LZ4 builds")
         continue()
     endif()
 

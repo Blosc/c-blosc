@@ -1,7 +1,7 @@
 /*********************************************************************
   Blosc - Blocked Shuffling and Compression Library
 
-  Unit tests for basic features in Blosc.
+  Unit tests for BLOSC_NOLOCK environment variable in Blosc.
 
   Creation date: 2016-04-25
   Author: Francesc Alted <francesc@blosc.org>

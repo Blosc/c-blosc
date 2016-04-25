@@ -1146,13 +1146,30 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 {
   int error;
   int result;
-  char* nthreads_str;
-  long nthreads;
+  char* envvar;
+
+  /* Check for a BLOSC_COMPRESSOR environment variable */
+  envvar = getenv("BLOSC_COMPRESSOR");
+  if (envvar != NULL) {
+    result = blosc_set_compressor(envvar);
+    if (result < 0) { return result; }
+  }
+
+  /* Check for a BLOSC_COMPRESSOR environment variable */
+  envvar = getenv("BLOSC_BLOCKSIZE");
+  if (envvar != NULL) {
+    long blocksize;
+    blocksize = strtol(envvar, NULL, 10);
+    if ((blocksize != EINVAL) && (blocksize > 0)) {
+      blosc_set_blocksize((size_t)blocksize);
+    }
+  }
 
   /* Check for a BLOSC_NTHREADS environment variable */
-  nthreads_str = getenv("BLOSC_NTHREADS");
-  if (nthreads_str != NULL) {
-    nthreads = strtol(nthreads_str, NULL, 10);
+  envvar = getenv("BLOSC_NTHREADS");
+  if (envvar != NULL) {
+    long nthreads;
+    nthreads = strtol(envvar, NULL, 10);
     if ((nthreads != EINVAL) && (nthreads > 0)) {
       result = blosc_set_nthreads((int)nthreads);
       if (result < 0) { return result; }
@@ -1160,7 +1177,8 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   }
 
   /* Check for a BLOSC_NOLOCK environment variable */
-  if (getenv("BLOSC_NOLOCK") != NULL) {
+  envvar = getenv("BLOSC_NOLOCK");
+  if (envvar != NULL) {
     char *compname;
     blosc_compcode_to_compname(g_compressor, &compname);
     result = blosc_compress_ctx(clevel, doshuffle, typesize,
@@ -1281,13 +1299,13 @@ int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
 int blosc_decompress(const void *src, void *dest, size_t destsize)
 {
   int result;
-  char* nthreads_str;
+  char* envvar;
   long nthreads;
 
   /* Check for a BLOSC_NTHREADS environment variable */
-  nthreads_str = getenv("BLOSC_NTHREADS");
-  if (nthreads_str != NULL) {
-    nthreads = strtol(nthreads_str, NULL, 10);
+  envvar = getenv("BLOSC_NTHREADS");
+  if (envvar != NULL) {
+    nthreads = strtol(envvar, NULL, 10);
     if ((nthreads != EINVAL) && (nthreads > 0)) {
       result = blosc_set_nthreads((int)nthreads);
       if (result < 0) { return result; }
@@ -1295,7 +1313,8 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   }
 
   /* Check for a BLOSC_NOLOCK environment variable */
-  if (getenv("BLOSC_NOLOCK") != NULL) {
+  envvar = getenv("BLOSC_NOLOCK");
+  if (envvar != NULL) {
     result = blosc_decompress_ctx(src, dest, destsize, g_threads);
     return result;
   }
@@ -1719,6 +1738,14 @@ int blosc_set_nthreads_(struct blosc_context* context)
   context->threads_started = context->numthreads;
 
   return context->numthreads;
+}
+
+char* blosc_get_compressor(void)
+{
+  char* compname;
+  blosc_compcode_to_compname(g_compressor, &compname);
+
+  return compname;
 }
 
 int blosc_set_compressor(const char *compname)
