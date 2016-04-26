@@ -111,7 +111,7 @@
     _mm256_storeu_si256((__m256i*)d, ymm0);      \
     d+=CPYSIZE; s+=CPYSIZE;                   \
   }
-#elseif defined(__SSE2__)
+#elif defined(__SSE2__)
   #include <emmintrin.h>
   #define CPYSIZE              16
   #define MCPY(d,s)            {              \
