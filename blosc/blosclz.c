@@ -102,9 +102,29 @@
 #if defined(_WIN32)
   #define CPYSIZE              32
 #else
+#if defined(__AVX2__)
+  #include <immintrin.h>
+  #define CPYSIZE              32
+  #define MCPY(d,s)            {              \
+    __m256i ymm0;                             \
+    ymm0 = _mm256_loadu_si256((__m256i*)s);      \
+    _mm256_storeu_si256((__m256i*)d, ymm0);      \
+    d+=CPYSIZE; s+=CPYSIZE;                   \
+  }
+#elseif defined(__SSE2__)
+  #include <emmintrin.h>
+  #define CPYSIZE              16
+  #define MCPY(d,s)            {              \
+    __m128i xmm0;                             \
+    xmm0 = _mm_loadu_si128((__m128i*)s);      \
+    _mm_storeu_si128((__m128i*)d, xmm0);      \
+    d+=CPYSIZE; s+=CPYSIZE;                   \
+  }
+#else
   #define CPYSIZE              8
+  #define MCPY(d,s)            { memcpy(d, s, CPYSIZE); d+=CPYSIZE; s+=CPYSIZE; }
 #endif
-#define MCPY(d,s)            { memcpy(d, s, CPYSIZE); d+=CPYSIZE; s+=CPYSIZE; }
+#endif	/* _WIN32 */
 #define FASTCOPY(d,s,e)      { do { MCPY(d,s) } while (d<e); }
 #define SAFECOPY(d,s,e)      { while (d<e) { MCPY(d,s) } }
 
@@ -133,11 +153,11 @@ if (llabs(op-ref) < CPYSIZE) {                \
 else BLOCK_COPY(op, ref, len, op_limit);
 
 /* Copy optimized for GCC 4.8.  Seems like long copy loops are optimal. */
-#define GCC_SAFE_COPY(op, ref, len, op_limit) \
+#define GCC_SAFE_COPY(op, ref, len, op_limit)  \
 if ((len > 32) || (llabs(op-ref) < CPYSIZE)) { \
-  for(; len; --len)                           \
-    *op++ = *ref++;                           \
-}                                             \
+  for(; len; --len)                            \
+    *op++ = *ref++;                            \
+}                                              \
 else BLOCK_COPY(op, ref, len, op_limit);
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
