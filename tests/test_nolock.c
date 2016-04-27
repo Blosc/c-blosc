@@ -18,7 +18,7 @@ int tests_run = 0;
 void *src, *srccpy, *dest, *dest2;
 size_t nbytes, cbytes;
 int clevel = 1;
-int doshuffle = 0;
+int doshuffle = 1;
 size_t typesize = 4;
 size_t size = 4 * 1000 * 1000;             /* must be divisible by 4 */
 
@@ -28,8 +28,8 @@ static char *test_compress() {
 
   /* Get a compressed buffer */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
-                          dest, size+15);
-  mu_assert("ERROR: cbytes is not 0", cbytes == 0);
+                          dest, size + 16);
+  mu_assert("ERROR: cbytes is not correct", cbytes < size);
 
   return 0;
 }
@@ -40,8 +40,8 @@ static char *test_compress_decompress() {
 
   /* Get a compressed buffer */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
-                          dest, size+16);
-  mu_assert("ERROR: cbytes is not correct", cbytes == size+16);
+                          dest, size + 16);
+  mu_assert("ERROR: cbytes is not correct", cbytes < size);
 
   /* Decompress the buffer */
   nbytes = blosc_decompress(dest, dest2, size);

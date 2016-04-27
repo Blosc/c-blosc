@@ -1148,6 +1148,40 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   int result;
   char* envvar;
 
+  /* Check for a BLOSC_CLEVEL environment variable */
+  envvar = getenv("BLOSC_CLEVEL");
+  if (envvar != NULL) {
+    long value;
+    value = strtol(envvar, NULL, 10);
+    if ((value != EINVAL) && (value >= 0)) {
+      clevel = (int)value;
+    }
+  }
+
+  /* Check for a BLOSC_SHUFFLE environment variable */
+  envvar = getenv("BLOSC_SHUFFLE");
+  if (envvar != NULL) {
+    if (strcmp(envvar, "NOSHUFFLE") == 0) {
+      doshuffle = BLOSC_NOSHUFFLE;
+    }
+    if (strcmp(envvar, "SHUFFLE") == 0) {
+      doshuffle = BLOSC_SHUFFLE;
+    }
+    if (strcmp(envvar, "BITSHUFFLE") == 0) {
+      doshuffle = BLOSC_BITSHUFFLE;
+    }
+  }
+
+  /* Check for a BLOSC_TYPESIZE environment variable */
+  envvar = getenv("BLOSC_TYPESIZE");
+  if (envvar != NULL) {
+    long value;
+    value = strtol(envvar, NULL, 10);
+    if ((value != EINVAL) && (value > 0)) {
+      typesize = (int)value;
+    }
+  }
+
   /* Check for a BLOSC_COMPRESSOR environment variable */
   envvar = getenv("BLOSC_COMPRESSOR");
   if (envvar != NULL) {
@@ -1176,7 +1210,9 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_NOLOCK environment variable */
+  /* Check for a BLOSC_NOLOCK environment variable.  It is important
+     that this should be the last env var so that it can take the
+     previous ones into account */
   envvar = getenv("BLOSC_NOLOCK");
   if (envvar != NULL) {
     char *compname;
@@ -1189,8 +1225,10 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   pthread_mutex_lock(&global_comp_mutex);
 
-  error = initialize_context_compression(g_global_context, clevel, doshuffle, typesize, nbytes,
-                                  src, dest, destsize, g_compressor, g_force_blocksize, g_threads);
+  error = initialize_context_compression(g_global_context, clevel, doshuffle,
+					 typesize, nbytes, src, dest, destsize,
+					 g_compressor, g_force_blocksize,
+					 g_threads);
   if (error < 0) { return error; }
 
   error = write_compression_header(g_global_context, clevel, doshuffle);
@@ -1312,7 +1350,9 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
     }
   }
 
-  /* Check for a BLOSC_NOLOCK environment variable */
+  /* Check for a BLOSC_NOLOCK environment variable.  It is important
+     that this should be the last env var so that it can take the
+     previous ones into account */
   envvar = getenv("BLOSC_NOLOCK");
   if (envvar != NULL) {
     result = blosc_decompress_ctx(src, dest, destsize, g_threads);

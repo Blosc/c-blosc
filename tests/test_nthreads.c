@@ -16,9 +16,9 @@ int tests_run = 0;
 
 /* Global vars */
 void *src, *srccpy, *dest, *dest2;
-size_t nbytes, cbytes;
+int nbytes, cbytes;
 int clevel = 1;
-int doshuffle = 0;
+int doshuffle = 1;
 size_t typesize = 4;
 size_t size = 4 * 1000 * 1000;             /* must be divisible by 4 */
 
@@ -34,8 +34,8 @@ static char *test_compress() {
 
   /* Get a compressed buffer */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
-                          dest, size+15);
-  mu_assert("ERROR: cbytes is not 0", cbytes == 0);
+                          dest, size + 16);
+  mu_assert("ERROR: cbytes is not correct", cbytes < size);
 
   nthreads = blosc_get_nthreads();
   mu_assert("ERROR: get_nthreads (compress, after) incorrect", nthreads == 3);
@@ -54,7 +54,7 @@ static char *test_compress_decompress() {
   /* Get a compressed buffer */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
                           dest, size+16);
-  mu_assert("ERROR: cbytes is not correct", cbytes == size+16);
+  mu_assert("ERROR: cbytes is not correct", cbytes < size);
 
   nthreads = blosc_get_nthreads();
   mu_assert("ERROR: get_nthreads incorrect", nthreads == 3);

@@ -124,7 +124,7 @@ BLOSC_EXPORT void blosc_destroy(void);
 
 /**
   Compress a block of data in the `src` buffer and returns the size of
-  compressed block.  The size of `src` buffer is specified by
+  the compressed block.  The size of `src` buffer is specified by
   `nbytes`.  There is not a minimum for `src` buffer size (`nbytes`).
 
   `clevel` is the desired compression level and must be a number
@@ -160,28 +160,39 @@ BLOSC_EXPORT void blosc_destroy(void);
   Environment variables
   ---------------------
 
-  Setting the BLOSC_NOLOCK environment variable will make
-  blosc_compress() to call blosc_compress_ctx() under the hood, with
-  the `compressor`, `blocksize` and `numinternalthreads` parameters
-  set to the same as the last calls to blosc_set_compressor(),
-  blosc_set_blocksize() and blosc_set_nthreads().
+  blosc_compress() honors different environment variables to control
+  internal parameters without the need of doing that programatically.
+  Here are the ones supported:
 
-  Setting the BLOSC_NTHREADS environment variable to an integer will
-  call blosc_set_nthreads(BLOSC_NTHREADS) under the hood before the
-  proper compression process starts, so making blosc_compress() to use
-  this number of threads internally.
+  BLOSC_CLEVEL=(INTEGER): This will overwrite the `clevel` parameter
+  before the compression process starts.
 
-  Setting the BLOSC_COMPRESSOR environment variable to an internal
-  compressor name will call blosc_set_compressor(BLOSC_COMPRESSOR)
-  under the hood before the proper compression process starts, so
-  making blosc_compress() to use this compressor internally.
+  BLOSC_SHUFFLE=[NOSHUFFLE | SHUFFLE | BITSHUFFLE]: This will
+  overwrite the `doshuffle` parameter before the compression process
+  starts.
 
-  Setting the BLOSC_BLOCKSIZE environment variable to an integer will
-  call blosc_set_blocksize(BLOSC_BLOCKSIZE) under the hood before the
-  proper compression process starts, so making blosc_compress() to use
-  this blocksize internally.  The blocksize is a critical parameter
-  with important restrictions in the allowed values, so use this with
-  care.
+  BLOSC_TYPESIZE=(INTEGER): This will overwrite the `typesize`
+  parameter before the compression process starts.
+
+  BLOSC_COMPRESSOR=[BLOSCLZ | LZ4 | LZ4HC | SNAPPY | ZLIB]: This will
+  call blosc_set_compressor(BLOSC_COMPRESSOR) before the compression
+  process starts.
+
+  BLOSC_NTHREADS=(INTEGER): This will call
+  blosc_set_nthreads(BLOSC_NTHREADS) before the compression process
+  starts.
+
+  BLOSC_BLOCKSIZE=(INTEGER): This will call
+  blosc_set_blocksize(BLOSC_BLOCKSIZE) before the compression process
+  starts.  *NOTE:* The blocksize is a critical parameter with
+  important restrictions in the allowed values, so use this with care.
+
+  BLOSC_NOLOCK=(ANY VALUE): This will call blosc_compress_ctx() under
+  the hood, with the `compressor`, `blocksize` and
+  `numinternalthreads` parameters set to the same as the last calls to
+  blosc_set_compressor(), blosc_set_blocksize() and
+  blosc_set_nthreads().  BLOSC_CLEVEL, BLOSC_SHUFFLE, BLOSC_TYPESIZE
+  environment vars will also be honored.
   */
 BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
 				size_t nbytes, const void *src, void *dest,
@@ -228,15 +239,17 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
   Environment variables
   ---------------------
 
-  Setting the BLOSC_NOLOCK environment variable will make
-  blosc_decompress() to call blosc_decompress_ctx() under the hood,
-  with the `numinternalthreads` parameter set to the same value as the
-  last call to blosc_set_nthreads().
+  blosc_decompress() honors different environment variables to control
+  internal parameters without the need of doing that programatically.
+  Here are the ones supported:
 
-  Setting the BLOSC_NTHREADS environment variable to an integer will
-  call blosc_set_nthreads(BLOSC_NTHREADS) under the hood before the
-  proper decompression process starts, so making blosc_decompress() to
-  use this number of threads internally.
+  BLOSC_NTHREADS=(INTEGER): This will call
+  blosc_set_nthreads(BLOSC_NTHREADS) before the proper decompression
+  process starts.
+
+  BLOSC_NOLOCK=(ANY VALUE): This will call blosc_decompress_ctx()
+  under the hood, with the `numinternalthreads` parameter set to the
+  same value as the last call to blosc_set_nthreads().
 */
 BLOSC_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
 

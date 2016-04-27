@@ -37,6 +37,10 @@ Changes from 1.8.1 to 1.8.2
   before the actuall compression/decompression process.  See blosc.h
   for details.
 
+* Finally, if BLOSC_CLEVEL, BLOSC_SHUFFLE, BLOSC_TYPESIZE and/or
+  BLOSC_COMPRESSOR variables are set in the environment, these will be
+  also honored before calling blosc_compress().
+
 
 Changes from 1.8.0 to 1.8.1
 ===========================
