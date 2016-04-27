@@ -1148,6 +1148,9 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   int result;
   char* envvar;
 
+  /* Check if should initialize */
+  if (!g_initlib) blosc_init();
+
   /* Check for a BLOSC_CLEVEL environment variable */
   envvar = getenv("BLOSC_CLEVEL");
   if (envvar != NULL) {
@@ -1339,6 +1342,9 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   int result;
   char* envvar;
   long nthreads;
+
+  /* Check if should initialize */
+  if (!g_initlib) blosc_init();
 
   /* Check for a BLOSC_NTHREADS environment variable */
   envvar = getenv("BLOSC_NTHREADS");
@@ -1745,6 +1751,9 @@ int blosc_set_nthreads(int nthreads_new)
 {
   int ret = g_threads;
 
+  /* Check if should initialize */
+  if (!g_initlib) blosc_init();
+
   if (nthreads_new != ret){
     /* Re-initialize Blosc */
     blosc_destroy();
@@ -1794,8 +1803,7 @@ int blosc_set_compressor(const char *compname)
 
   g_compressor = code;
 
-  /* Check if should initialize (implementing previous 1.2.3 behaviour,
-     where calling blosc_set_nthreads was enough) */
+  /* Check if should initialize */
   if (!g_initlib) blosc_init();
 
   return code;

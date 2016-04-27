@@ -9,6 +9,8 @@
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
 
+/* Test for using blosc without blosc_init() and blosc_destroy() */
+
 #include <unistd.h>
 #include "test_common.h"
 
@@ -68,15 +70,11 @@ int main(int argc, char **argv) {
 
   printf("STARTING TESTS for %s\n", argv[0]);
 
-  /* Activate the BLOSC_NOLOCK variable */
-  setenv("BLOSC_NOLOCK", "TRUE", 0);
-
   /* Launch several subprocesses */
   for (i = 1; i <= nchildren; i++) {
     pid = fork();
   }
 
-  blosc_init();
   blosc_set_nthreads(4);
 
   /* Initialize buffers */
@@ -105,7 +103,6 @@ int main(int argc, char **argv) {
   blosc_test_free(dest);
   blosc_test_free(dest2);
 
-  blosc_destroy();
 
   return result != 0;
 }

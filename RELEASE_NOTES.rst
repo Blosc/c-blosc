@@ -7,8 +7,14 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.8.1 to 1.8.2
+Changes from 1.8.1 to 1.9.0
 ===========================
+
+* Calling blosc_init() before any other Blosc call, although
+  recommended, is not necessary anymore.  The idea is that you can use
+  just the basic blosc_compress() and blosc_decompress() and control
+  other parameters (nthreads, compressor, blocksize) by using
+  environment variables (see below).
 
 * New blosc_get_nthreads() function to get the number of threads that
   will be used internally during compression/decompression (set by
