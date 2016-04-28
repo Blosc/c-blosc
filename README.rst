@@ -2,6 +2,10 @@
  Blosc: A blocking, shuffling and lossless compression library
 ===============================================================
 
+.. image:: https://badges.gitter.im/Blosc/c-blosc.svg
+   :alt: Join the chat at https://gitter.im/Blosc/c-blosc
+   :target: https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
