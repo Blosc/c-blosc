@@ -50,6 +50,7 @@ foreach(source ${SOURCES})
     # have to copy dlls for Visual Studio
     if(MSVC)
         if(MSVC_VERSION EQUAL 1500)
+            # This is an attempt to make VS2008 work, but no luck...
             # https://cmake.org/pipermail/cmake/2014-October/058777.html
             SET(Configuration "Release")
         endif()

@@ -10,8 +10,9 @@ version: '{build}'
 
 environment:
   matrix:
-    - GENERATOR: "Visual Studio 9 2008"
-      CONFIG: Release
+    # Unfortunately, I was not able to correctly make VS2008 to work
+    #- GENERATOR: "Visual Studio 9 2008"
+    #  CONFIG: Release
 
     # Using Win64 for 2008 is unnecessarily complicated.  See:
     # http://help.appveyor.com/discussions/kb/38-visual-studio-2008-64-bit-builds
