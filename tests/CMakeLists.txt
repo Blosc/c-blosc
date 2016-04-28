@@ -9,8 +9,9 @@ link_directories(${PROJECT_BINARY_DIR}/blosc)
 foreach(source ${SOURCES})
     get_filename_component(target ${source} NAME_WE)
 
-    # test_nolock will be enabled only for Unix
-    if(target STREQUAL test_nolock AND WIN32)
+    # test_nolock and test_noinit will be enabled only for Unix
+    if(WIN32)
+      if(target STREQUAL test_nolock OR target STREQUAL test_noinit)
         message("Skipping ${target} on Windows systems")
         continue()
     endif()

@@ -13,8 +13,10 @@ environment:
     - GENERATOR: "Visual Studio 9 2008"
       CONFIG: Release
 
-    - GENERATOR: "Visual Studio 9 2008 Win64"
-      CONFIG: Release
+    # Using Win64 for 2008 is unnecessarily complicated.  See:
+    # http://help.appveyor.com/discussions/kb/38-visual-studio-2008-64-bit-builds
+    #- GENERATOR: "Visual Studio 9 2008 Win64"
+    #  CONFIG: Release
 
     - GENERATOR: "Visual Studio 10 2010"
       CONFIG: Release
