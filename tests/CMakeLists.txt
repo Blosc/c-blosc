@@ -13,7 +13,7 @@ foreach(source ${SOURCES})
     if(WIN32)
         if (target STREQUAL test_nolock OR
             target STREQUAL test_noinit OR
-            target STREQUAL test_compress)
+            target STREQUAL test_compressor)
             message("Skipping ${target} on Windows systems")
             continue()
         endif()
@@ -51,7 +51,7 @@ foreach(source ${SOURCES})
     if(MSVC)
         if(MSVC_VERSION EQUAL 1500)
             # https://cmake.org/pipermail/cmake/2014-October/058777.html
-            SET(Configuration $ConfigurationName)
+            SET(Configuration "Release")
         endif()
         add_custom_command(
             TARGET      ${target}
