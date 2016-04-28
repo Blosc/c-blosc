@@ -11,9 +11,10 @@ foreach(source ${SOURCES})
 
     # test_nolock and test_noinit will be enabled only for Unix
     if(WIN32)
-      if(target STREQUAL test_nolock OR target STREQUAL test_noinit)
-        message("Skipping ${target} on Windows systems")
-        continue()
+        if(target STREQUAL test_nolock OR target STREQUAL test_noinit)
+            message("Skipping ${target} on Windows systems")
+            continue()
+        endif()
     endif()
 
     # test_compressor will be enabled only when LZ4 support is in
