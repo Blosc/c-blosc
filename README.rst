@@ -9,9 +9,9 @@
 :Travis CI: |travis|
 :Appveyor: |appveyor|
 
-.. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+.. |gitter| image:: https://badges.gitter.im/Blosc/c-blosc.svg
         :alt: Join the chat at https://gitter.im/Blosc/c-blosc
-        :target: https://gitter.im/Blosc/c-blosc
+        :target: https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 .. |travis| image:: https://travis-ci.org/Blosc/c-blosc.svg?branch=master
         :target: https://travis-ci.org/Blosc/c-blosc
