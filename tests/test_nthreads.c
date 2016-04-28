@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
   printf("STARTING TESTS for %s", argv[0]);
 
   /* Activate the BLOSC_NTHREADS variable */
-  setenv("BLOSC_NTHREADS", "3", 0);
+  setenv("BLOSC_NTHREADS", "3", 1);
 
   blosc_init();
   blosc_set_nthreads(1);

@@ -11,7 +11,9 @@ foreach(source ${SOURCES})
 
     # test_nolock and test_noinit will be enabled only for Unix
     if(WIN32)
-        if(target STREQUAL test_nolock OR target STREQUAL test_noinit)
+        if (target STREQUAL test_nolock OR
+            target STREQUAL test_noinit OR
+            target STREQUAL test_compress)
             message("Skipping ${target} on Windows systems")
             continue()
         endif()
@@ -47,6 +49,10 @@ foreach(source ${SOURCES})
 
     # have to copy dlls for Visual Studio
     if(MSVC)
+        if(MSVC_VERSION EQUAL 1500)
+            # https://cmake.org/pipermail/cmake/2014-October/058777.html
+            SET(Configuration $ConfigurationName)
+        endif()
         add_custom_command(
             TARGET      ${target}
             POST_BUILD
