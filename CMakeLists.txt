@@ -159,7 +159,17 @@ endif()
 # by this (the host) system, because we want to be able to support compiling
 # for newer hardware on older machines as well as cross-compilation.
 message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}")
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
+
+# Allow hardware features to be specified over the command-line (e.g. -DCOMPILER_SUPPORT_AVX2).
+if(DEFINED COMPILER_SUPPORT_SSE2 AND NOT DEFINED COMPILER_SUPPORT_AVX2)
+    set(COMPILER_SUPPORT_AVX2 FALSE)
+elseif(DEFINED COMPILER_SUPPORT_AVX2 AND NOT DEFINED COMPILER_SUPPORT_SSE2)
+    set(COMPILER_SUPPORT_SSE2 ${COMPILER_SUPPORT_AVX2})
+endif()
+
+if(DEFINED COMPILER_SUPPORT_SSE2 AND DEFINED COMPILER_SUPPORT_AVX2)
+    message(STATUS "Taking hardware features from command-line (SSE2=${COMPILER_SUPPORT_SSE2}, AVX2=${COMPILER_SUPPORT_AVX2}).")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL i686 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL amd64 OR
