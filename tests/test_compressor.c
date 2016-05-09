@@ -151,6 +151,7 @@ static char *test_bitshuffle() {
   int cbytes2;
 
   /* Get a compressed buffer */
+  blosc_set_compressor("blosclz");  /* avoid lz4 here for now (see #168) */
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
                           dest, size + 16);
   mu_assert("ERROR: cbytes is not 0", cbytes < size);
