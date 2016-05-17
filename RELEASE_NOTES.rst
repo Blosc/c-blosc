@@ -10,12 +10,13 @@
 Changes from 1.9.0 to 1.9.1
 ===========================
 
-- The internal copies when clevel = 0 are made now via memcpy().  At
-  the beginning of C-Blosc my time measurements told me that the
-  internal, multi-threaded copies inisde C-Blosc were faster, but 6
-  years lat, memcpy() made greats strides in terms of efficiency.  As
-  said, you should expect an slight speed advantage only when C-Blosc
-  is used as a replacement of memcpy.
+- The internal copies when clevel=0 are made now via memcpy().  At the
+  beginning of C-Blosc my time measurements told me that the internal,
+  multi-threaded copies inside C-Blosc were faster, but 6 years later,
+  memcpy() made greats strides in terms of efficiency.  As said, you
+  should expect an slight speed advantage (10% ~ 20%) only when
+  C-Blosc is used as a replacement of memcpy() (which should not be
+  the most common scenario out there).
 
 
 Changes from 1.8.1 to 1.9.0
