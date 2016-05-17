@@ -586,7 +586,8 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     }
     else if (context->compcode == BLOSC_LZ4HC) {
       cbytes = lz4hc_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
-                                   (char *)dest, (size_t)maxout, context->clevel);
+                                   (char *)dest, (size_t)maxout,
+                                   context->clevel);
     }
     #endif /*  HAVE_LZ4 */
     #if defined(HAVE_SNAPPY)
@@ -598,7 +599,8 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     #if defined(HAVE_ZLIB)
     else if (context->compcode == BLOSC_ZLIB) {
       cbytes = zlib_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
-                                  (char *)dest, (size_t)maxout, context->clevel);
+                                  (char *)dest, (size_t)maxout,
+                                  context->clevel);
     }
     #endif /*  HAVE_ZLIB */
 
@@ -851,7 +853,9 @@ static int do_job(struct blosc_context* context)
 }
 
 
-static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel, int32_t typesize, int32_t nbytes, int32_t forced_blocksize)
+static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
+                                 int32_t typesize, int32_t nbytes,
+                                 int32_t forced_blocksize)
 {
   int32_t blocksize;
 
@@ -1034,12 +1038,12 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
   }
   }
 
-  context->header_flags = context->dest+2;                       /* flags */
-  context->dest[2] = 0;                                          /* zeroes flags */
-  context->dest[3] = (uint8_t)context->typesize;                 /* type size */
-  _sw32(context->dest + 4, context->sourcesize);                 /* size of the buffer */
-  _sw32(context->dest + 8, context->blocksize);                  /* block size */
-  context->bstarts = context->dest + 16;                         /* starts for every block */
+  context->header_flags = context->dest+2;  /* flags */
+  context->dest[2] = 0;  /* zeroes flags */
+  context->dest[3] = (uint8_t)context->typesize;  /* type size */
+  _sw32(context->dest + 4, context->sourcesize);  /* size of the buffer */
+  _sw32(context->dest + 8, context->blocksize);  /* block size */
+  context->bstarts = context->dest + 16;  /* starts for every block */
   context->num_output_bytes = 16 + sizeof(int32_t)*context->nblocks;  /* space for header and pointers */
 
   if (context->clevel == 0) {
@@ -1089,17 +1093,9 @@ int blosc_compress_context(struct blosc_context* context)
       /* We are exceeding maximum output size */
       ntbytes = 0;
     }
-    else if (((context->sourcesize % L1) == 0) || (context->numthreads > 1)) {
-      /* More effective with large buffers that are multiples of the
-       cache size or multi-cores */
-      context->num_output_bytes = BLOSC_MAX_OVERHEAD;
-      ntbytes = do_job(context);
-      if (ntbytes < 0) {
-        return -1;
-      }
-    }
     else {
-      memcpy(context->dest+BLOSC_MAX_OVERHEAD, context->src, context->sourcesize);
+      memcpy(context->dest+BLOSC_MAX_OVERHEAD, context->src,
+             context->sourcesize);
       ntbytes = context->sourcesize + BLOSC_MAX_OVERHEAD;
     }
   }
@@ -1292,18 +1288,8 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
 
   /* Check whether this buffer is memcpy'ed */
   if (*(context->header_flags) & BLOSC_MEMCPYED) {
-    if (((context->sourcesize % L1) == 0) || (context->numthreads > 1)) {
-      /* More effective with large buffers that are multiples of the
-       cache size or multi-cores */
-      ntbytes = do_job(context);
-      if (ntbytes < 0) {
-        return -1;
-      }
-    }
-    else {
       memcpy(dest, (uint8_t *)src+BLOSC_MAX_OVERHEAD, context->sourcesize);
       ntbytes = context->sourcesize;
-    }
   }
   else {
     /* Do the actual decompression */
