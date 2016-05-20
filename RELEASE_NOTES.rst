@@ -11,12 +11,18 @@ Changes from 1.9.0 to 1.9.1
 ===========================
 
 - The internal copies when clevel=0 are made now via memcpy().  At the
-  beginning of C-Blosc my time measurements told me that the internal,
-  multi-threaded copies inside C-Blosc were faster, but 6 years later,
-  memcpy() made greats strides in terms of efficiency.  As said, you
-  should expect an slight speed advantage (10% ~ 20%) only when
-  C-Blosc is used as a replacement of memcpy() (which should not be
-  the most common scenario out there).
+  beginning of C-Blosc development, benchmarks where saying that the
+  internal, multi-threaded copies inside C-Blosc were faster than
+  memcpy(), but 6 years later, memcpy() made greats strides in terms
+  of efficiency.  With this, you should expect an slight speed
+  advantage (10% ~ 20%) when C-Blosc is used as a replacement of
+  memcpy() (which should not be the most common scenario out there).
+
+- Added a new DEACTIVATE_AVX2 cmake option to explicitly disable AVX2
+  at build-time.  Thanks to James Bird.
+
+- The ``make -jN`` for parallel compilation should work now.  Thanks
+  to James Bird.
 
 
 Changes from 1.8.1 to 1.9.0
