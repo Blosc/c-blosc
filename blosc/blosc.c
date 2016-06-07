@@ -1951,6 +1951,9 @@ void blosc_set_blocksize(size_t size)
 
 void blosc_init(void)
 {
+  /* Return if we are already initialized */
+  if (g_initlib) return;
+
   pthread_mutex_init(&global_comp_mutex, NULL);
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
