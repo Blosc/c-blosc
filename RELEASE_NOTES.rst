@@ -10,7 +10,8 @@
 Changes from 1.9.1 to 1.9.2
 ===========================
 
-#XXX version-specific blurb XXX#
+- Check that Blosc is actually initialized before blosc_destroy() and
+  blosc_free_resources().
 
 
 Changes from 1.9.0 to 1.9.1

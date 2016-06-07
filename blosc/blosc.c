@@ -1959,6 +1959,9 @@ void blosc_init(void)
 
 void blosc_destroy(void)
 {
+  /* Return if Blosc is not initialized */
+  if (!g_initlib) return;
+
   g_initlib = 0;
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
@@ -2015,5 +2018,8 @@ int blosc_release_threadpool(struct blosc_context* context)
 
 int blosc_free_resources(void)
 {
+  /* Return if Blosc is not initialized */
+  if (!g_initlib) return -1;
+
   return blosc_release_threadpool(g_global_context);
 }
