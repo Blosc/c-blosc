@@ -6,7 +6,11 @@
 What is new?
 ============
 
- #XXX version-specific blurb XXX#
+This is a maintenance release.  On it, a check on whether Blosc is
+actually initialized before blosc_init(), blosc_destroy() and
+blosc_free_resources() is done, so that the library is more resistant
+to different initialization cycles
+(e.g. https://github.com/stevengj/Blosc.jl/issues/19).
 
 For more info, please see the release notes in:
 

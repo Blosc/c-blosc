@@ -10,8 +10,10 @@
 Changes from 1.9.1 to 1.9.2
 ===========================
 
-- Check that Blosc is actually initialized before blosc_init(),
-  blosc_destroy() and blosc_free_resources().
+- Check whether Blosc is actually initialized before blosc_init(),
+  blosc_destroy() and blosc_free_resources().  This makes the library
+  more resistant to different initialization cycles
+  (e.g. https://github.com/stevengj/Blosc.jl/issues/19).
 
 
 Changes from 1.9.0 to 1.9.1
