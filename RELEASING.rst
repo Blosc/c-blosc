@@ -59,8 +59,7 @@ Post-release actions
   version to the next minor one (i.e. X.Y.Z --> X.Y.(Z+1).dev).
 
 - Create new headers for adding new features in ``RELEASE_NOTES.rst``
-  and empty the release-specific information in ``ANNOUNCE.rst`` and
-  add this place-holder instead:
+  and add this place-holder instead:
 
   #XXX version-specific blurb XXX#
 
