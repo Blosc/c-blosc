@@ -10,7 +10,11 @@
 Changes from 1.9.2 to 1.9.3
 ===========================
 
-#XXX version-specific blurb XXX#
+- Reverted a mistake introduced in 1.7.1.  At that time, bit-shuffling
+  was enabled for typesize == 1 (i.e. strings), but the change also
+  included byte-shuffling accidentally.  This only affected performance,
+  but in a quite bad way (a copy was needed).  This has been fixed and
+  byte-shuffling is not active when typesize == 1 anymore.
 
 
 Changes from 1.9.1 to 1.9.2

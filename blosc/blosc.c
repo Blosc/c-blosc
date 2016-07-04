@@ -531,7 +531,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   int accel;
   int bscount;
 
-  if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
+  if (*(context->header_flags) & BLOSC_DOSHUFFLE & (typesize > 1)) {
     /* Byte shuffling only makes sense if typesize > 1 */
     shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
@@ -653,7 +653,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   char *compname;
   int bscount;
 
-  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) || \
+  if ((*(context->header_flags) & BLOSC_DOSHUFFLE & (typesize > 1)) ||  \
       (*(context->header_flags) & BLOSC_DOBITSHUFFLE)) {
     _tmp = tmp;
   }
@@ -721,7 +721,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if (*(context->header_flags) & BLOSC_DOSHUFFLE) {
+  if (*(context->header_flags) & BLOSC_DOSHUFFLE & (typesize > 1)) {
     unshuffle(typesize, blocksize, tmp, dest);
   }
   else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
