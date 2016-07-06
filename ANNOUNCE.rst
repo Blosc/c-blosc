@@ -1,16 +1,17 @@
 ===============================================================
- Announcing c-blosc 1.9.2
+ Announcing c-blosc 1.9.3
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  On it, a check on whether Blosc is
-actually initialized before blosc_init(), blosc_destroy() and
-blosc_free_resources() is done, so that the library is more resistant
-to different initialization cycles
-(e.g. https://github.com/stevengj/Blosc.jl/issues/19).
+This is a maintenance release for reverting a mistake introduced in
+1.7.1. At that time, bit-shuffling was enabled for typesize == 1 (i.e.
+strings), but the change also included byte-shuffling accidentally. This
+only affected performance, but in a quite bad way (a copy was needed).
+This has been fixed and byte-shuffling is not active anymore when
+typesize == 1.
 
 For more info, please see the release notes in:
 
