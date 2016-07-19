@@ -63,13 +63,12 @@ def get_values(filename):
     return nthreads, values
 
 
-def show_plot(plots, yaxis, legends, gtitle, xmax=None):
+def show_plot(plots, yaxis, legends, gtitle, xmax=None, ymax=None):
     xlabel('Compresssion ratio')
     ylabel('Speed (MB/s)')
     title(gtitle)
     xlim(0, xmax)
-    #ylim(0, 10000)
-    ylim(0, None)
+    ylim(0, ymax)
     grid(True)
 
 #     legends = [f[f.find('-'):f.index('.out')] for f in filenames]
@@ -117,6 +116,12 @@ if __name__ == '__main__':
                       '--xmax',
                       dest='xmax',
                       help='limit the x-axis',
+                      default=None)
+
+    parser.add_option('-y',
+                      '--ymax',
+                      dest='ymax',
+                      help='limit the y-axis',
                       default=None)
 
     parser.add_option('-r', '--report', action='store_true',
@@ -210,7 +215,8 @@ if __name__ == '__main__':
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
     text(1.0, mean+50, message)
     plots.append(plot_)
-    show_plot(plots, yaxis, legends, gtitle, xmax=int(options.xmax) if
-            options.xmax else None)
+    show_plot(plots, yaxis, legends, gtitle,
+              xmax=int(options.xmax) if options.xmax else None,
+              ymax=int(options.ymax) if options.ymax else None)
 
 
