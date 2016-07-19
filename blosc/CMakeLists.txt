@@ -41,7 +41,7 @@ if (NOT DEACTIVATE_ZSTD)
         include_directories(${ZSTD_INCLUDE_DIR})
     else (ZSTD_FOUND)
         set(ZSTD_LOCAL_DIR ${INTERNAL_LIBS}/zstd-0.7.4)
-        include_directories(${ZSTD_LOCAL_DIR/common})
+        include_directories(${ZSTD_LOCAL_DIR}/common)
     endif (ZSTD_FOUND)
 endif (NOT DEACTIVATE_ZSTD)
 
@@ -107,7 +107,10 @@ if (NOT DEACTIVATE_ZSTD)
     if (ZSTD_FOUND)
         set(LIBS ${LIBS} ${ZSTD_LIBRARY})
     else (ZSTD_FOUND)
-        file(GLOB ZSTD_FILES ${ZSTD_LOCAL_DIR}/*.c)
+      file(GLOB ZSTD_FILES
+        ${ZSTD_LOCAL_DIR}/common/*.c
+        ${ZSTD_LOCAL_DIR}/compress/*.c
+        ${ZSTD_LOCAL_DIR}/decompress/*.c)
         set(SOURCES ${SOURCES} ${ZSTD_FILES})
     endif (ZSTD_FOUND)
 endif (NOT DEACTIVATE_ZSTD)
