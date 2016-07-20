@@ -1,17 +1,17 @@
 ===============================================================
- Announcing c-blosc 1.9.3
+ Announcing c-blosc 1.10.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release for reverting a mistake introduced in
-1.7.1. At that time, bit-shuffling was enabled for typesize == 1 (i.e.
-strings), but the change also included byte-shuffling accidentally. This
-only affected performance, but in a quite bad way (a copy was needed).
-This has been fixed and byte-shuffling is not active anymore when
-typesize == 1.
+This release introduces support for the new Zstd codec. Zstd is meant to
+achieve larger compression ratios than Zlib, but with higher speeds. We
+are talking about a well-balanced codec that should see a lot of use
+among Blosc users. There is a blog about what you can expect of it in:
+
+http://blosc.org/blog/zstd-has-just-landed-in-blosc.html
 
 For more info, please see the release notes in:
 
@@ -57,4 +57,3 @@ http://groups.google.es/group/blosc
 
 
 Enjoy Data!
-
