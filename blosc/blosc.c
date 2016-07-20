@@ -514,7 +514,6 @@ static int zstd_wrap_compress(const char* input, size_t input_length,
   code = ZSTD_compress(
       (void*)output, maxout, (void*)input, input_length, clevel);
   if (ZSTD_isError(code)) {
-    fprintf(stderr, "error compressing with Zstd: %s \n", ZSTD_getErrorName(code));
     return 0;
   }
   return (int)code;
