@@ -52,6 +52,8 @@ All entries are little endian.
         ``snappy``
     :``3``:
         ``zlib``
+    :``4``:
+        ``zstd``
 
 :typesize:
     (``uint8``) Number of bytes for the atomic type.
@@ -61,4 +63,3 @@ All entries are little endian.
     (``uint32``) Size of internal blocks.
 :ctbytes:
     (``uint32``) Compressed size of the buffer.
-
