@@ -17,6 +17,8 @@
 #       do not include support for the Snappy library
 #   DEACTIVATE_ZLIB: default OFF
 #       do not include support for the Zlib library
+#   DEACTIVATE_ZSTD: default OFF
+#       do not include support for the Zstd library
 #   PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
 #       sources
@@ -25,6 +27,9 @@
 #       sources
 #   PREFER_EXTERNAL_ZLIB: default ON
 #       when found, use the installed zlib libs instead of included
+#       sources
+#   PREFER_EXTERNAL_ZSTD: default OFF
+#       when found, use the installed zstd libs instead of included
 #       sources
 #   TEST_INCLUDE_BENCH_SHUFFLE_1: default ON
 #       add a test that runs the benchmark program passing "shuffle" with 1
@@ -88,15 +93,19 @@ option(DEACTIVATE_AVX2
 option(DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
 option(DEACTIVATE_SNAPPY
-    "Do not include support for the SNAPPY library." OFF)
+    "Do not include support for the Snappy library." OFF)
 option(DEACTIVATE_ZLIB
-    "Do not include support for the ZLIB library." OFF)
+    "Do not include support for the Zlib library." OFF)
+option(DEACTIVATE_ZSTD
+    "Do not include support for the Zstd library." OFF)
 option(PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
 option(PREFER_EXTERNAL_SNAPPY
     "Find and use external Snappy library instead of included sources." ON)
 option(PREFER_EXTERNAL_ZLIB
-    "Find and use external zlib library instead of included sources." ON)
+    "Find and use external Zlib library instead of included sources." ON)
+option(PREFER_EXTERNAL_ZSTD
+    "Find and use external Zstd library instead of included sources." ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -138,6 +147,17 @@ if(NOT DEACTIVATE_ZLIB)
     # we will use the included sources for it
     set(HAVE_ZLIB TRUE)
 endif(NOT DEACTIVATE_ZLIB)
+
+if (NOT DEACTIVATE_ZSTD)
+    if (PREFER_EXTERNAL_ZSTD)
+        find_package(Zstd)
+    else ()
+        message(STATUS "Using ZSTD internal sources.")
+    endif (PREFER_EXTERNAL_ZSTD)
+    # HAVE_ZSTD will be set to true because even if the library is
+    # not found, we will use the included sources for it
+    set(HAVE_ZSTD TRUE)
+endif (NOT DEACTIVATE_ZSTD)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )

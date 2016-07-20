@@ -31,6 +31,9 @@
 #if defined(HAVE_ZLIB)
   #include "zlib.h"
 #endif /*  HAVE_ZLIB */
+#if defined(HAVE_ZSTD)
+  #include "zstd.h"
+#endif /*  HAVE_ZSTD */
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
@@ -307,6 +310,8 @@ static int compname_to_clibcode(const char *compname)
     return BLOSC_SNAPPY_LIB;
   if (strcmp(compname, BLOSC_ZLIB_COMPNAME) == 0)
     return BLOSC_ZLIB_LIB;
+  if (strcmp(compname, BLOSC_ZSTD_COMPNAME) == 0)
+    return BLOSC_ZSTD_LIB;
   return -1;
 }
 
@@ -317,6 +322,7 @@ static char *clibcode_to_clibname(int clibcode)
   if (clibcode == BLOSC_LZ4_LIB) return BLOSC_LZ4_LIBNAME;
   if (clibcode == BLOSC_SNAPPY_LIB) return BLOSC_SNAPPY_LIBNAME;
   if (clibcode == BLOSC_ZLIB_LIB) return BLOSC_ZLIB_LIBNAME;
+  if (clibcode == BLOSC_ZSTD_LIB) return BLOSC_ZSTD_LIBNAME;
   return NULL;                  /* should never happen */
 }
 
@@ -342,6 +348,8 @@ int blosc_compcode_to_compname(int compcode, char **compname)
     name = BLOSC_SNAPPY_COMPNAME;
   else if (compcode == BLOSC_ZLIB)
     name = BLOSC_ZLIB_COMPNAME;
+  else if (compcode == BLOSC_ZSTD)
+    name = BLOSC_ZSTD_COMPNAME;
 
   *compname = name;
 
@@ -362,6 +370,10 @@ int blosc_compcode_to_compname(int compcode, char **compname)
   else if (compcode == BLOSC_ZLIB)
     code = BLOSC_ZLIB;
 #endif /*  HAVE_ZLIB */
+#if defined(HAVE_ZSTD)
+  else if (compcode == BLOSC_ZSTD)
+    code = BLOSC_ZSTD;
+#endif /*  HAVE_ZSTD */
 
   return code;
 }
@@ -392,6 +404,11 @@ int blosc_compname_to_compcode(const char *compname)
     code = BLOSC_ZLIB;
   }
 #endif /*  HAVE_ZLIB */
+#if defined(HAVE_ZSTD)
+  else if (strcmp(compname, BLOSC_ZSTD_COMPNAME) == 0) {
+    code = BLOSC_ZSTD;
+  }
+#endif /*  HAVE_ZSTD */
 
 return code;
 }
@@ -486,8 +503,35 @@ static int zlib_wrap_decompress(const char* input, size_t compressed_length,
   }
   return (int)ul;
 }
-
 #endif /*  HAVE_ZLIB */
+
+#if defined(HAVE_ZSTD)
+static int zstd_wrap_compress(const char* input, size_t input_length,
+                              char* output, size_t maxout, int clevel) {
+  size_t code;
+  // clevel = (clevel < 9) ? clevel * 2 - 1 : ZSTD_maxCLevel();  // see zstd#254
+  clevel = (clevel < 9) ? clevel * 2 - 1 : 22;
+  code = ZSTD_compress(
+      (void*)output, maxout, (void*)input, input_length, clevel);
+  if (ZSTD_isError(code)) {
+    fprintf(stderr, "error compressing with Zstd: %s \n", ZSTD_getErrorName(code));
+    return 0;
+  }
+  return (int)code;
+}
+
+static int zstd_wrap_decompress(const char* input, size_t compressed_length,
+                                char* output, size_t maxout) {
+  size_t code;
+  code = ZSTD_decompress(
+      (void*)output, maxout, (void*)input, compressed_length);
+  if (ZSTD_isError(code)) {
+    fprintf(stderr, "error decompressing with Zstd: %s \n", ZSTD_getErrorName(code));
+    return 0;
+  }
+  return (int)code;
+}
+#endif /*  HAVE_ZSTD */
 
 /* Compute acceleration for blosclz */
 static int get_accel(const struct blosc_context* context) {
@@ -589,20 +633,26 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
                                    (char *)dest, (size_t)maxout,
                                    context->clevel);
     }
-    #endif /*  HAVE_LZ4 */
+    #endif /* HAVE_LZ4 */
     #if defined(HAVE_SNAPPY)
     else if (context->compcode == BLOSC_SNAPPY) {
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                     (char *)dest, (size_t)maxout);
     }
-    #endif /*  HAVE_SNAPPY */
+    #endif /* HAVE_SNAPPY */
     #if defined(HAVE_ZLIB)
     else if (context->compcode == BLOSC_ZLIB) {
       cbytes = zlib_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
                                   (char *)dest, (size_t)maxout,
                                   context->clevel);
     }
-    #endif /*  HAVE_ZLIB */
+    #endif /* HAVE_ZLIB */
+    #if defined(HAVE_ZSTD)
+    else if (context->compcode == BLOSC_ZSTD) {
+      cbytes = zstd_wrap_compress((char*)_tmp + j * neblock, (size_t)neblock,
+                                  (char*)dest, (size_t)maxout, context->clevel);
+    }
+    #endif /* HAVE_ZSTD */
 
     else {
       blosc_compcode_to_compname(context->compcode, &compname);
@@ -700,6 +750,12 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
                                       (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_ZLIB */
+      #if defined(HAVE_ZSTD)
+      else if (compformat == BLOSC_ZSTD_FORMAT) {
+        nbytes = zstd_wrap_decompress((char*)src, (size_t)cbytes,
+                                      (char*)_tmp, (size_t)neblock);
+      }
+      #endif /*  HAVE_ZSTD */
       else {
         compname = clibcode_to_clibname(compformat);
         fprintf(stderr,
@@ -876,17 +932,24 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
   else if (nbytes >= L1) {
     blocksize = L1;
 
-    /* For Zlib, increase the block sizes in a factor of 8 because it
-       is meant for compression large blocks (it shows a big overhead
-       in compressing small ones). */
+    /* For LZ4HC, increase the block sizes by a factor of 8 because it
+       is meant for compressing large blocks (it shows a big overhead
+       when compressing small ones). */
+    if (context->compcode == BLOSC_LZ4HC) {
+      blocksize *= 8;
+    }
+
+    /* For Zlib, increase the block sizes by a factor of 8 because it
+       is meant for compressing large blocks (it shows a big overhead
+       when compressing small ones). */
     if (context->compcode == BLOSC_ZLIB) {
       blocksize *= 8;
     }
 
-    /* For LZ4HC, increase the block sizes in a factor of 8 because it
-       is meant for compression large blocks (it shows a big overhead
-       in compressing small ones). */
-    if (context->compcode == BLOSC_LZ4HC) {
+    /* For Zstd, increase the block sizes by a factor of 8 because it
+       is meant for compressing large blocks (it shows a big overhead
+       when compressing small ones). */
+    if (context->compcode == BLOSC_ZSTD) {
       blocksize *= 8;
     }
 
@@ -1011,21 +1074,28 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
     compformat = BLOSC_LZ4HC_FORMAT;
     context->dest[1] = BLOSC_LZ4HC_VERSION_FORMAT; /* lz4hc is the same as lz4 */
     break;
-#endif /*  HAVE_LZ4 */
+#endif /* HAVE_LZ4 */
 
 #if defined(HAVE_SNAPPY)
   case BLOSC_SNAPPY:
     compformat = BLOSC_SNAPPY_FORMAT;
     context->dest[1] = BLOSC_SNAPPY_VERSION_FORMAT;    /* snappy format version */
     break;
-#endif /*  HAVE_SNAPPY */
+#endif /* HAVE_SNAPPY */
 
 #if defined(HAVE_ZLIB)
   case BLOSC_ZLIB:
     compformat = BLOSC_ZLIB_FORMAT;
     context->dest[1] = BLOSC_ZLIB_VERSION_FORMAT;      /* zlib format version */
     break;
-#endif /*  HAVE_ZLIB */
+#endif /* HAVE_ZLIB */
+
+#if defined(HAVE_ZSTD)
+  case BLOSC_ZSTD:
+    compformat = BLOSC_ZSTD_FORMAT;
+    context->dest[1] = BLOSC_ZSTD_VERSION_FORMAT;      /* zstd format version */
+    break;
+#endif /* HAVE_ZSTD */
 
   default:
   {
@@ -1806,13 +1876,16 @@ char* blosc_list_compressors(void)
 #if defined(HAVE_LZ4)
   strcat(ret, ","); strcat(ret, BLOSC_LZ4_COMPNAME);
   strcat(ret, ","); strcat(ret, BLOSC_LZ4HC_COMPNAME);
-#endif /*  HAVE_LZ4 */
+#endif /* HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
   strcat(ret, ","); strcat(ret, BLOSC_SNAPPY_COMPNAME);
-#endif /*  HAVE_SNAPPY */
+#endif /* HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
   strcat(ret, ","); strcat(ret, BLOSC_ZLIB_COMPNAME);
-#endif /*  HAVE_ZLIB */
+#endif /* HAVE_ZLIB */
+#if defined(HAVE_ZSTD)
+  strcat(ret, ","); strcat(ret, BLOSC_ZSTD_COMPNAME);
+#endif /* HAVE_ZSTD */
   compressors_list_done = 1;
   return ret;
 }
@@ -1847,22 +1920,29 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
     sprintf(sbuffer, "%d.%d.%d",
             LZ4_VERSION_MAJOR, LZ4_VERSION_MINOR, LZ4_VERSION_RELEASE);
     clibversion = sbuffer;
-#endif /*  LZ4_VERSION_MAJOR */
+#endif /* LZ4_VERSION_MAJOR */
   }
-#endif /*  HAVE_LZ4 */
+#endif /* HAVE_LZ4 */
 #if defined(HAVE_SNAPPY)
   else if (clibcode == BLOSC_SNAPPY_LIB) {
 #if defined(SNAPPY_VERSION)
     sprintf(sbuffer, "%d.%d.%d", SNAPPY_MAJOR, SNAPPY_MINOR, SNAPPY_PATCHLEVEL);
     clibversion = sbuffer;
-#endif /*  SNAPPY_VERSION */
+#endif /* SNAPPY_VERSION */
   }
-#endif /*  HAVE_SNAPPY */
+#endif /* HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
   else if (clibcode == BLOSC_ZLIB_LIB) {
     clibversion = ZLIB_VERSION;
   }
-#endif /*  HAVE_ZLIB */
+#endif /* HAVE_ZLIB */
+#if defined(HAVE_ZSTD)
+  else if (clibcode == BLOSC_ZSTD_LIB) {
+    sprintf(sbuffer, "%d.%d.%d",
+            ZSTD_VERSION_MAJOR, ZSTD_VERSION_MINOR, ZSTD_VERSION_RELEASE);
+    clibversion = sbuffer;
+  }
+#endif /* HAVE_ZSTD */
 
   *complib = strdup(clibname);
   *version = strdup(clibversion);
