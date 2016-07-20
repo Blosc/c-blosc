@@ -7,10 +7,19 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.9.3 to 1.9.4
-===========================
+Changes from 1.9.3 to 1.10.0
+============================
 
-#XXX version-specific blurb XXX#
+- Initial support for Zstandard (0.7.4). Zstandard (or Zstd for short) is a new
+  compression library that allows better compression than Zlib, but that works
+  typically faster (and some times much faster), making of it a good match for
+  Blosc.
+
+  Although the Zstd format is considered stable
+  (http://fastcompression.blogspot.com.es/2016_07_03_archive.html), its API is
+  maturing very fast, and despite passing the extreme test suite for C-Blosc,
+  this codec should be considered in beta for C-Blosc usage purposes. Please
+  test it and report back any possible issues you may get.
 
 
 Changes from 1.9.2 to 1.9.3
@@ -367,7 +376,7 @@ Changes from 1.3.5 to 1.3.6
 
 * Updated to LZ4 r118 due to a (highly unlikely) security hole.  For
   details see:
- 
+
   http://fastcompression.blogspot.fr/2014/06/debunking-lz4-20-years-old-bug-myth.html
 
 
@@ -696,4 +705,3 @@ Changes from 0.8.0 to 0.9
   MacOSX (for example, Tiger).  At nay rate, posix_memalign() is not
   necessary on Mac because 16 bytes alignment is ensured by default.
   Thanks to Ivan Vilata.  Fixes #3.
-
