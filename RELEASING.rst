@@ -44,8 +44,9 @@ Tagging
 
     $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
-- Push the tag to the github repo::
+- Push the previous commits and tag to the github repo::
 
+    $ git push
     $ git push --tags
 
 
