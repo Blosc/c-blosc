@@ -1,15 +1,22 @@
 ===============================================================
- Announcing c-blosc 1.10.0
+ Announcing c-blosc 1.10.1
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This release introduces support for the new Zstd codec. Zstd is meant to
-achieve larger compression ratios than Zlib, but with higher speeds. We
-are talking about a well-balanced codec that should see a lot of use
-among Blosc users. There is a blog about what you can expect of it in:
+This is a maintenance release fixing some issues in C11 compiler
+detection that affected Mac OSX.
+
+Also, in 1.10.0 support for Zstd has been introduced for first time, and
+so far the experience with it is really pleasant. As an example, see how
+Blosc + Zstd can collaborate compressing images delivering pretty
+impressive compression ratios and extremely fast decompression:
+
+https://github.com/Cyan4973/zstd/issues/256
+
+There is also a blog about what you can expect of it in:
 
 http://blosc.org/blog/zstd-has-just-landed-in-blosc.html
 
