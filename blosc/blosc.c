@@ -61,11 +61,6 @@
   #include <pthread.h>
 #endif
 
-/* If C11 is supported, use it's built-in aligned allocation. */
-#if __STDC_VERSION__ >= 201112L
-  #include <stdalign.h>
-#endif
-
 
 /* Some useful units */
 #define KB 1024
@@ -207,15 +202,9 @@ static uint8_t *my_malloc(size_t size)
   int res = 0;
 
 /* Do an alignment to 32 bytes because AVX2 is supported */
-#if _ISOC11_SOURCE
-  /* C11 aligned allocation. 'size' must be a multiple of the alignment. */
-  block = aligned_alloc(32, size);
-#elif defined(_WIN32)
+#if defined(_WIN32)
   /* A (void *) cast needed for avoiding a warning with MINGW :-/ */
   block = (void *)_aligned_malloc(size, 32);
-#elif defined __APPLE__
-  /* Mac OS X guarantees 16-byte alignment in small allocs */
-  block = malloc(size);
 #elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
   /* Platform does have an implementation of posix_memalign */
   res = posix_memalign(&block, 32, size);

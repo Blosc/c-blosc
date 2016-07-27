@@ -10,7 +10,10 @@
 Changes from 1.10.0 to 1.10.1
 =============================
 
- #XXX version-specific blurb XXX#
+- Removed an inconsistent check for C11 (__STDC_VERSION__ >= 201112L and
+  _ISOC11_SOURCE) as this seem to pose problems on compilers doing different
+  things in this check (e.g. clang). See
+  https://github.com/Blosc/bloscpack/issues/50.
 
 
 Changes from 1.9.3 to 1.10.0
