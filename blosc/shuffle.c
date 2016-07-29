@@ -22,8 +22,6 @@ typedef _Bool bool;
 /* do not have a C99 compiler */
 typedef unsigned char bool;
 #endif
-static const bool false = 0;
-static const bool true = 1;
 
 
 #if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
