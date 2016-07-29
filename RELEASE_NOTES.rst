@@ -7,10 +7,10 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.10.0 to 1.10.1
+Changes from 1.10.1 to 1.10.2
 =============================
 
-#XXX version-specific blurb XXX#
+- Force the use of --std=gnu99 when using gcc.  Fixes #174.
 
 
 Changes from 1.10.0 to 1.10.1
