@@ -1,13 +1,14 @@
 ===============================================================
- Announcing c-blosc 1.10.1
+ Announcing C-Blosc 1.10.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release fixing some issues in C11 compiler
-detection that affected Mac OSX.
+This is a maintenance release fixing compilation on platforms where
+compilation with GCC does not default to -std=gnu99.  Fixes #174.
+Thanks to Matthew Brett for reporting.
 
 Also, in 1.10.0 support for Zstd has been introduced for first time, and
 so far the experience with it is really pleasant. As an example, see how
