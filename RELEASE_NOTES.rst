@@ -10,6 +10,12 @@
 Changes from 1.10.1 to 1.10.2
 =============================
 
+#XXX version-specific blurb XXX#
+
+
+Changes from 1.10.1 to 1.10.2
+=============================
+
 - Force the use of --std=gnu99 when using gcc.  Fixes #174.
 
 
