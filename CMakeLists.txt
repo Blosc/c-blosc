@@ -79,11 +79,6 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_RELEASE[ \t]+([0-9]+).*"
 string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+)\".*"
     "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
-if(APPLE)
-  # enable @rpath in the install name for any shared library being built.  See #175.
-  set(CMAKE_MACOSX_RPATH True)
-endif()
-
 message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
@@ -180,6 +175,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     # Set the possible values of build type for cmake-gui
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
         "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+if(APPLE)
+  # enable @rpath in the install name for any shared library being built.  See #175.
+  set(CMAKE_MACOSX_RPATH TRUE)
 endif()
 
 # Based on the target system's processor and the compiler being used,
