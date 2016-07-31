@@ -7,10 +7,10 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.10.1 to 1.10.2
+Changes from 1.10.2 to 1.10.3
 =============================
 
-#XXX version-specific blurb XXX#
+- Added the @rpath flag in Mac OSX for shared libraries.  Fixes #175.
 
 
 Changes from 1.10.1 to 1.10.2
