@@ -14,6 +14,8 @@ Changes from 1.10.2 to 1.10.3
 
 - Added a fix for VS2008 discovered in: https://github.com/PyTables/PyTables/pull/569/files#diff-953cf824ebfea7208d2a2e312d9ccda2L126
 
+- License changed from MIT to 3-clause BSD style.
+
 
 Changes from 1.10.1 to 1.10.2
 =============================
