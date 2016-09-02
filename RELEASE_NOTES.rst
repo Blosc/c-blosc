@@ -7,6 +7,12 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.11.0 to 1.11.1
+=============================
+
+#XXX version-specific blurb XXX#
+
+
 Changes from 1.10.2 to 1.11.0
 =============================
 
