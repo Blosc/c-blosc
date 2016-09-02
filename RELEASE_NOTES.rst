@@ -10,6 +10,8 @@
 Changes from 1.10.2 to 1.10.3
 =============================
 
+- Internal Zstd codec upgraded to 1.0.0.
+
 - Added the @rpath flag in Mac OSX for shared libraries.  Fixes #175.
 
 - Added a fix for VS2008 discovered in: https://github.com/PyTables/PyTables/pull/569/files#diff-953cf824ebfea7208d2a2e312d9ccda2L126
