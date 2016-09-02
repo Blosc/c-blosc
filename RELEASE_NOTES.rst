@@ -12,6 +12,10 @@ Changes from 1.10.2 to 1.10.3
 
 - Internal Zstd codec upgraded to 1.0.0.
 
+- New block size computation inherited from C-Blosc2. Benchmarks are saying that
+  this benefits mainly to LZ4, LZ4HC, Zlib and Zstd codecs, both in speed and in
+  compression ratios (although YMMV for your case).
+
 - Added the @rpath flag in Mac OSX for shared libraries.  Fixes #175.
 
 - Added a fix for VS2008 discovered in: https://github.com/PyTables/PyTables/pull/569/files#diff-953cf824ebfea7208d2a2e312d9ccda2L126
