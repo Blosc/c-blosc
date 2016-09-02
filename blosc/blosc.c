@@ -498,8 +498,7 @@ static int zlib_wrap_decompress(const char* input, size_t compressed_length,
 static int zstd_wrap_compress(const char* input, size_t input_length,
                               char* output, size_t maxout, int clevel) {
   size_t code;
-  // clevel = (clevel < 9) ? clevel * 2 - 1 : ZSTD_maxCLevel();  // see zstd#254
-  clevel = (clevel < 9) ? clevel * 2 - 1 : 22;
+  clevel = (clevel < 9) ? clevel * 2 - 1 : ZSTD_maxCLevel();
   code = ZSTD_compress(
       (void*)output, maxout, (void*)input, input_length, clevel);
   if (ZSTD_isError(code)) {
