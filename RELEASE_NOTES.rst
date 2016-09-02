@@ -7,7 +7,7 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.10.2 to 1.10.3
+Changes from 1.10.2 to 1.11.0
 =============================
 
 - Internal Zstd codec upgraded to 1.0.0.
