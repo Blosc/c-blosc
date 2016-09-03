@@ -695,10 +695,11 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     _tmp = tmp;
   }
 
-  compformat = (*(context->header_flags) & 0xe0) >> 5;
-
   /* The number of splits for this block */
-  if (!dont_split && !leftoverblock) {
+  if (!dont_split &&
+      /* For compatibility with before the introduction of the split flag */
+      ((typesize <= MAX_SPLITS) && (blocksize/typesize) >= MIN_BUFFERSIZE) &&
+      !leftoverblock) {
     nsplits = typesize;
   }
   else {
