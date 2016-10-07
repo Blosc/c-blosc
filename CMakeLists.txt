@@ -297,11 +297,6 @@ endif()
 # subdirectories
 add_subdirectory(blosc)
 
-if (BLOSC_IS_SUBPROJECT)
-    add_library(blosc ALIAS blosc_static)
-    message(STATUS "Enabled `blosc` alias target to static library.")
-endif()
-
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

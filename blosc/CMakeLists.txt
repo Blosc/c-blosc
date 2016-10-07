@@ -6,7 +6,7 @@ set(INTERNAL_LIBS ${PROJECT_SOURCE_DIR}/internal-complibs)
 # Hide symbols by default unless they're specifically exported.
 # This makes it easier to keep the set of exported symbols the
 # same across all compilers/platforms.
-#set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
 
 # includes
 if(NOT DEACTIVATE_LZ4)
