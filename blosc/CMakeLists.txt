@@ -6,7 +6,9 @@ set(INTERNAL_LIBS ${PROJECT_SOURCE_DIR}/internal-complibs)
 # Hide symbols by default unless they're specifically exported.
 # This makes it easier to keep the set of exported symbols the
 # same across all compilers/platforms.
-cmake_policy(SET CMP0063 NEW)
+if (NOT CMAKE_VERSION VERSION_LESS 3.3)
+    cmake_policy(SET CMP0063 NEW)
+endif()
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
 # includes
