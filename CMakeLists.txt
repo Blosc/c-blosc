@@ -68,6 +68,9 @@
 
 
 cmake_minimum_required(VERSION 2.8.10)
+if (NOT CMAKE_VERSION VERSION_LESS 3.3)
+    cmake_policy(SET CMP0063 NEW)
+endif()
 project(blosc)
 
 # parse the full version numbers from blosc.h
