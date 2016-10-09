@@ -6,11 +6,13 @@
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
 
+
 Changes in master
 =============================
 
 - Enabled use as a CMake subproject, exporting shared & static library targets
-  for super-projects to use. #178
+  for super-projects to use. See PRs #178, #179 and #180.  Thanks to Kevin
+  Murray.
 
 Changes from 1.11.0 to 1.11.1
 =============================
