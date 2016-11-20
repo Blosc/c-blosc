@@ -31,14 +31,14 @@
 #if defined(_WIN32)
   /* For QueryPerformanceCounter(), etc. */
   #include <windows.h>
-#elif defined(__MACH__)
+#elif defined(__MACH__) && defined(__APPLE__)
   #include <mach/clock.h>
   #include <mach/mach.h>
   #include <time.h>
   #include <sys/time.h>
 #elif defined(__unix__)
   #include <unistd.h>
-  #if defined(__linux__)
+  #if defined(__GLIBC__)
     #include <time.h>
   #else
     #include <sys/time.h>
@@ -89,7 +89,7 @@ double blosc_elapsed_usecs(blosc_timestamp_t start_time, blosc_timestamp_t end_t
 
 /* Set a timestamp value to the current time. */
 void blosc_set_timestamp(blosc_timestamp_t* timestamp) {
-#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+#if defined(__MACH__) && defined(__APPLE__) // OS X does not have clock_gettime, use clock_get_time
   clock_serv_t cclock;
   mach_timespec_t mts;
   host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
