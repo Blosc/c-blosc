@@ -14,6 +14,9 @@ Changes in master
   for super-projects to use. See PRs #178, #179 and #180.  Thanks to Kevin
   Murray.
 
+- Internal LZ4 updated to 1.7.5.
+
+
 Changes from 1.11.0 to 1.11.1
 =============================
 
