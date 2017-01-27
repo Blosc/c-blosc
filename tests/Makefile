@@ -34,7 +34,7 @@ LDFLAGS += -DHAVE_ZLIB -lz
 
 
 # Support for internal Zstd
-ZSTD_DIR = ../internal-complibs/zstd-1.0.0
+ZSTD_DIR = ../internal-complibs/zstd-1.1.2
 CFLAGS += -DHAVE_ZSTD -I$(ZSTD_DIR) -I$(ZSTD_DIR)/common
 BLOSC_LIB += $(wildcard $(ZSTD_DIR)/*/*.c)
 
