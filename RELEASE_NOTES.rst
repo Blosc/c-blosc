@@ -7,7 +7,7 @@
 :URL: http://www.blosc.org
 
 
-Changes in master
+Changes from 1.11.1 to 1.11.2
 =============================
 
 - Enabled use as a CMake subproject, exporting shared & static library targets
