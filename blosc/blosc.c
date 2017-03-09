@@ -500,6 +500,8 @@ static int zstd_wrap_compress(const char* input, size_t input_length,
                               char* output, size_t maxout, int clevel) {
   size_t code;
   clevel = (clevel < 9) ? clevel * 2 - 1 : ZSTD_maxCLevel();
+  /* Make the level 8 close enough to maxCLevel */
+  if (clevel == 8) clevel = ZSTD_maxCLevel() - 2;
   code = ZSTD_compress(
       (void*)output, maxout, (void*)input, input_length, clevel);
   if (ZSTD_isError(code)) {
@@ -946,8 +948,11 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
     else if (clevel <= 6) {
       blocksize *= 2;
     }
-    else if (clevel < 9) {
+    else if (clevel == 7) {
       blocksize *= 4;
+    }
+    else if (clevel == 8) {
+      blocksize *= 8;
     }
     else {
       blocksize *= 16;
