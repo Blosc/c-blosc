@@ -14,6 +14,9 @@ Changes from 1.11.2 to 1.11.3
 
 - Internal Zstd codec updated to 1.1.3.
 
+- New blocksize for complevel 8 in automatic mode.  This should help specially
+  the Zstd codec to achieve better compression ratios.
+
 
 Changes from 1.11.1 to 1.11.2
 =============================
