@@ -7,6 +7,14 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.11.2 to 1.11.3
+=============================
+
+- Fixed #181: bitshuffle filter for big endian machines.
+
+- Internal Zstd codec updated to 1.1.3.
+
+
 Changes from 1.11.1 to 1.11.2
 =============================
 
