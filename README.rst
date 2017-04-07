@@ -240,12 +240,6 @@ the libraries and the header files for these libraries are accessible,
 these will be used by default.  See an `example here
 <https://github.com/Blosc/c-blosc/blob/master/examples/many_compressors.c>`_.
 
-*Note on Zlib*: the library should be easily found on UNIX systems,
-although on Windows, you can help CMake to find it by setting the
-environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
-directories are. Also, make sure that Zlib DDL library is in your
-'\Windows' directory.
-
 However, the full sources for LZ4, LZ4HC, Snappy and Zlib have been
 included in Blosc too. So, in general, you should not worry about not
 having (or CMake not finding) the libraries in your system because in
@@ -266,6 +260,24 @@ You can also disable support for some compression libraries:
 .. code-block:: console
 
   $ cmake -DDEACTIVATE_SNAPPY=ON ..
+  
+Windows troubleshooting
+~~~~~~~~~~~~~~~~~~~~~~~
+
+While the *ZLib* library should be easily found on UNIX systems,
+on Windows you can help CMake to find it by setting the
+environment variable 'ZLIB_ROOT' to where zlib 'include' and 'lib'
+directories are. Also, make sure that Zlib DDL library is in your
+'\Windows' directory.
+
+However, the best is to use the ZLib internal sources with:
+
+.. code-block:: console
+
+  > cmake -DPREFER_EXTERNAL_ZLIB=OFF ..
+
+Due to its better behaviour, disabling the use of a external ZLib
+might be the default in the future.
 
 Mac OSX troubleshooting
 ~~~~~~~~~~~~~~~~~~~~~~~
