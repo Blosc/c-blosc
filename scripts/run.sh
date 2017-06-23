@@ -5,7 +5,7 @@ set -x
 
 if [[ ! -z $TRAVIS_TAG ]]; then
     export CONAN_REFERENCE="c-blosc/${TRAVIS_TAG}"
-    python build.py
+    python conanbuild.py
 else
     mkdir build
     cd build
