@@ -46,4 +46,4 @@ install:
     - conan user # It creates the conan data directory
 
 test_script:
-    - scripts\\winrun.cmd
+    - appveyor\\winrun.cmd
