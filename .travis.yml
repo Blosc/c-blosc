@@ -8,7 +8,7 @@ env:
 
 linux: &linux
    os: linux
-   sudo: required
+   sudo: false
    dist: trusty
    language: python
    python: "3.6"
