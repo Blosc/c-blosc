@@ -21,23 +21,23 @@ environment:
     CONAN_VISUAL_RUNTIMES: "MD"
     CONAN_ARCHS: "x86,x86_64"
 
-matrix:
-    - GENERATOR: "Visual Studio 10 2010"
-      CONFIG: Release
+    matrix:
+        - GENERATOR: "Visual Studio 10 2010"
+          CONFIG: Release
 
-    - GENERATOR: "Visual Studio 10 2010 Win64"
-      CONFIG: Release
+        - GENERATOR: "Visual Studio 10 2010 Win64"
+          CONFIG: Release
 
-    - GENERATOR: "Visual Studio 12 2013"
-      CONFIG: Release
+        - GENERATOR: "Visual Studio 12 2013"
+          CONFIG: Release
 
-    - GENERATOR: "Visual Studio 12 Win64"
-      CONFIG: Release
+        - GENERATOR: "Visual Studio 12 Win64"
+          CONFIG: Release
 
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      CONAN_VISUAL_VERSIONS: 14
-      GENERATOR: "Visual Studio 14 2015 Win64"
-      CONFIG: Release
+        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+          CONAN_VISUAL_VERSIONS: 14
+          GENERATOR: "Visual Studio 14 2015 Win64"
+          CONFIG: Release
 
 install:
     - set PATH=%PATH%;%PYTHON%/Scripts/
