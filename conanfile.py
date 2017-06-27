@@ -21,7 +21,6 @@ class CbloscConan(ConanFile):
     
     def source(self):
         self.run("git clone https://github.com/Blosc/c-blosc.git")
-        #self.run("cd hello && git checkout static_shared")
         # patch to ensure compatibility
         tools.replace_in_file("c-blosc/CMakeLists.txt", "PROJECT(blosc)", '''PROJECT(blosc)
             include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
