@@ -25,9 +25,6 @@ matrix:
         compiler: clang
         osx_image: xcode8.3
 
-
-before_install: ./scripts/travis-before-install.sh
-
 install:
   - bash scripts/install.sh
 
