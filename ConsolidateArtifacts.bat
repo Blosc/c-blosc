@@ -3,19 +3,24 @@ setlocal EnableDelayedExpansion
 :: Libraries from local folder
 @SETLOCAL
 @ECHO off
-call "%VS140COMNTOOLS%..\..\VC\bin\vcvars32.bat"
 
+::set up dirs
 set "OUT_DIR=./Artifacts"
 set "CURR_DIR=."
 
 ::remove original artifacts (if any)
-if exist "OUT_DIR" rmdir "%OUT_DIR%" /s /q
+if exist "%OUT_DIR%" rmdir "%OUT_DIR%"  /s /q 
+if errorlevel 1 exit /b %errorlevel%
+
 ::create artifacts folder
 mkdir "%OUT_DIR%"
+if errorlevel 1 exit /b %errorlevel%
+
 
 ::move required dll,.lib and .exp into build folder
 xcopy  "%CURR_DIR%\blosc\Release\blosc.*" "%OUT_DIR%" /y/s/q/i
-if !errorlevel! neq 0 exit /b !errorlevel!
+if errorlevel 1 exit /b %errorlevel%
+
 
 exit /b 0
 
