@@ -16,8 +16,8 @@ environment:
     CONAN_LOGIN_USERNAME: "francescalted"
     CONAN_CHANNEL: "stable"
     VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
-    CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/c-blosc"
-    CONAN_REMOTES: "https://api.bintray.com/conan/blosc/c-blosc"
+    CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
+    CONAN_REMOTES: "https://api.bintray.com/conan/blosc/Conan"
     CONAN_VISUAL_RUNTIMES: "MD"
     CONAN_ARCHS: "x86,x86_64"
 

@@ -2,8 +2,8 @@ env:
    global:
      - CONAN_USERNAME: "francescalted"
      - CONAN_CHANNEL: "stable"
-     - CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/c-blosc"
-     - CONAN_REMOTES: "https://api.bintray.com/conan/blosc/c-blosc"
+     - CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
+     - CONAN_REMOTES: "https://api.bintray.com/conan/blosc/Conan"
      - CONAN_ARCHS: "x86,x86_64"
 
 linux: &linux
