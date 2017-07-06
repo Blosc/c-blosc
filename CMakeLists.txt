@@ -24,7 +24,7 @@
 #   PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
 #       sources
-#   PREFER_EXTERNAL_SNAPPY: default ON
+#   PREFER_EXTERNAL_SNAPPY: default OFF
 #       when found, use the installed Snappy libs instead of included
 #       sources
 #   PREFER_EXTERNAL_ZLIB: default OFF
@@ -108,7 +108,7 @@ option(DEACTIVATE_ZSTD
 option(PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
 option(PREFER_EXTERNAL_SNAPPY
-    "Find and use external Snappy library instead of included sources." ON)
+    "Find and use external Snappy library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZLIB
     "Find and use external Zlib library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZSTD
