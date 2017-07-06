@@ -7,6 +7,20 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.11.3 to 1.12.0
+=============================
+
+- Zlib and Zstd codecs are compiled internally now, even if they are
+  installed in the machine.  This has been done in order to avoid
+  problems in machines having the shared libraries for the codecs
+  accessible but not the includes (typical in Windows boxes).  Also,
+  the Zstd codec runs much faster when compiled internally.  The
+  previous behaviour can be restored by activating the cmake options
+  PREFER_EXTERNAL_ZLIB and PREFER_EXTERNAL_ZSTD.
+
+- Zstd has been updated to 1.3.0.
+
+
 Changes from 1.11.3 to 1.11.4
 =============================
 
