@@ -1,7 +1,5 @@
 setlocal EnableDelayedExpansion
 
-:: Libraries from local folder
-@SETLOCAL
 @ECHO off
 
 ::set up dirs
