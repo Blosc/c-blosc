@@ -1,19 +1,18 @@
 ===============================================================
- Announcing C-Blosc 1.11.3
+ Announcing C-Blosc 1.12.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Fixed an important bug in bitshuffle filter for big endian machines.
-This prevented files written in bigendian machines to be read from
-little endian ones.  See issue https://github.com/Blosc/c-blosc/issues/181.
+In order to avoid problems with platforms with incomplete development
+library codecs, the default is now to compile the internal codecs.
+Users can still compile Blosc with external codecs by properly setting
+cmake options like PREFER_EXTERNAL_SNAPPY, PREFER_EXTERNAL_ZLIB or
+PREFER_EXTERNAL_ZSTD.
 
-Also, the internal Zstd codec has been updated to 1.1.3.
-
-Finally, the blocksize for compression level 8 has been made 2x larger.
-This should help specially Zstd codec to achieve better compression ratios.
+Also, the internal Zstd codec has been updated to 1.3.0.
 
 For more info, please see the release notes in:
 
