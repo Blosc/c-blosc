@@ -27,7 +27,7 @@
 #   PREFER_EXTERNAL_SNAPPY: default ON
 #       when found, use the installed Snappy libs instead of included
 #       sources
-#   PREFER_EXTERNAL_ZLIB: default ON
+#   PREFER_EXTERNAL_ZLIB: default OFF
 #       when found, use the installed zlib libs instead of included
 #       sources
 #   PREFER_EXTERNAL_ZSTD: default OFF
@@ -110,9 +110,9 @@ option(PREFER_EXTERNAL_LZ4
 option(PREFER_EXTERNAL_SNAPPY
     "Find and use external Snappy library instead of included sources." ON)
 option(PREFER_EXTERNAL_ZLIB
-    "Find and use external Zlib library instead of included sources." ON)
+    "Find and use external Zlib library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZSTD
-    "Find and use external Zstd library instead of included sources." ON)
+    "Find and use external Zstd library instead of included sources." OFF)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
