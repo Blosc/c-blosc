@@ -1,20 +1,11 @@
-env:
-   global:
-     - CONAN_USERNAME: "francescalted"
-     - CONAN_CHANNEL: "stable"
-     - CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
-     - CONAN_REMOTES: "https://api.bintray.com/conan/blosc/Conan"
-     - CONAN_ARCHS: "x86,x86_64"
+language: c
 
 linux: &linux
    os: linux
    sudo: false
    dist: trusty
-   language: python
-   python: "3.6"
 osx: &osx
    os: osx
-   language: generic
 
 matrix:
    include:
@@ -28,5 +19,11 @@ matrix:
 install:
   - bash scripts/install.sh
 
+before_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+
 script:
-   - bash scripts/run.sh
+  - cmake --build . --config Release
+  - ctest
