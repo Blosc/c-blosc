@@ -2,3 +2,7 @@ bench/bench
 build/
 
 *.sw?
+
+**/npm-debug.log
+artifacts/
+node_modules/
