@@ -1,0 +1,19 @@
+{
+  "name": "@sb/c-blosc",
+  "version": "1.6.50",
+  "description": "fl4re c-blosc",
+  "repository": "https://github.com/fl4re/c-blosc",
+  "private": false,
+  "binary": {
+    "file": "{package_name}/{package_version}/c-blosc-{package_version}-{platform}-{arch}.tar.gz",
+    "host": "https://registry-node.starbreeze.com/-/releases",
+    "os": "win32",
+    "path": [
+      "artifacts",
+      "artifacts/**"
+    ]
+  },
+  "scripts": {
+    "install": "prades install"
+  }
+}
