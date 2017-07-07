@@ -30,7 +30,6 @@ exit /b 0
 echo Failed to compile:  "Blosc" error code: %errorlevel%
 @ECHO OFF
 popd 
-pause 
 exit /b %errorlevel%
 @ECHO ON
 
