@@ -73,7 +73,6 @@ The following procedure describes the "out of source" build.
 
 ```console
 
-  $ git clone https://github.com/Blosc/c-blosc
   $ cd c-blosc
   $ mkdir build
   $ cd build
@@ -135,7 +134,7 @@ You can also disable support for some compression libraries:
 
 ```console
 
-  $ cmake -DDEACTIVATE_SNAPPY=ON ..
+  $ cmake -DDEACTIVATE_SNAPPY=ON ..  # in case you don't have a C++ compiler
 ```
  
 ## Examples
