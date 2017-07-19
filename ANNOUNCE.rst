@@ -1,18 +1,15 @@
 ===============================================================
- Announcing C-Blosc 1.12.0
+ Announcing C-Blosc 1.12.1
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-In order to avoid problems with platforms with incomplete development
-library codecs, the default is now to compile the internal codecs.
-Users can still compile Blosc with external codecs by properly setting
-cmake options like PREFER_EXTERNAL_SNAPPY, PREFER_EXTERNAL_ZLIB or
-PREFER_EXTERNAL_ZSTD.
-
-Also, the internal Zstd codec has been updated to 1.3.0.
+Backported BloscLZ parameters that were fine-tuned for C-Blosc2.
+You should expect better compression ratios and faster operation,
+specially on modern CPUs.  See:
+http://blosc.org/posts/blosclz-tuning/
 
 For more info, please see the release notes in:
 
