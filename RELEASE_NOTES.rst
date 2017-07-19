@@ -10,7 +10,10 @@
 Changes from 1.12.0 to 1.12.1
 =============================
 
-#XXX version-specific blurb XXX#
+- Backported BloscLZ parameters that were fine-tuned for C-Blosc2.
+  You should expect better compression ratios and faster operation,
+  specially on modern CPUs.  See:
+  http://blosc.org/posts/blosclz-tuning/
 
 
 Changes from 1.11.3 to 1.12.0

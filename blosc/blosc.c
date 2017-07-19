@@ -901,9 +901,10 @@ static int do_job(struct blosc_context* context)
 
 
 /* Whether a codec is meant for High Compression Ratios */
-#define HCR(codec) ( ((codec) == BLOSC_LZ4HC) ||                  \
-                     ((codec) == BLOSC_ZLIB) ||                   \
-                     ((codec) == BLOSC_ZSTD) ? 1 : 0 )
+#define HCR(codec) (  \
+             ((codec) == BLOSC_LZ4HC) ||                  \
+             ((codec) == BLOSC_ZLIB) ||                   \
+             ((codec) == BLOSC_ZSTD) ? 1 : 0 )
 
 
 static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
@@ -936,29 +937,36 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
       blocksize *= 2;
     }
 
-    if (clevel == 0) {
+    switch (clevel) {
+    case 0:
+      /* Case of plain copy */
       blocksize /= 4;
-    }
-    else if (clevel <= 3) {
-      blocksize /= 2;
-    }
-    else if (clevel <= 5) {
+      break;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
       blocksize *= 1;
-    }
-    else if (clevel <= 6) {
+      break;
+    case 5:
       blocksize *= 2;
-    }
-    else if (clevel == 7) {
+      break;
+    case 6:
       blocksize *= 4;
-    }
-    else if (clevel == 8) {
+      break;
+    case 7:
+    case 8:
       blocksize *= 8;
-    }
-    else {
-      blocksize *= 16;
+      break;
+    case 9:
+      /* Do not exceed 256 KB for non HCR codecs */
+      blocksize *= 8;
+      if (HCR(context->compcode)) {
+        blocksize *= 2;
+      }
+      break;
     }
   }
-
   /* Check that blocksize is not too large */
   if (blocksize > (int32_t)nbytes) {
     blocksize = nbytes;
