@@ -23,7 +23,7 @@ extern "C" {
 
 #define BLOSC_VERSION_STRING   "1.12.2.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2017-07-19 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2017-07-31 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.0.6"   /* the internal compressor version */
 
@@ -64,11 +64,13 @@ extern "C" {
 #define BLOSC_SNAPPY    3
 #define BLOSC_ZLIB      4
 #define BLOSC_ZSTD      5
+#define BLOSC_LIZARD    6
 
 /* Names for the different compressors shipped with Blosc */
 #define BLOSC_BLOSCLZ_COMPNAME   "blosclz"
 #define BLOSC_LZ4_COMPNAME       "lz4"
 #define BLOSC_LZ4HC_COMPNAME     "lz4hc"
+#define BLOSC_LIZARD_COMPNAME    "lizard"
 #define BLOSC_SNAPPY_COMPNAME    "snappy"
 #define BLOSC_ZLIB_COMPNAME      "zlib"
 #define BLOSC_ZSTD_COMPNAME      "zstd"
@@ -79,10 +81,12 @@ extern "C" {
 #define BLOSC_SNAPPY_LIB    2
 #define BLOSC_ZLIB_LIB      3
 #define BLOSC_ZSTD_LIB      4
+#define BLOSC_LIZARD_LIB    5
 
 /* Names for the different compression libraries shipped with Blosc */
 #define BLOSC_BLOSCLZ_LIBNAME   "BloscLZ"
 #define BLOSC_LZ4_LIBNAME       "LZ4"
+#define BLOSC_LIZARD_LIBNAME    "Lizard"
 #define BLOSC_SNAPPY_LIBNAME    "Snappy"
 #define BLOSC_ZLIB_LIBNAME      "Zlib"
 #define BLOSC_ZSTD_LIBNAME      "Zstd"
@@ -91,6 +95,7 @@ extern "C" {
 #define BLOSC_BLOSCLZ_FORMAT  BLOSC_BLOSCLZ_LIB
 #define BLOSC_LZ4_FORMAT      BLOSC_LZ4_LIB
 #define BLOSC_LZ4HC_FORMAT    BLOSC_LZ4_LIB /* LZ4HC and LZ4 share the same format */
+#define BLOSC_LIZARD_FORMAT   BLOSC_LIZARD_LIB
 #define BLOSC_SNAPPY_FORMAT   BLOSC_SNAPPY_LIB
 #define BLOSC_ZLIB_FORMAT     BLOSC_ZLIB_LIB
 #define BLOSC_ZSTD_FORMAT     BLOSC_ZSTD_LIB
@@ -101,6 +106,7 @@ extern "C" {
 #define BLOSC_BLOSCLZ_VERSION_FORMAT  1
 #define BLOSC_LZ4_VERSION_FORMAT      1
 #define BLOSC_LZ4HC_VERSION_FORMAT    1  /* LZ4HC and LZ4 share the same format */
+#define BLOSC_LIZARD_VERSION_FORMAT   1
 #define BLOSC_SNAPPY_VERSION_FORMAT   1
 #define BLOSC_ZLIB_VERSION_FORMAT     1
 #define BLOSC_ZSTD_VERSION_FORMAT     1
@@ -179,7 +185,7 @@ BLOSC_EXPORT void blosc_destroy(void);
   BLOSC_TYPESIZE=(INTEGER): This will overwrite the `typesize`
   parameter before the compression process starts.
 
-  BLOSC_COMPRESSOR=[BLOSCLZ | LZ4 | LZ4HC | SNAPPY | ZLIB]: This will
+  BLOSC_COMPRESSOR=[BLOSCLZ | LZ4 | LZ4HC | LIZARD | SNAPPY | ZLIB]: This will
   call blosc_set_compressor(BLOSC_COMPRESSOR) before the compression
   process starts.
 

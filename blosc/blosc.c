@@ -22,9 +22,13 @@
 #include "shuffle.h"
 #include "blosclz.h"
 #if defined(HAVE_LZ4)
-  #include "lz4.h"
-  #include "lz4hc.h"
+#include "lz4.h"
+#include "lz4hc.h"
 #endif /*  HAVE_LZ4 */
+#if defined(HAVE_LIZARD)
+#include "lizard_compress.h"
+#include "lizard_decompress.h"
+#endif /*  HAVE_LIZARD */
 #if defined(HAVE_SNAPPY)
   #include "snappy-c.h"
 #endif /*  HAVE_SNAPPY */
@@ -295,6 +299,8 @@ static int compname_to_clibcode(const char *compname)
     return BLOSC_LZ4_LIB;
   if (strcmp(compname, BLOSC_LZ4HC_COMPNAME) == 0)
     return BLOSC_LZ4_LIB;
+  if (strcmp(compname, BLOSC_LIZARD_COMPNAME) == 0)
+    return BLOSC_LIZARD_LIB;
   if (strcmp(compname, BLOSC_SNAPPY_COMPNAME) == 0)
     return BLOSC_SNAPPY_LIB;
   if (strcmp(compname, BLOSC_ZLIB_COMPNAME) == 0)
@@ -309,6 +315,7 @@ static char *clibcode_to_clibname(int clibcode)
 {
   if (clibcode == BLOSC_BLOSCLZ_LIB) return BLOSC_BLOSCLZ_LIBNAME;
   if (clibcode == BLOSC_LZ4_LIB) return BLOSC_LZ4_LIBNAME;
+  if (clibcode == BLOSC_LIZARD_LIB) return BLOSC_LIZARD_LIBNAME;
   if (clibcode == BLOSC_SNAPPY_LIB) return BLOSC_SNAPPY_LIBNAME;
   if (clibcode == BLOSC_ZLIB_LIB) return BLOSC_ZLIB_LIBNAME;
   if (clibcode == BLOSC_ZSTD_LIB) return BLOSC_ZSTD_LIBNAME;
@@ -333,6 +340,8 @@ int blosc_compcode_to_compname(int compcode, char **compname)
     name = BLOSC_LZ4_COMPNAME;
   else if (compcode == BLOSC_LZ4HC)
     name = BLOSC_LZ4HC_COMPNAME;
+  else if (compcode == BLOSC_LIZARD)
+    name = BLOSC_LIZARD_COMPNAME;
   else if (compcode == BLOSC_SNAPPY)
     name = BLOSC_SNAPPY_COMPNAME;
   else if (compcode == BLOSC_ZLIB)
@@ -351,6 +360,10 @@ int blosc_compcode_to_compname(int compcode, char **compname)
   else if (compcode == BLOSC_LZ4HC)
     code = BLOSC_LZ4HC;
 #endif /*  HAVE_LZ4 */
+#if defined(HAVE_LIZARD)
+  else if (compcode == BLOSC_LIZARD)
+    code = BLOSC_LIZARD;
+#endif /* HAVE_LIZARD */
 #if defined(HAVE_SNAPPY)
   else if (compcode == BLOSC_SNAPPY)
     code = BLOSC_SNAPPY;
@@ -383,6 +396,11 @@ int blosc_compname_to_compcode(const char *compname)
     code = BLOSC_LZ4HC;
   }
 #endif /*  HAVE_LZ4 */
+#if defined(HAVE_LIZARD)
+  else if (strcmp(compname, BLOSC_LIZARD_COMPNAME) == 0) {
+    code = BLOSC_LIZARD;
+  }
+#endif /*  HAVE_LIZARD */
 #if defined(HAVE_SNAPPY)
   else if (strcmp(compname, BLOSC_SNAPPY_COMPNAME) == 0) {
     code = BLOSC_SNAPPY;
@@ -436,8 +454,29 @@ static int lz4_wrap_decompress(const char* input, size_t compressed_length,
   }
   return (int)maxout;
 }
-
 #endif /* HAVE_LZ4 */
+
+#if defined(HAVE_LIZARD)
+static int lizard_wrap_compress(const char* input, size_t input_length,
+                                char* output, size_t maxout, int clevel) {
+  int cbytes;
+  cbytes = Lizard_compress(input, output, (int)input_length, (int)maxout,
+                           clevel);
+  return cbytes;
+}
+
+static int lizard_wrap_decompress(const char* input, size_t compressed_length,
+                                  char* output, size_t maxout) {
+  int dbytes;
+  dbytes = Lizard_decompress_safe(input, output, (int)compressed_length,
+                                  (int)maxout);
+  if (dbytes < 0) {
+    return 0;
+  }
+  return dbytes;
+}
+
+#endif /* HAVE_LIZARD */
 
 #if defined(HAVE_SNAPPY)
 static int snappy_wrap_compress(const char* input, size_t input_length,
@@ -528,9 +567,6 @@ static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
   int32_t typesize = context->typesize;
 
-  if (clevel == 9) {
-    return 1;
-  }
   if (context->compcode == BLOSC_BLOSCLZ) {
     /* Compute the power of 2. See:
      * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
@@ -545,6 +581,29 @@ static int get_accel(const struct blosc_context* context) {
      * https://groups.google.com/forum/#!topic/lz4c/zosy90P8MQw
      */
     return (10 - clevel);
+  }
+  else if (context->compcode == BLOSC_LIZARD) {
+    /* Lizard currently accepts clevels from 10 to 49 */
+      switch (clevel) {
+          case 1 :
+              return 10;
+          case 2 :
+              return 10;
+          case 3 :
+              return 10;
+          case 4 :
+              return 10;
+          case 5 :
+              return 20;
+          case 6 :
+              return 20;
+          case 7 :
+              return 20;
+          case 8 :
+              return 41;
+          case 9 :
+              return 41;
+      }
   }
   return 1;
 }
@@ -623,6 +682,12 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
                                    context->clevel);
     }
     #endif /* HAVE_LZ4 */
+    #if defined(HAVE_LIZARD)
+      else if (context->compcode == BLOSC_LIZARD) {
+      cbytes = lizard_wrap_compress((char*)_tmp + j * neblock, (size_t)neblock,
+                                    (char*)dest, (size_t)maxout, accel);
+    }
+    #endif /* HAVE_LIZARD */
     #if defined(HAVE_SNAPPY)
     else if (context->compcode == BLOSC_SNAPPY) {
       cbytes = snappy_wrap_compress((char *)_tmp+j*neblock, (size_t)neblock,
@@ -729,6 +794,12 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
                                      (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_LZ4 */
+      #if defined(HAVE_LIZARD)
+        else if (compformat == BLOSC_LIZARD_FORMAT) {
+        nbytes = lizard_wrap_decompress((char*)src, (size_t)cbytes,
+                                        (char*)_tmp, (size_t)neblock);
+      }
+      #endif /*  HAVE_LIZARD */
       #if defined(HAVE_SNAPPY)
       else if (compformat == BLOSC_SNAPPY_FORMAT) {
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
@@ -902,8 +973,9 @@ static int do_job(struct blosc_context* context)
 
 /* Whether a codec is meant for High Compression Ratios */
 #define HCR(codec) (  \
-             ((codec) == BLOSC_LZ4HC) ||                  \
-             ((codec) == BLOSC_ZLIB) ||                   \
+             ((codec) == BLOSC_LZ4HC) ||          \
+             ((codec) == BLOSC_LIZARD) ||         \
+             ((codec) == BLOSC_ZLIB) ||           \
              ((codec) == BLOSC_ZSTD) ? 1 : 0 )
 
 
@@ -1050,10 +1122,11 @@ static int split_block(int compcode, int typesize, int blocksize) {
      split.  However, in conducted benchmarks LZ4 seems that it runs
      faster if we don't split, which is quite surprising. */
   return (((compcode == BLOSC_BLOSCLZ) ||
-	   //(compcode == BLOSC_LZ4) ||
-	   (compcode == BLOSC_SNAPPY)) &&
-	  (typesize <= MAX_SPLITS) &&
-	  (blocksize / typesize) >= MIN_BUFFERSIZE);
+          // (compcode == BLOSC_LZ4) ||
+          // (compcode == BLOSC_LIZARD) ||
+          (compcode == BLOSC_SNAPPY)) &&
+          (typesize <= MAX_SPLITS) &&
+          (blocksize / typesize) >= MIN_BUFFERSIZE);
 }
 
 
@@ -1084,6 +1157,13 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
     context->dest[1] = BLOSC_LZ4HC_VERSION_FORMAT; /* lz4hc is the same as lz4 */
     break;
 #endif /* HAVE_LZ4 */
+
+#if defined(HAVE_LIZARD)
+    case BLOSC_LIZARD:
+      compformat = BLOSC_LIZARD_FORMAT;
+      context->dest[1] = BLOSC_LIZARD_VERSION_FORMAT;  /* lizard format version */
+      break;
+#endif /*  HAVE_LIZARD */
 
 #if defined(HAVE_SNAPPY)
   case BLOSC_SNAPPY:
@@ -1889,6 +1969,10 @@ char* blosc_list_compressors(void)
   strcat(ret, ","); strcat(ret, BLOSC_LZ4_COMPNAME);
   strcat(ret, ","); strcat(ret, BLOSC_LZ4HC_COMPNAME);
 #endif /* HAVE_LZ4 */
+#if defined(HAVE_LIZARD)
+  strcat(ret, ",");
+  strcat(ret, BLOSC_LIZARD_COMPNAME);
+#endif /* HAVE_LIZARD */
 #if defined(HAVE_SNAPPY)
   strcat(ret, ","); strcat(ret, BLOSC_SNAPPY_COMPNAME);
 #endif /* HAVE_SNAPPY */
@@ -1915,7 +1999,10 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
   char *clibname;
   char *clibversion = "unknown";
 
-#if (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || (defined(HAVE_SNAPPY) && defined(SNAPPY_VERSION)) || defined(ZSTD_VERSION_MAJOR)
+#if (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || \
+  (defined(HAVE_LIZARD) && defined(LIZARD_VERSION_MAJOR)) || \
+  (defined(HAVE_SNAPPY) && defined(SNAPPY_VERSION)) || \
+  (defined(HAVE_ZSTD) && defined(ZSTD_VERSION_MAJOR))
   char sbuffer[256];
 #endif
 
@@ -1935,6 +2022,13 @@ int blosc_get_complib_info(char *compname, char **complib, char **version)
 #endif /* LZ4_VERSION_MAJOR */
   }
 #endif /* HAVE_LZ4 */
+#if defined(HAVE_LIZARD)
+  else if (clibcode == BLOSC_LIZARD_LIB) {
+    sprintf(sbuffer, "%d.%d.%d",
+            LIZARD_VERSION_MAJOR, LIZARD_VERSION_MINOR, LIZARD_VERSION_RELEASE);
+    clibversion = sbuffer;
+  }
+#endif /* HAVE_LIZARD */
 #if defined(HAVE_SNAPPY)
   else if (clibcode == BLOSC_SNAPPY_LIB) {
 #if defined(SNAPPY_VERSION)

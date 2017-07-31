@@ -352,6 +352,8 @@ void print_compress_info(void)
   if (ret >= 0) printf("  %s: %s\n", name, version);
   ret = blosc_get_complib_info("lz4", &name, &version);
   if (ret >= 0) printf("  %s: %s\n", name, version);
+  ret = blosc_get_complib_info("lizard", &name, &version);
+  if (ret >= 0) printf("  %s: %s\n", name, version);
   ret = blosc_get_complib_info("snappy", &name, &version);
   if (ret >= 0) printf("  %s: %s\n", name, version);
   ret = blosc_get_complib_info("zlib", &name, &version);
@@ -384,7 +386,7 @@ int main(int argc, char *argv[]) {
 
   print_compress_info();
 
-  strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib | zstd] "
+  strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | lizard | snappy | zlib | zstd] "
           "[noshuffle | shuffle | bitshuffle] "
           "[single | suite | hardsuite | extremesuite | debugsuite] "
           "[nthreads] [bufsize(bytes)] [typesize] [sbits]", 255);
@@ -399,6 +401,7 @@ int main(int argc, char *argv[]) {
   if (strcmp(compressor, "blosclz") != 0 &&
       strcmp(compressor, "lz4") != 0 &&
       strcmp(compressor, "lz4hc") != 0 &&
+      strcmp(compressor, "lizard") != 0 &&
       strcmp(compressor, "snappy") != 0 &&
       strcmp(compressor, "zlib") != 0 &&
       strcmp(compressor, "zstd") != 0) {

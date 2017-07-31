@@ -15,6 +15,8 @@
 #       do not attempt to build with AVX2 instructions
 #   DEACTIVATE_LZ4: default OFF
 #       do not include support for the LZ4 library
+#   DEACTIVATE_LIZARD: default OFF
+#       do not include support for the LIZARD library
 #   DEACTIVATE_SNAPPY: default OFF
 #       do not include support for the Snappy library
 #   DEACTIVATE_ZLIB: default OFF
@@ -26,6 +28,9 @@
 #       sources
 #   PREFER_EXTERNAL_SNAPPY: default OFF
 #       when found, use the installed Snappy libs instead of included
+#       sources
+#   PREFER_EXTERNAL_LIZARD: default OFF
+#       when found, use the installed LIZARD libs instead of included
 #       sources
 #   PREFER_EXTERNAL_ZLIB: default OFF
 #       when found, use the installed zlib libs instead of included
@@ -98,7 +103,9 @@ option(BUILD_BENCHMARKS
 option(DEACTIVATE_AVX2
     "Do not attempt to build with AVX2 instructions" OFF)
 option(DEACTIVATE_LZ4
-    "Do not include support for the LZ4 library." OFF)
+        "Do not include support for the LZ4 library." OFF)
+option(DEACTIVATE_LIZARD
+        "Do not include support for the LIZARD library." OFF)
 option(DEACTIVATE_SNAPPY
     "Do not include support for the Snappy library." OFF)
 option(DEACTIVATE_ZLIB
@@ -106,7 +113,9 @@ option(DEACTIVATE_ZLIB
 option(DEACTIVATE_ZSTD
     "Do not include support for the Zstd library." OFF)
 option(PREFER_EXTERNAL_LZ4
-    "Find and use external LZ4 library instead of included sources." OFF)
+        "Find and use external LZ4 library instead of included sources." OFF)
+option(PREFER_EXTERNAL_LIZARD
+        "Find and use external LIZARD library instead of included sources." OFF)
 option(PREFER_EXTERNAL_SNAPPY
     "Find and use external Snappy library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZLIB
@@ -127,6 +136,17 @@ if(NOT DEACTIVATE_LZ4)
     # not found, we will use the included sources for it
     set(HAVE_LZ4 TRUE)
 endif(NOT DEACTIVATE_LZ4)
+
+if (NOT DEACTIVATE_LIZARD)
+    if (PREFER_EXTERNAL_LIZARD)
+        find_package(LIZARD)
+    else ()
+        message(STATUS "Using LIZARD internal sources.")
+    endif (PREFER_EXTERNAL_LIZARD)
+    # HAVE_LIZARD will be set to true because even if the library is
+    # not found, we will use the included sources for it
+    set(HAVE_LIZARD TRUE)
+endif (NOT DEACTIVATE_LIZARD)
 
 if(NOT DEACTIVATE_SNAPPY)
     if(PREFER_EXTERNAL_SNAPPY)
