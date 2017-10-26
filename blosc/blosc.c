@@ -556,7 +556,8 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
                    const uint8_t *src, uint8_t *dest, uint8_t *tmp,
                    uint8_t *tmp2)
 {
-  int dont_split = (*(context->header_flags) & 0x10) >> 4;
+  int8_t header_flags = *(context->header_flags);
+  int dont_split = (header_flags & 0x10) >> 4;
   int32_t j, neblock, nsplits;
   int32_t cbytes;                   /* number of compressed bytes in split */
   int32_t ctbytes = 0;              /* number of compressed bytes in block */
@@ -566,14 +567,17 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   char *compname;
   int accel;
   int bscount;
+  int doshuffle = (header_flags & BLOSC_DOSHUFFLE) && (typesize > 1);
+  int dobitshuffle = ((header_flags & BLOSC_DOBITSHUFFLE) &&
+                      (blocksize >= typesize));
 
-  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) && (typesize > 1)) {
+  if (doshuffle) {
     /* Byte shuffling only makes sense if typesize > 1 */
     shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
   }
   /* We don't allow more than 1 filter at the same time (yet) */
-  else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
+  else if (dobitshuffle) {
     bscount = bitshuffle(typesize, blocksize, src, tmp, tmp2);
     if (bscount < 0)
       return bscount;
@@ -678,11 +682,13 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
 }
 
 /* Decompress & unshuffle a single block */
-static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t leftoverblock,
-                   const uint8_t *src, uint8_t *dest, uint8_t *tmp, uint8_t *tmp2)
+static int blosc_d(struct blosc_context* context, int32_t blocksize,
+                   int32_t leftoverblock, const uint8_t *src, uint8_t *dest,
+                   uint8_t *tmp, uint8_t *tmp2)
 {
-  int32_t compformat = (*(context->header_flags) & 0xe0) >> 5;
-  int dont_split = (*(context->header_flags) & 0x10) >> 4;
+  int8_t header_flags = *(context->header_flags);
+  int32_t compformat = (header_flags & 0xe0) >> 5;
+  int dont_split = (header_flags & 0x10) >> 4;
   int32_t j, neblock, nsplits;
   int32_t nbytes;                /* number of decompressed bytes in split */
   int32_t cbytes;                /* number of compressed bytes in split */
@@ -692,9 +698,11 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
   int32_t typesize = context->typesize;
   char *compname;
   int bscount;
+  int doshuffle = (header_flags & BLOSC_DOSHUFFLE) && (typesize > 1);
+  int dobitshuffle = ((header_flags & BLOSC_DOBITSHUFFLE) &&
+                      (blocksize >= typesize));
 
-  if (((*(context->header_flags) & BLOSC_DOSHUFFLE && (typesize > 1))) ||
-      (*(context->header_flags) & BLOSC_DOBITSHUFFLE)) {
+  if (doshuffle || dobitshuffle) {
     _tmp = tmp;
   }
 
@@ -768,10 +776,10 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize, int32_t lef
     ntbytes += nbytes;
   } /* Closes j < nsplits */
 
-  if ((*(context->header_flags) & BLOSC_DOSHUFFLE) && (typesize > 1)) {
+  if (doshuffle) {
     unshuffle(typesize, blocksize, tmp, dest);
   }
-  else if (*(context->header_flags) & BLOSC_DOBITSHUFFLE) {
+  else if (dobitshuffle) {
     bscount = bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
     if (bscount < 0)
       return bscount;
