@@ -25,7 +25,6 @@
   (zlib format), rfc1951 (deflate format) and rfc1952 (gzip format).
  */
 
-#include <stdint.h>
 #include <assert.h>
 
 #ifndef MEMCOPY_H_
@@ -35,7 +34,15 @@
  * Use inlined functions for supported systems.
  */
 #if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
-#define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+  #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+  /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
+  #if _MSC_VER < 1600
+    #include "win32/stdint-windows.h"
+  #else
+    #include <stdint.h>
+  #endif
+#else
+  #include <stdint.h>
 #endif
 
 #if (defined(__GNUC__) || defined(__clang__))
