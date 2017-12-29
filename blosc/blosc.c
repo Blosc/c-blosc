@@ -528,9 +528,6 @@ static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
   int32_t typesize = context->typesize;
 
-  if (clevel == 9) {
-    return 1;
-  }
   if (context->compcode == BLOSC_BLOSCLZ) {
     /* Compute the power of 2. See:
      * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
