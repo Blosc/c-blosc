@@ -248,17 +248,19 @@ static inline unsigned char *set_bytes(unsigned char *out, unsigned char *from, 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
 static inline unsigned char *chunk_memcpy(unsigned char *out, unsigned char *from, unsigned len) {
   unsigned sz = sizeof(uint64_t);
+  unsigned rem = len % sz;
+  unsigned by8;
+
   assert(len >= sz);
 
   /* Copy a few bytes to make sure the loop below has a multiple of SZ bytes to be copied. */
   copy_8_bytes(out, from);
 
-  unsigned rem = len % sz;
   len /= sz;
   out += rem;
   from += rem;
 
-  unsigned by8 = len % sz;
+  by8 = len % sz;
   len -= by8;
   switch (by8) {
     case 7:
@@ -311,19 +313,20 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, unsigned char *fro
 /* Memset LEN bytes in OUT with the value at OUT - 1. Return OUT + LEN. */
 static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
   unsigned sz = sizeof(uint64_t);
-  assert(len >= sz);
-
   unsigned char *from = out - 1;
   unsigned char c = *from;
+  unsigned rem = len % sz;
+  unsigned by8;
+
+  assert(len >= sz);
 
   /* First, deal with the case when LEN is not a multiple of SZ. */
   MEMSET(out, c, sz);
-  unsigned rem = len % sz;
   len /= sz;
   out += rem;
   from += rem;
 
-  unsigned by8 = len % 8;
+  by8 = len % 8;
   len -= by8;
   switch (by8) {
     case 7:
@@ -376,13 +379,13 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
 
 /* Copy DIST bytes from OUT - DIST into OUT + DIST * k, for 0 <= k < LEN/DIST. Return OUT + LEN. */
 static inline unsigned char *chunk_memset(unsigned char *out, unsigned char *from, unsigned dist, unsigned len) {
+  unsigned sz = sizeof(uint64_t);
   if (dist >= len)
     return chunk_memcpy(out, from, len);
 
   assert(len >= sizeof(uint64_t));
 
   /* Double up the size of the memset pattern until reaching the largest pattern of size less than SZ. */
-  unsigned sz = sizeof(uint64_t);
   while (dist < len && dist < sz) {
     copy_8_bytes(out, from);
 
