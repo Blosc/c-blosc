@@ -30,17 +30,24 @@
 #ifndef MEMCOPY_H_
 #define MEMCOPY_H_
 
-/* stdint.h only available in VS2010 (VC++ 16.0) and newer */
-#if defined(_MSC_VER) && _MSC_VER < 1600
-  #include "win32/stdint-windows.h"
+#if defined(_WIN32) && !defined(__MINGW32__)
+  #include <windows.h>
+
+  /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1600
+    #include "win32/stdint-windows.h"
+  #else
+    #include <stdint.h>
+  #endif
+
+  /* Use inlined functions for supported systems */
+  #if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
+    #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+  #endif
+
 #else
   #include <stdint.h>
-#endif
-
-/* Use inlined functions for supported systems */
-#if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
-  #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
-#endif
+#endif  // _WIN32
 
 #if (defined(__GNUC__) || defined(__clang__))
 #define MEMCPY __builtin_memcpy
