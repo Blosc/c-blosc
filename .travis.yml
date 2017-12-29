@@ -16,9 +16,6 @@ matrix:
         compiler: clang
         osx_image: xcode8.3
 
-install:
-  - bash scripts/install.sh
-
 before_script:
   - mkdir build
   - cd build
