@@ -100,24 +100,16 @@
 /*
  * Fast copy macros
  */
-#define BLOCK_COPY(op, ref, len, op_limit) { chunk_copy((op), (ref), 0, (len)); (op) += (len); (ref) += (len);}
+#define BLOCK_COPY(op, ref, len) { chunk_copy((op), (ref), 0, (len)); (op) += (len); (ref) += (len);}
 
 #define CPYSIZE 8
 
-#define SAFE_COPY(op, ref, len, op_limit)     \
+#define SAFE_COPY(op, ref, len)     \
 if (llabs(op-ref) < CPYSIZE) {                \
   for(; len; --len)                           \
     *op++ = *ref++;                           \
 }                                             \
-else BLOCK_COPY(op, ref, len, op_limit);
-
-/* Copy optimized for GCC 4.8.  Seems like long copy loops are optimal. */
-#define GCC_SAFE_COPY(op, ref, len, op_limit) \
-if ((len > 32) || (llabs(op-ref) < CPYSIZE)) { \
-  for(; len; --len)                           \
-    *op++ = *ref++;                           \
-}                                             \
-else BLOCK_COPY(op, ref, len, op_limit);
+else BLOCK_COPY(op, ref, len);
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
 #define HASH_FUNCTION(v, p, l) {                       \
@@ -454,11 +446,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         /* copy from reference */
         ref--;
         len += 3;
-#if !defined(_WIN32) && ((defined(__GNUC__) || defined(__INTEL_COMPILER) || !defined(__clang__)))
-        GCC_SAFE_COPY(op, ref, len, op_limit);
-#else
-        SAFE_COPY(op, ref, len, op_limit);
-#endif
+        SAFE_COPY(op, ref, len);
       }
     }
     else {
@@ -472,7 +460,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      BLOCK_COPY(op, ip, ctrl, op_limit);
+      BLOCK_COPY(op, ip, ctrl);
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if (loop)
