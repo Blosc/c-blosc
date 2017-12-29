@@ -121,7 +121,7 @@ endif (NOT DEACTIVATE_ZSTD)
 
 # targets
 if (BUILD_SHARED)
-    add_library(blosc_shared SHARED ${SOURCES})
+    add_library(blosc_shared SHARED ${SOURCES} memcopy.h)
     set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)
     set_target_properties(blosc_shared PROPERTIES
             VERSION ${version_string}
@@ -199,7 +199,7 @@ if (BUILD_TESTS)
 endif()
 
 if(BUILD_STATIC)
-    add_library(blosc_static STATIC ${SOURCES})
+    add_library(blosc_static STATIC ${SOURCES} memcopy.h)
     set_target_properties(blosc_static PROPERTIES OUTPUT_NAME blosc)
     if (MSVC)
         set_target_properties(blosc_static PROPERTIES PREFIX lib)

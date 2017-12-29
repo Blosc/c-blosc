@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "blosclz.h"
+#include "memcopy.h"
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
@@ -99,25 +100,9 @@
 /*
  * Fast copy macros
  */
-#if defined(_WIN32)
-  /* A previous value of 32 created this issue:
-     https://github.com/Blosc/bcolz/issues/363 */
-  #define CPYSIZE              32
-#else
-  #define CPYSIZE              16
-#endif
-#define MCPY(d, s)            { memcpy((d), (s), CPYSIZE); (d) += CPYSIZE; (s) += CPYSIZE; }
-#define SAFECOPY(d, s, e)     { while ((d) < (e)) { MCPY((d), (s)) } }
+#define BLOCK_COPY(op, ref, len, op_limit) { chunk_copy((op), (ref), 0, (len)); (op) += (len); (ref) += (len);}
 
-/* Copy optimized for copying in blocks */
-#define BLOCK_COPY(op, ref, len, op_limit)    \
-{ int ilen = len % CPYSIZE;                   \
-  uint8_t *cpy = op + len - ilen;             \
-  SAFECOPY(op, ref, cpy);                     \
-  ref -= op - cpy; op = cpy;                  \
-  for(; ilen; --ilen)                         \
-    *op++ = *ref++;                           \
-}
+#define CPYSIZE 8
 
 #define SAFE_COPY(op, ref, len, op_limit)     \
 if (llabs(op-ref) < CPYSIZE) {                \
