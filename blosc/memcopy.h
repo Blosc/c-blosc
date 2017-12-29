@@ -31,6 +31,13 @@
 #ifndef MEMCOPY_H_
 #define MEMCOPY_H_
 
+/*
+ * Use inlined functions for supported systems.
+ */
+#if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
+#define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+#endif
+
 #if (defined(__GNUC__) || defined(__clang__))
 #define MEMCPY __builtin_memcpy
 #define MEMSET __builtin_memset
