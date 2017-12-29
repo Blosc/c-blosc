@@ -102,29 +102,21 @@
 #if defined(_WIN32)
   /* A previous value of 32 created this issue:
      https://github.com/Blosc/bcolz/issues/363 */
-  #define CPYSIZE              8
+  #define CPYSIZE              32
 #else
-  #define CPYSIZE              8
+  #define CPYSIZE              16
 #endif
-#define MCPY(d, s)            { memcpy(d, s, CPYSIZE); d+=CPYSIZE; s+=CPYSIZE; }
-#define FASTCOPY(d, s, e)      { do { MCPY(d,s) } while (d<e); }
-#define SAFECOPY(d, s, e)      { while (d<e) { MCPY(d,s) } }
+#define MCPY(d, s)            { memcpy((d), (s), CPYSIZE); (d) += CPYSIZE; (s) += CPYSIZE; }
+#define SAFECOPY(d, s, e)     { while ((d) < (e)) { MCPY((d), (s)) } }
 
 /* Copy optimized for copying in blocks */
 #define BLOCK_COPY(op, ref, len, op_limit)    \
 { int ilen = len % CPYSIZE;                   \
-  uint8_t *cpy = op + len;                    \
-  if (cpy + CPYSIZE - ilen <= op_limit) {     \
-    FASTCOPY(op, ref, cpy);                   \
-    ref -= (op-cpy); op = cpy;                \
-  }                                           \
-  else {                                      \
-    cpy -= ilen;                              \
-    SAFECOPY(op, ref, cpy);                   \
-    ref -= (op-cpy); op = cpy;                \
-    for(; ilen; --ilen)                          \
-        *op++ = *ref++;                       \
-  }                                           \
+  uint8_t *cpy = op + len - ilen;             \
+  SAFECOPY(op, ref, cpy);                     \
+  ref -= op - cpy; op = cpy;                  \
+  for(; ilen; --ilen)                         \
+    *op++ = *ref++;                           \
 }
 
 #define SAFE_COPY(op, ref, len, op_limit)     \
