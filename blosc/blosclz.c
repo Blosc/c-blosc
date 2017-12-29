@@ -154,9 +154,9 @@ else BLOCK_COPY(op, ref, len, op_limit);
  */
 #define MINMATCH 3
 #define HASH_FUNCTION2(v, p, l) {                       \
-  v = BLOSCLZ_READU16(p);                \
+  v = BLOSCLZ_READU16(p);                               \
   v = (v * 2654435761U) >> ((MINMATCH * 8) - (l + 1));  \
-  v &= (1 << l) - 1;                    \
+  v &= (1 << l) - 1;                                    \
 }
 
 #define LITERAL(ip, op, op_limit, anchor, copy) {        \
@@ -207,7 +207,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   op_limit = op + maxlength;
 
   /* output buffer cannot be less than 66 bytes or we can get into trouble */
-  if (BLOSCLZ_UNEXPECT_CONDITIONAL(maxlength < 66 || length < 4)) {
+  if (BLOSCLZ_UNEXPECT_CONDITIONAL(maxout < 66 || length < 4)) {
     return 0;
   }
 
