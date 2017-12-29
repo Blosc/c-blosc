@@ -102,13 +102,11 @@
  */
 #define BLOCK_COPY(op, ref, len) { chunk_copy((op), (ref), 0, (len)); (op) += (len); (ref) += (len);}
 
-#define CPYSIZE 8
-
 #define SAFE_COPY(op, ref, len)     \
-if (llabs(op-ref) < CPYSIZE) {                \
-  for(; len; --len)                           \
-    *op++ = *ref++;                           \
-}                                             \
+if (llabs(op-ref) < 8) {            \
+  for(; len; --len)                 \
+    *op++ = *ref++;                 \
+}                                   \
 else BLOCK_COPY(op, ref, len);
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
