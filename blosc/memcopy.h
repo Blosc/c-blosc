@@ -57,25 +57,6 @@
 #define MEMSET memset
 #endif
 
-/* Load a short from IN and place the bytes at offset BITS in the result. */
-static inline uint32_t load_short(const unsigned char *in, unsigned bits) {
-  union {
-    uint16_t a;
-    uint8_t b[2];
-  } chunk;
-  MEMCPY(&chunk, in, sizeof(uint16_t));
-
-#if BYTE_ORDER == LITTLE_ENDIAN
-  uint32_t res = chunk.a;
-  return res << bits;
-#else
-  uint32_t c0 = chunk.b[0];
-    uint32_t c1 = chunk.b[1];
-    c0 <<= bits;
-    c1 <<= bits + 8;
-    return c0 + c1;
-#endif
-}
 
 static inline unsigned char *copy_1_bytes(unsigned char *out, unsigned char *from) {
   *out++ = *from;
