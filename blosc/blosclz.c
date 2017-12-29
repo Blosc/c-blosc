@@ -100,7 +100,9 @@
  * Fast copy macros
  */
 #if defined(_WIN32)
-  #define CPYSIZE              32
+  /* A previous value of 32 created this issue:
+     https://github.com/Blosc/bcolz/issues/363 */
+  #define CPYSIZE              8
 #else
   #define CPYSIZE              8
 #endif
