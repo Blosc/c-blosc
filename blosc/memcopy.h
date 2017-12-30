@@ -1,7 +1,11 @@
 /* memcopy.h -- inline functions to copy small data chunks.
- * This is strongly based in memcopy.h from the zlib-ng project
- * See copyright at: https://github.com/Dead2/zlib-ng/blob/develop/zlib.h
- * Here it is a copy of the license:
+ * This is strongly based in memcopy.h from the zlib-ng project.
+ * New implementations by Francesc Alted:
+ *   fast_copy and safe_copy()
+ *   support for SSE2 copy instructions for the above routines
+ *
+ * See: https://github.com/Dead2/zlib-ng/blob/develop/zlib.h
+ * Here it is a copy of the original license:
    zlib.h -- interface of the 'zlib-ng' compression library
    Forked from and compatible with zlib 1.2.11
   Copyright (C) 1995-2016 Jean-loup Gailly and Mark Adler
@@ -25,10 +29,12 @@
   (zlib format), rfc1951 (deflate format) and rfc1952 (gzip format).
  */
 
-#include <assert.h>
-
 #ifndef MEMCOPY_H_
 #define MEMCOPY_H_
+
+#include <assert.h>
+#include "shuffle-common.h"
+
 
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
@@ -61,6 +67,11 @@
 #define MEMCPY memcpy
 #define MEMSET memset
 #endif
+
+#if defined(__SSE2__)
+  #include <emmintrin.h>
+#endif
+
 
 
 static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned char *from) {
@@ -106,11 +117,19 @@ static inline unsigned char *copy_7_bytes(unsigned char *out, unsigned char *fro
 
 static inline unsigned char *copy_8_bytes(unsigned char *out, const unsigned char *from) {
   uint64_t chunk;
-  unsigned sz = sizeof(chunk);
-  MEMCPY(&chunk, from, sz);
-  MEMCPY(out, &chunk, sz);
-  return out + sz;
+  MEMCPY(&chunk, from, 8);
+  MEMCPY(out, &chunk, 8);
+  return out + 8;
 }
+
+#if defined(__SSE2__)
+static inline unsigned char *copy_16_bytes(unsigned char *out, const unsigned char *from) {
+  __m128i chunk;
+  chunk = _mm_loadu_si128((__m128i*)from);
+  _mm_storeu_si128((__m128i*)out, chunk);
+  return out + 16;
+}
+#endif  // __SSE2__
 
 /* Copy LEN bytes (7 or fewer) from FROM into OUT. Return OUT + LEN. */
 static inline unsigned char *copy_bytes(unsigned char *out, const unsigned char *from, unsigned len) {
@@ -265,7 +284,7 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
   out += rem;
   from += rem;
 
-  by8 = len % sz;
+  by8 = len % 8;
   len -= by8;
   switch (by8) {
     case 7:
@@ -316,6 +335,75 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
 
   return out;
 }
+
+/* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
+#if defined(__SSE2__)
+static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
+  unsigned sz = sizeof(__m128i);
+  unsigned rem = len % sz;
+  unsigned by8;
+
+  assert(len >= sz);
+
+  /* Copy a few bytes to make sure the loop below has a multiple of SZ bytes to be copied. */
+  copy_16_bytes(out, from);
+
+  len /= sz;
+  out += rem;
+  from += rem;
+
+  by8 = len % 8;
+  len -= by8;
+  switch (by8) {
+    case 7:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    case 6:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    case 5:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    case 4:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    case 3:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    case 2:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    case 1:
+      out = copy_16_bytes(out, from);
+      from += sz;
+    default:
+      break;
+  }
+
+  while (len) {
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+    out = copy_16_bytes(out, from);
+    from += sz;
+
+    len -= 8;
+  }
+
+  return out;
+}
+#endif // __SSE2__
 
 /* Memset LEN bytes in OUT with the value at OUT - 1. Return OUT + LEN. */
 static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
@@ -434,12 +522,23 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
   if (len < sizeof(uint64_t)) {
     return copy_bytes(out, from, len);
   }
+#if defined(__SSE2__)
+  else if (len < sizeof(__m128i)) {
+    return chunk_memcpy(out, from, len);
+  }
+  return chunk_memcpy_16(out, from, len);
+#endif  // __SSE2__
   return chunk_memcpy(out, from, len);
 }
 
 /* Same as fast_copy() but without overwriting origin or destination */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-  if (labs(from - out) < sizeof(uint64_t)) {
+#if defined(__SSE2__)
+  unsigned sz = sizeof(__m128i);
+#else
+  unsigned sz = sizeof(uint64_t);
+#endif
+  if (labs(from - out) < sz) {
     for (; len; --len) {
       *out++ = *from++;
     }
