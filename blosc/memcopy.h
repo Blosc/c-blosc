@@ -2,7 +2,7 @@
  * This is strongly based in memcopy.h from the zlib-ng project.
  * New implementations by Francesc Alted:
  *   fast_copy and safe_copy()
- *   support for SSE2 copy instructions for the above routines
+ *   Support for SSE2/AVX2 copy instructions for these routines
  *
  * See: https://github.com/Dead2/zlib-ng/blob/develop/zlib.h
  * Here it is a copy of the original license:
@@ -71,6 +71,9 @@
 #if defined(__SSE2__)
   #include <emmintrin.h>
 #endif
+#if !defined(__AVX2__)
+  #include <immintrin.h>
+#endif
 
 
 
@@ -130,6 +133,15 @@ static inline unsigned char *copy_16_bytes(unsigned char *out, const unsigned ch
   return out + 16;
 }
 #endif  // __SSE2__
+
+#if defined(__AVX2__)
+static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned char *from) {
+  __m256i chunk;
+  chunk = _mm256_loadu_si256((__m256i*)from);
+  _mm256_storeu_si256((__m256i*)out, chunk);
+  return out + 32;
+}
+#endif  // __AVX2__
 
 /* Copy LEN bytes (7 or fewer) from FROM into OUT. Return OUT + LEN. */
 static inline unsigned char *copy_bytes(unsigned char *out, const unsigned char *from, unsigned len) {
@@ -336,7 +348,7 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
   return out;
 }
 
-/* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
+/* SSE2 version of chunk_memcpy() */
 #if defined(__SSE2__)
 static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
   unsigned sz = sizeof(__m128i);
@@ -404,6 +416,75 @@ static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned 
   return out;
 }
 #endif // __SSE2__
+
+/* AVX2 version of chunk_memcpy() */
+#if defined(__AVX2__)
+static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
+  unsigned sz = sizeof(__m256i);
+  unsigned rem = len % sz;
+  unsigned by8;
+
+  assert(len >= sz);
+
+  /* Copy a few bytes to make sure the loop below has a multiple of SZ bytes to be copied. */
+  copy_32_bytes(out, from);
+
+  len /= sz;
+  out += rem;
+  from += rem;
+
+  by8 = len % 8;
+  len -= by8;
+  switch (by8) {
+    case 7:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    case 6:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    case 5:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    case 4:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    case 3:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    case 2:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    case 1:
+      out = copy_32_bytes(out, from);
+      from += sz;
+    default:
+      break;
+  }
+
+  while (len) {
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+    out = copy_32_bytes(out, from);
+    from += sz;
+
+    len -= 8;
+  }
+
+  return out;
+}
+#endif // __AVX2__
 
 /* Memset LEN bytes in OUT with the value at OUT - 1. Return OUT + LEN. */
 static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
@@ -522,18 +603,26 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
   if (len < sizeof(uint64_t)) {
     return copy_bytes(out, from, len);
   }
-#if defined(__SSE2__)
+#if defined(__SSE2__) && !defined(__AVX2__)
   else if (len < sizeof(__m128i)) {
     return chunk_memcpy(out, from, len);
   }
   return chunk_memcpy_16(out, from, len);
-#endif  // __SSE2__
+#endif  // __SSE2__ && !__AVX2__
+#if defined(__AVX2__)
+  else if (len < sizeof(__m256i)) {
+    return chunk_memcpy(out, from, len);
+  }
+  return chunk_memcpy_32(out, from, len);
+#endif  // __AVX2__
   return chunk_memcpy(out, from, len);
 }
 
 /* Same as fast_copy() but without overwriting origin or destination */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-#if defined(__SSE2__)
+#if defined(__AVX2__)
+  unsigned sz = sizeof(__m256i);
+#elif defined(__SSE2__)
   unsigned sz = sizeof(__m128i);
 #else
   unsigned sz = sizeof(uint64_t);
