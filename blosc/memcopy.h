@@ -58,7 +58,7 @@
 #endif
 
 
-static inline unsigned char *copy_1_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned char *from) {
   *out++ = *from;
   return out;
 }
@@ -99,7 +99,7 @@ static inline unsigned char *copy_7_bytes(unsigned char *out, unsigned char *fro
   return copy_4_bytes(out, from + 3);
 }
 
-static inline unsigned char *copy_8_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_8_bytes(unsigned char *out, const unsigned char *from) {
   uint64_t chunk;
   unsigned sz = sizeof(chunk);
   MEMCPY(&chunk, from, sz);
@@ -108,7 +108,7 @@ static inline unsigned char *copy_8_bytes(unsigned char *out, unsigned char *fro
 }
 
 /* Copy LEN bytes (7 or fewer) from FROM into OUT. Return OUT + LEN. */
-static inline unsigned char *copy_bytes(unsigned char *out, unsigned char *from, unsigned len) {
+static inline unsigned char *copy_bytes(unsigned char *out, const unsigned char *from, unsigned len) {
   assert(len < 8);
 
 #ifndef UNALIGNED_OK
@@ -143,7 +143,7 @@ static inline unsigned char *copy_bytes(unsigned char *out, unsigned char *from,
 }
 
 /* Copy LEN bytes (7 or fewer) from FROM into OUT. Return OUT + LEN. */
-static inline unsigned char *set_bytes(unsigned char *out, unsigned char *from, unsigned dist, unsigned len) {
+static inline unsigned char *set_bytes(unsigned char *out, const unsigned char *from, unsigned dist, unsigned len) {
   assert(len < 8);
 
 #ifndef UNALIGNED_OK
@@ -246,7 +246,7 @@ static inline unsigned char *set_bytes(unsigned char *out, unsigned char *from, 
 }
 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
-static inline unsigned char *chunk_memcpy(unsigned char *out, unsigned char *from, unsigned len) {
+static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned char *from, unsigned len) {
   unsigned sz = sizeof(uint64_t);
   unsigned rem = len % sz;
   unsigned by8;
@@ -284,6 +284,9 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, unsigned char *fro
     case 1:
       out = copy_8_bytes(out, from);
       from += sz;
+    default:
+      assert(0);
+      break;
   }
 
   while (len) {
@@ -324,7 +327,6 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
   MEMSET(out, c, sz);
   len /= sz;
   out += rem;
-  from += rem;
 
   by8 = len % 8;
   len -= by8;
@@ -350,6 +352,9 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
     case 1:
       MEMSET(out, c, sz);
       out += sz;
+    default:
+      assert(0);
+      break;
   }
 
   while (len) {
@@ -378,7 +383,7 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
 }
 
 /* Copy DIST bytes from OUT - DIST into OUT + DIST * k, for 0 <= k < LEN/DIST. Return OUT + LEN. */
-static inline unsigned char *chunk_memset(unsigned char *out, unsigned char *from, unsigned dist, unsigned len) {
+static inline unsigned char *chunk_memset(unsigned char *out, const unsigned char *from, unsigned dist, unsigned len) {
   unsigned sz = sizeof(uint64_t);
   if (dist >= len)
     return chunk_memcpy(out, from, len);
@@ -403,7 +408,7 @@ static inline unsigned char *chunk_memset(unsigned char *out, unsigned char *fro
 }
 
 /* Byte by byte semantics: copy LEN bytes from OUT + DIST and write them to OUT. Return OUT + LEN. */
-static inline unsigned char *chunk_copy(unsigned char *out, unsigned char *from, int dist, unsigned len) {
+static inline unsigned char *chunk_copy(unsigned char *out, const unsigned char *from, unsigned dist, unsigned len) {
   if (len < sizeof(uint64_t)) {
     if (dist > 0)
       return set_bytes(out, from, dist, len);
