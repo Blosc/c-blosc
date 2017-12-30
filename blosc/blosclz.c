@@ -209,11 +209,11 @@ int blosclz_compress(const int opt_level, const void* input, int length,
       uint8_t x = ip[-1];
       int64_t value, value2;
       /* Broadcast the value for every byte in a 64-bit register */
-      memset(&value, x, 8);
+      MEMSET(&value, x, 8);
       /* safe because the outer check against ip limit */
       while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
 #if defined(BLOSCLZ_STRICT_ALIGN)
-        memcpy(&value2, ref, 8);
+        MEMCPY(&value2, ref, 8);
 #else
         value2 = ((int64_t*)ref)[0];
 #endif
@@ -408,7 +408,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       if (ref == op) {
         /* optimize copy for a run */
         uint8_t b = ref[-1];
-        memset(op, b, len + 3);
+        MEMSET(op, b, len + 3);
         op += len + 3;
       }
       else {
