@@ -19,6 +19,7 @@
 #include "blosclz.h"
 #include "memcopy.h"
 
+
 #if defined(_WIN32) && !defined(__MINGW32__)
   /* llabs only available in VS2013 (VC++ 18.0) and newer */
   #if defined(_MSC_VER) && _MSC_VER < 1800
@@ -90,20 +91,24 @@
 /*
  * Fast copy macros
  */
-#define BLOCK_COPY(op, ref, len) { chunk_copy((op), (ref), 0, (len)); (op) += (len); (ref) += (len);}
+#define BLOCK_COPY(op, ref, len) {    \
+  chunk_copy((op), (ref), 0, (len));  \
+  (op) += (len); (ref) += (len);      \
+}
 
-#define SAFE_COPY(op, ref, len)     \
-if (llabs(op-ref) < 8) {            \
-  for(; len; --len)                 \
-    *op++ = *ref++;                 \
-}                                   \
-else BLOCK_COPY(op, ref, len);
+#define SAFE_COPY(op, ref, len) {     \
+  if (llabs((op) - (ref)) < 8)        \
+    for(; (len); --(len))             \
+      *(op)++ = *(ref)++;             \
+  else                                \
+     BLOCK_COPY((op), (ref), (len));  \
+}
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
-#define HASH_FUNCTION(v, p, l) {                       \
-    v = BLOSCLZ_READU16(p);                            \
-    v ^= BLOSCLZ_READU16(p + 1) ^ ( v >> (16 - l));    \
-    v &= (1 << l) - 1;                                 \
+#define HASH_FUNCTION(v, p, l) {                     \
+  v = BLOSCLZ_READU16(p);                            \
+  v ^= BLOSCLZ_READU16(p + 1) ^ ( v >> (16 - l));    \
+  v &= (1 << l) - 1;                                 \
 }
 
 /* Another version which seems to be a bit more effective than the above,
