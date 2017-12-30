@@ -600,21 +600,20 @@ static inline unsigned char *chunk_copy(unsigned char *out, const unsigned char 
 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
 static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-  if (len < sizeof(uint64_t)) {
-    return copy_bytes(out, from, len);
+#if defined(__AVX2__)
+  if (len < sizeof(__m256i)) {
+    return chunk_memcpy_16(out, from, len);
   }
-#if defined(__SSE2__) && !defined(__AVX2__)
-  else if (len < sizeof(__m128i)) {
+  return chunk_memcpy_32(out, from, len);
+#elif defined(__SSE2__)
+  if (len < sizeof(__m128i)) {
     return chunk_memcpy(out, from, len);
   }
   return chunk_memcpy_16(out, from, len);
-#endif  // __SSE2__ && !__AVX2__
-#if defined(__AVX2__)
-  else if (len < sizeof(__m256i)) {
-    return chunk_memcpy(out, from, len);
-  }
-  return chunk_memcpy_32(out, from, len);
 #endif  // __AVX2__
+  if (len < sizeof(uint64_t)) {
+    return copy_bytes(out, from, len);
+  }
   return chunk_memcpy(out, from, len);
 }
 
