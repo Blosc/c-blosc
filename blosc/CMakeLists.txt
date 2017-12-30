@@ -49,7 +49,7 @@ endif (NOT DEACTIVATE_ZSTD)
 include_directories(${BLOSC_INCLUDE_DIRS})
 
 # library sources
-set(SOURCES blosc.c blosclz.c shuffle-generic.c bitshuffle-generic.c)
+set(SOURCES blosc.c blosclz.c shuffle-generic.c bitshuffle-generic.c memcopy.h)
 if(COMPILER_SUPPORT_SSE2)
     message(STATUS "Adding run-time support for SSE2")
     set(SOURCES ${SOURCES} shuffle-sse2.c bitshuffle-sse2.c)
@@ -121,7 +121,7 @@ endif (NOT DEACTIVATE_ZSTD)
 
 # targets
 if (BUILD_SHARED)
-    add_library(blosc_shared SHARED ${SOURCES} memcopy.h)
+    add_library(blosc_shared SHARED ${SOURCES})
     set_target_properties(blosc_shared PROPERTIES OUTPUT_NAME blosc)
     set_target_properties(blosc_shared PROPERTIES
             VERSION ${version_string}
@@ -199,7 +199,7 @@ if (BUILD_TESTS)
 endif()
 
 if(BUILD_STATIC)
-    add_library(blosc_static STATIC ${SOURCES} memcopy.h)
+    add_library(blosc_static STATIC ${SOURCES})
     set_target_properties(blosc_static PROPERTIES OUTPUT_NAME blosc)
     if (MSVC)
         set_target_properties(blosc_static PROPERTIES PREFIX lib)

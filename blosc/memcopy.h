@@ -285,7 +285,6 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
       out = copy_8_bytes(out, from);
       from += sz;
     default:
-      assert(0);
       break;
   }
 
