@@ -69,9 +69,9 @@
 #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
 #endif
 
-#define MAX_COPY       32
+#define MAX_COPY 32
 #define MAX_DISTANCE 8191
-#define MAX_FARDISTANCE (65535+MAX_DISTANCE-1)
+#define MAX_FARDISTANCE (65535 + MAX_DISTANCE - 1)
 
 #ifdef BLOSCLZ_STRICT_ALIGN
   #define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
@@ -98,7 +98,7 @@
 }
 
 #define LITERAL(ip, op, op_limit, anchor, copy) {        \
-  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op+2 > op_limit))     \
+  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + 2 > op_limit))   \
     goto out;                                            \
   *op++ = *anchor++;                                     \
   ip = anchor;                                           \
@@ -128,7 +128,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
      and taking the minimum times on a i5-3380M @ 2.90GHz.
      Curiously enough, values >= 14 does not always
      get maximum compression, even with large blocksizes. */
-  int8_t hash_log_[10] = {-1, 11, 11, 11, 12, 13, 14, 14, 14, 14};
+  int8_t hash_log_[10] = {-1, 11, 11, 12, 13, 14, 14, 14, 14, 14};
   uint8_t hash_log = hash_log_[opt_level];
   uint16_t hash_size = 1 << hash_log;
   uint16_t* htab;
@@ -137,7 +137,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   int32_t hval;
   uint8_t copy;
 
-  double maxlength_[10] = {-1, .1, .1, .15, .2, .3, .5, .7, .9, 1.0};
+  double maxlength_[10] = {-1, .1, .1, .15, .2, .2, .5, .7, .9, 1.0};
   int32_t maxlength = (int32_t)(length * maxlength_[opt_level]);
   if (maxlength > (int32_t)maxout) {
     maxlength = (int32_t)maxout;
@@ -186,7 +186,9 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 
     /* is this a match? check the first 3 bytes */
     if (distance == 0 || (distance >= MAX_FARDISTANCE) ||
-        *ref++ != *ip++ || *ref++ != *ip++ || *ref++ != *ip++) LITERAL(ip, op, op_limit, anchor, copy);
+        *ref++ != *ip++ || *ref++ != *ip++ || *ref++ != *ip++) {
+      LITERAL(ip, op, op_limit, anchor, copy);
+    }
 
     /* far, needs at least 5-byte match */
     if (opt_level >= 5 && distance >= MAX_DISTANCE) {
@@ -210,10 +212,10 @@ int blosclz_compress(const int opt_level, const void* input, int length,
       memset(&value, x, 8);
       /* safe because the outer check against ip limit */
       while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-        value2 = ((int64_t*)ref)[0];
-#else
+#if defined(BLOSCLZ_STRICT_ALIGN)
         memcpy(&value2, ref, 8);
+#else
+        value2 = ((int64_t*)ref)[0];
 #endif
         if (value != value2) {
           /* Find the byte that starts to differ */
@@ -354,6 +356,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   return 0;
 
 }
+
 
 int blosclz_decompress(const void* input, int length, void* output, int maxout) {
   const uint8_t* ip = (const uint8_t*)input;

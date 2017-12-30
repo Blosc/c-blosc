@@ -439,7 +439,7 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
 
 /* Same as fast_copy() but without overwriting origin or destination */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-  if (labs(from - out) < 8) {
+  if (labs(from - out) < sizeof(uint64_t)) {
     for (; len; --len) {
       *out++ = *from++;
     }
