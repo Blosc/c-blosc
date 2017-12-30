@@ -87,16 +87,6 @@
   v &= (1 << l) - 1;                                 \
 }
 
-/* Another version which seems to be a bit more effective than the above,
- * but a bit slower.  Could be interesting for high opt_level.
- */
-#define MINMATCH 3
-#define HASH_FUNCTION2(v, p, l) {                       \
-  v = BLOSCLZ_READU16(p);                               \
-  v = (v * 2654435761U) >> ((MINMATCH * 8) - (l + 1));  \
-  v &= (1 << l) - 1;                                    \
-}
-
 #define LITERAL(ip, op, op_limit, anchor, copy) {        \
   if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + 2 > op_limit))   \
     goto out;                                            \
