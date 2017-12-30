@@ -528,16 +528,7 @@ static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
   int32_t typesize = context->typesize;
 
-  if (context->compcode == BLOSC_BLOSCLZ) {
-    /* Compute the power of 2. See:
-     * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
-     */
-    int32_t tspow2 = ((typesize != 0) && !(typesize & (typesize - 1)));
-    if (tspow2 && typesize < 32) {
-      return 32;
-    }
-  }
-  else if (context->compcode == BLOSC_LZ4) {
+  if (context->compcode == BLOSC_LZ4) {
     /* This acceleration setting based on discussions held in:
      * https://groups.google.com/forum/#!topic/lz4c/zosy90P8MQw
      */
@@ -611,7 +602,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     }
     if (context->compcode == BLOSC_BLOSCLZ) {
       cbytes = blosclz_compress(context->clevel, _tmp+j*neblock, neblock,
-                                dest, maxout, accel);
+                                dest, maxout);
     }
     #if defined(HAVE_LZ4)
     else if (context->compcode == BLOSC_LZ4) {

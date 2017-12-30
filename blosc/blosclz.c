@@ -138,7 +138,7 @@
 
 
 int blosclz_compress(const int opt_level, const void* input, int length,
-                     void* output, int maxout, int accel) {
+                     void* output, int maxout) {
   uint8_t* ip = (uint8_t*)input;
   uint8_t* ibase = (uint8_t*)input;
   uint8_t* ip_bound = ip + length - IP_BOUNDARY;
@@ -173,10 +173,6 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     return 0;
   }
 
-  /* prepare the acceleration to be used in condition */
-  accel = accel < 1 ? 1 : accel;
-  accel -= 1;
-
   htab = (uint16_t*)calloc(hash_size, sizeof(uint16_t));
 
   /* we start with literal copy */
@@ -208,7 +204,8 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     distance = (int32_t)(anchor - ref);
 
     /* update hash table if necessary */
-    if ((distance & accel) == 0)
+    /* not exactly sure why 0x1F works best, but experiments apparently say so */
+    if ((distance & 0x1F) == 0)
       htab[hval] = (uint16_t)(anchor - ibase);
 
     /* is this a match? check the first 3 bytes */
