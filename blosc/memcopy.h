@@ -45,6 +45,11 @@
     #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
   #endif
 
+  /* labs only available in VS2013 (VC++ 18.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1800
+    #define labs(v) abs(v)
+  #endif
+
 #else
   #include <stdint.h>
 #endif  // _WIN32
@@ -423,5 +428,27 @@ static inline unsigned char *chunk_copy(unsigned char *out, const unsigned char 
 
   return chunk_memcpy(out, from, len);
 }
+
+/* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
+static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *from, unsigned len) {
+  if (len < sizeof(uint64_t)) {
+    return copy_bytes(out, from, len);
+  }
+  return chunk_memcpy(out, from, len);
+}
+
+/* Same as fast_copy() but without overwriting origin or destination */
+static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
+  if (labs(from - out) < 8) {
+    for (; len; --len) {
+      *out++ = *from++;
+    }
+    return out;
+  }
+  else {
+    return fast_copy(out, from, len);
+  }
+}
+
 
 #endif /* MEMCOPY_H_ */

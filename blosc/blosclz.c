@@ -20,14 +20,6 @@
 #include "memcopy.h"
 
 
-#if defined(_WIN32) && !defined(__MINGW32__)
-  /* labs only available in VS2013 (VC++ 18.0) and newer */
-  #if defined(_MSC_VER) && _MSC_VER < 1800
-    #define labs(v) abs(v)
-  #endif
-#endif  /* _WIN32 */
-
-
 /*
  * Prevent accessing more than 8-bit at once, except on x86 architectures.
  */
@@ -87,21 +79,6 @@
   #define BLOSCLZ_READU16(p) *((const uint16_t*)(p))
 #endif
 
-
-/*
- * Copying without overwriting origin or destination
- */
-static inline uint8_t* safe_copy(uint8_t* op, const uint8_t* ref, unsigned len) {
-  if (labs(ref - op) < 8) {
-    for (; len; --len) {
-      *op++ = *ref++;
-    }
-    return op;
-  }
-  else {
-    chunk_copy(op, ref, 0, len);
-  }
-}
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
 #define HASH_FUNCTION(v, p, l) {                     \
@@ -449,7 +426,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      op = chunk_copy(op, ip, 0, ctrl);
+      op = fast_copy(op, ip, ctrl);
       ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
