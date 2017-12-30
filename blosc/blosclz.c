@@ -21,9 +21,9 @@
 
 
 #if defined(_WIN32) && !defined(__MINGW32__)
-  /* llabs only available in VS2013 (VC++ 18.0) and newer */
+  /* labs only available in VS2013 (VC++ 18.0) and newer */
   #if defined(_MSC_VER) && _MSC_VER < 1800
-    #define llabs(v) abs(v)
+    #define labs(v) abs(v)
   #endif
 #endif  /* _WIN32 */
 
@@ -89,19 +89,18 @@
 
 
 /*
- * Fast copy macros
+ * Copying without overwriting origin or destination
  */
-#define BLOCK_COPY(op, ref, len) {    \
-  chunk_copy((op), (ref), 0, (len));  \
-  (op) += (len); (ref) += (len);      \
-}
-
-#define SAFE_COPY(op, ref, len) {     \
-  if (llabs((op) - (ref)) < 8)        \
-    for(; (len); --(len))             \
-      *(op)++ = *(ref)++;             \
-  else                                \
-     BLOCK_COPY((op), (ref), (len));  \
+static inline uint8_t* safe_copy(uint8_t* op, const uint8_t* ref, unsigned len) {
+  if (labs(ref - op) < 8) {
+    for (; len; --len) {
+      *op++ = *ref++;
+    }
+    return op;
+  }
+  else {
+    chunk_copy(op, ref, 0, len);
+  }
 }
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
@@ -436,7 +435,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         /* copy from reference */
         ref--;
         len += 3;
-        SAFE_COPY(op, ref, len);
+        op = safe_copy(op, ref, len);
       }
     }
     else {
@@ -450,7 +449,8 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      BLOCK_COPY(op, ip, ctrl);
+      op = chunk_copy(op, ip, 0, ctrl);
+      ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if (loop)
