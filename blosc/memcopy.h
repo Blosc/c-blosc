@@ -611,7 +611,7 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
 #endif  // __SSE2__ && !__AVX2__
 #if defined(__AVX2__)
   else if (len < sizeof(__m256i)) {
-    return chunk_memcpy(out, from, len);
+    return chunk_memcpy_16(out, from, len);
   }
   return chunk_memcpy_32(out, from, len);
 #endif  // __AVX2__
