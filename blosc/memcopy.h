@@ -141,6 +141,13 @@ static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned ch
   _mm256_storeu_si256((__m256i*)out, chunk);
   return out + 32;
 }
+
+static inline unsigned char *copy_32_bytes_aligned(unsigned char *out, const unsigned char *from) {
+  __m256i chunk;
+  chunk = _mm256_load_si256((__m256i*)from);
+  _mm256_storeu_si256((__m256i*)out, chunk);
+  return out + 32;
+}
 #endif  // __AVX2__
 
 /* Copy LEN bytes (7 or fewer) from FROM into OUT. Return OUT + LEN. */
@@ -484,6 +491,82 @@ static inline unsigned char *chunk_memcpy_32(unsigned char *out, const unsigned 
 
   return out;
 }
+
+/* AVX2 *aligned* version of chunk_memcpy_32() */
+static inline unsigned char *chunk_memcpy_32_aligned(unsigned char *out, const unsigned char *from, unsigned len) {
+  unsigned sz = sizeof(__m256i);
+  unsigned bytes_to_align = sz - (unsigned)(((uintptr_t)(const void *)(from)) % sz);
+  unsigned corrected_len = len - bytes_to_align;
+  unsigned rem = corrected_len % sz;
+  unsigned by8;
+
+  assert(len >= sz);
+
+  /* Copy a few bytes to make sure the loop below has aligned 32-byte access. */
+  copy_32_bytes(out, from);
+  out += bytes_to_align;
+  from += bytes_to_align;
+
+  len = corrected_len / sz;
+  by8 = len % 8;
+  len -= by8;
+  switch (by8) {
+    case 7:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    case 6:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    case 5:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    case 4:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    case 3:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    case 2:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    case 1:
+      out = copy_32_bytes_aligned(out, from);
+      from += sz;
+    default:
+      break;
+  }
+
+  while (len) {
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+    out = copy_32_bytes_aligned(out, from);
+    from += sz;
+
+    len -= 8;
+  }
+
+  /* Copy remaining bytes */
+  if (rem < 8) {
+    out = copy_bytes(out, from, rem);
+  }
+  else {
+    out = chunk_memcpy(out, from, rem);
+  }
+
+  return out;
+}
 #endif // __AVX2__
 
 /* Memset LEN bytes in OUT with the value at OUT - 1. Return OUT + LEN. */
@@ -603,18 +686,25 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
   if (len < sizeof(uint64_t)) {
     return copy_bytes(out, from, len);
   }
-#if defined(__SSE2__) && !defined(__AVX2__)
+#if defined(__SSE2__)
   else if (len < sizeof(__m128i)) {
     return chunk_memcpy(out, from, len);
   }
+#if !defined(__AVX2__)
   return chunk_memcpy_16(out, from, len);
-#endif  // __SSE2__ && !__AVX2__
-#if defined(__AVX2__)
+#else
   else if (len < sizeof(__m256i)) {
     return chunk_memcpy_16(out, from, len);
   }
-  return chunk_memcpy_32(out, from, len);
-#endif  // __AVX2__
+  if (len < 1 << 12) {
+    return chunk_memcpy_32(out, from, len);
+  }
+  else {
+    // This should be faster for larger buffers (> 4 KB)
+    return chunk_memcpy_32_aligned(out, from, len);
+  }
+#endif  // !__AVX2__
+#endif  // __SSE2__
   return chunk_memcpy(out, from, len);
 }
 
