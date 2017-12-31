@@ -618,7 +618,7 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
   return chunk_memcpy(out, from, len);
 }
 
-/* Same as fast_copy() but without overwriting origin or destination */
+/* Same as fast_copy() but without overwriting origin or destination when they overlap */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
 #if defined(__AVX2__)
   unsigned sz = sizeof(__m256i);
