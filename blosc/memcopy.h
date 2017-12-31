@@ -71,7 +71,7 @@
 #if defined(__SSE2__)
   #include <emmintrin.h>
 #endif
-#if !defined(__AVX2__)
+#if defined(__AVX2__)
   #include <immintrin.h>
 #endif
 
@@ -419,7 +419,7 @@ static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned 
 
 /* AVX2 version of chunk_memcpy() */
 #if defined(__AVX2__)
-static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
+static inline unsigned char *chunk_memcpy_32(unsigned char *out, const unsigned char *from, unsigned len) {
   unsigned sz = sizeof(__m256i);
   unsigned rem = len % sz;
   unsigned by8;
