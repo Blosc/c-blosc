@@ -36,14 +36,6 @@
 #include "blosc-common.h"
 
 
-#if (defined(__GNUC__) || defined(__clang__))
-#define MEMCPY __builtin_memcpy
-#define MEMSET __builtin_memset
-#else
-#define MEMCPY memcpy
-#define MEMSET memset
-#endif
-
 #if defined(__SSE2__)
   #include <emmintrin.h>
 #endif
@@ -61,8 +53,8 @@ static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned cha
 static inline unsigned char *copy_2_bytes(unsigned char *out, unsigned char *from) {
   uint16_t chunk;
   unsigned sz = sizeof(chunk);
-  MEMCPY(&chunk, from, sz);
-  MEMCPY(out, &chunk, sz);
+  memcpy(&chunk, from, sz);
+  memcpy(out, &chunk, sz);
   return out + sz;
 }
 
@@ -74,8 +66,8 @@ static inline unsigned char *copy_3_bytes(unsigned char *out, unsigned char *fro
 static inline unsigned char *copy_4_bytes(unsigned char *out, unsigned char *from) {
   uint32_t chunk;
   unsigned sz = sizeof(chunk);
-  MEMCPY(&chunk, from, sz);
-  MEMCPY(out, &chunk, sz);
+  memcpy(&chunk, from, sz);
+  memcpy(out, &chunk, sz);
   return out + sz;
 }
 
@@ -96,8 +88,8 @@ static inline unsigned char *copy_7_bytes(unsigned char *out, unsigned char *fro
 
 static inline unsigned char *copy_8_bytes(unsigned char *out, const unsigned char *from) {
   uint64_t chunk;
-  MEMCPY(&chunk, from, 8);
-  MEMCPY(out, &chunk, 8);
+  memcpy(&chunk, from, 8);
+  memcpy(out, &chunk, 8);
   return out + 8;
 }
 
@@ -238,22 +230,22 @@ static inline unsigned char *set_bytes(unsigned char *out, const unsigned char *
         unsigned char c = *from;
         switch (len) {
         case 7:
-            MEMSET(out, c, 7);
+            memset(out, c, 7);
             return out + 7;
         case 6:
-            MEMSET(out, c, 6);
+            memset(out, c, 6);
             return out + 6;
         case 5:
-            MEMSET(out, c, 5);
+            memset(out, c, 5);
             return out + 5;
         case 4:
-            MEMSET(out, c, 4);
+            memset(out, c, 4);
             return out + 4;
         case 3:
-            MEMSET(out, c, 3);
+            memset(out, c, 3);
             return out + 3;
         case 2:
-            MEMSET(out, c, 2);
+            memset(out, c, 2);
             return out + 2;
         default:
             assert(0);
@@ -556,7 +548,7 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
   assert(len >= sz);
 
   /* First, deal with the case when LEN is not a multiple of SZ. */
-  MEMSET(out, c, sz);
+  memset(out, c, sz);
   len /= sz;
   out += rem;
 
@@ -564,25 +556,25 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
   len -= by8;
   switch (by8) {
     case 7:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     case 6:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     case 5:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     case 4:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     case 3:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     case 2:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     case 1:
-      MEMSET(out, c, sz);
+      memset(out, c, sz);
       out += sz;
     default:
       assert(0);
@@ -592,21 +584,21 @@ static inline unsigned char *byte_memset(unsigned char *out, unsigned len) {
   while (len) {
     /* When sz is a constant, the compiler replaces __builtin_memset with an
        inline version that does not incur a function call overhead. */
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
-    MEMSET(out, c, sz);
+    memset(out, c, sz);
     out += sz;
     len -= 8;
   }
