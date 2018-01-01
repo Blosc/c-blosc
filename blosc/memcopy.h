@@ -36,15 +36,6 @@
 #include "blosc-common.h"
 
 
-#if defined(__SSE2__)
-  #include <emmintrin.h>
-#endif
-#if defined(__AVX2__)
-  #include <immintrin.h>
-#endif
-
-
-
 static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned char *from) {
   *out++ = *from;
   return out;
