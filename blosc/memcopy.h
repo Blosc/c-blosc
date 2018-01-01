@@ -454,10 +454,11 @@ static inline unsigned char *chunk_memcpy_32(unsigned char *out, const unsigned 
 /* AVX2 *aligned* version of chunk_memcpy_32() */
 static inline unsigned char *chunk_memcpy_32_aligned(unsigned char *out, const unsigned char *from, unsigned len) {
   unsigned sz = sizeof(__m256i);
+  __m256i chunk;
   unsigned bytes_to_align = sz - (unsigned)(((uintptr_t)(const void *)(from)) % sz);
   unsigned corrected_len = len - bytes_to_align;
   unsigned rem = corrected_len % sz;
-  unsigned by8;
+  unsigned ilen;
 
   assert(len >= sz);
 
@@ -466,54 +467,11 @@ static inline unsigned char *chunk_memcpy_32_aligned(unsigned char *out, const u
   out += bytes_to_align;
   from += bytes_to_align;
 
-  len = corrected_len / sz;
-  by8 = len % 8;
-  len -= by8;
-  switch (by8) {
-    case 7:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    case 6:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    case 5:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    case 4:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    case 3:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    case 2:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    case 1:
-      out = copy_32_bytes_aligned(out, from);
-      from += sz;
-    default:
-      break;
-  }
-
-  while (len) {
-    out = copy_32_bytes_aligned(out, from);
+  for (ilen = 0; ilen < len; ilen += sz) {
+    chunk = _mm256_load_si256((__m256i *) from);
+    _mm256_storeu_si256((__m256i *) out, chunk);
+    out += sz;
     from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-    out = copy_32_bytes_aligned(out, from);
-    from += sz;
-
-    len -= 8;
   }
 
   /* Copy remaining bytes */
