@@ -467,7 +467,8 @@ static inline unsigned char *chunk_memcpy_32_aligned(unsigned char *out, const u
   out += bytes_to_align;
   from += bytes_to_align;
 
-  for (ilen = 0; ilen < len; ilen += sz) {
+  len /= sz;
+  for (ilen = 1; ilen < len; ilen++) {
     chunk = _mm256_load_si256((__m256i *) from);
     _mm256_storeu_si256((__m256i *) out, chunk);
     out += sz;
