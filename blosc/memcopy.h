@@ -51,11 +51,6 @@
     #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
   #endif
 
-  /* labs only available in VS2013 (VC++ 18.0) and newer */
-  #if defined(_MSC_VER) && _MSC_VER < 1800
-    #define labs(v) abs(v)
-  #endif
-
 #else
   #include <stdint.h>
 #endif  // _WIN32
@@ -717,7 +712,7 @@ static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *
 #else
   unsigned sz = sizeof(uint64_t);
 #endif
-  if (labs(from - out) < sz) {
+  if (out - sz < from) {
     for (; len; --len) {
       *out++ = *from++;
     }
