@@ -319,7 +319,7 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
 static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
   unsigned sz = sizeof(__m128i);
   unsigned rem = len % sz;
-  unsigned by8;
+  unsigned ilen;
 
   assert(len >= sz);
 
@@ -330,127 +330,15 @@ static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned 
   out += rem;
   from += rem;
 
-  by8 = len % 8;
-  len -= by8;
-  switch (by8) {
-    case 7:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    case 6:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    case 5:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    case 4:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    case 3:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    case 2:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    case 1:
-      out = copy_16_bytes(out, from);
-      from += sz;
-    default:
-      break;
-  }
-
-  while (len) {
-    out = copy_16_bytes(out, from);
+  for (ilen = 0; ilen < len; ilen++) {
+    copy_16_bytes(out, from);
+    out += sz;
     from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-    out = copy_16_bytes(out, from);
-    from += sz;
-
-    len -= 8;
   }
 
   return out;
 }
 #endif // __SSE2__
-
-/* AVX2 version of chunk_memcpy() */
-#if defined(__AVX2__)
-static inline unsigned char *chunk_memcpy_32(unsigned char *out, const unsigned char *from, unsigned len) {
-  unsigned sz = sizeof(__m256i);
-  unsigned rem = len % sz;
-  unsigned by8;
-
-  assert(len >= sz);
-
-  /* Copy a few bytes to make sure the loop below has a multiple of SZ bytes to be copied. */
-  copy_32_bytes(out, from);
-
-  len /= sz;
-  out += rem;
-  from += rem;
-
-  by8 = len % 8;
-  len -= by8;
-  switch (by8) {
-    case 7:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    case 6:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    case 5:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    case 4:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    case 3:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    case 2:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    case 1:
-      out = copy_32_bytes(out, from);
-      from += sz;
-    default:
-      break;
-  }
-
-  while (len) {
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-    out = copy_32_bytes(out, from);
-    from += sz;
-
-    len -= 8;
-  }
-
-  return out;
-}
-#endif // __AVX2__
 
 #if defined(__AVX2__) || defined(__SSE2__)
 /* AVX2 *aligned* version of chunk_memcpy_32() */
