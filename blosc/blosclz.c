@@ -201,7 +201,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
       /* safe because the outer check against ip limit */
       while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
 #if defined(BLOSCLZ_STRICT_ALIGN)
-        MEMCPY(&value2, ref, 8);
+        memcpy(&value2, ref, 8);
 #else
         value2 = ((int64_t*)ref)[0];
 #endif
