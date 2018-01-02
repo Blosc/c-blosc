@@ -206,6 +206,102 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
 #endif
 
 
+uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  for (; ;) {
+    while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
+#if !defined(BLOSCLZ_STRICT_ALIGN)
+      if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
+#endif
+        /* Find the byte that starts to differ */
+        while (ip < ip_bound) {
+          if (*ref++ != *ip++)
+            return ip;
+        }
+        break;
+#if !defined(BLOSCLZ_STRICT_ALIGN)
+      } else {
+        ip += sizeof(int64_t);
+        ref += sizeof(int64_t);
+      }
+#endif
+    }
+    break;
+  }
+  /* Look into the remainder */
+  while (ip < ip_bound + IP_BOUNDARY) {
+    if (*ref++ != *ip++)
+      break;
+  }
+  return ip;
+}
+
+
+#if defined(__SSE2__)
+uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  __m128i value, value2, cmp;
+
+  for (; ;) {
+    while (ip < (ip_bound - (sizeof(__m128i) - IP_BOUNDARY))) {
+      value = _mm_loadu_si128((__m128i *) ip);
+      value2 = _mm_loadu_si128((__m128i *) ref);
+      cmp = _mm_cmpeq_epi32(value, value2);
+      if (_mm_movemask_epi8(cmp) != 0xFFFF) {
+        /* Find the byte that starts to differ */
+        while (ip < ip_bound) {
+          if (*ref++ != *ip++)
+            return ip;
+        }
+        break;
+      } else {
+        ip += sizeof(__m128i);
+        ref += sizeof(__m128i);
+      }
+    }
+    break;
+  }
+  /* Look into the remainder */
+  while (ip < ip_bound + IP_BOUNDARY) {
+    if (*ref++ != *ip++)
+      break;
+  }
+  return ip;
+}
+#endif
+
+
+#if defined(__AVX2__)
+uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  __m256i value, value2, cmp;
+
+  for (; ;) {
+    while (ip < (ip_bound - (sizeof(__m256i) - IP_BOUNDARY))) {
+      value = _mm256_loadu_si256((__m256i *) ip);
+      value2 = _mm256_loadu_si256((__m256i *)ref);
+      cmp = _mm256_cmpeq_epi64(value, value2);
+      if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
+        /* Find the byte that starts to differ */
+        while (ip < ip_bound) {
+          if (*ref++ != *ip++)
+            return ip;
+        }
+        break;
+      } else {
+        ip += sizeof(__m256i);
+        ref += sizeof(__m256i);
+      }
+    }
+    break;
+  }
+  /* Look into the remainder */
+  while (ip < ip_bound + IP_BOUNDARY) {
+    if (*ref++ != *ip++)
+      break;
+  }
+  return ip;
+}
+#endif
+
+
 int blosclz_compress(const int opt_level, const void* input, int length,
                      void* output, int maxout) {
   uint8_t* ip = (uint8_t*)input;
@@ -301,10 +397,6 @@ int blosclz_compress(const int opt_level, const void* input, int length,
       /* zero distance means a run */
 #if defined(__AVX2__)
       ip = get_run_32(ip, ip_bound, ref);
-      //printf("B %p %p %p %p\n", ip2, ip, ip_bound, ref);
-      //ip = get_run(ip, ip_bound, ref);
-      //printf("A %p %p %p %p\n", ip, ip, ip_bound, ref);
-      //assert(ip == ip2);
 #elif defined(__SSE2__)
       ip = get_run_16(ip, ip_bound, ref);
 #else
@@ -312,30 +404,13 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 #endif
     }
     else {
-      for (; ;) {
-        /* safe because the outer check against ip limit */
-        while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-          if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
+#if defined(__AVX2__)
+      ip = get_match_32(ip, ip_bound, ref);
+#elif defined(__SSE2__)
+      ip = get_match_16(ip, ip_bound, ref);
+#else
+      ip = get_match(ip, ip_bound, ref);
 #endif
-            /* Find the byte that starts to differ */
-            while (ip < ip_bound) {
-              if (*ref++ != *ip++) break;
-            }
-            break;
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-          } else {
-            ip += 8;
-            ref += 8;
-          }
-#endif
-        }
-        /* Last correction before exiting loop */
-        if (ip > ip_bound) {
-          ip = ip_bound;
-        }   /* End of optimization */
-        break;
-      }
     }
 
     /* if we have copied something, adjust the copy count */
@@ -430,7 +505,6 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   return 0;
 
 }
-
 
 int blosclz_decompress(const void* input, int length, void* output, int maxout) {
   const uint8_t* ip = (const uint8_t*)input;
