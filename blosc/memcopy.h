@@ -690,5 +690,4 @@ static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *
   }
 }
 
-
 #endif /* MEMCOPY_H_ */
