@@ -317,7 +317,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
      and taking the minimum times on a i5-3380M @ 2.90GHz.
      Curiously enough, values >= 14 does not always
      get maximum compression, even with large blocksizes. */
-  int8_t hash_log_[10] = {-1, 11, 11, 12, 13, 14, 14, 14, 14, 14};
+  int8_t hash_log_[10] = {-1, 15, 15, 15, 15, 15, 15, 15, 15, 15};
   uint8_t hash_log = hash_log_[opt_level];
   uint16_t hash_size = 1 << hash_log;
   uint16_t* htab;
@@ -326,7 +326,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   int32_t hval;
   uint8_t copy;
 
-  double maxlength_[10] = {-1, .1, .1, .15, .2, .2, .5, .7, .9, 1.0};
+  double maxlength_[10] = {-1, .1, .5, .5, .6, .6, .65, .7, .9, 1.0};
   int32_t maxlength = (int32_t)(length * maxlength_[opt_level]);
   if (maxlength > (int32_t)maxout) {
     maxlength = (int32_t)maxout;
