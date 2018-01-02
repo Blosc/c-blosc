@@ -340,8 +340,48 @@ static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned 
 }
 #endif // __SSE2__
 
-#if defined(__AVX2__) || defined(__SSE2__)
-/* AVX2 *aligned* version of chunk_memcpy_32() */
+/* SSE2/AVX2 *unaligned* version of chunk_memcpy_aligned() */
+#if defined(__SSE2__) || defined(__AVX2__)
+static inline unsigned char *chunk_memcpy_unaligned(unsigned char *out, const unsigned char *from, unsigned len) {
+#if defined(__AVX2__)
+  unsigned sz = sizeof(__m256i);
+  __m256i chunk;
+#elif defined(__SSE2__)
+  unsigned sz = sizeof(__m128i);
+  __m128i chunk;
+#endif
+  unsigned rem = len % sz;
+  unsigned ilen;
+
+  assert(len >= sz);
+
+  /* Copy a few bytes to make sure the loop below has a multiple of SZ bytes to be copied. */
+#if defined(__AVX2__)
+  copy_32_bytes(out, from);
+#elif defined(__SSE2__)
+  copy_16_bytes(out, from);
+#endif
+
+  len /= sz;
+  out += rem;
+  from += rem;
+
+  for (ilen = 0; ilen < len; ilen++) {
+#if defined(__AVX2__)
+    copy_32_bytes(out, from);
+#elif defined(__SSE2__)
+    copy_16_bytes(out, from);
+#endif
+    out += sz;
+    from += sz;
+  }
+
+  return out;
+}
+#endif // __SSE2__
+
+#if defined(__SSE2__) || defined(__AVX2__)
+/* SSE2/AVX2 *aligned* version of chunk_memcpy_aligned() */
 static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsigned char *from, unsigned len) {
 #if defined(__AVX2__)
   unsigned sz = sizeof(__m256i);
@@ -518,15 +558,15 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
     return copy_16_bytes(out, from);
   }
 #if !defined(__AVX2__)
-  return chunk_memcpy_16(out, from, len);
+  return chunk_memcpy_unaligned(out, from, len);
 #else
-  if (len < sizeof(__m256i)) {
-    return chunk_memcpy_16(out, from, len);
-  }
   if (len == sizeof(__m256i)) {
     return copy_32_bytes(out, from);
   }
-  return chunk_memcpy_aligned(out, from, len);
+  if (len < sizeof(__m256i)) {
+    return chunk_memcpy_16(out, from, len);
+  }
+  return chunk_memcpy_unaligned(out, from, len);
 #endif  // !__AVX2__
 #endif  // __SSE2__
   return chunk_memcpy(out, from, len);
