@@ -101,6 +101,37 @@
 #define IP_BOUNDARY 2
 
 
+static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  int64_t value, value2;
+  /* Broadcast the value for every byte in a 64-bit register */
+  memset(&value, x, 8);
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
+#if defined(BLOSCLZ_STRICT_ALIGN)
+    memcpy(&value2, ref, 8);
+#else
+    value2 = ((int64_t*)ref)[0];
+#endif
+    if (value != value2) {
+      /* Find the byte that starts to differ */
+      while (ip < ip_bound) {
+        if (*ref++ != x) break; else ip++;
+      }
+      break;
+    }
+    else {
+      ip += 8;
+      ref += 8;
+    }
+  }
+  if (ip > ip_bound) {
+    ip = (uint8_t*)ip_bound;
+  }
+  return ip;
+}
+
+
 int blosclz_compress(const int opt_level, const void* input, int length,
                      void* output, int maxout) {
   uint8_t* ip = (uint8_t*)input;
@@ -194,34 +225,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 
     if (!distance) {
       /* zero distance means a run */
-      uint8_t x = ip[-1];
-      int64_t value, value2;
-      /* Broadcast the value for every byte in a 64-bit register */
-      memset(&value, x, 8);
-      /* safe because the outer check against ip limit */
-      while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
-#if defined(BLOSCLZ_STRICT_ALIGN)
-        memcpy(&value2, ref, 8);
-#else
-        value2 = ((int64_t*)ref)[0];
-#endif
-        if (value != value2) {
-          /* Find the byte that starts to differ */
-          while (ip < ip_bound) {
-            if (*ref++ != x) break; else ip++;
-          }
-          break;
-        }
-        else {
-          ip += 8;
-          ref += 8;
-        }
-      }
-      if (ip > ip_bound) {
-        long l = (long)(ip - ip_bound);
-        ip -= l;
-        ref -= l;
-      }   /* End of optimization */
+      ip = get_run(ip, ip_bound, ref);
     }
     else {
       for (; ;) {
@@ -244,9 +248,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
         }
         /* Last correction before exiting loop */
         if (ip > ip_bound) {
-          int32_t l = (int32_t)(ip - ip_bound);
-          ip -= l;
-          ref -= l;
+          ip = ip_bound;
         }   /* End of optimization */
         break;
       }
