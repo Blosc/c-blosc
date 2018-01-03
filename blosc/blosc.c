@@ -981,11 +981,11 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
 
   /* Enlarge the blocksize for splittable codecs */
   if (clevel > 0 && split_block(context->compcode, typesize, blocksize)) {
-    blocksize *= typesize;
-    if (blocksize > (1 << 18)) {
-      /* Do not exceed 256 KB for splitting codecs */
-      blocksize = (1 << 18);
+    if (blocksize > (1 << 16)) {
+      /* Do not use a too large buffer (64 KB) for splitting codecs */
+      blocksize = (1 << 16);
     }
+    blocksize *= typesize;
   }
 
   /* Check that blocksize is not too large */
