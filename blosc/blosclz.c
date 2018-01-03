@@ -115,11 +115,8 @@ static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8
 #endif
     if (value != value2) {
       /* Find the byte that starts to differ */
-      while (ip < ip_bound) {
-        if (*ref++ != x)
-          return ip;
-        else ip++;
-      }
+      while (*ref++ == x) ip++;
+      return ip;
     }
     else {
       ip += 8;
@@ -127,15 +124,9 @@ static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8
     }
   }
   /* Look into the remainder */
-  while (ip < ip_bound) {
-    if (*ref++ != x)
-      return ip;
-    else ip++;
-  }
-
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
   return ip;
 }
-
 
 #ifdef __SSE2__
 static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
@@ -150,12 +141,8 @@ static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const ui
     cmp = _mm_cmpeq_epi32(value, value2);
     if (_mm_movemask_epi8(cmp) != 0xFFFF) {
       /* Find the byte that starts to differ */
-      while (ip < ip_bound) {
-        if (*ref++ != x)
-          return ip;
-        else
-          ip++;
-      }
+      while (*ref++ == x) ip++;
+      return ip;
     }
     else {
       ip += sizeof(__m128i);
@@ -163,12 +150,7 @@ static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const ui
     }
   }
   /* Look into the remainder */
-  while (ip < ip_bound) {
-    if (*ref++ != x)
-      return ip;
-    else
-      ip++;
-  }
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
   return ip;
 }
 #endif
@@ -187,12 +169,8 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
     cmp = _mm256_cmpeq_epi64(value, value2);
     if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
       /* Find the byte that starts to differ */
-      while (ip < ip_bound) {
-        if (*ref++ != x)
-          return ip;
-        else
-          ip++;
-      }
+      while (*ref++ == x) ip++;
+      return ip;
     }
     else {
       ip += sizeof(__m256i);
@@ -200,12 +178,7 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
     }
   }
   /* Look into the remainder */
-  while (ip < ip_bound) {
-    if (*ref++ != x)
-      return ip;
-    else
-      ip++;
-  }
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
   return ip;
 }
 #endif
@@ -401,10 +374,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     if (!distance) {
       /* zero distance means a run */
 #if defined(__AVX2__)
-      uint8_t* ip2 = get_run_32(ip, ip_bound, ref);
-      //printf("A%d,", (int)(ip2 - ip));
-      ip = get_run(ip, ip_bound, ref);
-      assert(ip == ip2);
+      ip = get_run_32(ip, ip_bound, ref);
 #elif defined(__SSE2__)
       ip = get_run_16(ip, ip_bound, ref);
 #else
