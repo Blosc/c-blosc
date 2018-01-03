@@ -185,31 +185,23 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
 
 
 uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  for (; ;) {
-    while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
+  while (ip < (ip_bound - (sizeof(int64_t)) + IP_BOUNDARY)) {
 #if !defined(BLOSCLZ_STRICT_ALIGN)
-      if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
+    if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
 #endif
-        /* Find the byte that starts to differ */
-        while (ip < ip_bound) {
-          if (*ref++ != *ip++)
-            return ip;
-        }
-        break;
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
 #if !defined(BLOSCLZ_STRICT_ALIGN)
-      } else {
-        ip += sizeof(int64_t);
-        ref += sizeof(int64_t);
-      }
-#endif
     }
-    break;
+    else {
+      ip += sizeof(int64_t);
+      ref += sizeof(int64_t);
+    }
+#endif
   }
   /* Look into the remainder */
-  while (ip < ip_bound + IP_BOUNDARY) {
-    if (*ref++ != *ip++)
-      break;
-  }
+  while ((ip < ip_bound + IP_BOUNDARY) && (*ref++ == *ip++)) {}
   return ip;
 }
 
@@ -218,30 +210,22 @@ uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
 uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   __m128i value, value2, cmp;
 
-  for (; ;) {
-    while (ip < (ip_bound - (sizeof(__m128i) - IP_BOUNDARY))) {
-      value = _mm_loadu_si128((__m128i *) ip);
-      value2 = _mm_loadu_si128((__m128i *) ref);
-      cmp = _mm_cmpeq_epi32(value, value2);
-      if (_mm_movemask_epi8(cmp) != 0xFFFF) {
-        /* Find the byte that starts to differ */
-        while (ip < ip_bound) {
-          if (*ref++ != *ip++)
-            return ip;
-        }
-        break;
-      } else {
-        ip += sizeof(__m128i);
-        ref += sizeof(__m128i);
-      }
+  while (ip < (ip_bound - (sizeof(__m128i) - IP_BOUNDARY))) {
+    value = _mm_loadu_si128((__m128i *) ip);
+    value2 = _mm_loadu_si128((__m128i *) ref);
+    cmp = _mm_cmpeq_epi32(value, value2);
+    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
     }
-    break;
+    else {
+      ip += sizeof(__m128i);
+      ref += sizeof(__m128i);
+    }
   }
   /* Look into the remainder */
-  while (ip < ip_bound + IP_BOUNDARY) {
-    if (*ref++ != *ip++)
-      break;
-  }
+  while ((ip < ip_bound + IP_BOUNDARY) && (*ref++ == *ip++)) {}
   return ip;
 }
 #endif
@@ -251,30 +235,22 @@ uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) 
 uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   __m256i value, value2, cmp;
 
-  for (; ;) {
-    while (ip < (ip_bound - (sizeof(__m256i) - IP_BOUNDARY))) {
-      value = _mm256_loadu_si256((__m256i *) ip);
-      value2 = _mm256_loadu_si256((__m256i *)ref);
-      cmp = _mm256_cmpeq_epi64(value, value2);
-      if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
-        /* Find the byte that starts to differ */
-        while (ip < ip_bound) {
-          if (*ref++ != *ip++)
-            return ip;
-        }
-        break;
-      } else {
-        ip += sizeof(__m256i);
-        ref += sizeof(__m256i);
-      }
+  while (ip < (ip_bound - (sizeof(__m256i) - IP_BOUNDARY))) {
+    value = _mm256_loadu_si256((__m256i *) ip);
+    value2 = _mm256_loadu_si256((__m256i *)ref);
+    cmp = _mm256_cmpeq_epi64(value, value2);
+    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
     }
-    break;
+    else {
+      ip += sizeof(__m256i);
+      ref += sizeof(__m256i);
+    }
   }
   /* Look into the remainder */
-  while (ip < ip_bound + IP_BOUNDARY) {
-    if (*ref++ != *ip++)
-      break;
-  }
+  while ((ip < ip_bound + IP_BOUNDARY) && (*ref++ == *ip++)) {}
   return ip;
 }
 #endif
@@ -384,6 +360,11 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     else {
 #if defined(__AVX2__)
       ip = get_match_32(ip, ip_bound, ref);
+      //uint8_t *ip2 = get_match_32(ip, ip_bound, ref);
+      //printf("M%d,", (int)(ip2 - ip));
+      //ip = get_match(ip, ip_bound, ref);
+      //assert(ip == ip2);
+      //ip = ip2;
 #elif defined(__SSE2__)
       ip = get_match_16(ip, ip_bound, ref);
 #else
