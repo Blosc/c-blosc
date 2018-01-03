@@ -13,27 +13,9 @@
 **********************************************************************/
 
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include "blosclz.h"
-
-#if defined(_WIN32) && !defined(__MINGW32__)
-  #include <windows.h>
-
-/* stdint.h only available in VS2010 (VC++ 16.0) and newer */
-  #if defined(_MSC_VER) && _MSC_VER < 1600
-    #include "win32/stdint-windows.h"
-  #else
-    #include <stdint.h>
-  #endif
-/* llabs only available in VS2013 (VC++ 18.0) and newer */
-  #if defined(_MSC_VER) && _MSC_VER < 1800
-    #define llabs(v) abs(v)
-  #endif
-#else
-  #include <stdint.h>
-#endif  /* _WIN32 */
+#include "memcopy.h"
 
 
 /*
@@ -85,9 +67,9 @@
 #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
 #endif
 
-#define MAX_COPY       32
+#define MAX_COPY 32
 #define MAX_DISTANCE 8191
-#define MAX_FARDISTANCE (65535+MAX_DISTANCE-1)
+#define MAX_FARDISTANCE (65535 + MAX_DISTANCE - 1)
 
 #ifdef BLOSCLZ_STRICT_ALIGN
   #define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
@@ -96,71 +78,15 @@
 #endif
 
 
-/*
- * Fast copy macros
- */
-#if defined(_WIN32)
-  /* A previous value of 32 created this issue:
-     https://github.com/Blosc/bcolz/issues/363 */
-  #define CPYSIZE              8
-#else
-  #define CPYSIZE              8
-#endif
-#define MCPY(d, s)            { memcpy(d, s, CPYSIZE); d+=CPYSIZE; s+=CPYSIZE; }
-#define FASTCOPY(d, s, e)      { do { MCPY(d,s) } while (d<e); }
-#define SAFECOPY(d, s, e)      { while (d<e) { MCPY(d,s) } }
-
-/* Copy optimized for copying in blocks */
-#define BLOCK_COPY(op, ref, len, op_limit)    \
-{ int ilen = len % CPYSIZE;                   \
-  uint8_t *cpy = op + len;                    \
-  if (cpy + CPYSIZE - ilen <= op_limit) {     \
-    FASTCOPY(op, ref, cpy);                   \
-    ref -= (op-cpy); op = cpy;                \
-  }                                           \
-  else {                                      \
-    cpy -= ilen;                              \
-    SAFECOPY(op, ref, cpy);                   \
-    ref -= (op-cpy); op = cpy;                \
-    for(; ilen; --ilen)                          \
-        *op++ = *ref++;                       \
-  }                                           \
-}
-
-#define SAFE_COPY(op, ref, len, op_limit)     \
-if (llabs(op-ref) < CPYSIZE) {                \
-  for(; len; --len)                           \
-    *op++ = *ref++;                           \
-}                                             \
-else BLOCK_COPY(op, ref, len, op_limit);
-
-/* Copy optimized for GCC 4.8.  Seems like long copy loops are optimal. */
-#define GCC_SAFE_COPY(op, ref, len, op_limit) \
-if ((len > 32) || (llabs(op-ref) < CPYSIZE)) { \
-  for(; len; --len)                           \
-    *op++ = *ref++;                           \
-}                                             \
-else BLOCK_COPY(op, ref, len, op_limit);
-
 /* Simple, but pretty effective hash function for 3-byte sequence */
-#define HASH_FUNCTION(v, p, l) {                       \
-    v = BLOSCLZ_READU16(p);                            \
-    v ^= BLOSCLZ_READU16(p + 1) ^ ( v >> (16 - l));    \
-    v &= (1 << l) - 1;                                 \
-}
-
-/* Another version which seems to be a bit more effective than the above,
- * but a bit slower.  Could be interesting for high opt_level.
- */
-#define MINMATCH 3
-#define HASH_FUNCTION2(v, p, l) {                       \
-  v = BLOSCLZ_READU16(p);                               \
-  v = (v * 2654435761U) >> ((MINMATCH * 8) - (l + 1));  \
-  v &= (1 << l) - 1;                                    \
+#define HASH_FUNCTION(v, p, l) {                     \
+  v = BLOSCLZ_READU16(p);                            \
+  v ^= BLOSCLZ_READU16(p + 1) ^ ( v >> (16 - l));    \
+  v &= (1 << l) - 1;                                 \
 }
 
 #define LITERAL(ip, op, op_limit, anchor, copy) {        \
-  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op+2 > op_limit))     \
+  if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + 2 > op_limit))   \
     goto out;                                            \
   *op++ = *anchor++;                                     \
   ip = anchor;                                           \
@@ -175,8 +101,163 @@ else BLOCK_COPY(op, ref, len, op_limit);
 #define IP_BOUNDARY 2
 
 
+static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  int64_t value, value2;
+  /* Broadcast the value for every byte in a 64-bit register */
+  memset(&value, x, 8);
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - sizeof(int64_t))) {
+#if defined(BLOSCLZ_STRICT_ALIGN)
+    memcpy(&value2, ref, 8);
+#else
+    value2 = ((int64_t*)ref)[0];
+#endif
+    if (value != value2) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == x) ip++;
+      return ip;
+    }
+    else {
+      ip += 8;
+      ref += 8;
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
+  return ip;
+}
+
+#ifdef __SSE2__
+static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  __m128i value, value2, cmp;
+
+  /* Broadcast the value for every byte in a 128-bit register */
+  memset(&value, x, sizeof(__m128i));
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - sizeof(__m128i))) {
+    value2 = _mm_loadu_si128((__m128i *)ref);
+    cmp = _mm_cmpeq_epi32(value, value2);
+    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == x) ip++;
+      return ip;
+    }
+    else {
+      ip += sizeof(__m128i);
+      ref += sizeof(__m128i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
+  return ip;
+}
+#endif
+
+
+#ifdef __AVX2__
+static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  __m256i value, value2, cmp;
+
+  /* Broadcast the value for every byte in a 256-bit register */
+  memset(&value, x, sizeof(__m256i));
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - (sizeof(__m256i)))) {
+    value2 = _mm256_loadu_si256((__m256i *)ref);
+    cmp = _mm256_cmpeq_epi64(value, value2);
+    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == x) ip++;
+      return ip;
+    }
+    else {
+      ip += sizeof(__m256i);
+      ref += sizeof(__m256i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
+  return ip;
+}
+#endif
+
+
+uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  while (ip < (ip_bound - sizeof(int64_t)) + IP_BOUNDARY) {
+#if !defined(BLOSCLZ_STRICT_ALIGN)
+    if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
+#endif
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
+#if !defined(BLOSCLZ_STRICT_ALIGN)
+    }
+    else {
+      ip += sizeof(int64_t);
+      ref += sizeof(int64_t);
+    }
+#endif
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound + IP_BOUNDARY) && (*ref++ == *ip++)) {}
+  return ip;
+}
+
+
+#if defined(__SSE2__)
+uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  __m128i value, value2, cmp;
+
+  while (ip < (ip_bound - sizeof(__m128i) + IP_BOUNDARY)) {
+    value = _mm_loadu_si128((__m128i *) ip);
+    value2 = _mm_loadu_si128((__m128i *) ref);
+    cmp = _mm_cmpeq_epi32(value, value2);
+    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
+    }
+    else {
+      ip += sizeof(__m128i);
+      ref += sizeof(__m128i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound + IP_BOUNDARY) && (*ref++ == *ip++)) {}
+  return ip;
+}
+#endif
+
+
+#if defined(__AVX2__)
+uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  __m256i value, value2, cmp;
+
+  while (ip < (ip_bound - sizeof(__m256i) + IP_BOUNDARY)) {
+    value = _mm256_loadu_si256((__m256i *) ip);
+    value2 = _mm256_loadu_si256((__m256i *)ref);
+    cmp = _mm256_cmpeq_epi64(value, value2);
+    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
+    }
+    else {
+      ip += sizeof(__m256i);
+      ref += sizeof(__m256i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound + IP_BOUNDARY) && (*ref++ == *ip++)) {}
+  return ip;
+}
+#endif
+
+
 int blosclz_compress(const int opt_level, const void* input, int length,
-                     void* output, int maxout, int accel) {
+                     void* output, int maxout) {
   uint8_t* ip = (uint8_t*)input;
   uint8_t* ibase = (uint8_t*)input;
   uint8_t* ip_bound = ip + length - IP_BOUNDARY;
@@ -190,7 +271,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
      and taking the minimum times on a i5-3380M @ 2.90GHz.
      Curiously enough, values >= 14 does not always
      get maximum compression, even with large blocksizes. */
-  int8_t hash_log_[10] = {-1, 11, 11, 11, 12, 13, 14, 14, 14, 14};
+  int8_t hash_log_[10] = {-1, 15, 15, 15, 15, 15, 15, 15, 15, 15};
   uint8_t hash_log = hash_log_[opt_level];
   uint16_t hash_size = 1 << hash_log;
   uint16_t* htab;
@@ -199,7 +280,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   int32_t hval;
   uint8_t copy;
 
-  double maxlength_[10] = {-1, .1, .1, .15, .2, .3, .5, .7, .9, 1.0};
+  double maxlength_[10] = {-1, .1, .5, .5, .6, .6, .65, .7, .9, 1.0};
   int32_t maxlength = (int32_t)(length * maxlength_[opt_level]);
   if (maxlength > (int32_t)maxout) {
     maxlength = (int32_t)maxout;
@@ -210,10 +291,6 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   if (BLOSCLZ_UNEXPECT_CONDITIONAL(maxout < 66 || length < 4)) {
     return 0;
   }
-
-  /* prepare the acceleration to be used in condition */
-  accel = accel < 1 ? 1 : accel;
-  accel -= 1;
 
   htab = (uint16_t*)calloc(hash_size, sizeof(uint16_t));
 
@@ -246,12 +323,15 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     distance = (int32_t)(anchor - ref);
 
     /* update hash table if necessary */
-    if ((distance & accel) == 0)
+    /* not exactly sure why 0x1F works best, but experiments apparently say so */
+    if ((distance & 0x1F) == 0)
       htab[hval] = (uint16_t)(anchor - ibase);
 
     /* is this a match? check the first 3 bytes */
     if (distance == 0 || (distance >= MAX_FARDISTANCE) ||
-        *ref++ != *ip++ || *ref++ != *ip++ || *ref++ != *ip++) LITERAL(ip, op, op_limit, anchor, copy);
+        *ref++ != *ip++ || *ref++ != *ip++ || *ref++ != *ip++) {
+      LITERAL(ip, op, op_limit, anchor, copy);
+    }
 
     /* far, needs at least 5-byte match */
     if (opt_level >= 5 && distance >= MAX_DISTANCE) {
@@ -269,62 +349,23 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 
     if (!distance) {
       /* zero distance means a run */
-      uint8_t x = ip[-1];
-      int64_t value, value2;
-      /* Broadcast the value for every byte in a 64-bit register */
-      memset(&value, x, 8);
-      /* safe because the outer check against ip limit */
-      while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-        value2 = ((int64_t*)ref)[0];
+#if defined(__AVX2__)
+      ip = get_run_32(ip, ip_bound, ref);
+#elif defined(__SSE2__)
+      ip = get_run_16(ip, ip_bound, ref);
 #else
-        memcpy(&value2, ref, 8);
+      ip = get_run(ip, ip_bound, ref);
 #endif
-        if (value != value2) {
-          /* Find the byte that starts to differ */
-          while (ip < ip_bound) {
-            if (*ref++ != x) break; else ip++;
-          }
-          break;
-        }
-        else {
-          ip += 8;
-          ref += 8;
-        }
-      }
-      if (ip > ip_bound) {
-        long l = (long)(ip - ip_bound);
-        ip -= l;
-        ref -= l;
-      }   /* End of optimization */
     }
     else {
-      for (; ;) {
-        /* safe because the outer check against ip limit */
-        while (ip < (ip_bound - (sizeof(int64_t) - IP_BOUNDARY))) {
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-          if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
+#if defined(__AVX2__)
+      /* Experiments show that the SSE2 version is a bit faster, even on AVX2 processors */
+      ip = get_match_16(ip, ip_bound, ref);
+#elif defined(__SSE2__)
+      ip = get_match_16(ip, ip_bound, ref);
+#else
+      ip = get_match(ip, ip_bound, ref);
 #endif
-            /* Find the byte that starts to differ */
-            while (ip < ip_bound) {
-              if (*ref++ != *ip++) break;
-            }
-            break;
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-          } else {
-            ip += 8;
-            ref += 8;
-          }
-#endif
-        }
-        /* Last correction before exiting loop */
-        if (ip > ip_bound) {
-          int32_t l = (int32_t)(ip - ip_bound);
-          ip -= l;
-          ref -= l;
-        }   /* End of optimization */
-        break;
-      }
     }
 
     /* if we have copied something, adjust the copy count */
@@ -477,11 +518,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         /* copy from reference */
         ref--;
         len += 3;
-#if !defined(_WIN32) && ((defined(__GNUC__) || defined(__INTEL_COMPILER) || !defined(__clang__)))
-        GCC_SAFE_COPY(op, ref, len, op_limit);
-#else
-        SAFE_COPY(op, ref, len, op_limit);
-#endif
+        op = safe_copy(op, ref, len);
       }
     }
     else {
@@ -495,7 +532,12 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      BLOCK_COPY(op, ip, ctrl, op_limit);
+      // memcpy(op, ip, ctrl); op += ctrl;
+      // On GCC-6, fast_copy this is still faster than plain memcpy
+      // However, using recent CLANG/LLVM 9.0, there is almost no difference
+      // in performance.  In the long run plain memcpy should be preferred.
+      op = fast_copy(op, ip, ctrl);
+      ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if (loop)

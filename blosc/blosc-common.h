@@ -11,6 +11,27 @@
 
 #include "blosc-export.h"
 
+/* Import standard integer type definitions */
+#if defined(_WIN32) && !defined(__MINGW32__)
+
+  /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1600
+    #include "win32/stdint-windows.h"
+  #else
+    #include <stdint.h>
+  #endif
+
+  /* Use inlined functions for supported systems */
+  #if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
+    #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+  #endif
+
+#else
+  #include <stdint.h>
+  #include <string.h>
+#endif  /* _WIN32 */
+
+
 /* Define the __SSE2__ symbol if compiling with Visual C++ and
    targeting the minimum architecture level supporting SSE2.
    Other compilers define this as expected and emit warnings
@@ -20,15 +41,12 @@
   #define __SSE2__
 #endif
 
-/* Import standard integer type definitions */
-#if defined(_WIN32) && !defined(__MINGW32__)
-  #include <windows.h>
-  #include "win32/stdint-windows.h"
-#else
-  #include <stdint.h>
-  #include <stddef.h>
-  #include <inttypes.h>
-  #include <string.h>
-#endif  /* _WIN32 */
+
+#if defined(__SSE2__)
+  #include <emmintrin.h>
+#endif
+#if defined(__AVX2__)
+  #include <immintrin.h>
+#endif
 
 #endif  /* SHUFFLE_COMMON_H */

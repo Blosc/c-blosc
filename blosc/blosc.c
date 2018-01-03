@@ -64,7 +64,7 @@
 
 /* Some useful units */
 #define KB 1024
-#define MB (1024*KB)
+#define MB (1024 * (KB))
 
 /* Minimum buffer size to be compressed */
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
@@ -73,7 +73,7 @@
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
 
 /* The size of L1 cache.  32 KB is quite common nowadays. */
-#define L1 (32*KB)
+#define L1 (32 * (KB))
 
 /* Have problems using posix barriers when symbol value is 200112L */
 /* This requires more investigation, but will work for the moment */
@@ -528,16 +528,7 @@ static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
   int32_t typesize = context->typesize;
 
-  if (context->compcode == BLOSC_BLOSCLZ) {
-    /* Compute the power of 2. See:
-     * http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
-     */
-    int32_t tspow2 = ((typesize != 0) && !(typesize & (typesize - 1)));
-    if (tspow2 && typesize < 32) {
-      return 32;
-    }
-  }
-  else if (context->compcode == BLOSC_LZ4) {
+  if (context->compcode == BLOSC_LZ4) {
     /* This acceleration setting based on discussions held in:
      * https://groups.google.com/forum/#!topic/lz4c/zosy90P8MQw
      */
@@ -611,7 +602,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
     }
     if (context->compcode == BLOSC_BLOSCLZ) {
       cbytes = blosclz_compress(context->clevel, _tmp+j*neblock, neblock,
-                                dest, maxout, accel);
+                                dest, maxout);
     }
     #if defined(HAVE_LZ4)
     else if (context->compcode == BLOSC_LZ4) {
@@ -912,6 +903,19 @@ static int do_job(struct blosc_context* context)
              ((codec) == BLOSC_ZSTD) ? 1 : 0 )
 
 
+/* Conditions for splitting a block before compressing with a codec. */
+static int split_block(int compcode, int typesize, int blocksize) {
+  /* Normally all the compressors designed for speed benefit from a
+     split.  However, in conducted benchmarks LZ4 seems that it runs
+     faster if we don't split, which is quite surprising. */
+  return (((compcode == BLOSC_BLOSCLZ) ||
+           //(compcode == BLOSC_LZ4) ||
+           (compcode == BLOSC_SNAPPY)) &&
+          (typesize <= MAX_SPLITS) &&
+          (blocksize / typesize) >= MIN_BUFFERSIZE);
+}
+
+
 static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
                                  int32_t typesize, int32_t nbytes,
                                  int32_t forced_blocksize)
@@ -964,14 +968,26 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
       blocksize *= 8;
       break;
     case 9:
-      /* Do not exceed 256 KB for non HCR codecs */
       blocksize *= 8;
       if (HCR(context->compcode)) {
         blocksize *= 2;
       }
       break;
+      default:
+        assert(0);
+        break;
     }
   }
+
+  /* Enlarge the blocksize for splittable codecs */
+  if (clevel > 0 && split_block(context->compcode, typesize, blocksize)) {
+    if (blocksize > (1 << 16)) {
+      /* Do not use a too large buffer (64 KB) for splitting codecs */
+      blocksize = (1 << 16);
+    }
+    blocksize *= typesize;
+  }
+
   /* Check that blocksize is not too large */
   if (blocksize > (int32_t)nbytes) {
     blocksize = nbytes;
@@ -1046,19 +1062,6 @@ static int initialize_context_compression(struct blosc_context* context,
   context->nblocks = (context->leftover > 0) ? (context->nblocks + 1) : context->nblocks;
 
   return 1;
-}
-
-
-/* Conditions for splitting a block before compressing with a codec. */
-static int split_block(int compcode, int typesize, int blocksize) {
-  /* Normally all the compressors designed for speed benefit from a
-     split.  However, in conducted benchmarks LZ4 seems that it runs
-     faster if we don't split, which is quite surprising. */
-  return (((compcode == BLOSC_BLOSCLZ) ||
-	   //(compcode == BLOSC_LZ4) ||
-	   (compcode == BLOSC_SNAPPY)) &&
-	  (typesize <= MAX_SPLITS) &&
-	  (blocksize / typesize) >= MIN_BUFFERSIZE);
 }
 
 
