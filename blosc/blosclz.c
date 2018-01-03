@@ -185,7 +185,7 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
 
 
 uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  while (ip < (ip_bound - (sizeof(int64_t)) + IP_BOUNDARY)) {
+  while (ip < (ip_bound - sizeof(int64_t)) + IP_BOUNDARY) {
 #if !defined(BLOSCLZ_STRICT_ALIGN)
     if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
 #endif
@@ -210,7 +210,7 @@ uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
 uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   __m128i value, value2, cmp;
 
-  while (ip < (ip_bound - (sizeof(__m128i) - IP_BOUNDARY))) {
+  while (ip < (ip_bound - sizeof(__m128i) + IP_BOUNDARY)) {
     value = _mm_loadu_si128((__m128i *) ip);
     value2 = _mm_loadu_si128((__m128i *) ref);
     cmp = _mm_cmpeq_epi32(value, value2);
@@ -235,7 +235,7 @@ uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) 
 uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   __m256i value, value2, cmp;
 
-  while (ip < (ip_bound - (sizeof(__m256i) - IP_BOUNDARY))) {
+  while (ip < (ip_bound - sizeof(__m256i) + IP_BOUNDARY)) {
     value = _mm256_loadu_si256((__m256i *) ip);
     value2 = _mm256_loadu_si256((__m256i *)ref);
     cmp = _mm256_cmpeq_epi64(value, value2);
@@ -359,12 +359,8 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     }
     else {
 #if defined(__AVX2__)
-      ip = get_match_32(ip, ip_bound, ref);
-      //uint8_t *ip2 = get_match_32(ip, ip_bound, ref);
-      //printf("M%d,", (int)(ip2 - ip));
-      //ip = get_match(ip, ip_bound, ref);
-      //assert(ip == ip2);
-      //ip = ip2;
+      /* Experiments show that the SSE2 version is a bit faster, even on AVX2 processors */
+      ip = get_match_16(ip, ip_bound, ref);
 #elif defined(__SSE2__)
       ip = get_match_16(ip, ip_bound, ref);
 #else
