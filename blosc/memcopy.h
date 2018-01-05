@@ -363,6 +363,7 @@ static inline unsigned char *chunk_memcpy_unaligned(unsigned char *out, const un
 }
 #endif // __SSE2__ || __AVX2__
 
+
 #if defined(__SSE2__) || defined(__AVX2__)
 /* SSE2/AVX2 *aligned* version of chunk_memcpy_aligned() */
 static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsigned char *from, unsigned len) {
@@ -416,6 +417,7 @@ static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsi
 }
 #endif // __AVX2__ || __SSE2__
 
+
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
 static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *from, unsigned len) {
   if (len < sizeof(uint64_t)) {
@@ -442,6 +444,7 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
 #endif  // __SSE2__
   return chunk_memcpy(out, from, len);
 }
+
 
 /* Same as fast_copy() but without overwriting origin or destination when they overlap */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {

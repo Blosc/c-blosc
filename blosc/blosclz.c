@@ -509,7 +509,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         loop = 0;
 
       if (ref == op) {
-        /* optimize copy for a run */
+        /* optimized copy for a run */
         uint8_t b = ref[-1];
         memset(op, b, len + 3);
         op += len + 3;
@@ -532,12 +532,54 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      // memcpy(op, ip, ctrl); op += ctrl;
+      // memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
       // On GCC-6, fast_copy this is still faster than plain memcpy
       // However, using recent CLANG/LLVM 9.0, there is almost no difference
       // in performance.  In the long run plain memcpy should be preferred.
-      op = fast_copy(op, ip, ctrl);
-      ip += ctrl;
+      switch (ctrl) {
+#if defined(__SSE2__)
+        __m128i chunk;
+        case 32:
+          chunk = _mm_loadu_si128((__m128i*)ip);
+          _mm_storeu_si128((__m128i*)op, chunk);
+          op += 16;
+          ip += 16;
+        case 16:
+          chunk = _mm_loadu_si128((__m128i*)ip);
+          _mm_storeu_si128((__m128i*)op, chunk);
+          op += 16;
+          ip += 16;
+          break;
+#else
+        case 32:
+          *(uint64_t*)op = *(uint64_t*)ip;
+          op += 8; ip += 8;
+          *(uint64_t*)op = *(uint64_t*)ip;
+          op += 8; ip += 8;
+        case 16:
+          *(uint64_t*)op = *(uint64_t*)ip;
+          op += 8; ip += 8;
+          *(uint64_t*)op = *(uint64_t*)ip;
+          op += 8; ip += 8;
+          break;
+#endif
+        case 8:
+          *(uint64_t*)op = *(uint64_t*)ip;
+          op += 8; ip += 8;
+          break;
+        case 4:
+          *op++ = *ip++;
+          *op++ = *ip++;
+        case 2:
+          *op++ = *ip++;
+        case 1:
+          *op++ = *ip++;
+          break;
+        default:
+          op = fast_copy(op, ip, ctrl);
+          ip += ctrl;
+      }
+      //printf("FC%d\n", ctrl);
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if (loop)
