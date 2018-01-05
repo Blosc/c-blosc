@@ -537,7 +537,6 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       // However, using recent CLANG/LLVM 9.0, there is almost no difference
       // in performance.  In the long run plain memcpy should be preferred.
       switch (ctrl) {
-#if defined(__AVX2__)
         case 32:
           op = copy_32_bytes(op, ip);
           ip += 32;
@@ -546,27 +545,6 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
           op = copy_16_bytes(op, ip);
           ip += 16;
           break;
-#elif defined(__SSE2__)
-        case 32:
-          op = copy_16_bytes(op, ip);
-          ip += 16;
-        case 16:
-          op = copy_16_bytes(op, ip);
-          ip += 16;
-          break;
-#else
-        case 32:
-          *(uint64_t*)op = *(uint64_t*)ip;
-          op += 8; ip += 8;
-          *(uint64_t*)op = *(uint64_t*)ip;
-          op += 8; ip += 8;
-        case 16:
-          *(uint64_t*)op = *(uint64_t*)ip;
-          op += 8; ip += 8;
-          *(uint64_t*)op = *(uint64_t*)ip;
-          op += 8; ip += 8;
-          break;
-#endif
         case 8:
           *(uint64_t*)op = *(uint64_t*)ip;
           op += 8; ip += 8;

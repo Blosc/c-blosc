@@ -73,23 +73,54 @@ static inline unsigned char *copy_8_bytes(unsigned char *out, const unsigned cha
   return out + 8;
 }
 
-#if defined(__SSE2__)
+
 static inline unsigned char *copy_16_bytes(unsigned char *out, const unsigned char *from) {
+#if defined(__SSE2__)
   __m128i chunk;
   chunk = _mm_loadu_si128((__m128i*)from);
   _mm_storeu_si128((__m128i*)out, chunk);
-  return out + 16;
+  from += 16; out += 16;
+#elif UNALIGNED_OK
+   *(uint64_t*)out = *(uint64_t*)from;
+   from += 8; out += 8;
+   *(uint64_t*)out = *(uint64_t*)from;
+   from += 8; out += 8;
+#else
+   out = chunk_memcpy(out, from, 16);
+#endif
+  return out;
 }
-#endif  // __SSE2__
 
-#if defined(__AVX2__)
 static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned char *from) {
+#if defined(__AVX2__)
   __m256i chunk;
   chunk = _mm256_loadu_si256((__m256i*)from);
   _mm256_storeu_si256((__m256i*)out, chunk);
-  return out + 32;
+  from += 32; out += 32;
+#elif defined(__SSE2__)
+  __m128i chunk;
+  chunk = _mm_loadu_si128((__m128i*)from);
+  _mm_storeu_si128((__m128i*)out, chunk);
+  from += 16; out += 16;
+  chunk = _mm_loadu_si128((__m128i*)from);
+  _mm_storeu_si128((__m128i*)out, chunk);
+  from += 16; out += 16;
+#elif UNALIGNED_OK
+   *(uint64_t*)out = *(uint64_t*)from;
+   from += 8; out += 8;
+   *(uint64_t*)out = *(uint64_t*)from;
+   from += 8; out += 8;
+   *(uint64_t*)out = *(uint64_t*)from;
+   from += 8; out += 8;
+   *(uint64_t*)out = *(uint64_t*)from;
+   from += 8; out += 8;
+#else
+   out = chunk_memcpy(out, from, 32);
+#endif
+  return out;
 }
 
+#if defined(__AVX2__)
 static inline unsigned char *copy_32_bytes_aligned(unsigned char *out, const unsigned char *from) {
   __m256i chunk;
   chunk = _mm256_load_si256((__m256i*)from);
@@ -200,8 +231,7 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
   return out;
 }
 
-/* SSE2 version of chunk_memcpy() */
-#if defined(__SSE2__)
+/* 16-byte version of chunk_memcpy() */
 static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
   unsigned sz = sizeof(__m128i);
   unsigned rem = len % sz;
@@ -224,12 +254,10 @@ static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned 
 
   return out;
 }
-#endif // __SSE2__
 
-/* AVX2 version of chunk_memcpy() */
-#if defined(__AVX2__)
+/* 32-byte version of chunk_memcpy() */
 static inline unsigned char *chunk_memcpy_32(unsigned char *out, const unsigned char *from, unsigned len) {
-  unsigned sz = sizeof(__m256i);
+  unsigned sz = 32;
   unsigned rem = len % sz;
   unsigned ilen;
 
@@ -250,12 +278,10 @@ static inline unsigned char *chunk_memcpy_32(unsigned char *out, const unsigned 
 
   return out;
 }
-#endif // __AVX2__
 
-/* AVX2 *unrolled* version of chunk_memcpy() */
-#if defined(__AVX2__)
+/* 32-byte *unrolled* version of chunk_memcpy() */
 static inline unsigned char *chunk_memcpy_32_unrolled(unsigned char *out, const unsigned char *from, unsigned len) {
-  unsigned sz = sizeof(__m256i);
+  unsigned sz = 32;
   unsigned rem = len % sz;
   unsigned by8;
 
@@ -320,10 +346,8 @@ static inline unsigned char *chunk_memcpy_32_unrolled(unsigned char *out, const 
   return out;
 }
 
-#endif // __AVX2__
 
-
-/* SSE2/AVX2 *unaligned* version of chunk_memcpy_aligned() */
+/* SSE2/AVX2 *unaligned* version of chunk_memcpy() */
 #if defined(__SSE2__) || defined(__AVX2__)
 static inline unsigned char *chunk_memcpy_unaligned(unsigned char *out, const unsigned char *from, unsigned len) {
 #if defined(__AVX2__)
@@ -365,7 +389,7 @@ static inline unsigned char *chunk_memcpy_unaligned(unsigned char *out, const un
 
 
 #if defined(__SSE2__) || defined(__AVX2__)
-/* SSE2/AVX2 *aligned* version of chunk_memcpy_aligned() */
+/* SSE2/AVX2 *aligned* version of chunk_memcpy() */
 static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsigned char *from, unsigned len) {
 #if defined(__AVX2__)
   unsigned sz = sizeof(__m256i);
@@ -395,10 +419,10 @@ static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsi
   len = corrected_len / sz;
   for (ilen = 0; ilen < len; ilen++) {
 #if defined(__AVX2__)
-    chunk = _mm256_load_si256((__m256i *) from);
+    chunk = _mm256_load_si256((__m256i *) from);  /* *aligned* load */
     _mm256_storeu_si256((__m256i *) out, chunk);
 #elif defined(__SSE2__)
-    chunk = _mm_load_si128((__m128i *) from);
+    chunk = _mm_load_si128((__m128i *) from);  /* *aligned* load */
     _mm_storeu_si128((__m128i *) out, chunk);
 #endif
     out += sz;
