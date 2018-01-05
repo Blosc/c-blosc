@@ -30,7 +30,7 @@ static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned cha
   return out;
 }
 
-static inline unsigned char *copy_2_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_2_bytes(unsigned char *out, const unsigned char *from) {
   uint16_t chunk;
   unsigned sz = sizeof(chunk);
   memcpy(&chunk, from, sz);
@@ -38,12 +38,12 @@ static inline unsigned char *copy_2_bytes(unsigned char *out, unsigned char *fro
   return out + sz;
 }
 
-static inline unsigned char *copy_3_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_3_bytes(unsigned char *out, const unsigned char *from) {
   out = copy_1_bytes(out, from);
   return copy_2_bytes(out, from + 1);
 }
 
-static inline unsigned char *copy_4_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_4_bytes(unsigned char *out, const unsigned char *from) {
   uint32_t chunk;
   unsigned sz = sizeof(chunk);
   memcpy(&chunk, from, sz);
@@ -51,17 +51,17 @@ static inline unsigned char *copy_4_bytes(unsigned char *out, unsigned char *fro
   return out + sz;
 }
 
-static inline unsigned char *copy_5_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_5_bytes(unsigned char *out, const unsigned char *from) {
   out = copy_1_bytes(out, from);
   return copy_4_bytes(out, from + 1);
 }
 
-static inline unsigned char *copy_6_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_6_bytes(unsigned char *out, const unsigned char *from) {
   out = copy_2_bytes(out, from);
   return copy_4_bytes(out, from + 2);
 }
 
-static inline unsigned char *copy_7_bytes(unsigned char *out, unsigned char *from) {
+static inline unsigned char *copy_7_bytes(unsigned char *out, const unsigned char *from) {
   out = copy_3_bytes(out, from);
   return copy_4_bytes(out, from + 3);
 }
@@ -80,7 +80,7 @@ static inline unsigned char *copy_16_bytes(unsigned char *out, const unsigned ch
   chunk = _mm_loadu_si128((__m128i*)from);
   _mm_storeu_si128((__m128i*)out, chunk);
   from += 16; out += 16;
-#elif UNALIGNED_OK
+#elif undefined(BLOSC_STRICT_ALIGN)
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
    *(uint64_t*)out = *(uint64_t*)from;
@@ -105,7 +105,7 @@ static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned ch
   chunk = _mm_loadu_si128((__m128i*)from);
   _mm_storeu_si128((__m128i*)out, chunk);
   from += 16; out += 16;
-#elif UNALIGNED_OK
+#elif undefined(BLOSC_STRICT_ALIGN)
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
    *(uint64_t*)out = *(uint64_t*)from;
@@ -133,11 +133,10 @@ static inline unsigned char *copy_32_bytes_aligned(unsigned char *out, const uns
 static inline unsigned char *copy_bytes(unsigned char *out, const unsigned char *from, unsigned len) {
   assert(len < 8);
 
-#ifndef UNALIGNED_OK
+#ifdef BLOSC_STRICT_ALIGN
   while (len--) {
     *out++ = *from++;
   }
-  return out;
 #else
   switch (len) {
     case 7:
@@ -159,9 +158,8 @@ static inline unsigned char *copy_bytes(unsigned char *out, const unsigned char 
     default:
         assert(0);
     }
-
-    return out;
-#endif /* UNALIGNED_OK */
+#endif /* BLOSC_STRICT_ALIGN */
+  return out;
 }
 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
@@ -233,7 +231,7 @@ static inline unsigned char *chunk_memcpy(unsigned char *out, const unsigned cha
 
 /* 16-byte version of chunk_memcpy() */
 static inline unsigned char *chunk_memcpy_16(unsigned char *out, const unsigned char *from, unsigned len) {
-  unsigned sz = sizeof(__m128i);
+  unsigned sz = 16;
   unsigned rem = len % sz;
   unsigned ilen;
 

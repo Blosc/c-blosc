@@ -41,6 +41,30 @@
   #define __SSE2__
 #endif
 
+/*
+ * Detect if the architecture is fine with unaligned access.
+ */
+#if !defined(BLOSC_STRICT_ALIGN)
+#define BLOSC_STRICT_ALIGN
+#if defined(__i386__) || defined(__386) || defined (__amd64)  /* GNU C, Sun Studio */
+#undef BLOSC_STRICT_ALIGN
+#elif defined(__i486__) || defined(__i586__) || defined(__i686__)  /* GNU C */
+#undef BLOSC_STRICT_ALIGN
+#elif defined(_M_IX86) || defined(_M_X64)   /* Intel, MSVC */
+#undef BLOSC_STRICT_ALIGN
+#elif defined(__386)
+#undef BLOSC_STRICT_ALIGN
+#elif defined(_X86_) /* MinGW */
+#undef BLOSC_STRICT_ALIGN
+#elif defined(__I86__) /* Digital Mars */
+#undef BLOSC_STRICT_ALIGN
+/* Seems like unaligned access in ARM (at least ARMv6) is pretty
+   expensive, so we are going to always enforce strict aligment in ARM.
+   If anybody suggest that newer ARMs are better, we can revisit this. */
+/* #elif defined(__ARM_FEATURE_UNALIGNED) */  /* ARM, GNU C */
+/* #undef BLOSC_STRICT_ALIGN */
+#endif
+#endif
 
 #if defined(__SSE2__)
   #include <emmintrin.h>
