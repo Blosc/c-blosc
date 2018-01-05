@@ -444,23 +444,29 @@ static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsi
 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
 static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-  if (len < sizeof(uint64_t)) {
+  switch (len) {
+    case 32:
+      return copy_32_bytes(out, from);
+    case 16:
+      return copy_16_bytes(out, from);
+    case 8:
+      *(uint64_t *) out = *(uint64_t *) from;
+      out += 8;
+      return out;
+    default: {
+    }
+  }
+  if (len < 8) {
     return copy_bytes(out, from, len);
   }
 #if defined(__SSE2__)
-  if (len < sizeof(__m128i)) {
+  if (len < 16) {
     return chunk_memcpy(out, from, len);
-  }
-  if (len == sizeof(__m128i)) {
-    return copy_16_bytes(out, from);
   }
 #if !defined(__AVX2__)
   return chunk_memcpy_unaligned(out, from, len);
 #else
-  if (len == sizeof(__m256i)) {
-    return copy_32_bytes(out, from);
-  }
-  if (len < sizeof(__m256i)) {
+  if (len < 32) {
     return chunk_memcpy_16(out, from, len);
   }
   return chunk_memcpy_unaligned(out, from, len);

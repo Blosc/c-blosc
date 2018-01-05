@@ -536,32 +536,8 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       // On GCC-6, fast_copy this is still faster than plain memcpy
       // However, using recent CLANG/LLVM 9.0, there is almost no difference
       // in performance.  In the long run plain memcpy should be preferred.
-      switch (ctrl) {
-        case 32:
-          op = copy_32_bytes(op, ip);
-          ip += 32;
-          break;
-        case 16:
-          op = copy_16_bytes(op, ip);
-          ip += 16;
-          break;
-        case 8:
-          *(uint64_t*)op = *(uint64_t*)ip;
-          op += 8; ip += 8;
-          break;
-        case 4:
-          *op++ = *ip++;
-          *op++ = *ip++;
-        case 2:
-          *op++ = *ip++;
-        case 1:
-          *op++ = *ip++;
-          break;
-        default:
-          op = fast_copy(op, ip, ctrl);
-          ip += ctrl;
-      }
-      //printf("FC%d\n", ctrl);
+      op = fast_copy(op, ip, ctrl);
+      ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if (loop)
