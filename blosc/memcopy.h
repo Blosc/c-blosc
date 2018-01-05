@@ -482,7 +482,14 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
 
 /* Same as fast_copy() but without overwriting origin or destination when they overlap */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-  if (out - 8 < from) {
+#if defined(__AVX2__)
+  unsigned sz = sizeof(__m256i);
+#elif defined(__SSE2__)
+  unsigned sz = sizeof(__m128i);
+#else
+  unsigned sz = sizeof(uint64_t);
+#endif
+  if (out - sz < from) {
     for (; len; --len) {
       *out++ = *from++;
     }
