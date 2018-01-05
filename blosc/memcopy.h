@@ -80,13 +80,16 @@ static inline unsigned char *copy_16_bytes(unsigned char *out, const unsigned ch
   chunk = _mm_loadu_si128((__m128i*)from);
   _mm_storeu_si128((__m128i*)out, chunk);
   from += 16; out += 16;
-#elif undefined(BLOSC_STRICT_ALIGN)
+#elif !defined(BLOSC_STRICT_ALIGN)
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
 #else
-   out = chunk_memcpy(out, from, 16);
+   int i;
+   for (i = 0; i < 16; i++) {
+     *out++ = *from++;
+   }
 #endif
   return out;
 }
@@ -105,7 +108,7 @@ static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned ch
   chunk = _mm_loadu_si128((__m128i*)from);
   _mm_storeu_si128((__m128i*)out, chunk);
   from += 16; out += 16;
-#elif undefined(BLOSC_STRICT_ALIGN)
+#elif !defined(BLOSC_STRICT_ALIGN)
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
    *(uint64_t*)out = *(uint64_t*)from;
@@ -115,7 +118,10 @@ static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned ch
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
 #else
-   out = chunk_memcpy(out, from, 32);
+   int i;
+   for (i = 0; i < 32; i++) {
+     *out++ = *from++;
+   }
 #endif
   return out;
 }
@@ -476,15 +482,7 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
 
 /* Same as fast_copy() but without overwriting origin or destination when they overlap */
 static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
-  /* TODO: shortcut for a copy of 32 bytes */
-#if defined(__AVX2__)
-  unsigned sz = sizeof(__m256i);
-#elif defined(__SSE2__)
-  unsigned sz = sizeof(__m128i);
-#else
-  unsigned sz = sizeof(uint64_t);
-#endif
-  if (out - sz < from) {
+  if (out - 8 < from) {
     for (; len; --len) {
       *out++ = *from++;
     }
