@@ -947,34 +947,34 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
     }
 
     switch (clevel) {
-    case 0:
-      /* Case of plain copy */
-      blocksize /= 4;
-      break;
-    case 1:
-      blocksize /= 2;
+      case 0:
+        /* Case of plain copy */
+        blocksize /= 4;
         break;
-    case 2:
-      blocksize *= 1;
+      case 1:
+        blocksize /= 2;
         break;
-    case 3:
-      blocksize *= 2;
+      case 2:
+        blocksize *= 1;
         break;
-    case 4:
-    case 5:
-    case 6:
-      blocksize *= 4;
-      break;
-    case 7:
-    case 8:
-      blocksize *= 8;
-      break;
-    case 9:
-      blocksize *= 8;
-      if (HCR(context->compcode)) {
+      case 3:
         blocksize *= 2;
-      }
-      break;
+        break;
+      case 4:
+      case 5:
+      case 6:
+        blocksize *= 4;
+        break;
+      case 7:
+      case 8:
+        blocksize *= 8;
+        break;
+      case 9:
+        blocksize *= 8;
+        if (HCR(context->compcode)) {
+          blocksize *= 2;
+        }
+        break;
       default:
         assert(0);
         break;

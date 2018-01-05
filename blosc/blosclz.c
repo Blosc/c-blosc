@@ -19,31 +19,6 @@
 
 
 /*
- * Prevent accessing more than 8-bit at once, except on x86 architectures.
- */
-#if !defined(BLOSCLZ_STRICT_ALIGN)
-#define BLOSCLZ_STRICT_ALIGN
-#if defined(__i386__) || defined(__386) || defined (__amd64)  /* GNU C, Sun Studio */
-#undef BLOSCLZ_STRICT_ALIGN
-#elif defined(__i486__) || defined(__i586__) || defined(__i686__)  /* GNU C */
-#undef BLOSCLZ_STRICT_ALIGN
-#elif defined(_M_IX86) || defined(_M_X64)   /* Intel, MSVC */
-#undef BLOSCLZ_STRICT_ALIGN
-#elif defined(__386)
-#undef BLOSCLZ_STRICT_ALIGN
-#elif defined(_X86_) /* MinGW */
-#undef BLOSCLZ_STRICT_ALIGN
-#elif defined(__I86__) /* Digital Mars */
-#undef BLOSCLZ_STRICT_ALIGN
-/* Seems like unaligned access in ARM (at least ARMv6) is pretty
-   expensive, so we are going to always enforce strict aligment in ARM.
-   If anybody suggest that newer ARMs are better, we can revisit this. */
-/* #elif defined(__ARM_FEATURE_UNALIGNED) */  /* ARM, GNU C */
-/* #undef BLOSCLZ_STRICT_ALIGN */
-#endif
-#endif
-
-/*
  * Always check for bound when decompressing.
  * Generally it is best to leave it defined.
  */
@@ -71,7 +46,7 @@
 #define MAX_DISTANCE 8191
 #define MAX_FARDISTANCE (65535 + MAX_DISTANCE - 1)
 
-#ifdef BLOSCLZ_STRICT_ALIGN
+#ifdef BLOSC_STRICT_ALIGN
   #define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
 #else
   #define BLOSCLZ_READU16(p) *((const uint16_t*)(p))
@@ -108,7 +83,7 @@ static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8
   memset(&value, x, 8);
   /* safe because the outer check against ip limit */
   while (ip < (ip_bound - sizeof(int64_t))) {
-#if defined(BLOSCLZ_STRICT_ALIGN)
+#if defined(BLOSC_STRICT_ALIGN)
     memcpy(&value2, ref, 8);
 #else
     value2 = ((int64_t*)ref)[0];
@@ -186,13 +161,13 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
 
 uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   while (ip < (ip_bound - sizeof(int64_t)) + IP_BOUNDARY) {
-#if !defined(BLOSCLZ_STRICT_ALIGN)
+#if !defined(BLOSC_STRICT_ALIGN)
     if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
 #endif
       /* Find the byte that starts to differ */
       while (*ref++ == *ip++) {}
       return ip;
-#if !defined(BLOSCLZ_STRICT_ALIGN)
+#if !defined(BLOSC_STRICT_ALIGN)
     }
     else {
       ip += sizeof(int64_t);
