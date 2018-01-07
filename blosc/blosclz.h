@@ -20,9 +20,6 @@
 extern "C" {
 #endif
 
-#define BLOSCLZ_VERSION_STRING "1.1.0"
-
-
 /**
   Compress a block of data in the input buffer and returns the size of
   compressed block. The size of input buffer is specified by
