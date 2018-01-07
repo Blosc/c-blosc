@@ -962,9 +962,9 @@ static int32_t compute_blocksize(struct blosc_context* context, int32_t clevel,
         break;
       case 4:
       case 5:
-      case 6:
         blocksize *= 4;
         break;
+      case 6:
       case 7:
       case 8:
         blocksize *= 8;
