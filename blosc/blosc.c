@@ -61,6 +61,9 @@
   #include <pthread.h>
 #endif
 
+#include "fastcopy.h"
+#define MEMCPY fast_copy
+
 
 /* Some useful units */
 #define KB 1024
@@ -657,7 +660,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
       if ((ntbytes+neblock) > maxbytes) {
         return 0;    /* Non-compressible data */
       }
-      memcpy(dest, _tmp+j*neblock, neblock);
+      MEMCPY(dest, _tmp+j*neblock, neblock);
       cbytes = neblock;
     }
     _sw32(dest - 4, cbytes);
@@ -712,7 +715,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
     ctbytes += (int32_t)sizeof(int32_t);
     /* Uncompress */
     if (cbytes == neblock) {
-      memcpy(_tmp, src, neblock);
+      MEMCPY(_tmp, src, neblock);
       nbytes = neblock;
     }
     else {
@@ -803,7 +806,7 @@ static int serial_blosc(struct blosc_context* context)
     if (context->compress) {
       if (*(context->header_flags) & BLOSC_MEMCPYED) {
         /* We want to memcpy only */
-        memcpy(context->dest+BLOSC_MAX_OVERHEAD+j*context->blocksize,
+        MEMCPY(context->dest+BLOSC_MAX_OVERHEAD+j*context->blocksize,
                 context->src+j*context->blocksize,
                 bsize);
         cbytes = bsize;
@@ -822,7 +825,7 @@ static int serial_blosc(struct blosc_context* context)
     else {
       if (*(context->header_flags) & BLOSC_MEMCPYED) {
         /* We want to memcpy only */
-        memcpy(context->dest+j*context->blocksize,
+        MEMCPY(context->dest+j*context->blocksize,
                 context->src+BLOSC_MAX_OVERHEAD+j*context->blocksize,
                 bsize);
         cbytes = bsize;
@@ -1191,7 +1194,7 @@ int blosc_compress_context(struct blosc_context* context)
       ntbytes = 0;
     }
     else {
-      memcpy(context->dest + BLOSC_MAX_OVERHEAD, context->src,
+      MEMCPY(context->dest + BLOSC_MAX_OVERHEAD, context->src,
              context->sourcesize);
       ntbytes = context->sourcesize + BLOSC_MAX_OVERHEAD;
     }
@@ -1385,7 +1388,7 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
 
   /* Check whether this buffer is memcpy'ed */
   if (*(context->header_flags) & BLOSC_MEMCPYED) {
-      memcpy(dest, (uint8_t *)src+BLOSC_MAX_OVERHEAD, context->sourcesize);
+      MEMCPY(dest, (uint8_t *)src+BLOSC_MAX_OVERHEAD, context->sourcesize);
       ntbytes = context->sourcesize;
   }
   else {
@@ -1545,7 +1548,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
     /* Do the actual data copy */
     if (flags & BLOSC_MEMCPYED) {
       /* We want to memcpy only */
-      memcpy((uint8_t *)dest + ntbytes,
+      MEMCPY((uint8_t *)dest + ntbytes,
           (uint8_t *)src + BLOSC_MAX_OVERHEAD + j*blocksize + startb,
              bsize2);
       cbytes = bsize2;
@@ -1565,7 +1568,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
         break;
       }
       /* Copy to destination */
-      memcpy((uint8_t *)dest + ntbytes, tmp2 + startb, bsize2);
+      MEMCPY((uint8_t *)dest + ntbytes, tmp2 + startb, bsize2);
       cbytes = bsize2;
     }
     ntbytes += cbytes;
@@ -1675,7 +1678,7 @@ static void *t_blosc(void *ctxt)
       if (compress) {
         if (flags & BLOSC_MEMCPYED) {
           /* We want to memcpy only */
-          memcpy(dest+BLOSC_MAX_OVERHEAD+nblock_*blocksize,
+          MEMCPY(dest+BLOSC_MAX_OVERHEAD+nblock_*blocksize,
                  src+nblock_*blocksize, bsize);
           cbytes = bsize;
         }
@@ -1688,7 +1691,7 @@ static void *t_blosc(void *ctxt)
       else {
         if (flags & BLOSC_MEMCPYED) {
           /* We want to memcpy only */
-          memcpy(dest+nblock_*blocksize,
+          MEMCPY(dest+nblock_*blocksize,
                  src+BLOSC_MAX_OVERHEAD+nblock_*blocksize, bsize);
           cbytes = bsize;
         }
@@ -1731,7 +1734,7 @@ static void *t_blosc(void *ctxt)
         /* End of critical section */
 
         /* Copy the compressed buffer to destination */
-        memcpy(dest+ntdest, tmp2, cbytes);
+        MEMCPY(dest+ntdest, tmp2, cbytes);
       }
       else {
         nblock_++;
