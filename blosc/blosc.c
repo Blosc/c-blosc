@@ -1191,7 +1191,7 @@ int blosc_compress_context(struct blosc_context* context)
       ntbytes = 0;
     }
     else {
-      memcpy(context->dest+BLOSC_MAX_OVERHEAD, context->src,
+      memcpy(context->dest + BLOSC_MAX_OVERHEAD, context->src,
              context->sourcesize);
       ntbytes = context->sourcesize + BLOSC_MAX_OVERHEAD;
     }
