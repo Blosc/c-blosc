@@ -162,22 +162,21 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
 #endif
 
 
+/* Find the byte that starts to differ */
 uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  while (ip < (ip_bound - sizeof(int64_t))) {
 #if !defined(BLOSC_STRICT_ALIGN)
+  while (ip < (ip_bound - sizeof(int64_t))) {
     if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
-#endif
       /* Find the byte that starts to differ */
       while (*ref++ == *ip++) {}
       return ip;
-#if !defined(BLOSC_STRICT_ALIGN)
     }
     else {
       ip += sizeof(int64_t);
       ref += sizeof(int64_t);
     }
-#endif
   }
+#endif
   /* Look into the remainder */
   while ((ip < ip_bound) && (*ref++ == *ip++)) {}
   return ip;
