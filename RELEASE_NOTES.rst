@@ -7,10 +7,18 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.12.1 to 1.12.2
+Changes from 1.12.1 to 1.13.0
 =============================
 
-#XXX version-specific blurb XXX#
+- Serious optimization of memory copy functions (see new `blosc/fastcopy.c`).
+  This benefits the speed of all the codecs, but specially the BloscLZ one.
+
+- As a result of the above, the BloscLZ codec received a new adjustment of
+  knobs so that you should expect better compression ratios with it too.
+
+- LZ4 internal sources have been updated to 1.8.0.
+
+- Zstd internal sources have been updated to 1.3.3.
 
 
 Changes from 1.12.0 to 1.12.1

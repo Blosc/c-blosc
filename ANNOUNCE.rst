@@ -1,15 +1,18 @@
 ===============================================================
- Announcing C-Blosc 1.12.1
+ Announcing C-Blosc 1.13.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Backported BloscLZ parameters that were fine-tuned for C-Blosc2.
-You should expect better compression ratios and faster operation,
-specially on modern CPUs.  See:
-http://blosc.org/posts/blosclz-tuning/
+A serious optimization of memory copy functions (see `blosc/fastcopy.c`).
+This benefits the speed of all the codecs, but specially the BloscLZ one.
+As a result of the above, the BloscLZ codec received a new adjustment of
+knobs so that you should expect better compression ratios with BloscLZ too.
+
+Also, the LZ4 codec internal sources have been updated to 1.8.0. And internal
+Zstd sources have been updated to 1.3.3 too.
 
 For more info, please see the release notes in:
 
