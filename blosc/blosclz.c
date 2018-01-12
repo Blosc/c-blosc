@@ -15,7 +15,8 @@
 
 #include <stdio.h>
 #include "blosclz.h"
-#include "memcopy.h"
+#include "fastcopy.h"
+#include "blosc-common.h"
 
 
 /*
@@ -74,6 +75,162 @@
 }
 
 #define IP_BOUNDARY 2
+
+
+
+static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  int64_t value, value2;
+  /* Broadcast the value for every byte in a 64-bit register */
+  memset(&value, x, 8);
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - sizeof(int64_t))) {
+#if defined(BLOSC_STRICT_ALIGN)
+    memcpy(&value2, ref, 8);
+#else
+    value2 = ((int64_t*)ref)[0];
+#endif
+    if (value != value2) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == x) ip++;
+      return ip;
+    }
+    else {
+      ip += 8;
+      ref += 8;
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
+  return ip;
+}
+
+#ifdef __SSE2__
+static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  __m128i value, value2, cmp;
+
+  /* Broadcast the value for every byte in a 128-bit register */
+  memset(&value, x, sizeof(__m128i));
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - sizeof(__m128i))) {
+    value2 = _mm_loadu_si128((__m128i *)ref);
+    cmp = _mm_cmpeq_epi32(value, value2);
+    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == x) ip++;
+      return ip;
+    }
+    else {
+      ip += sizeof(__m128i);
+      ref += sizeof(__m128i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
+  return ip;
+}
+#endif
+
+
+#ifdef __AVX2__
+static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  uint8_t x = ip[-1];
+  __m256i value, value2, cmp;
+
+  /* Broadcast the value for every byte in a 256-bit register */
+  memset(&value, x, sizeof(__m256i));
+  /* safe because the outer check against ip limit */
+  while (ip < (ip_bound - (sizeof(__m256i)))) {
+    value2 = _mm256_loadu_si256((__m256i *)ref);
+    cmp = _mm256_cmpeq_epi64(value, value2);
+    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == x) ip++;
+      return ip;
+    }
+    else {
+      ip += sizeof(__m256i);
+      ref += sizeof(__m256i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == x)) ip++;
+  return ip;
+}
+#endif
+
+
+uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  while (ip < (ip_bound - sizeof(int64_t))) {
+#if !defined(BLOSC_STRICT_ALIGN)
+    if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
+#endif
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
+#if !defined(BLOSC_STRICT_ALIGN)
+    }
+    else {
+      ip += sizeof(int64_t);
+      ref += sizeof(int64_t);
+    }
+#endif
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == *ip++)) {}
+  return ip;
+}
+
+
+#if defined(__SSE2__)
+uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  __m128i value, value2, cmp;
+
+  while (ip < (ip_bound - sizeof(__m128i))) {
+    value = _mm_loadu_si128((__m128i *) ip);
+    value2 = _mm_loadu_si128((__m128i *) ref);
+    cmp = _mm_cmpeq_epi32(value, value2);
+    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
+    }
+    else {
+      ip += sizeof(__m128i);
+      ref += sizeof(__m128i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == *ip++)) {}
+  return ip;
+}
+#endif
+
+
+#if defined(__AVX2__)
+uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+  __m256i value, value2, cmp;
+
+  while (ip < (ip_bound - sizeof(__m256i))) {
+    value = _mm256_loadu_si256((__m256i *) ip);
+    value2 = _mm256_loadu_si256((__m256i *)ref);
+    cmp = _mm256_cmpeq_epi64(value, value2);
+    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
+      /* Find the byte that starts to differ */
+      while (*ref++ == *ip++) {}
+      return ip;
+    }
+    else {
+      ip += sizeof(__m256i);
+      ref += sizeof(__m256i);
+    }
+  }
+  /* Look into the remainder */
+  while ((ip < ip_bound) && (*ref++ == *ip++)) {}
+  return ip;
+}
+#endif
 
 
 int blosclz_compress(const int opt_level, const void* input, int length,
@@ -338,7 +495,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         /* copy from reference */
         ref--;
         len += 3;
-        op = safe_copy(op, ref, len);
+        op = safecopy(op, ref, (unsigned) len);
       }
     }
     else {
@@ -353,10 +510,10 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
 #endif
 
       // memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
-      // On GCC-6, fast_copy this is still faster than plain memcpy
+      // On GCC-6, fastcopy this is still faster than plain memcpy
       // However, using recent CLANG/LLVM 9.0, there is almost no difference
-      // in performance.  In the long run plain memcpy should be preferred.
-      op = fast_copy(op, ip, ctrl);
+      // in performance.
+      op = fastcopy(op, ip, (unsigned) ctrl);
       ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);

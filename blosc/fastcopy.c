@@ -18,167 +18,8 @@
     * Support for SSE2/AVX2 copy instructions for these routines
 **********************************************************************/
 
-
-#ifndef MEMCOPY_H_
-#define MEMCOPY_H_
-
 #include <assert.h>
 #include "blosc-common.h"
-
-
-static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  uint8_t x = ip[-1];
-  int64_t value, value2;
-  /* Broadcast the value for every byte in a 64-bit register */
-  memset(&value, x, 8);
-  /* safe because the outer check against ip limit */
-  while (ip < (ip_bound - sizeof(int64_t))) {
-#if defined(BLOSC_STRICT_ALIGN)
-    memcpy(&value2, ref, 8);
-#else
-    value2 = ((int64_t*)ref)[0];
-#endif
-    if (value != value2) {
-      /* Find the byte that starts to differ */
-      while (*ref++ == x) ip++;
-      return ip;
-    }
-    else {
-      ip += 8;
-      ref += 8;
-    }
-  }
-  /* Look into the remainder */
-  while ((ip < ip_bound) && (*ref++ == x)) ip++;
-  return ip;
-}
-
-#ifdef __SSE2__
-static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  uint8_t x = ip[-1];
-  __m128i value, value2, cmp;
-
-  /* Broadcast the value for every byte in a 128-bit register */
-  memset(&value, x, sizeof(__m128i));
-  /* safe because the outer check against ip limit */
-  while (ip < (ip_bound - sizeof(__m128i))) {
-    value2 = _mm_loadu_si128((__m128i *)ref);
-    cmp = _mm_cmpeq_epi32(value, value2);
-    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
-      /* Find the byte that starts to differ */
-      while (*ref++ == x) ip++;
-      return ip;
-    }
-    else {
-      ip += sizeof(__m128i);
-      ref += sizeof(__m128i);
-    }
-  }
-  /* Look into the remainder */
-  while ((ip < ip_bound) && (*ref++ == x)) ip++;
-  return ip;
-}
-#endif
-
-
-#ifdef __AVX2__
-static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  uint8_t x = ip[-1];
-  __m256i value, value2, cmp;
-
-  /* Broadcast the value for every byte in a 256-bit register */
-  memset(&value, x, sizeof(__m256i));
-  /* safe because the outer check against ip limit */
-  while (ip < (ip_bound - (sizeof(__m256i)))) {
-    value2 = _mm256_loadu_si256((__m256i *)ref);
-    cmp = _mm256_cmpeq_epi64(value, value2);
-    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
-      /* Find the byte that starts to differ */
-      while (*ref++ == x) ip++;
-      return ip;
-    }
-    else {
-      ip += sizeof(__m256i);
-      ref += sizeof(__m256i);
-    }
-  }
-  /* Look into the remainder */
-  while ((ip < ip_bound) && (*ref++ == x)) ip++;
-  return ip;
-}
-#endif
-
-
-uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  while (ip < (ip_bound - sizeof(int64_t))) {
-#if !defined(BLOSC_STRICT_ALIGN)
-    if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
-#endif
-      /* Find the byte that starts to differ */
-      while (*ref++ == *ip++) {}
-      return ip;
-#if !defined(BLOSC_STRICT_ALIGN)
-    }
-    else {
-      ip += sizeof(int64_t);
-      ref += sizeof(int64_t);
-    }
-#endif
-  }
-  /* Look into the remainder */
-  while ((ip < ip_bound) && (*ref++ == *ip++)) {}
-  return ip;
-}
-
-
-#if defined(__SSE2__)
-uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  __m128i value, value2, cmp;
-
-  while (ip < (ip_bound - sizeof(__m128i))) {
-    value = _mm_loadu_si128((__m128i *) ip);
-    value2 = _mm_loadu_si128((__m128i *) ref);
-    cmp = _mm_cmpeq_epi32(value, value2);
-    if (_mm_movemask_epi8(cmp) != 0xFFFF) {
-      /* Find the byte that starts to differ */
-      while (*ref++ == *ip++) {}
-      return ip;
-    }
-    else {
-      ip += sizeof(__m128i);
-      ref += sizeof(__m128i);
-    }
-  }
-  /* Look into the remainder */
-  while ((ip < ip_bound) && (*ref++ == *ip++)) {}
-  return ip;
-}
-#endif
-
-
-#if defined(__AVX2__)
-uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
-  __m256i value, value2, cmp;
-
-  while (ip < (ip_bound - sizeof(__m256i))) {
-    value = _mm256_loadu_si256((__m256i *) ip);
-    value2 = _mm256_loadu_si256((__m256i *)ref);
-    cmp = _mm256_cmpeq_epi64(value, value2);
-    if (_mm256_movemask_epi8(cmp) != 0xFFFFFFFF) {
-      /* Find the byte that starts to differ */
-      while (*ref++ == *ip++) {}
-      return ip;
-    }
-    else {
-      ip += sizeof(__m256i);
-      ref += sizeof(__m256i);
-    }
-  }
-  /* Look into the remainder */
-  while ((ip < ip_bound) && (*ref++ == *ip++)) {}
-  return ip;
-}
-#endif
 
 
 static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned char *from) {
@@ -237,7 +78,7 @@ static inline unsigned char *copy_16_bytes(unsigned char *out, const unsigned ch
   _mm_storeu_si128((__m128i*)out, chunk);
   from += 16; out += 16;
 #elif !defined(BLOSC_STRICT_ALIGN)
-   *(uint64_t*)out = *(uint64_t*)from;
+  *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
@@ -265,7 +106,7 @@ static inline unsigned char *copy_32_bytes(unsigned char *out, const unsigned ch
   _mm_storeu_si128((__m128i*)out, chunk);
   from += 16; out += 16;
 #elif !defined(BLOSC_STRICT_ALIGN)
-   *(uint64_t*)out = *(uint64_t*)from;
+  *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
    *(uint64_t*)out = *(uint64_t*)from;
    from += 8; out += 8;
@@ -302,24 +143,24 @@ static inline unsigned char *copy_bytes(unsigned char *out, const unsigned char 
 #else
   switch (len) {
     case 7:
-        return copy_7_bytes(out, from);
+      return copy_7_bytes(out, from);
     case 6:
-        return copy_6_bytes(out, from);
+      return copy_6_bytes(out, from);
     case 5:
-        return copy_5_bytes(out, from);
+      return copy_5_bytes(out, from);
     case 4:
-        return copy_4_bytes(out, from);
+      return copy_4_bytes(out, from);
     case 3:
-        return copy_3_bytes(out, from);
+      return copy_3_bytes(out, from);
     case 2:
-        return copy_2_bytes(out, from);
+      return copy_2_bytes(out, from);
     case 1:
-        return copy_1_bytes(out, from);
+      return copy_1_bytes(out, from);
     case 0:
-        return out;
+      return out;
     default:
-        assert(0);
-    }
+      assert(0);
+  }
 #endif /* BLOSC_STRICT_ALIGN */
   return out;
 }
@@ -603,7 +444,7 @@ static inline unsigned char *chunk_memcpy_aligned(unsigned char *out, const unsi
 
 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
-static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *from, unsigned len) {
+unsigned char *fastcopy(unsigned char *out, const unsigned char *from, unsigned len) {
   switch (len) {
     case 32:
       return copy_32_bytes(out, from);
@@ -636,8 +477,8 @@ static inline unsigned char *fast_copy(unsigned char *out, const unsigned char *
 }
 
 
-/* Same as fast_copy() but without overwriting origin or destination when they overlap */
-static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *from, unsigned len) {
+/* Same as fastcopy() but without overwriting origin or destination when they overlap */
+unsigned char* safecopy(unsigned char *out, const unsigned char *from, unsigned len) {
 #if defined(__AVX2__)
   unsigned sz = sizeof(__m256i);
 #elif defined(__SSE2__)
@@ -652,9 +493,6 @@ static inline unsigned char* safe_copy(unsigned char *out, const unsigned char *
     return out;
   }
   else {
-    return fast_copy(out, from, len);
+    return fastcopy(out, from, len);
   }
 }
-
-
-#endif /* MEMCOPY_H_ */
