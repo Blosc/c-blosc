@@ -10,7 +10,8 @@
 Changes from 1.13.0 to 1.13.1
 =============================
 
-#XXX version-specific blurb XXX#
+- Fixed a bug uncovered by the python-blosc test suite: when a buffer is
+to be copied, then we should reserve space for the header, not block pointers.
 
 
 Changes from 1.12.1 to 1.13.0

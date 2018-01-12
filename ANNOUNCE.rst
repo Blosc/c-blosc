@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+Fixed a bug uncovered by the python-blosc test suite: when a buffer is
+to be copied, then we should reserve space for the header, not block
+pointers.
 
 For more info, please see the release notes in:
 
