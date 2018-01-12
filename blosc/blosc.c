@@ -1147,6 +1147,7 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
   if (context->sourcesize < MIN_BUFFERSIZE) {
     /* Buffer is too small.  Try memcpy'ing. */
     *(context->header_flags) |= BLOSC_MEMCPYED;
+    context->num_output_bytes = 16;      /* space just for header */
   }
 
   if (doshuffle == BLOSC_SHUFFLE) {
