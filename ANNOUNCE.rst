@@ -1,14 +1,12 @@
 ===============================================================
- Announcing C-Blosc 1.13.0
+ Announcing C-Blosc 1.13.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Fixed a bug uncovered by the python-blosc test suite: when a buffer is
-to be copied, then we should reserve space for the header, not block
-pointers.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
