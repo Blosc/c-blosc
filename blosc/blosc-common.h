@@ -63,6 +63,10 @@
    If anybody suggest that newer ARMs are better, we can revisit this. */
 /* #elif defined(__ARM_FEATURE_UNALIGNED) */  /* ARM, GNU C */
 /* #undef BLOSC_STRICT_ALIGN */
+#elif defined(_ARCH_PPC) || defined(__PPC__)
+/* Modern PowerPC systems (like POWER8) should support unaligned access
+   quite efficiently. */
+#undef BLOSC_STRICT_ALIGN
 #endif
 #endif
 
