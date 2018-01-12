@@ -1142,6 +1142,7 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
   if (context->clevel == 0) {
     /* Compression level 0 means buffer to be memcpy'ed */
     *(context->header_flags) |= BLOSC_MEMCPYED;
+    context->num_output_bytes = 16;      /* space just for header */
   }
 
   if (context->sourcesize < MIN_BUFFERSIZE) {
