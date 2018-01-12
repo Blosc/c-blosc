@@ -21,10 +21,10 @@
 
 
 /*
- * Always check for bound when decompressing.
- * Generally it is best to leave it defined.
+ * Check for bound when decompressing.
+ * It is a good idea to define this while developing.
  */
-#define BLOSCLZ_SAFE
+#undef BLOSCLZ_SAFE
 
 /*
  * Give hints to the compiler for branch prediction optimization.
