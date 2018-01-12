@@ -14,6 +14,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "blosclz.h"
 #include "fastcopy.h"
 #include "blosc-common.h"
