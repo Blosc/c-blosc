@@ -6,13 +6,7 @@
 What is new?
 ============
 
-A serious optimization of memory copy functions (see `blosc/fastcopy.c`).
-This benefits the speed of all the codecs, but specially the BloscLZ one.
-As a result of the above, the BloscLZ codec received a new adjustment of
-knobs so that you should expect better compression ratios with BloscLZ too.
-
-Also, the LZ4 codec internal sources have been updated to 1.8.0. And internal
-Zstd sources have been updated to 1.3.3 too.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
