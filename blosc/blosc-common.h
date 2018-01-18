@@ -10,6 +10,7 @@
 #define SHUFFLE_COMMON_H
 
 #include "blosc-export.h"
+#include <string.h>
 
 /* Import standard integer type definitions */
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -28,7 +29,6 @@
 
 #else
   #include <stdint.h>
-  #include <string.h>
 #endif  /* _WIN32 */
 
 
