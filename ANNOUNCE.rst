@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+- C-Blosc can be compiled on CentOS 6 now.
+
+- LZ4 internal codec upgraded to 1.8.1.
 
 For more info, please see the release notes in:
 
