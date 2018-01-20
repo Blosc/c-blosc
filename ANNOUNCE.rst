@@ -1,14 +1,12 @@
 ===============================================================
- Announcing C-Blosc 1.13.2
+ Announcing C-Blosc 1.13.3
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-- C-Blosc can be compiled on CentOS 6 now.
-
-- LZ4 internal codec upgraded to 1.8.1.
+  #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
