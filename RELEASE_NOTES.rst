@@ -10,14 +10,16 @@
 Changes from 1.13.1 to 1.13.2
 =============================
 
-#XXX version-specific blurb XXX#
+- C-Blosc can be compiled on CentOS 6 now.
+
+- LZ4 internal codec upgraded to 1.8.1.
 
 
 Changes from 1.13.0 to 1.13.1
 =============================
 
 - Fixed a bug uncovered by the python-blosc test suite: when a buffer is
-to be copied, then we should reserve space for the header, not block pointers.
+  to be copied, then we should reserve space for the header, not block pointers.
 
 
 Changes from 1.12.1 to 1.13.0
