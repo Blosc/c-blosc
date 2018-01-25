@@ -10,7 +10,8 @@
 Changes from 1.13.2 to 1.13.3
 =============================
 
-  #XXX version-specific blurb XXX#
+- Tests work now when external compressors are located in non-system locations.
+  Fixes #210.  Thanks to Leif Walsh.
 
 
 Changes from 1.13.1 to 1.13.2

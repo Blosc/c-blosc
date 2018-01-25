@@ -6,7 +6,8 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+Tests should work now when external compressors are located in non-system
+locations.  Fixes #210.  Thanks to Leif Walsh.
 
 For more info, please see the release notes in:
 
