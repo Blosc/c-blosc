@@ -1,13 +1,12 @@
 ===============================================================
- Announcing C-Blosc 1.13.3
+ Announcing C-Blosc 1.13.4
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Tests should work now when external compressors are located in non-system
-locations.  Fixes #210.  Thanks to Leif Walsh.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
