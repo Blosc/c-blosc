@@ -1174,20 +1174,25 @@ int blosc_compress_context(struct blosc_context* context)
 {
   int32_t ntbytes = 0;
 
-    /* Do the actual compression */
+  if ((*(context->header_flags) & BLOSC_MEMCPYED) &&
+      (context->sourcesize + BLOSC_MAX_OVERHEAD > context->destsize)) {
+    return 0;   /* data cannot be copied without overrun destination */
+  }
+
+  /* Do the actual compression */
+  ntbytes = do_job(context);
+  if (ntbytes < 0) {
+    return -1;
+  }
+  if ((ntbytes == 0) && (context->sourcesize + BLOSC_MAX_OVERHEAD <= context->destsize)) {
+    /* Last chance for fitting `src` buffer in `dest`.  Update flags and force a copy. */
+    *(context->header_flags) |= BLOSC_MEMCPYED;
+    context->num_output_bytes = BLOSC_MAX_OVERHEAD;  /* reset the output bytes in previous step */
     ntbytes = do_job(context);
     if (ntbytes < 0) {
       return -1;
     }
-    if ((ntbytes == 0) && (context->sourcesize+BLOSC_MAX_OVERHEAD <= context->destsize)) {
-      /* Last chance for fitting `src` buffer in `dest`.  Update flags and force a copy. */
-      *(context->header_flags) |= BLOSC_MEMCPYED;
-      context->num_output_bytes = BLOSC_MAX_OVERHEAD;  /* reset the output bytes in previous step */
-      ntbytes = do_job(context);
-      if (ntbytes < 0) {
-        return -1;
-      }
-    }
+  }
 
   /* Set the number of compressed bytes in header */
   _sw32(context->dest + 12, ntbytes);
