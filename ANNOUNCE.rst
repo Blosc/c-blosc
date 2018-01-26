@@ -6,7 +6,9 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+Fixed a buffer overrun that happens when compressing small buffers and
+len(destination_buffer) < (len(source_buffer) + BLOSC_MAX_OVERHEAD).
+Thanks to Ivan Smirnov for reporting this.
 
 For more info, please see the release notes in:
 

@@ -10,7 +10,9 @@
 Changes from 1.13.3 to 1.13.4
 =============================
 
-#XXX version-specific blurb XXX#
+- Fixed a buffer overrun that happens when compressing small buffers and
+  len(destination_buffer) < (len(source_buffer) + BLOSC_MAX_OVERHEAD).
+  Reported by Ivan Smirnov.
 
 
 Changes from 1.13.2 to 1.13.3
