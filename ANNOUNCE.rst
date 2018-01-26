@@ -1,14 +1,12 @@
 ===============================================================
- Announcing C-Blosc 1.13.4
+ Announcing C-Blosc 1.13.5
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Fixed a buffer overrun that happens when compressing small buffers and
-len(destination_buffer) < (len(source_buffer) + BLOSC_MAX_OVERHEAD).
-Thanks to Ivan Smirnov for reporting this.
+  #XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
