@@ -1,0 +1,14 @@
+include(default)
+[settings]
+arch=x86_64
+build_type=Release
+compiler=gcc
+compiler.exception=seh
+compiler.libcxx=libstdc++
+compiler.threads=posix
+compiler.version=4.9
+[options]
+c-blosc:shared=False
+[env]
+[build_requires]
+*:mingw_installer/1.0@conan/stable
