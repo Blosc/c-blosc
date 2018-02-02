@@ -7,7 +7,7 @@ environment:
     PYTHON_ARCH: "32"
 
     CONAN_USERNAME: "francescalted"
-    CONAN_LOGIN_USERNAME: "blosc"
+    CONAN_LOGIN_USERNAME: "francescalted"
     CONAN_CHANNEL: "testing"
     CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
 
