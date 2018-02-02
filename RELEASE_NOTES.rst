@@ -7,10 +7,11 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.13.3 to 1.13.4
+Changes from 1.13.4 to 1.13.5
 =============================
 
-  #XXX version-specific blurb XXX#
+- New conan binaries publicly accessible in https://bintray.com/blosc/Conan.
+  Still experimental, but feedback is appreciated.
 
 
 Changes from 1.13.3 to 1.13.4
