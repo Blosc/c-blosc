@@ -3,7 +3,7 @@ env:
      - CONAN_USERNAME: "francescalted"
      - CONAN_LOGIN_USERNAME: "blosc"
      - CONAN_CHANNEL: "testing"
-     - CONAN_UPLOAD: "https://api.bintray.com/conan/lasote/conan-repo" #"https://api.bintray.com/conan/blosc/Conan"
+     - CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
      - CONAN_TOTAL_PAGES: 2
 
 linux: &linux
