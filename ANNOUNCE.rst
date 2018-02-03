@@ -6,7 +6,8 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+More tests for binaries in https://bintray.com/blosc/Conan.
+Nothing in code has changed, so no need for upgrade.
 
 For more info, please see the release notes in:
 

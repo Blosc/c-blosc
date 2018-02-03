@@ -10,7 +10,7 @@
 Changes from 1.13.5 to 1.13.6
 =============================
 
-  #XXX version-specific blurb XXX#
+- More tests for binaries in https://bintray.com/blosc/Conan.
 
 
 Changes from 1.13.4 to 1.13.5
