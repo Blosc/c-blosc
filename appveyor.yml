@@ -8,7 +8,7 @@ environment:
 
     CONAN_USERNAME: "francescalted"
     CONAN_LOGIN_USERNAME: "francescalted"
-    CONAN_CHANNEL: "testing"
+    CONAN_CHANNEL: "stable"
     CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
 
 
