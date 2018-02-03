@@ -1,5 +1,5 @@
 ===============================================================
- Announcing C-Blosc 1.13.6
+ Announcing C-Blosc 1.13.7
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 

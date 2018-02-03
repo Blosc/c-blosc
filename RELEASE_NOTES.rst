@@ -7,6 +7,12 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.13.6 to 1.13.7
+=============================
+
+- More tests for binaries in https://bintray.com/blosc/Conan.
+
+
 Changes from 1.13.5 to 1.13.6
 =============================
 
