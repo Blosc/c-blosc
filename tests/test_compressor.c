@@ -189,6 +189,24 @@ static char *test_typesize() {
   return 0;
 }
 
+/* Check splitmode */
+static char *test_splitmode() {
+  int cbytes2;
+
+  /* Get a compressed buffer */
+  cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
+                          dest, size + 16);
+  mu_assert("ERROR: cbytes is not correct", cbytes < size);
+
+  /* Deactivate the split */
+  blosc_set_splitmode(BLOSC_NEVER_SPLIT);
+  cbytes2 = blosc_compress(clevel, doshuffle, typesize, size, src,
+                           dest, size + 16);
+  mu_assert("ERROR: blosc_set_splitmode does not work correctly", cbytes2 > cbytes);
+
+  return 0;
+}
+
 
 static char *all_tests() {
   mu_run_test(test_compressor);
@@ -198,6 +216,7 @@ static char *all_tests() {
   mu_run_test(test_shuffle);
   mu_run_test(test_bitshuffle);
   mu_run_test(test_typesize);
+  mu_run_test(test_splitmode);
 
   return 0;
 }

@@ -87,6 +87,11 @@ static char *test_blocksize() {
   return 0;
 }
 
+static char *test_set_splitmode() {
+  blosc_set_splitmode(BLOSC_AUTO_SPLIT);
+  return 0;
+}
+
 
 static char *all_tests() {
   mu_run_test(test_cbuffer_sizes);
@@ -95,6 +100,7 @@ static char *all_tests() {
   mu_run_test(test_cbuffer_complib);
   mu_run_test(test_nthreads);
   mu_run_test(test_blocksize);
+  mu_run_test(test_set_splitmode);
   return 0;
 }
 

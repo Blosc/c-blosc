@@ -143,6 +143,7 @@ static int32_t g_compressor = BLOSC_BLOSCLZ;  /* the compressor to use by defaul
 static int32_t g_threads = 1;
 static int32_t g_force_blocksize = 0;
 static int32_t g_initlib = 0;
+static int32_t g_splitmode = BLOSC_FORWARD_COMPAT_SPLIT;
 
 
 
@@ -905,14 +906,35 @@ static int do_job(struct blosc_context* context)
 
 /* Conditions for splitting a block before compressing with a codec. */
 static int split_block(int compcode, int typesize, int blocksize) {
-  /* Normally all the compressors designed for speed benefit from a
-     split.  However, in conducted benchmarks LZ4 seems that it runs
-     faster if we don't split, which is quite surprising. */
-  return (((compcode == BLOSC_BLOSCLZ) ||
-           //(compcode == BLOSC_LZ4) ||
-           (compcode == BLOSC_SNAPPY)) &&
-          (typesize <= MAX_SPLITS) &&
-          (blocksize / typesize) >= MIN_BUFFERSIZE);
+  int splitblock = -1;
+
+  switch (g_splitmode) {
+    case BLOSC_ALWAYS_SPLIT:
+      splitblock = 1;
+      break;
+    case BLOSC_NEVER_SPLIT:
+      splitblock = 0;
+      break;
+    case BLOSC_AUTO_SPLIT:
+      /* Normally all the compressors designed for speed benefit from a
+         split.  However, in conducted benchmarks LZ4 seems that it runs
+         faster if we don't split, which is quite surprising. */
+      splitblock= (((compcode == BLOSC_BLOSCLZ) ||
+                    (compcode == BLOSC_SNAPPY)) &&
+                   (typesize <= MAX_SPLITS) &&
+                   (blocksize / typesize) >= MIN_BUFFERSIZE);
+      break;
+    case BLOSC_FORWARD_COMPAT_SPLIT:
+      /* The zstd support was introduced at the same time than the split flag, so
+       * there should be not a problem with not splitting bloscks with it */
+      splitblock = ((compcode != BLOSC_ZSTD) &&
+                    (typesize <= MAX_SPLITS) &&
+                    (blocksize / typesize) >= MIN_BUFFERSIZE);
+      break;
+    default:
+      fprintf(stderr, "Split mode %d not supported", g_splitmode);
+  }
+  return splitblock;
 }
 
 
@@ -2042,6 +2064,12 @@ int blosc_get_blocksize(void)
 void blosc_set_blocksize(size_t size)
 {
   g_force_blocksize = (int32_t)size;
+}
+
+/* Force the use of a specific split mode. */
+void blosc_set_splitmode(int mode)
+{
+  g_splitmode = mode;
 }
 
 void blosc_init(void)

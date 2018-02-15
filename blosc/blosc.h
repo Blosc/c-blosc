@@ -18,12 +18,12 @@ extern "C" {
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
-#define BLOSC_VERSION_MINOR    13   /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  8    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_MINOR    14   /* for minor interface/format changes  */
+#define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.13.8.dev"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.14.0.dev"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2018-02-05 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2018-02-15 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.1.0"   /* the internal compressor version */
 
@@ -105,6 +105,13 @@ extern "C" {
 #define BLOSC_ZLIB_VERSION_FORMAT     1
 #define BLOSC_ZSTD_VERSION_FORMAT     1
 
+/* Split mode for blocks.  NEVER and ALWAYS are for experimenting with best compression ratio,
+ * AUTO for optimal behaviour (based on experiments), and FORWARD_COMPAT provides
+ * best forward compatibility */
+#define BLOSC_ALWAYS_SPLIT 1
+#define BLOSC_NEVER_SPLIT 2
+#define BLOSC_AUTO_SPLIT 3
+#define BLOSC_FORWARD_COMPAT_SPLIT 4
 
 /**
   Initialize the Blosc library environment.
@@ -464,6 +471,26 @@ BLOSC_EXPORT int blosc_get_blocksize(void);
   the allowed values, so use this with care.
   */
 BLOSC_EXPORT void blosc_set_blocksize(size_t blocksize);
+
+/**
+  Set the split mode.
+
+ This function can take the next values:
+ *  BLOSC_FORWARD_COMPAT_SPLIT
+ *  BLOSC_AUTO_SPLIT
+ *  BLOSC_NEVER_SPLIT
+ *  BLOSC_ALWAYS_SPLIT
+
+ FORWARD_COMPAT offers reasonably forward compatibility, AUTO is for nearly optimal results (based
+ on heuristics), NEVER and ALWAYS are for the user experimenting when trying to get best
+ compression ratios and/or speed.
+
+ If not called, the default mode is BLOSC_FORWARD_COMPAT_SPLIT.
+
+ This function should always succeed.
+ */
+BLOSC_EXPORT void blosc_set_splitmode(int splitmode);
+
 
 #ifdef __cplusplus
 }
