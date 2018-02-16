@@ -1338,6 +1338,27 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     return result;
   }
 
+  /* Check for a BLOSC_SPLITMODE environment variable */
+  envvar = getenv("BLOSC_SPLITMODE");
+  if (envvar != NULL) {
+    if (strcmp(envvar, "FORWARD_COMPAT") == 0) {
+      g_splitmode = BLOSC_FORWARD_COMPAT_SPLIT;
+    }
+    else if (strcmp(envvar, "AUTO") == 0) {
+      g_splitmode = BLOSC_AUTO_SPLIT;
+    }
+    else if (strcmp(envvar, "ALWAYS") == 0) {
+      g_splitmode = BLOSC_ALWAYS_SPLIT;
+    }
+    else if (strcmp(envvar, "NEVER") == 0) {
+      g_splitmode = BLOSC_NEVER_SPLIT;
+    }
+    else {
+      fprintf(stderr, "BLOSC_SPLITMODE environment variable '%s' not recognized\n", envvar);
+      return -1;
+    }
+  }
+
   pthread_mutex_lock(&global_comp_mutex);
 
   error = initialize_context_compression(g_global_context, clevel, doshuffle,

@@ -205,6 +205,11 @@ BLOSC_EXPORT void blosc_destroy(void);
   blosc_set_compressor(), blosc_set_blocksize() and
   blosc_set_nthreads().  BLOSC_CLEVEL, BLOSC_SHUFFLE, BLOSC_TYPESIZE
   environment vars will also be honored.
+
+  BLOSC_SPLITMODE=[ FORWARD_COMPAT | AUTO | ALWAYS | NEVER ]:
+  This will call blosc_set_splitmode() with the different supported values.
+  See blosc_set_splitmode() docstrings for more info on each mode.
+
   */
 BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
 				size_t nbytes, const void *src, void *dest,

@@ -203,6 +203,26 @@ static char *test_splitmode() {
   cbytes2 = blosc_compress(clevel, doshuffle, typesize, size, src,
                            dest, size + 16);
   mu_assert("ERROR: blosc_set_splitmode does not work correctly", cbytes2 > cbytes);
+  /* Reset the splitmode */
+  blosc_set_splitmode(BLOSC_FORWARD_COMPAT_SPLIT);
+
+  return 0;
+}
+
+/* Check splitmode with an environment variable */
+static char *test_splitmode_envvar() {
+  int cbytes2;
+
+  /* Get a compressed buffer */
+  cbytes = blosc_compress(clevel, doshuffle, typesize, size, src,
+                          dest, size + 16);
+  mu_assert("ERROR: cbytes is not correct", cbytes < size);
+
+  /* Deactivate the split */
+  setenv("BLOSC_SPLITMODE", "NEVER", 0);
+  cbytes2 = blosc_compress(clevel, doshuffle, typesize, size, src,
+                           dest, size + 16);
+  mu_assert("ERROR: BLOSC_SPLITMODE envvar does not work correctly", cbytes2 > cbytes);
 
   return 0;
 }
@@ -217,6 +237,7 @@ static char *all_tests() {
   mu_run_test(test_bitshuffle);
   mu_run_test(test_typesize);
   mu_run_test(test_splitmode);
+  mu_run_test(test_splitmode_envvar);
 
   return 0;
 }
