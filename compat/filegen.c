@@ -13,15 +13,27 @@
 #include <blosc.h>
 #include <string.h>
 
-#define SIZE 1000 * 1000
+#if defined(_WIN32) && !defined(__MINGW32__)
+#include <windows.h>
+  /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1600
+    #include "win32/stdint-windows.h"
+  #else
+    #include <stdint.h>
+  #endif
+#endif  /* _WIN32 */
+
+#define SIZE (1000 * 1000)
 
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
   static int32_t data[SIZE];
   static int32_t data_out[SIZE];
   static int32_t data_dest[SIZE];
-  int isize = SIZE * sizeof(int32_t), osize = SIZE*sizeof(int32_t);
-  int dsize = SIZE * sizeof(int32_t), csize;
+  size_t isize = SIZE * sizeof(int32_t);
+  size_t osize = SIZE * sizeof(int32_t);
+  int dsize = SIZE * sizeof(int32_t);
+  int csize;
   int i;
 
   FILE *f;
@@ -38,7 +50,7 @@ int main(int argc, char *argv[]){
 
   if (strcmp(argv[1], "compress") == 0) {
 
-    for(i=0; i<SIZE; i++){
+    for (i = 0; i < SIZE; i++) {
       data[i] = i;
     }
 
@@ -47,17 +59,16 @@ int main(int argc, char *argv[]){
     if (csize == 0) {
       printf("Buffer is uncompressible.  Giving up.\n");
       return 1;
-    }
-    else if (csize < 0) {
+    } else if (csize < 0) {
       printf("Compression error.  Error code: %d\n", csize);
       return csize;
     }
 
-    printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
+    printf("Compression: %d -> %d (%.1fx)\n", (int) isize, csize, (1. * isize) / csize);
 
     /* Write data_out to argv[3] */
     f = fopen(argv[3], "wb+");
-    if (fwrite(data_out, 1, csize, f) == SIZE) {
+    if (fwrite(data_out, 1, (size_t) csize, f) == SIZE) {
       printf("Wrote %s\n", argv[3]);
     } else {
       printf("Write failed");
@@ -67,15 +78,15 @@ int main(int argc, char *argv[]){
     f = fopen(argv[2], "rb");
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET); 
-    if (fread(data_out, 1, fsize, f) == fsize) {
+    fseek(f, 0, SEEK_SET);
+    if (fread(data_out, 1, (size_t) fsize, f) == fsize) {
       printf("Checking %s\n", argv[2]);
     } else {
       printf("Read failed");
     }
 
     /* Decompress */
-    dsize = blosc_decompress(data_out, data_dest, dsize);
+    dsize = blosc_decompress(data_out, data_dest, (size_t) dsize);
     if (dsize < 0) {
       printf("Decompression error.  Error code: %d\n", dsize);
       return dsize;

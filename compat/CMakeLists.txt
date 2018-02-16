@@ -20,6 +20,7 @@ elseif (MINGW)
             "${CMAKE_CURRENT_BINARY_DIR}/libblosc.dll")
 endif(MSVC)
 target_link_libraries(filegen blosc_shared)
+add_dependencies(filegen blosc_shared)
 
 # tests
 if (BUILD_TESTS)
