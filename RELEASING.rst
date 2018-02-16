@@ -36,6 +36,24 @@ http://blosc.org/synthetic-benchmarks.html
 where instructions on how to intensively test (and benchmark) Blosc
 are given.
 
+Forward compatibility testing
+-----------------------------
+
+In order to make sure that we are not breaking forward compatibility,
+link and run the `compat/filegen` utility against different versions of
+the Blosc library (suggestion: 1.3.0, 1.7.0, 1.11.1, 1.14.1).
+
+You can compile the utility with::
+
+  $ export LD_LIBRARY_PATH=shared_blosc_library_path
+  $ gcc -o filegen filegen.c -L$LD_LIBRARY_PATH -lblosc -Iblosc.h_include_path
+
+Then, test with::
+
+  $ for file in $(ls *.cdata); do ./filegen decompress $file; done
+
+Pay attention to any error that may appear (TODO: automate this via a bash
+script).
 
 Tagging
 -------
