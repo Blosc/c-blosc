@@ -303,6 +303,7 @@ add_subdirectory(blosc)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+    add_subdirectory(compat)
 endif(BUILD_TESTS)
 
 if(BUILD_BENCHMARKS)

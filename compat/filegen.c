@@ -1,8 +1,20 @@
+/*********************************************************************
+  Blosc - Blocked Shuffling and Compression Library
+
+  Generator data file for Blosc forward and backward tests.
+
+  Creation date: 2018-02-16
+  Author: Elvis Stansvik, Francesc Alted <francesc@blosc.org>
+
+  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+**********************************************************************/
+
 #include <stdio.h>
 #include <blosc.h>
 #include <string.h>
 
 #define SIZE 1000 * 1000
+
 
 int main(int argc, char *argv[]){
   static int32_t data[SIZE];
@@ -13,10 +25,6 @@ int main(int argc, char *argv[]){
   int i;
 
   FILE *f;
-
-  for(i=0; i<SIZE; i++){
-    data[i] = i;
-  }
 
   /* Register the filter with the library */
   printf("Blosc version info: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
@@ -29,6 +37,11 @@ int main(int argc, char *argv[]){
   blosc_set_compressor(argv[2]);
 
   if (strcmp(argv[1], "compress") == 0) {
+
+    for(i=0; i<SIZE; i++){
+      data[i] = i;
+    }
+
     /* Compress with clevel=9 and shuffle active  */
     csize = blosc_compress(9, 1, sizeof(int32_t), isize, data, data_out, osize);
     if (csize == 0) {
@@ -50,13 +63,13 @@ int main(int argc, char *argv[]){
       printf("Write failed");
     }
   } else {
-    /* Read from argv[3] into data_out. */
-    f = fopen(argv[3], "rb");
+    /* Read from argv[2] into data_out. */
+    f = fopen(argv[2], "rb");
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
     fseek(f, 0, SEEK_SET); 
     if (fread(data_out, 1, fsize, f) == fsize) {
-      printf("Read %s\n", argv[3]);
+      printf("Checking %s\n", argv[2]);
     } else {
       printf("Read failed");
     }
@@ -76,4 +89,3 @@ int main(int argc, char *argv[]){
 
   return 0;
 }
-
