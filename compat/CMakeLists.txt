@@ -4,7 +4,7 @@ add_executable(filegen filegen.c)
 # have to copy blosc dlls on Windows
 if (MSVC)
     add_custom_command(
-            TARGET ${src}
+            TARGET filegen
             POST_BUILD
             COMMAND ${CMAKE_COMMAND}
             ARGS -E copy_if_different
@@ -12,7 +12,7 @@ if (MSVC)
             "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc.dll")
 elseif (MINGW)
     add_custom_command(
-            TARGET ${src}
+            TARGET filegen
             POST_BUILD
             COMMAND ${CMAKE_COMMAND}
             ARGS -E copy_if_different
