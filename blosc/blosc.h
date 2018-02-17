@@ -311,7 +311,7 @@ BLOSC_EXPORT int blosc_set_nthreads(int nthreads);
 /**
   Returns the current compressor that is used for compression.
   */
-BLOSC_EXPORT char* blosc_get_compressor(void);
+BLOSC_EXPORT const char* blosc_get_compressor(void);
 
 
 /**
@@ -333,7 +333,7 @@ BLOSC_EXPORT int blosc_set_compressor(const char* compname);
   for it in this build, -1 is returned.  Else, the compressor code is
   returned.
  */
-BLOSC_EXPORT int blosc_compcode_to_compname(int compcode, char **compname);
+BLOSC_EXPORT int blosc_compcode_to_compname(int compcode, const char **compname);
 
 
 /**
@@ -356,14 +356,14 @@ BLOSC_EXPORT int blosc_compname_to_compcode(const char *compname);
 
   This function should always succeed.
   */
-BLOSC_EXPORT char* blosc_list_compressors(void);
+BLOSC_EXPORT const char* blosc_list_compressors(void);
 
 /**
   Return the version of blosc in string format.
 
   Useful for dynamic libraries.
 */
-BLOSC_EXPORT char* blosc_get_version_string(void);
+BLOSC_EXPORT const char* blosc_get_version_string(void);
 
 
 /**
@@ -380,7 +380,7 @@ BLOSC_EXPORT char* blosc_get_version_string(void);
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.
   */
-BLOSC_EXPORT int blosc_get_complib_info(char *compname, char **complib, char **version);
+BLOSC_EXPORT int blosc_get_complib_info(const char *compname, char **complib, char **version);
 
 
 /**
@@ -442,7 +442,7 @@ BLOSC_EXPORT void blosc_cbuffer_versions(const void *cbuffer, int *version,
 
   This function should always succeed.
   */
-BLOSC_EXPORT char *blosc_cbuffer_complib(const void *cbuffer);
+BLOSC_EXPORT const char *blosc_cbuffer_complib(const void *cbuffer);
 
 
 
