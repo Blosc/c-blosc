@@ -48,6 +48,8 @@ extern int tests_run;
 #define MB  (1024*KB)
 #define GB  (1024*MB)
 
+#define UNUSED __attribute__((unused))
+
 /*
   Memory functions.
 */
@@ -56,7 +58,7 @@ extern int tests_run;
     The allocated memory is 'cleaned' before returning to avoid
     accidental re-use of data within or between tests.
  */
-static inline void* blosc_test_malloc(const size_t alignment, const size_t size)
+static UNUSED void* blosc_test_malloc(const size_t alignment, const size_t size)
 {
   const int32_t clean_value = 0x99;
   void *block = NULL;
@@ -90,7 +92,7 @@ static inline void* blosc_test_malloc(const size_t alignment, const size_t size)
 }
 
 /** Frees memory allocated by blosc_test_malloc. */
-static inline void blosc_test_free(void* ptr)
+static UNUSED void blosc_test_free(void* ptr)
 {
 #if defined(_WIN32)
     _aligned_free(ptr);
@@ -100,7 +102,7 @@ static inline void blosc_test_free(void* ptr)
 }
 
 /** Fills a buffer with random values. */
-static inline void blosc_test_fill_random(void* const ptr, const size_t size)
+static UNUSED void blosc_test_fill_random(void* const ptr, const size_t size)
 {
   size_t k;
   uint8_t* const byte_ptr = (uint8_t*)ptr;
@@ -114,7 +116,7 @@ static inline void blosc_test_fill_random(void* const ptr, const size_t size)
 */
 
 /** Parse a `int32_t` value from a string, checking for overflow. */
-static inline int blosc_test_parse_uint32_t(const char* const str, uint32_t* value)
+static UNUSED int blosc_test_parse_uint32_t(const char* const str, uint32_t* value)
 {
   char* str_end;
   int32_t signed_value = strtol(str, &str_end, 10);
@@ -135,7 +137,7 @@ static inline int blosc_test_parse_uint32_t(const char* const str, uint32_t* val
 
 /** Print an error message when a test program has been invoked
     with an invalid number of arguments. */
-static inline void blosc_test_print_bad_argcount_msg(
+static UNUSED void blosc_test_print_bad_argcount_msg(
   const int32_t num_expected_args, const int32_t num_actual_args)
 {
   fprintf(stderr, "Invalid number of arguments specified.\nExpected %d arguments but was given %d.",
@@ -144,7 +146,7 @@ static inline void blosc_test_print_bad_argcount_msg(
 
 /** Print an error message when a test program has been invoked
     with an invalid argument value. */
-static inline void blosc_test_print_bad_arg_msg(const int32_t arg_index)
+static UNUSED void blosc_test_print_bad_arg_msg(const int32_t arg_index)
 {
   fprintf(stderr, "Invalid value specified for argument at index %d.\n", arg_index);
 }

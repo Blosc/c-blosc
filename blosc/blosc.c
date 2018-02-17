@@ -850,7 +850,7 @@ static int serial_blosc(struct blosc_context* context)
 /* Threaded version for compression/decompression */
 static int parallel_blosc(struct blosc_context* context)
 {
-  int rc;
+  __attribute__((unused)) int rc;
 
   /* Check whether we need to restart threads */
   blosc_set_nthreads_(context);
@@ -1590,7 +1590,7 @@ static void *t_blosc(void *ctxt)
   uint8_t *tmp;
   uint8_t *tmp2;
   uint8_t *tmp3;
-  int rc;
+  __attribute__((unused)) int rc;
 
   while(1)
   {
@@ -2067,7 +2067,7 @@ int blosc_release_threadpool(struct blosc_context* context)
 {
   int32_t t;
   void* status;
-  int rc;
+  __attribute__((unused)) int rc;
   int rc2;
 
   if (context->threads_started > 0)
