@@ -91,7 +91,7 @@ struct blosc_context {
   const uint8_t* src;
   uint8_t* dest;                  /* The current pos in the destination buffer */
   uint8_t* header_flags;          /* Flags for header */
-  int versionlz;                  /* Compressor version byte, only used during decompression */
+  int compressor_version;         /* Compressor version byte, only used during decompression */
   int32_t sourcesize;             /* Number of bytes in source buffer (or uncompressed bytes in compressed file) */
   int32_t nblocks;                /* Number of total blocks in buffer */
   int32_t leftover;               /* Extra bytes at end of buffer */
@@ -689,7 +689,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
   int doshuffle = (header_flags & BLOSC_DOSHUFFLE) && (typesize > 1);
   int dobitshuffle = ((header_flags & BLOSC_DOBITSHUFFLE) &&
                       (blocksize >= typesize));
-  int versionlz = context->versionlz;
+  int compressor_version = context->compressor_version;
 
   if (doshuffle || dobitshuffle) {
     _tmp = tmp;
@@ -718,21 +718,21 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
     }
     else {
       if (compformat == BLOSC_BLOSCLZ_FORMAT) {
-        if (versionlz != BLOSC_BLOSCLZ_VERSION_FORMAT)
-          return -1;
+        if (compressor_version != BLOSC_BLOSCLZ_VERSION_FORMAT)
+          return -9;
         nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
       }
       #if defined(HAVE_LZ4)
       else if (compformat == BLOSC_LZ4_FORMAT) {
-        if (versionlz != BLOSC_LZ4_VERSION_FORMAT)
-          return -1;
+        if (compressor_version != BLOSC_LZ4_VERSION_FORMAT)
+          return -9;
         nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
                                      (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_LZ4 */
       #if defined(HAVE_SNAPPY)
       else if (compformat == BLOSC_SNAPPY_FORMAT) {
-        if (versionlz != BLOSC_SNAPPY_VERSION_FORMAT)
+        if (compressor_version != BLOSC_SNAPPY_VERSION_FORMAT)
           return -1;
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
                                         (char*)_tmp, (size_t)neblock);
@@ -740,7 +740,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
       #endif /*  HAVE_SNAPPY */
       #if defined(HAVE_ZLIB)
       else if (compformat == BLOSC_ZLIB_FORMAT) {
-        if (versionlz != BLOSC_ZLIB_VERSION_FORMAT)
+        if (compressor_version != BLOSC_ZLIB_VERSION_FORMAT)
           return -1;
         nbytes = zlib_wrap_decompress((char *)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
@@ -748,7 +748,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
       #endif /*  HAVE_ZLIB */
       #if defined(HAVE_ZSTD)
       else if (compformat == BLOSC_ZSTD_FORMAT) {
-        if (versionlz != BLOSC_ZSTD_VERSION_FORMAT)
+        if (compressor_version != BLOSC_ZSTD_VERSION_FORMAT)
           return -1;
         nbytes = zstd_wrap_decompress((char*)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
@@ -1406,7 +1406,7 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
 
   /* Read the header block */
   version = context->src[0];                        /* blosc format version */
-  context->versionlz = context->src[1];             /* blosclz format version */
+  context->compressor_version = context->src[1];
 
   context->header_flags = (uint8_t*)(context->src + 2);           /* flags */
   context->typesize = (int32_t)context->src[3];      /* typesize */
@@ -1509,7 +1509,7 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
 int blosc_getitem(const void *src, int start, int nitems, void *dest)
 {
   uint8_t *_src=NULL;               /* current pos for source buffer */
-  uint8_t version, versionlz;       /* versions for compressed header */
+  uint8_t version, compressor_version; /* versions for compressed header */
   uint8_t flags;                    /* flags for header */
   int32_t ntbytes = 0;              /* the number of uncompressed bytes */
   int32_t nblocks;                  /* number of total blocks in buffer */
@@ -1528,21 +1528,20 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
 
   /* Read the header block */
   version = _src[0];                        /* blosc format version */
-  versionlz = _src[1];                      /* blosclz format version */
+  compressor_version = _src[1];
   flags = _src[2];                          /* flags */
   typesize = (int32_t)_src[3];              /* typesize */
   nbytes = sw32_(_src + 4);                 /* buffer size */
   blocksize = sw32_(_src + 8);              /* block size */
   ctbytes = sw32_(_src + 12);               /* compressed buffer size */
 
+  if (version != BLOSC_VERSION_FORMAT)
+    return -9;
+
   ebsize = blocksize + typesize * (int32_t)sizeof(int32_t);
   tmp = my_malloc(blocksize + ebsize + blocksize);
   tmp2 = tmp + blocksize;
   tmp3 = tmp + blocksize + ebsize;
-
-  version += 0;                             /* shut up compiler warning */
-  versionlz += 0;                           /* shut up compiler warning */
-  ctbytes += 0;                             /* shut up compiler warning */
 
   _src += 16;
   bstarts = _src;
@@ -1598,7 +1597,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
       /* Only initialize the fields blosc_d uses */
       context.typesize = typesize;
       context.header_flags = &flags;
-      context.versionlz = versionlz;
+      context.compressor_version = compressor_version;
 
       /* Regular decompression.  Put results in tmp2. */
       cbytes = blosc_d(&context, bsize, leftoverblock,
@@ -2024,7 +2023,10 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   uint8_t *_src = (uint8_t *)(cbuffer);    /* current pos for source buffer */
   uint8_t version = _src[0];               /* version of header */
 
-  assert (version == BLOSC_VERSION_FORMAT); /* Should have been checked earlier */
+  if (version != BLOSC_VERSION_FORMAT) {
+    *nbytes = *blocksize = *cbytes = 0;
+    return;
+  }
 
   /* Read the interesting values */
   *nbytes = (size_t)sw32_(_src + 4);       /* uncompressed buffer size */
@@ -2039,10 +2041,15 @@ void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
 {
   uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
 
-  assert (_src[0] == BLOSC_VERSION_FORMAT); /* Should have been checked earlier */
+  uint8_t version = _src[0];               /* version of header */
+
+  if (version != BLOSC_VERSION_FORMAT) {
+    *flags = *typesize = 0;
+    return;
+  }
 
   /* Read the interesting values */
-  *flags = (int)_src[2];                 /* flags */
+  *flags = (int)_src[2] & 7;             /* first three flags */
   *typesize = (size_t)_src[3];           /* typesize */
 }
 
