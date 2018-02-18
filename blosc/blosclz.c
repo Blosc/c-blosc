@@ -79,7 +79,7 @@
 
 
 
-static __attribute__((unused)) uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   uint8_t x = ip[-1];
   int64_t value, value2;
   /* Broadcast the value for every byte in a 64-bit register */

@@ -253,7 +253,7 @@ endif()
 # flags
 # set -Wall and other useful warning flags
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
-     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wwrite-strings -Wstrict-prototypes")
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wwrite-strings -Wstrict-prototypes -Wno-unused-function")
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
 
 # @NOTE: -O3 is enabled in Release mode (CMAKE_BUILD_TYPE="Release")
@@ -262,12 +262,12 @@ endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR 
 # Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
      if(COMPILER_SUPPORT_SSE2)
-         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2" CACHE STRING "C flags." FORCE)
+         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
      endif(COMPILER_SUPPORT_SSE2)
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
 
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Ox" CACHE STRING "C flags." FORCE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Ox")
 
     # Turn off misguided "secure CRT" warnings in MSVC.
     # Microsoft wants people to use the MS-specific <function>_s
