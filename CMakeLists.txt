@@ -67,7 +67,7 @@
 #    DEV: static includes blosc.a and blosc.h
 
 
-cmake_minimum_required(VERSION 2.8.10)
+cmake_minimum_required(VERSION 2.8.12)
 if (NOT CMAKE_VERSION VERSION_LESS 3.3)
     cmake_policy(SET CMP0063 NEW)
 endif()
