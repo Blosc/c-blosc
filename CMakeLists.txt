@@ -253,7 +253,7 @@ endif()
 # flags
 # Set -Wall and other useful warning flags.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
-    add_compile_options("-Wall" "-Wwrite-strings" "-Wno-unused-function")
+    add_compile_options(-Wall -Wwrite-strings -Wno-unused-function)
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
 
 # @NOTE: -O3 is enabled in Release mode (CMAKE_BUILD_TYPE="Release")
@@ -261,12 +261,14 @@ endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR 
 # Set the "-msse2" build flag if supported.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
      if(COMPILER_SUPPORT_SSE2)
-         add_compile_options("-msse2")
+         add_compile_options(-msse2)
      endif(COMPILER_SUPPORT_SSE2)
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
 
 if(MSVC)
-    add_compile_options("/Ox")
+    if(NOT CMAKE_C_FLAGS)
+        set(CMAKE_C_FLAGS "/Ox" CACHE STRING "C flags." FORCE)
+    endif(NOT CMAKE_C_FLAGS)
 
     # Turn off misguided "secure CRT" warnings in MSVC.
     # Microsoft wants people to use the MS-specific <function>_s
