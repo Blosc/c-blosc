@@ -251,23 +251,22 @@ if(DEACTIVATE_AVX2)
 endif()
 
 # flags
-# set -Wall and other useful warning flags
+# Set -Wall and other useful warning flags.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
-     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wwrite-strings -Wstrict-prototypes -Wno-unused-function")
+    add_compile_options("-Wall" "-Wwrite-strings" "-Wno-unused-function")
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
 
 # @NOTE: -O3 is enabled in Release mode (CMAKE_BUILD_TYPE="Release")
 
-# Set the "-msse2" build flag only if the CMAKE_C_FLAGS is not already set.
-# Probably "-msse2" should be appended to CMAKE_C_FLAGS_RELEASE.
+# Set the "-msse2" build flag if supported.
 if(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
      if(COMPILER_SUPPORT_SSE2)
-         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
+         add_compile_options("-msse2")
      endif(COMPILER_SUPPORT_SSE2)
 endif(CMAKE_C_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL Clang OR CMAKE_C_COMPILER_ID STREQUAL Intel)
 
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Ox")
+    add_compile_options("/Ox")
 
     # Turn off misguided "secure CRT" warnings in MSVC.
     # Microsoft wants people to use the MS-specific <function>_s
