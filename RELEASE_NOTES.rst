@@ -7,10 +7,18 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.13.7 to 1.13.8
+Changes from 1.13.7 to 1.14.0
 =============================
 
-#XXX version-specific blurb XXX#
+- New split mode that favors forward compatibility.  That means that,
+  from now on, all the buffers created starting with blosc 1.14.0 will
+  be forward compatible with any previous versions of the library --at
+  least until 1.3.0, when support for multi-codecs was introduced, and
+  that zstd codec is not used (it was introduced in 1.11.0).
+
+  Note that Blosc versions from 1.11.0 to 1.14.0 might generate buffers
+  that cannot be read with versions < 1.11.0, so if forward compatibility
+  is important to you, an upgrade to 1.14.0 is recommended.
 
 
 Changes from 1.13.6 to 1.13.7
