@@ -308,7 +308,7 @@ static int compname_to_clibcode(const char *compname)
 }
 
 /* Return the library name associated with the compressor code */
-static char *clibcode_to_clibname(int clibcode)
+static const char *clibcode_to_clibname(int clibcode)
 {
   if (clibcode == BLOSC_BLOSCLZ_LIB) return BLOSC_BLOSCLZ_LIBNAME;
   if (clibcode == BLOSC_LZ4_LIB) return BLOSC_LZ4_LIBNAME;
@@ -324,10 +324,10 @@ static char *clibcode_to_clibname(int clibcode)
  */
 
 /* Get the compressor name associated with the compressor code */
-int blosc_compcode_to_compname(int compcode, char **compname)
+int blosc_compcode_to_compname(int compcode, const char **compname)
 {
   int code = -1;    /* -1 means non-existent compressor code */
-  char *name = NULL;
+  const char *name = NULL;
 
   /* Map the compressor code */
   if (compcode == BLOSC_BLOSCLZ)
@@ -529,7 +529,6 @@ static int zstd_wrap_decompress(const char* input, size_t compressed_length,
 /* Compute acceleration for blosclz */
 static int get_accel(const struct blosc_context* context) {
   int32_t clevel = context->clevel;
-  int32_t typesize = context->typesize;
 
   if (context->compcode == BLOSC_LZ4) {
     /* This acceleration setting based on discussions held in:
@@ -555,7 +554,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
   int32_t maxout;
   int32_t typesize = context->typesize;
   const uint8_t *_tmp = src;
-  char *compname;
+  const char *compname;
   int accel;
   int bscount;
   int doshuffle = (header_flags & BLOSC_DOSHUFFLE) && (typesize > 1);
@@ -687,7 +686,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp = dest;
   int32_t typesize = context->typesize;
-  char *compname;
+  const char *compname;
   int bscount;
   int doshuffle = (header_flags & BLOSC_DOSHUFFLE) && (typesize > 1);
   int dobitshuffle = ((header_flags & BLOSC_DOBITSHUFFLE) &&
@@ -1144,7 +1143,7 @@ static int write_compression_header(struct blosc_context* context, int clevel, i
 
   default:
   {
-    char *compname;
+    const char *compname;
     compname = clibcode_to_clibname(compformat);
     fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
     fprintf(stderr, "compression support.  Please use one having it.");
@@ -1351,7 +1350,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
      previous ones into account */
   envvar = getenv("BLOSC_NOLOCK");
   if (envvar != NULL) {
-    char *compname;
+    const char *compname;
     blosc_compcode_to_compname(g_compressor, &compname);
     result = blosc_compress_ctx(clevel, doshuffle, typesize,
 				nbytes, src, dest, destsize,
@@ -1903,9 +1902,9 @@ int blosc_set_nthreads_(struct blosc_context* context)
   return context->numthreads;
 }
 
-char* blosc_get_compressor(void)
+const char* blosc_get_compressor(void)
 {
-  char* compname;
+  const char* compname;
   blosc_compcode_to_compname(g_compressor, &compname);
 
   return compname;
@@ -1923,7 +1922,7 @@ int blosc_set_compressor(const char *compname)
   return code;
 }
 
-char* blosc_list_compressors(void)
+const char* blosc_list_compressors(void)
 {
   static int compressors_list_done = 0;
   static char ret[256];
@@ -1948,18 +1947,16 @@ char* blosc_list_compressors(void)
   return ret;
 }
 
-char* blosc_get_version_string(void)
+const char* blosc_get_version_string(void)
 {
-  static char ret[256];
-  strcpy(ret, BLOSC_VERSION_STRING);
-  return ret;
+  return BLOSC_VERSION_STRING;
 }
 
-int blosc_get_complib_info(char *compname, char **complib, char **version)
+int blosc_get_complib_info(const char *compname, char **complib, char **version)
 {
   int clibcode;
-  char *clibname;
-  char *clibversion = "unknown";
+  const char *clibname;
+  const char *clibversion = "unknown";
 
 #if (defined(HAVE_LZ4) && defined(LZ4_VERSION_MAJOR)) || (defined(HAVE_SNAPPY) && defined(SNAPPY_VERSION)) || defined(ZSTD_VERSION_MAJOR)
   char sbuffer[256];
@@ -2061,11 +2058,11 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 
 
 /* Return the compressor library/format used in a compressed buffer. */
-char *blosc_cbuffer_complib(const void *cbuffer)
+const char *blosc_cbuffer_complib(const void *cbuffer)
 {
   uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
   int clibcode;
-  char *complib;
+  const char *complib;
 
   /* Read the compressor format/library info */
   clibcode = (_src[2] & 0xe0) >> 5;

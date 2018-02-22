@@ -252,21 +252,21 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
   }
 #endif /* defined(_XCR_XFEATURE_ENABLED_MASK) */
 
-#if defined(BLOSC_DUMP_CPU_INFO)
-  printf("Shuffle CPU Information:\n");
-  printf("SSE2 available: %s\n", sse2_available ? "True" : "False");
-  printf("SSE3 available: %s\n", sse3_available ? "True" : "False");
-  printf("SSSE3 available: %s\n", ssse3_available ? "True" : "False");
-  printf("SSE4.1 available: %s\n", sse41_available ? "True" : "False");
-  printf("SSE4.2 available: %s\n", sse42_available ? "True" : "False");
-  printf("AVX2 available: %s\n", avx2_available ? "True" : "False");
-  printf("AVX512BW available: %s\n", avx512bw_available ? "True" : "False");
-  printf("XSAVE available: %s\n", xsave_available ? "True" : "False");
-  printf("XSAVE enabled: %s\n", xsave_enabled_by_os ? "True" : "False");
-  printf("XMM state enabled: %s\n", xmm_state_enabled ? "True" : "False");
-  printf("YMM state enabled: %s\n", ymm_state_enabled ? "True" : "False");
-  printf("ZMM state enabled: %s\n", zmm_state_enabled ? "True" : "False");
-#endif /* defined(BLOSC_DUMP_CPU_INFO) */
+  if (0) {
+    printf("Shuffle CPU Information:\n");
+    printf("SSE2 available: %s\n", sse2_available ? "True" : "False");
+    printf("SSE3 available: %s\n", sse3_available ? "True" : "False");
+    printf("SSSE3 available: %s\n", ssse3_available ? "True" : "False");
+    printf("SSE4.1 available: %s\n", sse41_available ? "True" : "False");
+    printf("SSE4.2 available: %s\n", sse42_available ? "True" : "False");
+    printf("AVX2 available: %s\n", avx2_available ? "True" : "False");
+    printf("AVX512BW available: %s\n", avx512bw_available ? "True" : "False");
+    printf("XSAVE available: %s\n", xsave_available ? "True" : "False");
+    printf("XSAVE enabled: %s\n", xsave_enabled_by_os ? "True" : "False");
+    printf("XMM state enabled: %s\n", xmm_state_enabled ? "True" : "False");
+    printf("YMM state enabled: %s\n", ymm_state_enabled ? "True" : "False");
+    printf("ZMM state enabled: %s\n", zmm_state_enabled ? "True" : "False");
+  }
 
   /* Using the gathered CPU information, determine which implementation to use. */
   /* technically could fail on sse2 cpu on os without xmm support, but that
@@ -294,7 +294,7 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 
 #endif
 
-static shuffle_implementation_t get_shuffle_implementation() {
+static shuffle_implementation_t get_shuffle_implementation(void) {
   blosc_cpu_features cpu_features = blosc_get_cpu_features();
   shuffle_implementation_t impl_generic;
 
@@ -351,7 +351,7 @@ __forceinline
 #else
 inline
 #endif
-void init_shuffle_implementation() {
+void init_shuffle_implementation(void) {
   /* Initialization could (in rare cases) take place concurrently on
      multiple threads, but it shouldn't matter because the
      initialization should return the same result on each thread (so

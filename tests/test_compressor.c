@@ -23,8 +23,8 @@ size_t size = 8 * 1000 * 1000;  /* must be divisible by typesize */
 
 
 /* Check compressor */
-static char *test_compressor() {
-  char* compressor;
+static const char *test_compressor(void) {
+  const char* compressor;
 
   /* Before any blosc_compress() the compressor must be blosclz */
   compressor = blosc_get_compressor();
@@ -50,8 +50,8 @@ static char *test_compressor() {
 
 
 /* Check compressing + decompressing */
-static char *test_compress_decompress() {
-  char* compressor;
+static const char *test_compress_decompress(void) {
+  const char* compressor;
 
   /* Activate the BLOSC_COMPRESSOR variable */
   setenv("BLOSC_COMPRESSOR", "lz4", 0);
@@ -84,7 +84,7 @@ static char *test_compress_decompress() {
 
 
 /* Check compression level */
-static char *test_clevel() {
+static const char *test_clevel(void) {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -104,7 +104,7 @@ static char *test_clevel() {
 }
 
 /* Check noshuffle */
-static char *test_noshuffle() {
+static const char *test_noshuffle(void) {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -126,7 +126,7 @@ static char *test_noshuffle() {
 
 
 /* Check regular shuffle */
-static char *test_shuffle() {
+static const char *test_shuffle(void) {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -147,7 +147,7 @@ static char *test_shuffle() {
 }
 
 /* Check bitshuffle */
-static char *test_bitshuffle() {
+static const char *test_bitshuffle(void) {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -170,7 +170,7 @@ static char *test_bitshuffle() {
 
 
 /* Check typesize */
-static char *test_typesize() {
+static const char *test_typesize(void) {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -228,7 +228,7 @@ static char *test_splitmode_envvar() {
 }
 
 
-static char *all_tests() {
+static const char *all_tests(void) {
   mu_run_test(test_compressor);
   mu_run_test(test_compress_decompress);
   mu_run_test(test_clevel);
@@ -246,7 +246,7 @@ static char *all_tests() {
 
 int main(int argc, char **argv) {
   int64_t *_src;
-  char *result;
+  const char *result;
   size_t i;
 
   printf("STARTING TESTS for %s", argv[0]);
