@@ -413,7 +413,8 @@ BLOSC_EXPORT int blosc_free_resources(void);
   You only need to pass the first BLOSC_MIN_HEADER_LENGTH bytes of a
   compressed buffer for this call to work.
 
-  This function should always succeed.
+  If the format is not supported by the library, all output arguments will be
+  filled with zeros.
   */
 BLOSC_EXPORT void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 				      size_t *cbytes, size_t *blocksize);
@@ -423,16 +424,18 @@ BLOSC_EXPORT void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   Return information about a compressed buffer, namely the type size
   (`typesize`), as well as some internal `flags`.
 
-  The `flags` is a set of bits, where the currently used ones are:
+  The `flags` is a set of bits, where the used ones are:
     * bit 0: whether the shuffle filter has been applied or not
     * bit 1: whether the internal buffer is a pure memcpy or not
+    * bit 2: whether the bit shuffle filter has been applied or not
 
   You can use the `BLOSC_DOSHUFFLE`, `BLOSC_DOBITSHUFFLE` and
   `BLOSC_MEMCPYED` symbols for extracting the interesting bits
   (e.g. ``flags & BLOSC_DOSHUFFLE`` says whether the buffer is
   byte-shuffled or not).
 
-  This function should always succeed.
+  If the format is not supported by the library, all output arguments will be
+  filled with zeros.
   */
 BLOSC_EXPORT void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
 					 int *flags);
