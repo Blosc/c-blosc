@@ -718,38 +718,48 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
     }
     else {
       if (compformat == BLOSC_BLOSCLZ_FORMAT) {
-        if (compversion != BLOSC_BLOSCLZ_VERSION_FORMAT)
+        if (compversion != BLOSC_BLOSCLZ_VERSION_FORMAT) {
+          fprintf(stderr, "Unrecognized BloscLZ version %d\n", compversion);
           return -9;
+        }
         nbytes = blosclz_decompress(src, cbytes, _tmp, neblock);
       }
       #if defined(HAVE_LZ4)
       else if (compformat == BLOSC_LZ4_FORMAT) {
-        if (compversion != BLOSC_LZ4_VERSION_FORMAT)
+        if (compversion != BLOSC_LZ4_VERSION_FORMAT) {
+          fprintf(stderr, "Unrecognized LZ4 version %d\n", compversion);
           return -9;
+        }
         nbytes = lz4_wrap_decompress((char *)src, (size_t)cbytes,
                                      (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_LZ4 */
       #if defined(HAVE_SNAPPY)
       else if (compformat == BLOSC_SNAPPY_FORMAT) {
-        if (compversion != BLOSC_SNAPPY_VERSION_FORMAT)
-          return -1;
+        if (compversion != BLOSC_SNAPPY_VERSION_FORMAT) {
+          fprintf(stderr, "Unrecognized Snappy version %d\n", compversion);
+          return -9;
+        }
         nbytes = snappy_wrap_decompress((char *)src, (size_t)cbytes,
                                         (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_SNAPPY */
       #if defined(HAVE_ZLIB)
       else if (compformat == BLOSC_ZLIB_FORMAT) {
-        if (compversion != BLOSC_ZLIB_VERSION_FORMAT)
-          return -1;
+        if (compversion != BLOSC_ZLIB_VERSION_FORMAT) {
+          fprintf(stderr, "Unrecognized Zlib version %d\n", compversion);
+          return -9;
+        }
         nbytes = zlib_wrap_decompress((char *)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
       }
       #endif /*  HAVE_ZLIB */
       #if defined(HAVE_ZSTD)
       else if (compformat == BLOSC_ZSTD_FORMAT) {
-        if (compversion != BLOSC_ZSTD_VERSION_FORMAT)
-          return -1;
+        if (compversion != BLOSC_ZSTD_VERSION_FORMAT) {
+          fprintf(stderr, "Unrecognized Zstd version %d\n", compversion);
+          return -9;
+        }
         nbytes = zstd_wrap_decompress((char*)src, (size_t)cbytes,
                                       (char*)_tmp, (size_t)neblock);
       }

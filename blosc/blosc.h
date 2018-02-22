@@ -251,8 +251,7 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
 
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
-  will be returned instead. If the format version is not supported by
-  the library, -9 is returned.
+  will be returned instead.
 
   Environment variables
   ---------------------
@@ -287,8 +286,7 @@ BLOSC_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
 
   If an error occurs, e.g. the compressed data is corrupted or the
   output buffer is not large enough, then 0 (zero) or a negative value
-  will be returned instead. If the format version is not supported by
-  the library, -9 is returned.
+  will be returned instead.
 */
 BLOSC_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
                                       size_t destsize, int numinternalthreads);
