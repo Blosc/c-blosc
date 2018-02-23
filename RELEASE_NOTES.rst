@@ -13,16 +13,21 @@ Changes from 1.13.7 to 1.14.0
 - New split mode that favors forward compatibility.  That means that,
   from now on, all the buffers created starting with blosc 1.14.0 will
   be forward compatible with any previous versions of the library --at
-  least until 1.3.0, when support for multi-codecs was introduced, and
-  that zstd codec is not used (it was introduced in 1.11.0).
+  least until 1.3.0, when support for multi-codec was introduced.
 
-  Note that Blosc versions from 1.11.0 to 1.14.0 might generate buffers
-  that cannot be read with versions < 1.11.0, so if forward compatibility
-  is important to you, an upgrade to 1.14.0 is recommended.
+  So as to select the split mode, a new API function has been introduced:
+  https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h#L500
+  Also, the BLOSC_SPLITMODE environment variable is honored when using
+  the `blosc_compress()` function.  See
+  https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h#L209
 
   There is a dedicated blog entry about this at:
   http://blosc.org/posts/new-forward-compat-policy/
   More info in PR #216.
+
+  Caveat Emptor: Note that Blosc versions from 1.11.0 to 1.14.0 *might*
+  generate buffers that cannot be read with versions < 1.11.0, so if
+  forward compatibility is important to you, an upgrade to 1.14.0 is recommended.
 
 - All warnings during cmake build stage are enabled by default now.
   PR #218.  Thanks to kalvdans.
