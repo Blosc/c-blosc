@@ -8,11 +8,9 @@
 **********************************************************************/
 
 #include "shuffle.h"
-#include "blosc-common.h"
 #include "shuffle-generic.h"
 #include "bitshuffle-generic.h"
 #include <stdio.h>
-#include <string.h>
 
 /* Visual Studio < 2013 does not have stdbool.h so here it is a replacement: */
 #if defined __STDC__ && defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
@@ -208,6 +206,7 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
   int ymm_state_enabled = 0;
   int zmm_state_enabled = 0;
   uint64_t xcr0_contents;
+  char* envvar;
 
   /* Get the number of basic functions available. */
   __cpuid(cpu_info, 0);
@@ -252,7 +251,8 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
   }
 #endif /* defined(_XCR_XFEATURE_ENABLED_MASK) */
 
-  if (0) {
+  envvar = getenv("BLOSC_PRINT_SHUFFLE_ACCEL");
+  if (envvar != NULL) {
     printf("Shuffle CPU Information:\n");
     printf("SSE2 available: %s\n", sse2_available ? "True" : "False");
     printf("SSE3 available: %s\n", sse3_available ? "True" : "False");
