@@ -33,7 +33,8 @@ Changes from 1.13.7 to 1.14.0
 
   Caveat Emptor: Note that Blosc versions from 1.11.0 to 1.14.0 *might*
   generate buffers that cannot be read with versions < 1.11.0, so if
-  forward compatibility is important to you, an upgrade to 1.14.0 is recommended.
+  forward compatibility is important to you, an upgrade to 1.14.0 is
+  recommended.
 
 - All warnings during cmake build stage are enabled by default now.
   PR #218.  Thanks to kalvdans.
@@ -43,7 +44,7 @@ Changes from 1.13.7 to 1.14.0
 
 - The BLOSC_PRINT_SHUFFLE_ACCEL environment variable is honored now.
   This is useful for determining *at runtime* whether the different SIMD
-  capabilities (only for Intel processors) are available to Blosc to get
+  capabilities (only for x86 kind processors) are available to Blosc to get
   better performance during shuffle/bitshuffle operation.  As an example,
   here it is the normal output for the simple.c example::
 
