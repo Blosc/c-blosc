@@ -23,6 +23,11 @@
   #endif
 #endif  /* _WIN32 */
 
+#ifdef __HAIKU__
+/* int32_t declared here */
+#include <stdint.h>
+#endif
+
 #define SIZE (1000 * 1000)
 
 
