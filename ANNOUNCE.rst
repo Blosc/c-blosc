@@ -6,7 +6,10 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+The main reason for this release is a bug that caused C-Blosc to crash
+on platforms requiring strict alignment (as in some kinds of ARM CPUs).
+Thanks to Elvis Stansvik and Michael Hudson-Doyle for their help.
+For the discussion, see https://github.com/Blosc/c-blosc/issues/223 .
 
 For more info, please see the release notes in:
 

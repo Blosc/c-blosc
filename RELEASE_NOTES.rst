@@ -10,7 +10,16 @@
 Changes from 1.14.0 to 1.14.1
 =============================
 
-#XXX version-specific blurb XXX#
+- Fixed a bug that caused C-Blosc to crash on platforms requiring strict
+  alignment (as in some kinds of ARM CPUs).  Fixes #223.  Thanks to Elvis
+  Stansvik and Michael Hudson-Doyle for their help.
+
+- Fixed a piece of code that was not C89 compliant.  C89 compliance is
+  needed mainly by MS VS2008 which is still used for creating Python 2
+  extensions.
+
+- Remove the (spurious) $Configuration var in cmake config for Windows.
+  Thanks to Francis Brissette for pointing this out.
 
 
 Changes from 1.13.7 to 1.14.0
