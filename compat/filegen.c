@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
   size_t osize = SIZE * sizeof(int32_t);
   int dsize = SIZE * sizeof(int32_t);
   int csize;
+  long fsize;
   int i;
 
   FILE *f;
@@ -84,7 +85,7 @@ int main(int argc, char *argv[]) {
     /* Read from argv[2] into data_out. */
     f = fopen(argv[2], "rb");
     fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
+    fsize = ftell(f);
     fseek(f, 0, SEEK_SET);
     if (fread(data_out, 1, (size_t) fsize, f) == fsize) {
       printf("Checking %s\n", argv[2]);
