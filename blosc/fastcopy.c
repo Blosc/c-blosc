@@ -28,11 +28,14 @@ static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned cha
 }
 
 static inline unsigned char *copy_2_bytes(unsigned char *out, const unsigned char *from) {
+#if defined(BLOSC_STRICT_ALIGN)
   uint16_t chunk;
-  unsigned sz = sizeof(chunk);
-  memcpy(&chunk, from, sz);
-  memcpy(out, &chunk, sz);
-  return out + sz;
+  memcpy(&chunk, from, 2);
+  memcpy(out, &chunk, 2);
+#else
+  *(uint16_t *) out = *(uint16_t *) from;
+#endif
+  return out + 2;
 }
 
 static inline unsigned char *copy_3_bytes(unsigned char *out, const unsigned char *from) {
@@ -41,11 +44,14 @@ static inline unsigned char *copy_3_bytes(unsigned char *out, const unsigned cha
 }
 
 static inline unsigned char *copy_4_bytes(unsigned char *out, const unsigned char *from) {
+#if defined(BLOSC_STRICT_ALIGN)
   uint32_t chunk;
-  unsigned sz = sizeof(chunk);
-  memcpy(&chunk, from, sz);
-  memcpy(out, &chunk, sz);
-  return out + sz;
+  memcpy(&chunk, from, 4);
+  memcpy(out, &chunk, 4);
+#else
+  *(uint32_t *) out = *(uint32_t *) from;
+#endif
+  return out + 4;
 }
 
 static inline unsigned char *copy_5_bytes(unsigned char *out, const unsigned char *from) {
