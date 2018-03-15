@@ -66,8 +66,7 @@ matrix:
 before_script:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       brew update;
-      brew install python3;
-      brew link --overwrite python3;
+      brew upgrade python@3;
       python3 --version;
       pip3 install --upgrade pip;
     fi
