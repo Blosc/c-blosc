@@ -19,8 +19,8 @@ if(MSVC)
         POST_BUILD
         COMMAND     ${CMAKE_COMMAND}
         ARGS        -E copy_if_different
-                    "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc.dll"
-                    "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc.dll")
+                    "${PROJECT_BINARY_DIR}/blosc/${Configuration}/blosc.dll"
+                    "${CMAKE_CURRENT_BINARY_DIR}/${Configuration}/blosc.dll")
 elseif(MINGW)
     add_custom_command(
         TARGET      bench

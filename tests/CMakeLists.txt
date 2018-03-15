@@ -59,8 +59,8 @@ foreach(source ${SOURCES})
             POST_BUILD
             COMMAND     ${CMAKE_COMMAND}
             ARGS        -E copy_if_different
-                        "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc_testing.dll"
-                        "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc_testing.dll")
+                        "${PROJECT_BINARY_DIR}/blosc/${Configuration}/blosc_testing.dll"
+                        "${CMAKE_CURRENT_BINARY_DIR}/${Configuration}/blosc_testing.dll")
     elseif(MINGW)
         add_custom_command(
             TARGET      ${target}
