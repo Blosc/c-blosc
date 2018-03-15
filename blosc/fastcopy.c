@@ -64,9 +64,13 @@ static inline unsigned char *copy_7_bytes(unsigned char *out, const unsigned cha
 }
 
 static inline unsigned char *copy_8_bytes(unsigned char *out, const unsigned char *from) {
+#if defined(BLOSC_STRICT_ALIGN)
   uint64_t chunk;
   memcpy(&chunk, from, 8);
   memcpy(out, &chunk, 8);
+#else
+  *(uint64_t *) out = *(uint64_t *) from;
+#endif
   return out + 8;
 }
 
@@ -449,9 +453,7 @@ unsigned char *fastcopy(unsigned char *out, const unsigned char *from, unsigned 
     case 16:
       return copy_16_bytes(out, from);
     case 8:
-      *(uint64_t *) out = *(uint64_t *) from;
-      out += 8;
-      return out;
+      return copy_8_bytes(out, from);
     default: {
     }
   }
