@@ -1,16 +1,12 @@
 ===============================================================
- Announcing C-Blosc 1.14.2
+ Announcing C-Blosc 1.14.3
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Reverted the $Configuration var in CMake configuration for Windows so
-as to restore the compatibility with MS VisualStudio compilers.
-
-This is the only important change in this release, so Unix users should
-not bother to upgrade to this version.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
