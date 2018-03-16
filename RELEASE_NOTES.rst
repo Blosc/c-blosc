@@ -10,7 +10,8 @@
 Changes from 1.14.1 to 1.14.2
 =============================
 
-  #XXX version-specific blurb XXX#
+- Reverted the $Configuration var in CMake configuration for Windows so
+  as to restore the compatibility with MS VisualStudio compilers.
 
 
 Changes from 1.14.0 to 1.14.1

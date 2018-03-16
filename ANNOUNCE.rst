@@ -6,7 +6,11 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+Reverted the $Configuration var in CMake configuration for Windows so
+as to restore the compatibility with MS VisualStudio compilers.
+
+This is the only important change in this release, so Unix users should
+not bother to upgrade to this version.
 
 For more info, please see the release notes in:
 
