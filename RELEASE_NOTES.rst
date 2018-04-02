@@ -10,7 +10,7 @@
 Changes from 1.14.2 to 1.14.3
 =============================
 
-#XXX version-specific blurb XXX#
+- Zstd internal sources have been updated to 1.3.4.
 
 
 Changes from 1.14.1 to 1.14.2
