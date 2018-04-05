@@ -56,7 +56,7 @@
   #include <inttypes.h>
 #endif  /* _WIN32 */
 
-#if defined(_WIN32) && !defined(__GNUC__)
+#if defined(_WIN32)
   #include "win32/pthread.h"
   #include "win32/pthread.c"
 #else
