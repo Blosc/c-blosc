@@ -6,7 +6,11 @@
 What is new?
 ============
 
-#XXX version-specific blurb XXX#
+The main change for this release is that the pthreads library is
+not needed on any Windows build anymore.  Thanks to Steven G. Johnson.
+Also, the internal Zstd sources have been updated to 1.3.4; expect
+an important performance boost (can be up to 10%, specially for low
+compression levels).
 
 For more info, please see the release notes in:
 
