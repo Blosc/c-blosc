@@ -1323,7 +1323,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     if (result < 0) { return result; }
   }
 
-  /* Check for a BLOSC_COMPRESSOR environment variable */
+  /* Check for a BLOSC_BLOCKSIZE environment variable */
   envvar = getenv("BLOSC_BLOCKSIZE");
   if (envvar != NULL) {
     long blocksize;
