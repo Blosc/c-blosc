@@ -1282,7 +1282,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   /* Check if should initialize */
   if (!g_initlib) blosc_init();
 
-  /* Check for a BLOSC_CLEVEL environment variable */
+  /* Check for environment variables */
   envvar = getenv("BLOSC_CLEVEL");
   if (envvar != NULL) {
     long value;
@@ -1292,7 +1292,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_SHUFFLE environment variable */
   envvar = getenv("BLOSC_SHUFFLE");
   if (envvar != NULL) {
     if (strcmp(envvar, "NOSHUFFLE") == 0) {
@@ -1306,7 +1305,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_TYPESIZE environment variable */
   envvar = getenv("BLOSC_TYPESIZE");
   if (envvar != NULL) {
     long value;
@@ -1316,14 +1314,12 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_COMPRESSOR environment variable */
   envvar = getenv("BLOSC_COMPRESSOR");
   if (envvar != NULL) {
     result = blosc_set_compressor(envvar);
     if (result < 0) { return result; }
   }
 
-  /* Check for a BLOSC_COMPRESSOR environment variable */
   envvar = getenv("BLOSC_BLOCKSIZE");
   if (envvar != NULL) {
     long blocksize;
@@ -1333,7 +1329,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_NTHREADS environment variable */
   envvar = getenv("BLOSC_NTHREADS");
   if (envvar != NULL) {
     long nthreads;
@@ -1344,7 +1339,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_SPLITMODE environment variable */
   envvar = getenv("BLOSC_SPLITMODE");
   if (envvar != NULL) {
     if (strcmp(envvar, "FORWARD_COMPAT") == 0) {
