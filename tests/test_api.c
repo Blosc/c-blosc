@@ -34,6 +34,19 @@ static const char *test_cbuffer_sizes(void) {
   return 0;
 }
 
+static const char *test_get_complib_info(void) {
+  char *complib, *version;
+
+  blosc_get_complib_info("blosclz", &complib, &version);
+  printf("%s", complib);
+  mu_assert("ERROR: complib incorrect", strcmp(complib, "BloscLZ") == 0);
+  free(complib);
+  free(version);
+  blosc_get_complib_info("non-existing", &complib, &version);
+  mu_assert("ERROR: complib should be NULL", complib == NULL);
+  return 0;
+}
+
 static const char *test_cbuffer_metainfo(void) {
   size_t typesize_;
   int flags;
@@ -95,6 +108,7 @@ static char *test_set_splitmode() {
 
 static const char *all_tests(void) {
   mu_run_test(test_cbuffer_sizes);
+  mu_run_test(test_get_complib_info);
   mu_run_test(test_cbuffer_metainfo);
   mu_run_test(test_cbuffer_versions);
   mu_run_test(test_cbuffer_complib);

@@ -2019,7 +2019,10 @@ int blosc_get_complib_info(const char *compname, char **complib, char **version)
   }
 #endif /* HAVE_ZSTD */
 
-  *complib = strdup(clibname);
+  if (clibname != NULL)
+      *complib = strdup(clibname);
+  else
+      *complib = NULL;
   *version = strdup(clibversion);
   return clibcode;
 }
