@@ -1982,6 +1982,11 @@ int blosc_get_complib_info(const char *compname, char **complib, char **version)
   char sbuffer[256];
 #endif
 
+  /* Return immediately if complib is NULL.  Fixes #228. */
+  if (complib == NULL) {
+    return -1;
+  }
+
   clibcode = compname_to_clibcode(compname);
   clibname = clibcode_to_clibname(clibcode);
 
@@ -2019,11 +2024,16 @@ int blosc_get_complib_info(const char *compname, char **complib, char **version)
   }
 #endif /* HAVE_ZSTD */
 
-  if (clibname != NULL)
-      *complib = strdup(clibname);
-  else
-      *complib = NULL;
-  *version = strdup(clibversion);
+  if (clibname != NULL) {
+    *complib = strdup(clibname);
+  }
+  else {
+    *complib = NULL;
+    *version = NULL;
+  }
+  if (version != NULL) {
+    *version = strdup(clibversion);
+  }
   return clibcode;
 }
 

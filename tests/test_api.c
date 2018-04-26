@@ -38,12 +38,15 @@ static const char *test_get_complib_info(void) {
   char *complib, *version;
 
   blosc_get_complib_info("blosclz", &complib, &version);
-  printf("%s", complib);
   mu_assert("ERROR: complib incorrect", strcmp(complib, "BloscLZ") == 0);
   free(complib);
   free(version);
   blosc_get_complib_info("non-existing", &complib, &version);
   mu_assert("ERROR: complib should be NULL", complib == NULL);
+  blosc_get_complib_info("blosclz", NULL, NULL);
+  blosc_get_complib_info("blosclz", NULL, &version);
+  blosc_get_complib_info("blosclz", &complib, NULL);
+  mu_assert("ERROR: complib incorrect", strcmp(complib, "BloscLZ") == 0);
   return 0;
 }
 

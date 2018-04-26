@@ -385,7 +385,8 @@ BLOSC_EXPORT const char* blosc_get_version_string(void);
   In `complib` and `version` you get a pointer to the compressor
   library name and the version in string format respectively.  After
   using the name and version, you should free() them so as to avoid
-  leaks.
+  leaks.  If any of `complib` and `version` are NULL, they will no be
+  assigned to anything (and the user should not need to free them).
 
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.
