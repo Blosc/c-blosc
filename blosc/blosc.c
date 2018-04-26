@@ -1976,11 +1976,6 @@ int blosc_get_complib_info(const char *compname, char **complib, char **version)
   char sbuffer[256];
 #endif
 
-  /* Return immediately if complib is NULL.  Fixes #228. */
-  if (complib == NULL) {
-    return -1;
-  }
-
   clibcode = compname_to_clibcode(compname);
   clibname = clibcode_to_clibname(clibcode);
 
@@ -2017,17 +2012,16 @@ int blosc_get_complib_info(const char *compname, char **complib, char **version)
     clibversion = sbuffer;
   }
 #endif /* HAVE_ZSTD */
-
-  if (clibname != NULL) {
-    *complib = strdup(clibname);
-  }
   else {
-    *complib = NULL;
-    *version = NULL;
+    /* Unsupported library */
+    if (complib != NULL) *complib = NULL;
+    if (version != NULL) *version = NULL;
+    return -1;
   }
-  if (version != NULL) {
-    *version = strdup(clibversion);
-  }
+
+  if (complib != NULL) *complib = strdup(clibname);
+  if (version != NULL) *version = strdup(clibversion);
+
   return clibcode;
 }
 
