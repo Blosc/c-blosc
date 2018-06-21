@@ -13,6 +13,8 @@ Changes from 1.14.3 to 1.14.4
 - Added a new `DEACTIVATE_SSE2` option for cmake that is useful for disabling SSE2 when doing
   cross-compilation (see https://github.com/Blosc/c-blosc/issues/236).
 
+- New check for detecting output buffers smaller than BLOSC_MAX_OVERHEAD.  Fixes #234.
+
 
 Changes from 1.14.2 to 1.14.3
 =============================
