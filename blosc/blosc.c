@@ -1420,6 +1420,11 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
   context->sourcesize = sw32_(context->src + 4);     /* buffer size */
   context->blocksize = sw32_(context->src + 8);      /* block size */
 
+  if (context->blocksize <= 0) {
+    fprintf(stderr, "blocksize cannot be negative or 0; corrupt header?");
+    return -1;
+  }
+
   if (version != BLOSC_VERSION_FORMAT) {
     /* Version from future */
     return -1;
