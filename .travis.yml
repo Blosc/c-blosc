@@ -13,9 +13,11 @@ linux: &linux
    python: "3.6"
    services:
      - docker
-#osx: &osx
-#   os: osx
-#   language: generic
+
+osx: &osx
+   os: osx
+   language: generic
+
 matrix:
    include:
       - <<: *osx
@@ -62,11 +64,14 @@ matrix:
       - <<: *linux
         env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40 CONAN_CURRENT_PAGE=2
 
-
 before_script:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       brew update;
-      brew upgrade python@3;
+      # brew upgrade python@3;
+      brew install pyenv;
+      pyenv install 3.6.6;  # for a specific version as 3.7 seems currently broken on brew
+      eval "$(pyenv init -)"
+      pyenv global 3.6.6
       python3 --version;
       pip3 install --upgrade pip;
     fi
@@ -74,4 +79,3 @@ before_script:
 
 script:
   - python3 build.py
-
