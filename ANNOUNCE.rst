@@ -1,15 +1,12 @@
 ===============================================================
- Announcing C-Blosc 1.14.4
+ Announcing C-Blosc 1.14.5
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Now it is possible to deactivate SSE2,
-which can be useful e.g. when doing cross-compiling from an Intel box.
-Also, there is better protection against passing small output buffers
-for compression, and other improvements.
+#XXX version-specific blurb XXX#
 
 For more info, please see the release notes in:
 
