@@ -15,7 +15,8 @@ linux: &linux
      - docker
 osx: &osx
    os: osx
-   language: generic
+   language: python
+   python: "3.6"
 matrix:
    include:
       - <<: *osx
