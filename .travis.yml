@@ -67,7 +67,7 @@ matrix:
 before_script:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       brew update;
-      brew install pyenv;
+      brew update pyenv;
       pyenv install 3.6.6;
       eval "$(pyenv init -)";
       pyenv global 3.6.6;
