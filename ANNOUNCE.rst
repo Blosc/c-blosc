@@ -6,7 +6,10 @@
 What is new?
 ============
 
-  #XXX version-specific blurb XXX#
+This is a maintenance release.  Now it is possible to deactivate SSE2,
+which can be useful e.g. when doing cross-compiling from an Intel box.
+Also, there is better protection against passing small output buffers
+for compression, and other improvements.
 
 For more info, please see the release notes in:
 

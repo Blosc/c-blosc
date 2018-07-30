@@ -10,10 +10,21 @@
 Changes from 1.14.3 to 1.14.4
 =============================
 
-- Added a new `DEACTIVATE_SSE2` option for cmake that is useful for disabling SSE2 when doing
-  cross-compilation (see https://github.com/Blosc/c-blosc/issues/236).
+- Added a new `DEACTIVATE_SSE2` option for cmake that is useful for disabling
+  SSE2 when doing cross-compilation (see #236).
 
-- New check for detecting output buffers smaller than BLOSC_MAX_OVERHEAD.  Fixes #234.
+- New check for detecting output buffers smaller than BLOSC_MAX_OVERHEAD.
+  Fixes #234.
+
+- The `complib` and `version` parameters for `blosc_get_complib_info()` can be
+  safely set to NULL now.  This allows to call this function even if the user is
+  not interested in these parameters (so no need to reserve memory for them).
+  Fixes #228.
+
+- In some situations that a supposedly blosc chunk is passed to
+  `blosc_decompress()`, one might end with an `Arithmetic exception`.  This
+  is probably due to the chunk not being an actual blosc chunk, and divisions
+  by zero might occur.  A protection has been added for this. See #237.
 
 
 Changes from 1.14.2 to 1.14.3
