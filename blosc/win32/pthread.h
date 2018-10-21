@@ -45,6 +45,7 @@
 #define pthread_mutex_init(a,b) InitializeCriticalSection((a))
 #define pthread_mutex_destroy(a) DeleteCriticalSection((a))
 #define pthread_mutex_lock EnterCriticalSection
+#define pthread_mutex_trylock TryEnterCriticalSection
 #define pthread_mutex_unlock LeaveCriticalSection
 
 /*

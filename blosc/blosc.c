@@ -2117,6 +2117,20 @@ void blosc_set_splitmode(int mode)
   g_splitmode = mode;
 }
 
+/* Child process global context is an invalid state and threads are no longer
+ * valid.  Re-init a new context. */
+void blosc_fork_child() {
+  if (!g_initlib) return;
+
+  /* trylock, fork may have left global mutex locked in another thread */
+  pthread_mutex_trylock(&global_comp_mutex);
+
+  g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
+  g_global_context->threads_started = 0;
+
+  pthread_mutex_unlock(&global_comp_mutex);
+}
+
 void blosc_init(void)
 {
   /* Return if we are already initialized */
@@ -2125,6 +2139,11 @@ void blosc_init(void)
   pthread_mutex_init(&global_comp_mutex, NULL);
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
+
+  #if !defined(_WIN32)
+      pthread_atfork(NULL, NULL, &blosc_fork_child);
+  #endif
+
   g_initlib = 1;
 }
 
