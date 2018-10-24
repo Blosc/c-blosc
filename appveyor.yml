@@ -27,7 +27,7 @@ environment:
 install:
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
-  - pip.exe install conan_package_tools
+  - pip.exe install conan_package_tools==0.19.3
 
 test_script:
   - python build.py

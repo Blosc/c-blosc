@@ -74,7 +74,7 @@ before_script:
       python3 --version;
       pip3 install --upgrade pip;
     fi
-  - pip3 install conan_package_tools
+  - pip3 install conan_package_tools==0.19.3
 
 script:
   - python3 build.py
