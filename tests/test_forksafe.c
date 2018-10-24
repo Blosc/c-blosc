@@ -1,7 +1,7 @@
 /*********************************************************************
   Blosc - Blocked Shuffling and Compression Library
 
-  Roundtrip compression/decompression tests.
+  Test that library can be used after fork().
 
   Creation date: 2018-10-34
   Author: Alex Ford <a.sewall.ford@gmail.com>
@@ -36,6 +36,7 @@ static char *test_forksafe(void) {
   pid_t newpid = fork();
   if (newpid == 0) {
     nbytes = blosc_decompress(dest, dest2, size);
+    mu_assert(nbytes == size, "ERROR: Result buffer did not match expected size in child.");
     exit(0);
   }
 
@@ -57,6 +58,7 @@ static char *test_forksafe(void) {
   }
 
   mu_assert("ERROR: Child deadlocked post-fork.", success == 1);
+  mu_assert("ERROR: Child crashed.", status == 0);
 
   return 0;
 }
