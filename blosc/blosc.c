@@ -142,6 +142,7 @@ static int32_t g_compressor = BLOSC_BLOSCLZ;  /* the compressor to use by defaul
 static int32_t g_threads = 1;
 static int32_t g_force_blocksize = 0;
 static int32_t g_initlib = 0;
+static int32_t g_atfork_registered = 0;
 static int32_t g_splitmode = BLOSC_FORWARD_COMPAT_SPLIT;
 
 
@@ -2117,13 +2118,27 @@ void blosc_set_splitmode(int mode)
   g_splitmode = mode;
 }
 
-/* Child process global context is an invalid state and threads are no longer
- * valid.  Re-init a new context. */
-void blosc_fork_child() {
+/* Ensure global context safety post-fork via:
+ * 1. Acquire global context mutex pre-fork, blocks fork until global context
+ *    in released in other threads.
+ * 2. Parent global context is valid, release mutex. Child global context is
+ *    invalid and pool threads no longer exist, reinitialize another global
+ *    context.
+ */
+void blosc_atfork_prepare(){
   if (!g_initlib) return;
 
-  /* trylock, fork may have left global mutex locked in another thread */
-  pthread_mutex_trylock(&global_comp_mutex);
+  pthread_mutex_lock(&global_comp_mutex);
+}
+
+void blosc_atfork_parent() {
+  if (!g_initlib) return;
+
+  pthread_mutex_unlock(&global_comp_mutex);
+}
+
+void blosc_atfork_child() {
+  if (!g_initlib) return;
 
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
@@ -2141,7 +2156,12 @@ void blosc_init(void)
   g_global_context->threads_started = 0;
 
   #if !defined(_WIN32)
-      pthread_atfork(NULL, NULL, &blosc_fork_child);
+  /* atfork handlers are only be registered once, though multiple re-inits may
+   * occur via blosc_destroy/blosc_init.  */
+  if (!g_atfork_registered) {
+    g_atfork_registered = 1;
+    pthread_atfork(&blosc_atfork_prepare, &blosc_atfork_parent, &blosc_atfork_child);
+  }
   #endif
 
   g_initlib = 1;
