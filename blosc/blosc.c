@@ -2125,19 +2125,19 @@ void blosc_set_splitmode(int mode)
  *    invalid and pool threads no longer exist, reinitialize another global
  *    context.
  */
-void blosc_atfork_prepare(){
+void blosc_atfork_prepare(void){
   if (!g_initlib) return;
 
   pthread_mutex_lock(&global_comp_mutex);
 }
 
-void blosc_atfork_parent() {
+void blosc_atfork_parent(void) {
   if (!g_initlib) return;
 
   pthread_mutex_unlock(&global_comp_mutex);
 }
 
-void blosc_atfork_child() {
+void blosc_atfork_child(void) {
   if (!g_initlib) return;
 
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
