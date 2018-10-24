@@ -137,7 +137,7 @@ struct thread_context {
 
 /* Global context for non-contextual API */
 static struct blosc_context* g_global_context;
-static pthread_mutex_t global_comp_mutex;
+static pthread_mutex_t* global_comp_mutex;
 static int32_t g_compressor = BLOSC_BLOSCLZ;  /* the compressor to use by default */
 static int32_t g_threads = 1;
 static int32_t g_force_blocksize = 0;
@@ -1377,7 +1377,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     return result;
   }
 
-  pthread_mutex_lock(&global_comp_mutex);
+  pthread_mutex_lock(global_comp_mutex);
 
   error = initialize_context_compression(g_global_context, clevel, doshuffle,
 					 typesize, nbytes, src, dest, destsize,
@@ -1390,7 +1390,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   result = blosc_compress_context(g_global_context);
 
-  pthread_mutex_unlock(&global_comp_mutex);
+  pthread_mutex_unlock(global_comp_mutex);
 
   return result;
 }
@@ -1505,12 +1505,12 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
     return result;
   }
 
-  pthread_mutex_lock(&global_comp_mutex);
+  pthread_mutex_lock(global_comp_mutex);
 
   result = blosc_run_decompression_with_context(g_global_context, src, dest,
 						destsize, g_threads);
 
-  pthread_mutex_unlock(&global_comp_mutex);
+  pthread_mutex_unlock(global_comp_mutex);
 
   return result;
 }
@@ -2118,32 +2118,20 @@ void blosc_set_splitmode(int mode)
   g_splitmode = mode;
 }
 
-/* Ensure global context safety post-fork via:
- * 1. Acquire global context mutex pre-fork, blocks fork until global context
- *    in released in other threads.
- * 2. Parent global context is valid, release mutex. Child global context is
- *    invalid and pool threads no longer exist, reinitialize another global
- *    context.
+/* Child global context is invalid and pool threads no longer exist post-fork.
+ * Discard the old, inconsistent global context and global context mutex and
+ * mark as uninitialized.  Subsequent calls through `blosc_*` interfaces will
+ * trigger re-init of the global context.
+ *
+ * All pthread interfaces have undefined behavior in child handler in current
+ * posix standards: http://pubs.opengroup.org/onlinepubs/9699919799/
  */
-void blosc_atfork_prepare(void){
-  if (!g_initlib) return;
-
-  pthread_mutex_lock(&global_comp_mutex);
-}
-
-void blosc_atfork_parent(void) {
-  if (!g_initlib) return;
-
-  pthread_mutex_unlock(&global_comp_mutex);
-}
-
 void blosc_atfork_child(void) {
   if (!g_initlib) return;
 
-  g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
-  g_global_context->threads_started = 0;
-
-  pthread_mutex_unlock(&global_comp_mutex);
+  global_comp_mutex = NULL;
+  g_global_context = NULL;
+  g_initlib = 0;
 }
 
 void blosc_init(void)
@@ -2151,7 +2139,9 @@ void blosc_init(void)
   /* Return if we are already initialized */
   if (g_initlib) return;
 
-  pthread_mutex_init(&global_comp_mutex, NULL);
+  global_comp_mutex = (pthread_mutex_t*)my_malloc(sizeof(pthread_mutex_t));
+  pthread_mutex_init(global_comp_mutex, NULL);
+
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
 
@@ -2160,7 +2150,7 @@ void blosc_init(void)
    * occur via blosc_destroy/blosc_init.  */
   if (!g_atfork_registered) {
     g_atfork_registered = 1;
-    pthread_atfork(&blosc_atfork_prepare, &blosc_atfork_parent, &blosc_atfork_child);
+    pthread_atfork(NULL, NULL, &blosc_atfork_child);
   }
   #endif
 
@@ -2175,7 +2165,7 @@ void blosc_destroy(void)
   g_initlib = 0;
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
-  pthread_mutex_destroy(&global_comp_mutex);
+  pthread_mutex_destroy(global_comp_mutex);
 }
 
 int blosc_release_threadpool(struct blosc_context* context)
