@@ -3,8 +3,8 @@
 
   Roundtrip compression/decompression tests.
 
-  Creation date: 2010-06-07
-  Author: Francesc Alted <francesc@blosc.org>
+  Creation date: 2018-10-34
+  Author: Alex Ford <a.sewall.ford@gmail.com>
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
