@@ -2129,9 +2129,14 @@ void blosc_set_splitmode(int mode)
 void blosc_atfork_child(void) {
   if (!g_initlib) return;
 
-  global_comp_mutex = NULL;
-  g_global_context = NULL;
   g_initlib = 0;
+
+  my_free(global_comp_mutex);
+  global_comp_mutex = NULL;
+
+  my_free(g_global_context);
+  g_global_context = NULL;
+
 }
 
 void blosc_init(void)
@@ -2163,9 +2168,14 @@ void blosc_destroy(void)
   if (!g_initlib) return;
 
   g_initlib = 0;
+
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
+  g_global_context = NULL;
+
   pthread_mutex_destroy(global_comp_mutex);
+  my_free(global_comp_mutex);
+  global_comp_mutex = NULL;
 }
 
 int blosc_release_threadpool(struct blosc_context* context)
