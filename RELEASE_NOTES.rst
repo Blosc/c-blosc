@@ -10,7 +10,11 @@
 Changes from 1.14.4 to 1.14.5
 =============================
 
-#XXX version-specific blurb XXX#
+- The `blosc_compress()` and `blosc_decompress()` interfaces are now
+  fork-safe, preventing child-process deadlocks in fork-based
+  multiprocessing applications. These interfaces with BLOSC_NOLOCK were, and
+  continue to be, fork-safe. `_ctx` interface context reuse continues to be
+  unsafe in the child process post-fork. See #241.
 
 
 Changes from 1.14.3 to 1.14.4

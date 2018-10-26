@@ -13,6 +13,7 @@ foreach(source ${SOURCES})
     if(WIN32)
         if (target STREQUAL test_nolock OR
             target STREQUAL test_noinit OR
+            target STREQUAL test_forksafe OR
             target STREQUAL test_compressor)
             message("Skipping ${target} on Windows systems")
             continue()
