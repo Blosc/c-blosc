@@ -10,6 +10,7 @@
 #include "shuffle.h"
 #include "shuffle-generic.h"
 #include "bitshuffle-generic.h"
+#include "blosc-comp-features.h"
 #include <stdio.h>
 
 /* Visual Studio < 2013 does not have stdbool.h so here it is a replacement: */
@@ -349,7 +350,7 @@ static
 #if defined(_MSC_VER)
 __forceinline
 #else
-inline
+BLOSC_INLINE
 #endif
 void init_shuffle_implementation(void) {
   /* Initialization could (in rare cases) take place concurrently on
