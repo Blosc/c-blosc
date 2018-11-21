@@ -14,10 +14,12 @@
 
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "blosclz.h"
 #include "fastcopy.h"
 #include "blosc-common.h"
+#include "blosc-comp-features.h"
 
 
 /*
@@ -79,7 +81,7 @@
 
 
 
-static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static BLOSC_INLINE uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   uint8_t x = ip[-1];
   int64_t value, value2;
   /* Broadcast the value for every byte in a 64-bit register */
@@ -107,7 +109,7 @@ static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8
 }
 
 #ifdef __SSE2__
-static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static BLOSC_INLINE uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   uint8_t x = ip[-1];
   __m128i value, value2, cmp;
 
@@ -511,10 +513,10 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      // memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
-      // On GCC-6, fastcopy this is still faster than plain memcpy
-      // However, using recent CLANG/LLVM 9.0, there is almost no difference
-      // in performance.
+      /* memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
+         On GCC-6, fastcopy this is still faster than plain memcpy
+         However, using recent CLANG/LLVM 9.0, there is almost no difference
+         in performance. */
       op = fastcopy(op, ip, (unsigned) ctrl);
       ip += ctrl;
 

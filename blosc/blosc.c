@@ -862,7 +862,7 @@ static int serial_blosc(struct blosc_context* context)
     ntbytes += cbytes;
   }
 
-  // Free temporaries
+  /* Free temporaries */
   my_free(tmp);
 
   return ntbytes;
