@@ -101,10 +101,10 @@ static const char *test_maxout_great_memcpy(void) {
   return 0;
 }
 
-/* Check maxout with maxout <= BLOSC_MAX_OVERHEAD */
+/* Check maxout with maxout < BLOSC_MAX_OVERHEAD */
 static const char *test_max_overhead(void) {
   blosc_init();
-  cbytes = blosc_compress(0, doshuffle, typesize, size, src, dest, BLOSC_MAX_OVERHEAD);
+  cbytes = blosc_compress(0, doshuffle, typesize, size, src, dest, BLOSC_MAX_OVERHEAD - 1);
   mu_assert("ERROR: cbytes is not correct", cbytes < 0);
   blosc_destroy();
 
