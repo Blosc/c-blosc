@@ -7,14 +7,21 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.14.4 to 1.14.5
+Changes from 1.14.4 to 1.15.0
 =============================
 
 - The `blosc_compress()` and `blosc_decompress()` interfaces are now
   fork-safe, preventing child-process deadlocks in fork-based
   multiprocessing applications. These interfaces with BLOSC_NOLOCK were, and
   continue to be, fork-safe. `_ctx` interface context reuse continues to be
-  unsafe in the child process post-fork. See #241.
+  unsafe in the child process post-fork. See #241.  Thanks to Alex Ford.
+
+- Replaced //-comments with /**/-comments and other improvements for
+  compatibility with quite old gcc compilers.  See PR #243.  Thanks to
+  Andreas Martin.
+
+- Empty buffers can be compressed again (this was unadvertedly prevented while
+  fixing #234).  See #247.  Thanks to Valentin Haenel.
 
 - LZ4 internal codec upgraded to 1.8.3 (from 1.8.1.2).
 
