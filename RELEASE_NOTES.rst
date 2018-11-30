@@ -18,6 +18,8 @@ Changes from 1.14.4 to 1.14.5
 
 - LZ4 internal codec upgraded to 1.8.3 (from 1.8.1.2).
 
+- Zstd internal codec upgraded to 1.3.7 (from 1.3.4).
+
 
 Changes from 1.14.3 to 1.14.4
 =============================
