@@ -16,6 +16,8 @@ Changes from 1.14.4 to 1.14.5
   continue to be, fork-safe. `_ctx` interface context reuse continues to be
   unsafe in the child process post-fork. See #241.
 
+- LZ4 internal codec upgraded to 1.8.3 (from 1.8.1.2).
+
 
 Changes from 1.14.3 to 1.14.4
 =============================
