@@ -10,7 +10,8 @@
 Changes from 1.15.0 to 1.15.1
 =============================
 
-#XXX version-specific blurb XXX#
+- Add workaround for Visual Studio 2008's lack of a `stdint.h` file to
+  `blosclz.c`.
 
 
 Changes from 1.14.4 to 1.15.0
