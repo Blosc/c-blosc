@@ -1379,19 +1379,22 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   pthread_mutex_lock(global_comp_mutex);
 
-  error = initialize_context_compression(g_global_context, clevel, doshuffle,
-					 typesize, nbytes, src, dest, destsize,
-					 g_compressor, g_force_blocksize,
-					 g_threads);
-  if (error < 0) { return error; }
+  do {
+    error = initialize_context_compression(g_global_context, clevel, doshuffle,
+                                           typesize, nbytes, src, dest, destsize,
+                                           g_compressor, g_force_blocksize,
+                                           g_threads);
+    if (error < 0) { break; }
 
-  error = write_compression_header(g_global_context, clevel, doshuffle);
-  if (error < 0) { return error; }
+    error = write_compression_header(g_global_context, clevel, doshuffle);
+    if (error < 0) { break; }
 
-  result = blosc_compress_context(g_global_context);
+    result = blosc_compress_context(g_global_context);
+  } while (0);
 
   pthread_mutex_unlock(global_comp_mutex);
 
+  if (error < 0) { return error; }
   return result;
 }
 
