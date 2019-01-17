@@ -177,7 +177,7 @@ static inline uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const ui
 
 
 /* Find the byte that starts to differ */
-uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
 #if !defined(BLOSC_STRICT_ALIGN)
   while (ip < (ip_bound - sizeof(int64_t))) {
     if (((int64_t*)ref)[0] != ((int64_t*)ip)[0]) {
@@ -198,7 +198,7 @@ uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
 
 
 #if defined(__SSE2__)
-uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   __m128i value, value2, cmp;
 
   while (ip < (ip_bound - sizeof(__m128i))) {
@@ -223,7 +223,7 @@ uint8_t *get_match_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) 
 
 
 #if defined(__AVX2__)
-uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   __m256i value, value2, cmp;
 
   while (ip < (ip_bound - sizeof(__m256i))) {
@@ -511,7 +511,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         /* copy from reference */
         ref--;
         len += 3;
-        op = safecopy(op, ref, (unsigned) len);
+        op = blosc_internal_safecopy(op, ref, (unsigned) len);
       }
     }
     else {
@@ -529,7 +529,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
          On GCC-6, fastcopy this is still faster than plain memcpy
          However, using recent CLANG/LLVM 9.0, there is almost no difference
          in performance. */
-      op = fastcopy(op, ip, (unsigned) ctrl);
+      op = blosc_internal_fastcopy(op, ip, (unsigned) ctrl);
       ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
