@@ -244,6 +244,8 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
   Decompress a block of compressed data in `src`, put the result in
   `dest` and returns the size of the decompressed block.
 
+  Call `blosc_cbuffer_validate` to determine the size of the destination buffer.
+
   The `src` buffer and the `dest` buffer can not overlap.
 
   Decompression is memory safe and guaranteed not to write the `dest`
@@ -276,6 +278,8 @@ BLOSC_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
   call to blosc_init() and can be called from multithreaded
   applications without the global lock being used, so allowing Blosc
   be executed simultaneously in those scenarios.
+
+  Call `blosc_cbuffer_validate` to determine the size of the destination buffer.
 
   It uses the same parameters than the blosc_decompress() function plus:
 
@@ -418,6 +422,19 @@ BLOSC_EXPORT int blosc_free_resources(void);
 BLOSC_EXPORT void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 				      size_t *cbytes, size_t *blocksize);
 
+/**
+  Checks that the compressed buffer starting at `cbuffer` of length `cbytes` may
+  contain valid blosc compressed data, and that it is safe to call
+  blosc_decompress/blosc_decompress_ctx/blosc_getitem.
+
+  On success, returns 0 and sets *nbytes to the size of the uncompressed data.
+  This does not guarantee that the decompression function won't return an error,
+  but does guarantee that it is safe to attempt decompression.
+
+  On failure, returns -1.
+ */
+BLOSC_EXPORT int blosc_cbuffer_validate(const void* cbuffer, size_t cbytes,
+                                         size_t* nbytes);
 
 /**
   Return meta-information about a compressed buffer, namely the type size
