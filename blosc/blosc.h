@@ -44,6 +44,11 @@ extern "C" {
 /* Maximum typesize before considering source buffer as a stream of bytes */
 #define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
 
+/* Maximum supported blocksize.  Decompression (getitem) requires a temporary
+   buffer of size 3*blocksize + sizeof(int32_t) * typesize. */
+#define BLOSC_MAX_BLOCKSIZE \
+  ((INT_MAX - BLOSC_MAX_TYPESIZE * sizeof(int32_t)) / 3)
+
 /* The maximum number of threads (for some static arrays) */
 #define BLOSC_MAX_THREADS 256
 
@@ -272,6 +277,16 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
 */
 BLOSC_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
 
+/**
+  Same as `blosc_decompress`, except that this is not safe to run on
+  untrusted/possibly corrupted input (even after calling
+  `blosc_cbuffer_validate`).
+
+  This may be marginally faster than `blosc_decompress` due to skipping certain
+  bounds checking and validation.
+*/
+BLOSC_EXPORT int blosc_decompress_unsafe(const void* src, void* dest,
+                                         size_t destsize);
 
 /**
   Context interface to blosc decompression. This does not require a
@@ -296,6 +311,18 @@ BLOSC_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
                                       size_t destsize, int numinternalthreads);
 
 /**
+  Same as `blosc_decompress_ctx`, except that this is not safe to run on
+  untrusted/possibly corrupted input (even after calling
+  `blosc_cbuffer_validate`).
+
+  This may be marginally faster than `blosc_decompress_ctx` due to skipping
+  certain bounds checking and validation.
+*/
+BLOSC_EXPORT int blosc_decompress_ctx_unsafe(const void* src, void* dest,
+                                             size_t destsize,
+                                             int numinternalthreads);
+
+/**
   Get `nitems` (of typesize size) in `src` buffer starting in `start`.
   The items are returned in `dest` buffer, which has to have enough
   space for storing all items.
@@ -305,6 +332,16 @@ BLOSC_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
   */
 BLOSC_EXPORT int blosc_getitem(const void *src, int start, int nitems, void *dest);
 
+/**
+  Same as `blosc_getitem`, except that this is not safe to run on
+  untrusted/possibly corrupted input (even after calling
+  `blosc_cbuffer_validate`).
+
+  This may be marginally faster than `blosc_getitem` due to skipping certain
+  bounds checking and validation.
+*/
+BLOSC_EXPORT int blosc_getitem_unsafe(const void* src, int start, int nitems,
+                                      void* dest);
 
 /**
   Returns the current number of threads that are used for
