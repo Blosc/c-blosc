@@ -105,3 +105,21 @@ foreach(source ${SOURCES})
         add_test(${target} ${target})
     endif()
 endforeach(source)
+
+if (NOT WIN32)
+    # Verify that no unexpected symbols are exported.
+    if (BUILD_SHARED)
+        add_test(
+            NAME     blosc_test_shared_symbols
+            COMMAND  python
+                     "${CMAKE_CURRENT_SOURCE_DIR}/check_symbols.py"
+                     "$<TARGET_FILE:blosc_shared>")
+    endif()
+    if (BUILD_STATIC)
+        add_test(
+            NAME     blosc_test_static_symbols
+            COMMAND  python
+                     "${CMAKE_CURRENT_SOURCE_DIR}/check_symbols.py"
+                     "$<TARGET_FILE:blosc_static>")
+    endif()
+endif()
