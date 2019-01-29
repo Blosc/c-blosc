@@ -1,19 +1,13 @@
 ===============================================================
- Announcing C-Blosc 1.15.0
+ Announcing C-Blosc 1.15.1
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-In this release, the `blosc_compress()` and `blosc_decompress()` interfaces
-are now fork-safe, preventing child-process deadlocks in fork-based
-multiprocessing applications. These interfaces with BLOSC_NOLOCK were, and
-continue to be, fork-safe. `_ctx` interface context reuse continues to be
-unsafe in the child process post-fork.  Thanks to Alex Ford.
-
-Also, a few bugs have been fixed, more compatibility with oldish compilers
-and LZ4 and Zstd codecs have been updated to their latest versions.
+This is a maintenance release that adds a workaround for Visual Studio
+2008's lack of a stdint.h file to blosclz.c.
 
 For more info, please see the release notes in:
 

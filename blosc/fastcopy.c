@@ -453,7 +453,7 @@ static BLOSC_INLINE unsigned char *chunk_memcpy_aligned(unsigned char *out, cons
 
 
 /* Byte by byte semantics: copy LEN bytes from FROM and write them to OUT. Return OUT + LEN. */
-unsigned char *fastcopy(unsigned char *out, const unsigned char *from, unsigned len) {
+unsigned char *blosc_internal_fastcopy(unsigned char *out, const unsigned char *from, unsigned len) {
   switch (len) {
     case 32:
       return copy_32_bytes(out, from);
@@ -485,7 +485,7 @@ unsigned char *fastcopy(unsigned char *out, const unsigned char *from, unsigned 
 
 
 /* Same as fastcopy() but without overwriting origin or destination when they overlap */
-unsigned char* safecopy(unsigned char *out, const unsigned char *from, unsigned len) {
+unsigned char* blosc_internal_safecopy(unsigned char *out, const unsigned char *from, unsigned len) {
 #if defined(__AVX2__)
   unsigned sz = sizeof(__m256i);
 #elif defined(__SSE2__)
@@ -500,6 +500,6 @@ unsigned char* safecopy(unsigned char *out, const unsigned char *from, unsigned 
     return out;
   }
   else {
-    return fastcopy(out, from, len);
+    return blosc_internal_fastcopy(out, from, len);
   }
 }

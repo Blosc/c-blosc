@@ -7,6 +7,13 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.15.1 to 1.15.2
+=============================
+
+- Fixed a bug in `blosc_compress()` that could lead to thread deadlock under
+  some situations.  See #251.  Thanks to wenjuno for the report and the fix.
+
+
 Changes from 1.15.0 to 1.15.1
 =============================
 

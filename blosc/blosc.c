@@ -563,12 +563,12 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
 
   if (doshuffle) {
     /* Byte shuffling only makes sense if typesize > 1 */
-    shuffle(typesize, blocksize, src, tmp);
+    blosc_internal_shuffle(typesize, blocksize, src, tmp);
     _tmp = tmp;
   }
   /* We don't allow more than 1 filter at the same time (yet) */
   else if (dobitshuffle) {
-    bscount = bitshuffle(typesize, blocksize, src, tmp, tmp2);
+    bscount = blosc_internal_bitshuffle(typesize, blocksize, src, tmp, tmp2);
     if (bscount < 0)
       return bscount;
     _tmp = tmp;
@@ -659,7 +659,7 @@ static int blosc_c(const struct blosc_context* context, int32_t blocksize,
       if ((ntbytes+neblock) > maxbytes) {
         return 0;    /* Non-compressible data */
       }
-      fastcopy(dest, _tmp + j * neblock, neblock);
+      blosc_internal_fastcopy(dest, _tmp + j * neblock, neblock);
       cbytes = neblock;
     }
     _sw32(dest - 4, cbytes);
@@ -715,7 +715,7 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
     ctbytes += (int32_t)sizeof(int32_t);
     /* Uncompress */
     if (cbytes == neblock) {
-      fastcopy(_tmp, src, neblock);
+      blosc_internal_fastcopy(_tmp, src, neblock);
       nbytes = neblock;
     }
     else {
@@ -788,10 +788,10 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
   } /* Closes j < nsplits */
 
   if (doshuffle) {
-    unshuffle(typesize, blocksize, tmp, dest);
+    blosc_internal_unshuffle(typesize, blocksize, tmp, dest);
   }
   else if (dobitshuffle) {
-    bscount = bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
+    bscount = blosc_internal_bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
     if (bscount < 0)
       return bscount;
   }
@@ -826,8 +826,8 @@ static int serial_blosc(struct blosc_context* context)
     if (context->compress) {
       if (*(context->header_flags) & BLOSC_MEMCPYED) {
         /* We want to memcpy only */
-        fastcopy(context->dest + BLOSC_MAX_OVERHEAD + j * context->blocksize,
-                 context->src + j * context->blocksize, bsize);
+        blosc_internal_fastcopy(context->dest + BLOSC_MAX_OVERHEAD + j * context->blocksize,
+                                context->src + j * context->blocksize, bsize);
         cbytes = bsize;
       }
       else {
@@ -844,8 +844,8 @@ static int serial_blosc(struct blosc_context* context)
     else {
       if (*(context->header_flags) & BLOSC_MEMCPYED) {
         /* We want to memcpy only */
-        fastcopy(context->dest + j * context->blocksize,
-                 context->src + BLOSC_MAX_OVERHEAD + j * context->blocksize, bsize);
+        blosc_internal_fastcopy(context->dest + j * context->blocksize,
+                                context->src + BLOSC_MAX_OVERHEAD + j * context->blocksize, bsize);
         cbytes = bsize;
       }
       else {
@@ -1280,7 +1280,6 @@ int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
 int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
                    const void *src, void *dest, size_t destsize)
 {
-  int error;
   int result;
   char* envvar;
 
@@ -1379,16 +1378,18 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   pthread_mutex_lock(global_comp_mutex);
 
-  error = initialize_context_compression(g_global_context, clevel, doshuffle,
-					 typesize, nbytes, src, dest, destsize,
-					 g_compressor, g_force_blocksize,
-					 g_threads);
-  if (error < 0) { return error; }
+  do {
+    result = initialize_context_compression(g_global_context, clevel, doshuffle,
+                                           typesize, nbytes, src, dest, destsize,
+                                           g_compressor, g_force_blocksize,
+                                           g_threads);
+    if (result < 0) { break; }
 
-  error = write_compression_header(g_global_context, clevel, doshuffle);
-  if (error < 0) { return error; }
+    result = write_compression_header(g_global_context, clevel, doshuffle);
+    if (result < 0) { break; }
 
-  result = blosc_compress_context(g_global_context);
+    result = blosc_compress_context(g_global_context);
+  } while (0);
 
   pthread_mutex_unlock(global_comp_mutex);
 
@@ -1600,8 +1601,8 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
     /* Do the actual data copy */
     if (flags & BLOSC_MEMCPYED) {
       /* We want to memcpy only */
-      fastcopy((uint8_t *) dest + ntbytes,
-               (uint8_t *) src + BLOSC_MAX_OVERHEAD + j * blocksize + startb, bsize2);
+      blosc_internal_fastcopy((uint8_t *) dest + ntbytes,
+                              (uint8_t *) src + BLOSC_MAX_OVERHEAD + j * blocksize + startb, bsize2);
       cbytes = bsize2;
     }
     else {
@@ -1620,7 +1621,7 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest)
         break;
       }
       /* Copy to destination */
-      fastcopy((uint8_t *) dest + ntbytes, tmp2 + startb, bsize2);
+      blosc_internal_fastcopy((uint8_t *) dest + ntbytes, tmp2 + startb, bsize2);
       cbytes = bsize2;
     }
     ntbytes += cbytes;
@@ -1730,8 +1731,8 @@ static void *t_blosc(void *ctxt)
       if (compress) {
         if (flags & BLOSC_MEMCPYED) {
           /* We want to memcpy only */
-          fastcopy(dest + BLOSC_MAX_OVERHEAD + nblock_ * blocksize, src + nblock_ * blocksize,
-                   bsize);
+          blosc_internal_fastcopy(dest + BLOSC_MAX_OVERHEAD + nblock_ * blocksize, src + nblock_ * blocksize,
+                                  bsize);
           cbytes = bsize;
         }
         else {
@@ -1743,8 +1744,8 @@ static void *t_blosc(void *ctxt)
       else {
         if (flags & BLOSC_MEMCPYED) {
           /* We want to memcpy only */
-          fastcopy(dest + nblock_ * blocksize, src + BLOSC_MAX_OVERHEAD + nblock_ * blocksize,
-                   bsize);
+          blosc_internal_fastcopy(dest + nblock_ * blocksize, src + BLOSC_MAX_OVERHEAD + nblock_ * blocksize,
+                                  bsize);
           cbytes = bsize;
         }
         else {
@@ -1786,7 +1787,7 @@ static void *t_blosc(void *ctxt)
         /* End of critical section */
 
         /* Copy the compressed buffer to destination */
-        fastcopy(dest + ntdest, tmp2, cbytes);
+        blosc_internal_fastcopy(dest + ntdest, tmp2, cbytes);
       }
       else {
         nblock_++;

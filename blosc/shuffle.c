@@ -13,6 +13,12 @@
 #include "blosc-comp-features.h"
 #include <stdio.h>
 
+#if defined(_WIN32)
+#include "win32/pthread.h"
+#else
+#include <pthread.h>
+#endif
+
 /* Visual Studio < 2013 does not have stdbool.h so here it is a replacement: */
 #if defined __STDC__ && defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
 /* have a C99 compiler */
@@ -303,10 +309,10 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
   if (cpu_features & BLOSC_HAVE_AVX2) {
     shuffle_implementation_t impl_avx2;
     impl_avx2.name = "avx2";
-    impl_avx2.shuffle = (shuffle_func)shuffle_avx2;
-    impl_avx2.unshuffle = (unshuffle_func)unshuffle_avx2;
-    impl_avx2.bitshuffle = (bitshuffle_func)bshuf_trans_bit_elem_avx2;
-    impl_avx2.bitunshuffle = (bitunshuffle_func)bshuf_untrans_bit_elem_avx2;
+    impl_avx2.shuffle = (shuffle_func)blosc_internal_shuffle_avx2;
+    impl_avx2.unshuffle = (unshuffle_func)blosc_internal_unshuffle_avx2;
+    impl_avx2.bitshuffle = (bitshuffle_func)blosc_internal_bshuf_trans_bit_elem_avx2;
+    impl_avx2.bitunshuffle = (bitunshuffle_func)blosc_internal_bshuf_untrans_bit_elem_avx2;
     return impl_avx2;
   }
 #endif  /* defined(SHUFFLE_AVX2_ENABLED) */
@@ -315,10 +321,10 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
   if (cpu_features & BLOSC_HAVE_SSE2) {
     shuffle_implementation_t impl_sse2;
     impl_sse2.name = "sse2";
-    impl_sse2.shuffle = (shuffle_func)shuffle_sse2;
-    impl_sse2.unshuffle = (unshuffle_func)unshuffle_sse2;
-    impl_sse2.bitshuffle = (bitshuffle_func)bshuf_trans_bit_elem_sse2;
-    impl_sse2.bitunshuffle = (bitunshuffle_func)bshuf_untrans_bit_elem_sse2;
+    impl_sse2.shuffle = (shuffle_func)blosc_internal_shuffle_sse2;
+    impl_sse2.unshuffle = (unshuffle_func)blosc_internal_unshuffle_sse2;
+    impl_sse2.bitshuffle = (bitshuffle_func)blosc_internal_bshuf_trans_bit_elem_sse2;
+    impl_sse2.bitunshuffle = (bitunshuffle_func)blosc_internal_bshuf_untrans_bit_elem_sse2;
     return impl_sse2;
   }
 #endif  /* defined(SHUFFLE_SSE2_ENABLED) */
@@ -326,21 +332,24 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
   /*  Processor doesn't support any of the hardware-accelerated implementations,
       so use the generic implementation. */
   impl_generic.name = "generic";
-  impl_generic.shuffle = (shuffle_func)shuffle_generic;
-  impl_generic.unshuffle = (unshuffle_func)unshuffle_generic;
-  impl_generic.bitshuffle = (bitshuffle_func)bshuf_trans_bit_elem_scal;
-  impl_generic.bitunshuffle = (bitunshuffle_func)bshuf_untrans_bit_elem_scal;
+  impl_generic.shuffle = (shuffle_func)blosc_internal_shuffle_generic;
+  impl_generic.unshuffle = (unshuffle_func)blosc_internal_unshuffle_generic;
+  impl_generic.bitshuffle = (bitshuffle_func)blosc_internal_bshuf_trans_bit_elem_scal;
+  impl_generic.bitunshuffle = (bitunshuffle_func)blosc_internal_bshuf_untrans_bit_elem_scal;
   return impl_generic;
 }
 
 
-/*  Flag indicating whether the implementation has been initialized.
-    Zero means it hasn't been initialized, non-zero means it has. */
-static int32_t implementation_initialized;
+/*  Flag indicating whether the implementation has been initialized. */
+static pthread_once_t implementation_initialized = PTHREAD_ONCE_INIT;
 
 /*  The dynamically-chosen shuffle/unshuffle implementation.
     This is only safe to use once `implementation_initialized` is set. */
 static shuffle_implementation_t host_implementation;
+
+static void set_host_implementation(void) {
+  host_implementation = get_shuffle_implementation();
+}
 
 /*  Initialize the shuffle implementation, if necessary. */
 #if defined(__GNUC__) || defined(__clang__)
@@ -353,32 +362,14 @@ __forceinline
 BLOSC_INLINE
 #endif
 void init_shuffle_implementation(void) {
-  /* Initialization could (in rare cases) take place concurrently on
-     multiple threads, but it shouldn't matter because the
-     initialization should return the same result on each thread (so
-     the implementation will be the same). Since that's the case we
-     can avoid complicated synchronization here and get a small
-     performance benefit because we don't need to perform a volatile
-     load on the initialization variable each time this function is
-     called. */
-#if defined(__GNUC__) || defined(__clang__)
-  if (__builtin_expect(!implementation_initialized, 0)) {
-#else
-  if (!implementation_initialized) {
-#endif
-    /* Initialize the implementation. */
-    host_implementation = get_shuffle_implementation();
-
-    /*  Set the flag indicating the implementation has been initialized. */
-    implementation_initialized = 1;
-  }
+  pthread_once(&implementation_initialized, &set_host_implementation);
 }
 
 /*  Shuffle a block by dynamically dispatching to the appropriate
     hardware-accelerated routine at run-time. */
 void
-shuffle(const size_t bytesoftype, const size_t blocksize,
-        const uint8_t* _src, const uint8_t* _dest) {
+blosc_internal_shuffle(const size_t bytesoftype, const size_t blocksize,
+                       const uint8_t* _src, const uint8_t* _dest) {
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
 
@@ -390,8 +381,8 @@ shuffle(const size_t bytesoftype, const size_t blocksize,
 /*  Unshuffle a block by dynamically dispatching to the appropriate
     hardware-accelerated routine at run-time. */
 void
-unshuffle(const size_t bytesoftype, const size_t blocksize,
-          const uint8_t* _src, const uint8_t* _dest) {
+blosc_internal_unshuffle(const size_t bytesoftype, const size_t blocksize,
+                         const uint8_t* _src, const uint8_t* _dest) {
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
 
@@ -403,9 +394,9 @@ unshuffle(const size_t bytesoftype, const size_t blocksize,
 /*  Bit-shuffle a block by dynamically dispatching to the appropriate
     hardware-accelerated routine at run-time. */
 int
-bitshuffle(const size_t bytesoftype, const size_t blocksize,
-           const uint8_t* const _src, const uint8_t* _dest,
-           const uint8_t* _tmp) {
+blosc_internal_bitshuffle(const size_t bytesoftype, const size_t blocksize,
+                          const uint8_t* const _src, const uint8_t* _dest,
+                          const uint8_t* _tmp) {
   int size = blocksize / bytesoftype;
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
@@ -424,9 +415,9 @@ bitshuffle(const size_t bytesoftype, const size_t blocksize,
 /*  Bit-unshuffle a block by dynamically dispatching to the appropriate
     hardware-accelerated routine at run-time. */
 int
-bitunshuffle(const size_t bytesoftype, const size_t blocksize,
-             const uint8_t* const _src, const uint8_t* _dest,
-             const uint8_t* _tmp) {
+blosc_internal_bitunshuffle(const size_t bytesoftype, const size_t blocksize,
+                            const uint8_t* const _src, const uint8_t* _dest,
+                            const uint8_t* _tmp) {
   int size = blocksize / bytesoftype;
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
