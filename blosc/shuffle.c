@@ -13,6 +13,12 @@
 #include "blosc-comp-features.h"
 #include <stdio.h>
 
+#if defined(_WIN32)
+#include "win32/pthread.h"
+#else
+#include <pthread.h>
+#endif
+
 /* Visual Studio < 2013 does not have stdbool.h so here it is a replacement: */
 #if defined __STDC__ && defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
 /* have a C99 compiler */
@@ -334,13 +340,16 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
 }
 
 
-/*  Flag indicating whether the implementation has been initialized.
-    Zero means it hasn't been initialized, non-zero means it has. */
-static int32_t implementation_initialized;
+/*  Flag indicating whether the implementation has been initialized. */
+static pthread_once_t implementation_initialized = PTHREAD_ONCE_INIT;
 
 /*  The dynamically-chosen shuffle/unshuffle implementation.
     This is only safe to use once `implementation_initialized` is set. */
 static shuffle_implementation_t host_implementation;
+
+static void set_host_implementation(void) {
+  host_implementation = get_shuffle_implementation();
+}
 
 /*  Initialize the shuffle implementation, if necessary. */
 #if defined(__GNUC__) || defined(__clang__)
@@ -353,25 +362,7 @@ __forceinline
 BLOSC_INLINE
 #endif
 void init_shuffle_implementation(void) {
-  /* Initialization could (in rare cases) take place concurrently on
-     multiple threads, but it shouldn't matter because the
-     initialization should return the same result on each thread (so
-     the implementation will be the same). Since that's the case we
-     can avoid complicated synchronization here and get a small
-     performance benefit because we don't need to perform a volatile
-     load on the initialization variable each time this function is
-     called. */
-#if defined(__GNUC__) || defined(__clang__)
-  if (__builtin_expect(!implementation_initialized, 0)) {
-#else
-  if (!implementation_initialized) {
-#endif
-    /* Initialize the implementation. */
-    host_implementation = get_shuffle_implementation();
-
-    /*  Set the flag indicating the implementation has been initialized. */
-    implementation_initialized = 1;
-  }
+  pthread_once(&implementation_initialized, &set_host_implementation);
 }
 
 /*  Shuffle a block by dynamically dispatching to the appropriate
