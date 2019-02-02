@@ -1,29 +1,15 @@
 ===============================================================
- Announcing C-Blosc 1.16.0
+ Announcing C-Blosc 1.16.1
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is an important release in terms of improved safety for
-untrusted/possibly corrupted inputs.  The additional checks seem
-to not affect performance significantly (see some benchmarks in #258),
-so this is why they are the default now.
+This is maintenance release that allows again to compress an empty buffer.
+This was a regression intorduced in 1.16.0.
 
-The previous functions (with less safety) checks are still available
-with a '_unsafe' suffix.  The complete list is:
-
-  - blosc_decompress_unsafe()
-  - blosc_decompress_ctx_unsafe()
-  - blosc_getitem_unsafe()
-
-Also, a new API function named blosc_cbuffer_validate(), for validating Blosc
-compressed data, has been added.
-
-Also, a couple of potential thread deadlock and a data race have been fixed.
-
-Thanks to Jeremy Maitin-Shepard and @wenjuno for these great contributions.
+Also, the Zstd codec has been updated to 1.3.8.
 
 For more info, please see the release notes in:
 
