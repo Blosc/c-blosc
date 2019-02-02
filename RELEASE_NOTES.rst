@@ -10,7 +10,10 @@
 Changes from 1.16.0 to 1.16.1
 =============================
 
-#XXX version-specific blurb XXX#
+- Fixed a regression in 1.16.0 that prevented to compress empty buffers
+  (see #260).
+
+- Zstd updated to 1.3.8 (from 1.3.7).
 
 
 Changes from 1.15.1 to 1.16.0
