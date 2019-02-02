@@ -1441,6 +1441,11 @@ static int blosc_run_decompression_with_context(struct blosc_context* context,
   context->compressedsize = sw32_(context->src + 12); /* compressed buffer size */
   context->bstarts = (uint8_t*)(context->src + 16);
 
+  if (context->sourcesize == 0) {
+    /* Source buffer was empty, so we are done */
+    return 0;
+  }
+
   if (context->blocksize <= 0 || context->blocksize > destsize ||
       context->blocksize > BLOSC_MAX_BLOCKSIZE || context->typesize <= 0 ||
       context->typesize > BLOSC_MAX_TYPESIZE) {
