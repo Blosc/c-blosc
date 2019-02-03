@@ -1475,7 +1475,7 @@ static int blosc_run_decompression_with_context(struct blosc_context* context,
   if (*(context->header_flags) & BLOSC_MEMCPYED) {
     /* Validate that compressed size is equal to decompressed size + header
        size. */
-    if (destsize + BLOSC_MAX_OVERHEAD != context->compressedsize) {
+    if (context->sourcesize + BLOSC_MAX_OVERHEAD != context->compressedsize) {
       return -1;
     }
   } else {

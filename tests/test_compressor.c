@@ -248,14 +248,29 @@ static char *test_small_buffer() {
   int srclen;
 
   for (srclen = 1; srclen < BLOSC_MAX_OVERHEAD; srclen++) {
-    cbytes1 = blosc_compress(1, 1, 1, srclen, src, dest, srclen + BLOSC_MAX_OVERHEAD);
-    mu_assert("ERROR: cbytes is not correct", cbytes1 == srclen + BLOSC_MAX_OVERHEAD);
+      cbytes1 = blosc_compress(1, 1, 1, srclen, src, dest, srclen + BLOSC_MAX_OVERHEAD);
+      mu_assert("ERROR: cbytes is not correct", cbytes1 == srclen + BLOSC_MAX_OVERHEAD);
 
-    cbytes2 = blosc_decompress(dest, src, srclen);
-    mu_assert("ERROR: decompressed bytes is not correct", cbytes2 == srclen);
+      cbytes2 = blosc_decompress(dest, src, srclen);
+      mu_assert("ERROR: decompressed bytes is not correct", cbytes2 == srclen);
   }
+   return 0;
+}
+
+/* Check for decompressing into a buffer larger than necessary */
+static char *test_too_long_dest() {
+  int cbytes1;
+  int cbytes2;
+  int srclen = 2;
+
+  cbytes1 = blosc_compress(1, 1, 1, srclen, src, dest, srclen + BLOSC_MAX_OVERHEAD);
+  mu_assert("ERROR: cbytes is not correct", cbytes1 == srclen + BLOSC_MAX_OVERHEAD);
+
+  cbytes2 = blosc_decompress(dest, src, srclen + 1021);
+  mu_assert("ERROR: decompressed bytes is not correct", cbytes2 == srclen);
   return 0;
 }
+
 
 
 static const char *all_tests(void) {
@@ -270,6 +285,7 @@ static const char *all_tests(void) {
   mu_run_test(test_splitmode_envvar);
   mu_run_test(test_empty_buffer);
   mu_run_test(test_small_buffer);
+  mu_run_test(test_too_long_dest);
 
   return 0;
 }
