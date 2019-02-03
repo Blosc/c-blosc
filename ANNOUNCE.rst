@@ -1,15 +1,14 @@
 ===============================================================
- Announcing C-Blosc 1.16.1
+ Announcing C-Blosc 1.16.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is maintenance release that allows again to compress an empty buffer.
-This was a regression intorduced in 1.16.0.
-
-Also, the Zstd codec has been updated to 1.3.8.
+This is maintenance release that fixes the check for the compressed
+size when the buffer is memcpyed (fixes #261).  This was a regression
+introduced in 1.16.0.
 
 For more info, please see the release notes in:
 

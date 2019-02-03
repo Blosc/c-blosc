@@ -10,7 +10,8 @@
 Changes from 1.16.1 to 1.16.2
 =============================
 
-#XXX version-specific blurb XXX#
+- Correct the check for the compressed size when the buffer is memcpyed.  This
+  was a regression introduced in 1.16.0.  Fixes #261.
 
 
 Changes from 1.16.0 to 1.16.1
