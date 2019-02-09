@@ -103,11 +103,12 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 /*  _xgetbv is only supported by VS2010 SP1 and newer versions of VS. */
 #if _MSC_FULL_VER >= 160040219
   #include <immintrin.h>  /* Needed for _xgetbv */
+  #define blosc_internal_xgetbv _xgetbv
 #elif defined(_M_IX86)
 
 /*  Implement _xgetbv for VS2008 and VS2010 RTM with 32-bit (x86) targets. */
 
-static uint64_t _xgetbv(uint32_t xcr) {
+static uint64_t blosc_internal_xgetbv(uint32_t xcr) {
     uint32_t xcr0, xcr1;
     __asm {
         mov        ecx, xcr
@@ -126,7 +127,7 @@ static uint64_t _xgetbv(uint32_t xcr) {
     which means we can get away with returning a hard-coded value from
     this implementation of _xgetbv. */
 
-static __inline uint64_t _xgetbv(uint32_t xcr) {
+static __inline uint64_t blosc_internal_xgetbv(uint32_t xcr) {
     /* A 64-bit OS must have XMM save support. */
     return (xcr == 0 ? (1UL << 1) : 0UL);
 }
@@ -139,13 +140,15 @@ static __inline uint64_t _xgetbv(uint32_t xcr) {
 
 #endif /* _MSC_FULL_VER >= 160040219 */
 
+#define blosc_internal_cpuid __cpuid
+
 #else
 
 /*  Implement the __cpuid and __cpuidex intrinsics for GCC, Clang,
     and others using inline assembly. */
 __attribute__((always_inline))
 static inline void
-__cpuidex(int32_t cpuInfo[4], int32_t function_id, int32_t subfunction_id) {
+blosc_internal_cpuidex(int32_t cpuInfo[4], int32_t function_id, int32_t subfunction_id) {
   __asm__ __volatile__ (
 # if defined(__i386__) && defined (__PIC__)
   /*  Can't clobber ebx with PIC running under 32-bit, so it needs to be manually restored.
@@ -166,7 +169,7 @@ __cpuidex(int32_t cpuInfo[4], int32_t function_id, int32_t subfunction_id) {
     );
 }
 
-#define __cpuid(cpuInfo, function_id) __cpuidex(cpuInfo, function_id, 0)
+#define blosc_internal_cpuid(cpuInfo, function_id) blosc_internal_cpuidex(cpuInfo, function_id, 0)
 
 #define _XCR_XFEATURE_ENABLED_MASK 0
 
@@ -174,7 +177,7 @@ __cpuidex(int32_t cpuInfo[4], int32_t function_id, int32_t subfunction_id) {
    https://software.intel.com/en-us/articles/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family
 */
 static inline uint64_t
-_xgetbv(uint32_t xcr) {
+blosc_internal_xgetbv(uint32_t xcr) {
   uint32_t eax, edx;
   __asm__ __volatile__ (
     /* "xgetbv"
@@ -216,11 +219,11 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
   char* envvar;
 
   /* Get the number of basic functions available. */
-  __cpuid(cpu_info, 0);
+  blosc_internal_cpuid(cpu_info, 0);
   max_basic_function_id = cpu_info[0];
 
   /* Check for SSE-based features and required OS support */
-  __cpuid(cpu_info, 1);
+  blosc_internal_cpuid(cpu_info, 1);
   sse2_available = (cpu_info[3] & (1 << 26)) != 0;
   sse3_available = (cpu_info[2] & (1 << 0)) != 0;
   ssse3_available = (cpu_info[2] & (1 << 9)) != 0;
@@ -232,7 +235,7 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 
   /* Check for AVX-based features, if the processor supports extended features. */
   if (max_basic_function_id >= 7) {
-    __cpuid(cpu_info, 7);
+    blosc_internal_cpuid(cpu_info, 7);
     avx2_available = (cpu_info[1] & (1 << 5)) != 0;
     avx512bw_available = (cpu_info[1] & (1 << 30)) != 0;
   }
@@ -247,7 +250,7 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
       || sse41_available || sse42_available
       || avx2_available || avx512bw_available)) {
     /* Determine which register states can be restored by the OS. */
-    xcr0_contents = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+    xcr0_contents = blosc_internal_xgetbv(_XCR_XFEATURE_ENABLED_MASK);
 
     xmm_state_enabled = (xcr0_contents & (1UL << 1)) != 0;
     ymm_state_enabled = (xcr0_contents & (1UL << 2)) != 0;
