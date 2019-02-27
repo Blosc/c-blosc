@@ -1,7 +1,7 @@
 # Blosc: A blocking, shuffling and lossless compression library
 | Author | Contact | URL |
 |--------|---------|-----|
-| Francesc Alted | francesc@blosc.org | http://www.blosc.org | 
+| Blosc Development Team | blosc@blosc.org | http://www.blosc.org | 
 
 | Gitter | Travis CI | Appveyor | NumFOCUS |
 |--------|-----------|----------|----------|
