@@ -23,6 +23,8 @@
 #       do not include support for the Zlib library
 #   DEACTIVATE_ZSTD: default OFF
 #       do not include support for the Zstd library
+#   DEACTIVATE_SYMBOLS_CHECK: default ON
+#       do not check for symbols in shared or static libraries
 #   PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
 #       sources
@@ -108,7 +110,9 @@ option(DEACTIVATE_SNAPPY
 option(DEACTIVATE_ZLIB
     "Do not include support for the Zlib library." OFF)
 option(DEACTIVATE_ZSTD
-    "Do not include support for the Zstd library." OFF)
+        "Do not include support for the Zstd library." OFF)
+option(DEACTIVATE_SYMBOLS_CHECK
+        "Do not check for symbols in shared or static libraries." ON)
 option(PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
 option(PREFER_EXTERNAL_SNAPPY
