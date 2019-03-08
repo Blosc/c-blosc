@@ -1,14 +1,13 @@
 ===============================================================
- Announcing C-Blosc 1.16.2
+ Announcing C-Blosc 1.16.3
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is maintenance release that fixes the check for the compressed
-size when the buffer is memcpyed (fixes #261).  This was a regression
-introduced in 1.16.0.
+This is maintenance release that fixes some warnings in GCC/Clang and
+allows the build for clang with -march=haswell.
 
 For more info, please see the release notes in:
 

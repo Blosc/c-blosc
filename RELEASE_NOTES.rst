@@ -10,7 +10,14 @@
 Changes from 1.16.2 to 1.16.3
 =============================
 
-#XXX version-specific blurb XXX#
+- Fix for building for clang with -march=haswell. See PR #262.
+
+- Fix all the known warnings for GCC/Clang.  Still some work to do for MSVC
+  in this front.
+
+- Due to some problems with several CI systems, the check for library symbols
+  are deactivated now by default.  If you want to enforce this check, use:
+  `cmake .. -DDEACTIVATE_SYMBOLS_CHECK=ON` to re-activate it.
 
 
 Changes from 1.16.1 to 1.16.2
