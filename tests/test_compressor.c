@@ -190,7 +190,7 @@ static const char *test_typesize(void) {
 }
 
 /* Check splitmode */
-static char *test_splitmode() {
+static const char *test_splitmode() {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -210,7 +210,7 @@ static char *test_splitmode() {
 }
 
 /* Check splitmode with an environment variable */
-static char *test_splitmode_envvar() {
+static const char *test_splitmode_envvar() {
   int cbytes2;
 
   /* Get a compressed buffer */
@@ -228,7 +228,7 @@ static char *test_splitmode_envvar() {
 }
 
 /* Check for compressing an empty buffer */
-static char *test_empty_buffer() {
+static const char *test_empty_buffer() {
   int cbytes1;
   int cbytes2;
 
@@ -242,10 +242,10 @@ static char *test_empty_buffer() {
 }
 
 /* Check for compressing a very small buffer */
-static char *test_small_buffer() {
+static const char *test_small_buffer() {
   int cbytes1;
   int cbytes2;
-  int srclen;
+  size_t srclen;
 
   for (srclen = 1; srclen < BLOSC_MAX_OVERHEAD; srclen++) {
       cbytes1 = blosc_compress(1, 1, typesize, srclen, src, dest, srclen + BLOSC_MAX_OVERHEAD);
@@ -258,10 +258,10 @@ static char *test_small_buffer() {
 }
 
 /* Check for decompressing into a buffer larger than necessary */
-static char *test_too_long_dest() {
+static const char *test_too_long_dest() {
   int cbytes1;
   int cbytes2;
-  int srclen = 2;
+  size_t srclen = 2;
 
   cbytes1 = blosc_compress(1, 1, typesize, srclen, src, dest, srclen + BLOSC_MAX_OVERHEAD);
   mu_assert("ERROR: cbytes is not correct", cbytes1 == srclen + BLOSC_MAX_OVERHEAD);
@@ -272,10 +272,10 @@ static char *test_too_long_dest() {
 }
 
 /* Check for decompressing into a buffer larger than necessary (v2) */
-static char *test_too_long_dest2() {
+static const char *test_too_long_dest2() {
   int cbytes1;
   int cbytes2;
-  int srclen = 3069;
+  size_t srclen = 3069;
 
   cbytes1 = blosc_compress(1, 1, typesize, srclen, src, dest, srclen + BLOSC_MAX_OVERHEAD);
   mu_assert("ERROR: cbytes is not correct", cbytes1 <= srclen + BLOSC_MAX_OVERHEAD);

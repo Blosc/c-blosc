@@ -24,11 +24,11 @@ size_t size = 5*MB;
 #define BUFFER_ALIGN_SIZE   8
 
 void *src, *dest, *dest2;
-size_t nbytes, cbytes;
+int nbytes, cbytes;
 
 int tests_run = 0;
 
-static char *test_forksafe(void) {
+static const char *test_forksafe(void) {
   /* Compress the input data and store it in dest. */
   blosc_set_nthreads(4);
   cbytes = blosc_compress(clevel, doshuffle, typesize, size, src, dest, size + BLOSC_MAX_OVERHEAD);
@@ -41,7 +41,7 @@ static char *test_forksafe(void) {
   }
 
   int success = 0;
-	int status;
+  int status = 0;
   for(float sec = 0; sec < 1; ) {
     if(waitpid(newpid, &status, WNOHANG) != 0) {
       success = 1;

@@ -885,6 +885,7 @@ static int serial_blosc(struct blosc_context* context)
 static int parallel_blosc(struct blosc_context* context)
 {
   int rc;
+  (void)rc;  // just to avoid 'unused-variable' warning
 
   /* Check whether we need to restart threads */
   blosc_set_nthreads_(context);
@@ -1748,6 +1749,7 @@ static void *t_blosc(void *ctxt)
   uint8_t *tmp2;
   uint8_t *tmp3;
   int rc;
+  (void)rc;  // just to avoid 'unused-variable' warning
 
   while(1)
   {
@@ -2282,6 +2284,7 @@ int blosc_release_threadpool(struct blosc_context* context)
   void* status;
   int rc;
   int rc2;
+  (void)rc;  // just to avoid 'unused-variable' warning
 
   if (context->threads_started > 0)
   {
