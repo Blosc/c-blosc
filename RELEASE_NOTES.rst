@@ -10,7 +10,13 @@
 Changes from 1.16.3 to 1.16.4
 =============================
 
-#XXX version-specific blurb XXX#
+- LZ4 codec updated to 1.9.1.
+
+- Zstd codec updated to 1.4.0.
+
+- BloscLZ codec updated to 2.0.0.  Although this should be fully backward
+  compatible, it contains important changes that affects mainly speed, but
+  also compression ratios.  Feedback on your own data is appreciated.
 
 
 Changes from 1.16.2 to 1.16.3
