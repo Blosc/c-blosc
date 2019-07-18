@@ -533,6 +533,14 @@ unsigned char* blosc_internal_copy_match(unsigned char *out, const unsigned char
     return blosc_internal_fastcopy(out, from, len);
   }
 
+#if ((defined(__GNUC__) && BLOSC_GCC_VERSION < 800) && !defined(__clang__) && !defined(__ICC) && !defined(__ICL))
+  // GCC < 8 in fully optimization mode seems to have problems with the code further below so stop here
+  for (; len > 0; len--) {
+    *out++ = *from++;
+  }
+  return out;
+#endif
+
   // Otherwise we need to be more careful so as not to overwrite destination
   switch (overlap_dist) {
     case 32:
@@ -540,7 +548,6 @@ unsigned char* blosc_internal_copy_match(unsigned char *out, const unsigned char
         out = copy_32_bytes(out, from);
       }
       break;
-      // Just unroll in the range 16 to 32, as other cases are better covered by copy_match_16
     case 30:
       for (; len >= 30; len -= 30) {
         out = copy_16_bytes(out, from);
