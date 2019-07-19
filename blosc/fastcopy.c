@@ -20,6 +20,13 @@
 #include <assert.h>
 #include "blosc-common.h"
 
+/*
+ * Use inlined functions for supported systems.
+ */
+#if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
+#define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+#endif
+
 
 static inline unsigned char *copy_1_bytes(unsigned char *out, const unsigned char *from) {
   *out++ = *from;
