@@ -64,7 +64,7 @@
 #define BLOSCLZ_READU32(p) *((const uint32_t*)(p))
 #endif
 
-#define HASH_LOG (14)
+#define HASH_LOG (14U)
 
 /* Simple, but pretty effective hash function for 3-byte sequence */
 // This is the original hash function used in fastlz
@@ -75,9 +75,8 @@
 //}
 
 // This is used in LZ4 and seems to work pretty well here too
-#define HASH_FUNCTION(v, p, h) {                         \
-  v = ((BLOSCLZ_READU32(p) * 2654435761U) >> (32 - h));  \
-}
+#define HASH_FUNCTION(v, p, h)  \
+  v = ((BLOSCLZ_READU32(p) * 2654435761U) >> (32U - h))
 
 
 #define LITERAL(ip, op, op_limit, anchor, copy) {        \
@@ -350,26 +349,26 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   int32_t hval;
   uint8_t copy;
   uint32_t nmax_copies = 0;
-
+  unsigned i;
+  uint8_t hashlog_[10] = {0, HASH_LOG - 4, HASH_LOG - 4, HASH_LOG - 3 , HASH_LOG - 2,
+                          HASH_LOG - 1, HASH_LOG, HASH_LOG, HASH_LOG, HASH_LOG};
+  uint8_t hashlog = hashlog_[opt_level];
+  // The maximum amount of consecutive MAX_COPY copies before giving up
+  // 0 means something very close to RLE
+  uint8_t max_nmax_copies_[10] = {255U, 0U, 8U, 8U, 16U, 32U, 32U, 32U, 32U, 64U};  // 255 never used
+  uint8_t max_nmax_copies = max_nmax_copies_[opt_level];
   double maxlength_[10] = {-1, .1, .2, .3, .4, .6, .9, .95, 1.0, 1.0};
   int32_t maxlength = (int32_t)(length * maxlength_[opt_level]);
+
   if (maxlength > (int32_t)maxout) {
     maxlength = (int32_t)maxout;
   }
   op_limit = op + maxlength;
 
-  uint8_t hashlog_[10] = {0, HASH_LOG - 4, HASH_LOG - 4, HASH_LOG - 3 , HASH_LOG - 2,
-                          HASH_LOG - 1, HASH_LOG, HASH_LOG, HASH_LOG, HASH_LOG};
-  uint8_t hashlog = hashlog_[opt_level];
   // Initialize the hash table to distances of 0
-  for (unsigned i = 0; i < (1U << hashlog); i++) {
+  for (i = 0; i < (1U << hashlog); i++) {
     htab[i] = 0;
   }
-
-  // The maximum amount of consecutive MAX_COPY copies before giving up
-  // 0 means something very close to RLE
-  uint8_t max_nmax_copies_[10] = {255, 0, 8, 8, 16, 32, 32, 32, 32, 64};  // 255 never used
-  uint8_t max_nmax_copies = max_nmax_copies_[opt_level];
 
   /* output buffer cannot be less than 66 bytes or we can get into trouble */
   if (BLOSCLZ_UNEXPECT_CONDITIONAL(maxout < 66 || length < 4)) {
@@ -386,7 +385,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
   while (BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit)) {
     const uint8_t* ref;
     uint32_t distance;
-    int32_t len = 3;         /* minimum match length */
+    uint32_t len = 3;         /* minimum match length */
     uint8_t* anchor = ip;    /* comparison starting-point */
 
     /* check for a run */
@@ -410,7 +409,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     }
 
     if (distance == 0 || (distance >= MAX_FARDISTANCE)) {
-      LITERAL(ip, op, op_limit, anchor, copy);
+      LITERAL(ip, op, op_limit, anchor, copy)
     }
 
     /* is this a match? check the first 4 bytes */
@@ -419,9 +418,9 @@ int blosclz_compress(const int opt_level, const void* input, int length,
       ref += 4;
     }
       /* check just the first 3 bytes */
-    else if (*ref++ != *ip++ || *ref++ != *ip++ || *ref++ != *ip++) {
+    else if (*ref++ != *ip++ || *ref++ != *ip++ || *ref++ != *ip) {
       /* no luck, copy as a literal */
-      LITERAL(ip, op, op_limit, anchor, copy);
+      LITERAL(ip, op, op_limit, anchor, copy)
     }
 
     match:
@@ -472,36 +471,36 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 
     /* encode the match */
     if (distance < MAX_DISTANCE) {
-      if (len < 7) {
-        *op++ = (uint8_t)((len << 5) + (distance >> 8));
-        *op++ = (uint8_t)((distance & 255));
+      if (len < 7U) {
+        *op++ = (uint8_t)((len << 5U) + (distance >> 8U));
+        *op++ = (uint8_t)((distance & 255U));
       }
       else {
-        *op++ = (uint8_t)((7 << 5) + (distance >> 8));
-        for (len -= 7; len >= 255; len -= 255)
-          *op++ = 255;
+        *op++ = (uint8_t)((7U << 5U) + (distance >> 8U));
+        for (len -= 7U; len >= 255U; len -= 255U)
+          *op++ = 255U;
         *op++ = (uint8_t)len;
-        *op++ = (uint8_t)((distance & 255));
+        *op++ = (uint8_t)((distance & 255U));
       }
     }
     else {
       /* far away, but not yet in the another galaxy... */
-      if (len < 7) {
+      if (len < 7U) {
         distance -= MAX_DISTANCE;
-        *op++ = (uint8_t)((len << 5) + 31);
-        *op++ = 255;
-        *op++ = (uint8_t)(distance >> 8);
-        *op++ = (uint8_t)(distance & 255);
+        *op++ = (uint8_t)((len << 5U) + 31U);
+        *op++ = 255U;
+        *op++ = (uint8_t)(distance >> 8U);
+        *op++ = (uint8_t)(distance & 255U);
       }
       else {
         distance -= MAX_DISTANCE;
-        *op++ = (7 << 5) + 31;
-        for (len -= 7; len >= 255; len -= 255)
-          *op++ = 255;
+        *op++ = (7U << 5U) + 31U;
+        for (len -= 7U; len >= 255U; len -= 255U)
+          *op++ = 255U;
         *op++ = (uint8_t)len;
-        *op++ = 255;
-        *op++ = (uint8_t)(distance >> 8);
-        *op++ = (uint8_t)(distance & 255);
+        *op++ = 255U;
+        *op++ = (uint8_t)(distance >> 8U);
+        *op++ = (uint8_t)(distance & 255U);
       }
     }
 
@@ -537,7 +536,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
     op--;
 
   /* marker for blosclz */
-  *(uint8_t*)output |= (1 << 5);
+  *(uint8_t*)output |= (1U << 5U);
 
   return (int)(op - (uint8_t*)output);
 
