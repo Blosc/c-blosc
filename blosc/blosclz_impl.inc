@@ -4,62 +4,6 @@
  * This is included from blosclz.c once for each value of BLOSCLZ_SAFE.
  */
 
-// See https://habr.com/en/company/yandex/blog/457612/
-#ifdef __AVX2__
-
-#if defined(_MSC_VER)
-#define ALIGNED_(x) __declspec(align(x))
-#else
-#if defined(__GNUC__)
-#define ALIGNED_(x) __attribute__ ((aligned(x)))
-#endif
-#endif
-#define ALIGNED_TYPE_(t, x) t ALIGNED_(x)
-
-static unsigned char* copy_match_16(unsigned char *op, const unsigned char *match, int32_t len)
-{
-  unsigned offset = op - match;
-  while (len >= 16) {
-
-    static const ALIGNED_TYPE_(uint8_t, 16) masks[] =
-      {
-        0,  1,  2,  1,  4,  1,  4,  2,  8,  7,  6,  5,  4,  3,  2,  1, // offset = 0, not used as mask, but for shift
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, // offset = 1
-        0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,
-        0,  1,  2,  0,  1,  2,  0,  1,  2,  0,  1,  2,  0,  1,  2,  0,
-        0,  1,  2,  3,  0,  1,  2,  3,  0,  1,  2,  3,  0,  1,  2,  3,
-        0,  1,  2,  3,  4,  0,  1,  2,  3,  4,  0,  1,  2,  3,  4,  0,
-        0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,
-        0,  1,  2,  3,  4,  5,  6,  0,  1,  2,  3,  4,  5,  6,  0,  1,
-        0,  1,  2,  3,  4,  5,  6,  7,  0,  1,  2,  3,  4,  5,  6,  7,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  0,  1,  2,  3,  4,  5,  6,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  0,  1,  2,  3,  4,  5,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,  0,  1,  2,  3,  4,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  0,  1,  2,  3,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12,  0,  1,  2,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13,  0,  1,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,  0,
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,  15, // offset = 16
-      };
-
-    _mm_storeu_si128((__m128i *)(op),
-                     _mm_shuffle_epi8(_mm_loadu_si128((const __m128i *)(match)),
-                                      _mm_load_si128((const __m128i *)(masks) + offset)));
-
-    match += masks[offset];
-
-    op += 16;
-    len -= 16;
-  }
-  // Deal with remainders
-  for (; len > 0; len--) {
-    *op++ = *match++;
-  }
-  return op;
-}
-#endif
-
-
 int blosclz_decompress(const void* input, int length, void* output, int maxout) {
   const uint8_t* ip = (const uint8_t*)input;
   const uint8_t* ip_limit = ip + length;
