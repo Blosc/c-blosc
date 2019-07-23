@@ -10,7 +10,19 @@
 Changes from 1.16.3 to 1.16.4
 =============================
 
-#XXX version-specific blurb XXX#
+- The `DEACTIVATE_AVX2` cmake option is ON by default now.  This allows for
+  better compatibility with Intel/AMD processors that do not have support
+  for AVX2.  So as to enable AVX2 support, pass the `-DDEACTIVATE_AVX2=OFF`
+  option to cmake.
+
+- LZ4 codec updated to 1.9.1.
+
+- Zstd codec updated to 1.4.1.
+
+- BloscLZ codec updated to 2.0.0.  Although this should be fully backward
+  compatible, it contains important changes that affects mainly speed, but
+  also compression ratios.  Feedback on how it behaves on your own data is
+  appreciated.
 
 
 Changes from 1.16.2 to 1.16.3

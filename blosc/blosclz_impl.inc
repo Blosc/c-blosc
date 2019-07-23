@@ -8,7 +8,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
   const uint8_t* ip = (const uint8_t*)input;
   const uint8_t* ip_limit = ip + length;
   uint8_t* op = (uint8_t*)output;
-  int32_t ctrl;
+  int32_t ctrl = (*ip++) & 31;
   int32_t loop = 1;
 #ifdef BLOSCLZ_SAFE
   uint8_t* op_limit = op + maxout;
@@ -16,7 +16,6 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
     return 0;
   }
 #endif
-  ctrl = (*ip++) & 31;
 
   do {
     uint8_t* ref = op;
@@ -50,14 +49,14 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       /* match from 16-bit distance */
       if (BLOSCLZ_UNEXPECT_CONDITIONAL(code == 255)) if (BLOSCLZ_EXPECT_CONDITIONAL(ofs == (31 << 8))) {
 #ifdef BLOSCLZ_SAFE
-        if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + 1 >= ip_limit)) {
-          return 0;
-        }
+          if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + 1 >= ip_limit)) {
+            return 0;
+          }
 #endif
-        ofs = (*ip++) << 8;
-        ofs += *ip++;
-        ref = op - ofs - MAX_DISTANCE;
-      }
+          ofs = (*ip++) << 8;
+          ofs += *ip++;
+          ref = op - ofs - MAX_DISTANCE;
+        }
 
 #ifdef BLOSCLZ_SAFE
       if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + len + 3 > op_limit)) {
@@ -84,7 +83,19 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         /* copy from reference */
         ref--;
         len += 3;
-        op = blosc_internal_safecopy(op, ref, (unsigned) len);
+#ifdef __AVX2__
+        if (op - ref <= 16) {
+          // This is not faster on a combination of compilers (clang, gcc, icc) or machines, but
+          // it is not slower either.  Let's activate here for experimentation.
+          op = copy_match_16(op, ref, len);
+        }
+        else {
+#endif
+          // We absolutely need a blosc_internal_copy_match here
+          op = blosc_internal_copy_match(op, ref, (unsigned) len);
+#ifdef __AVX2__
+        }
+#endif
       }
     }
     else {
@@ -98,12 +109,11 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      /* memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
-         On GCC-6, fastcopy this is still faster than plain memcpy
-         However, using recent CLANG/LLVM 9.0, there is almost no difference
-         in performance. */
-      op = blosc_internal_fastcopy(op, ip, (unsigned) ctrl);
-      ip += ctrl;
+      // memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
+      // On GCC-6, blosc_internal_fastcopy this is still faster than plain memcpy
+      // However, using recent CLANG/LLVM 9.0, there is almost no difference
+      // in performance.
+      op = blosc_internal_fastcopy(op, ip, (unsigned) ctrl); ip += ctrl;
 
       loop = (int32_t)BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit);
       if (loop)

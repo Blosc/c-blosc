@@ -102,7 +102,7 @@ option(BUILD_BENCHMARKS
 option(DEACTIVATE_SSE2
         "Do not attempt to build with SSE2 instructions" OFF)
 option(DEACTIVATE_AVX2
-        "Do not attempt to build with AVX2 instructions" OFF)
+        "Do not attempt to build with AVX2 instructions" ON)
 option(DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
 option(DEACTIVATE_SNAPPY
@@ -227,10 +227,7 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
     elseif(CMAKE_C_COMPILER_ID STREQUAL Intel)
         set(COMPILER_SUPPORT_SSE2 TRUE)
         if(CMAKE_C_COMPILER_VERSION VERSION_GREATER 14.0 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 14.0)
-	    # icc (ICC) 15.0.3 does not work compiling AVX2 code
-	    # (perhaps my machine does not have AVX2 and the compiler
-	    # cannot generate code for that?)
-            set(COMPILER_SUPPORT_AVX2 FALSE)
+            set(COMPILER_SUPPORT_AVX2 TRUE)
         else()
             set(COMPILER_SUPPORT_AVX2 FALSE)
         endif()
