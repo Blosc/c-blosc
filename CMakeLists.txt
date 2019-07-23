@@ -102,7 +102,7 @@ option(BUILD_BENCHMARKS
 option(DEACTIVATE_SSE2
         "Do not attempt to build with SSE2 instructions" OFF)
 option(DEACTIVATE_AVX2
-        "Do not attempt to build with AVX2 instructions" ON)
+        "Do not attempt to build with AVX2 instructions" OFF)
 option(DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
 option(DEACTIVATE_SNAPPY

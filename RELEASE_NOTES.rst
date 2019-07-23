@@ -10,11 +10,6 @@
 Changes from 1.16.3 to 1.16.4
 =============================
 
-- The `DEACTIVATE_AVX2` cmake option is ON by default now.  This allows for
-  better compatibility with Intel/AMD processors that do not have support
-  for AVX2.  So as to enable AVX2 support, pass the `-DDEACTIVATE_AVX2=OFF`
-  option to cmake.
-
 - LZ4 codec updated to 1.9.1.
 
 - Zstd codec updated to 1.4.1.

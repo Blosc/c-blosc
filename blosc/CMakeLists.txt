@@ -155,10 +155,10 @@ if(COMPILER_SUPPORT_SSE2)
 endif(COMPILER_SUPPORT_SSE2)
 if(COMPILER_SUPPORT_AVX2)
     if (MSVC)
-        set_source_files_properties(shuffle-avx2.c bitshuffle-avx2.c blosclz.c fastcopy.c
+        set_source_files_properties(shuffle-avx2.c bitshuffle-avx2.c
                 PROPERTIES COMPILE_FLAGS "/arch:AVX2")
     else (MSVC)
-        set_source_files_properties(shuffle-avx2.c bitshuffle-avx2.c blosclz.c fastcopy.c
+        set_source_files_properties(shuffle-avx2.c bitshuffle-avx2.c
                 PROPERTIES COMPILE_FLAGS -mavx2)
     endif (MSVC)
 
