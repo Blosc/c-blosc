@@ -7,7 +7,7 @@
 :URL: http://www.blosc.org
 
 
-Changes from 1.16.3 to 1.16.4
+Changes from 1.16.3 to 1.17.0
 =============================
 
 - LZ4 codec updated to 1.9.1.
