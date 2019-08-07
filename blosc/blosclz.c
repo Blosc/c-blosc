@@ -559,7 +559,7 @@ int blosclz_compress(const int opt_level, const void* input, int length,
 
 static unsigned char* copy_match_16(unsigned char *op, const unsigned char *match, int32_t len)
 {
-  unsigned offset = op - match;
+  size_t offset = op - match;
   while (len >= 16) {
 
     static const ALIGNED_TYPE_(uint8_t, 16) masks[] =
