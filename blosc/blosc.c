@@ -441,9 +441,10 @@ static int lz4_wrap_decompress(const void* input, int compressed_length,
 static int lz4_wrap_decompress_unsafe(const void* input, int  compressed_length,
                                       void* output, int maxout)
 {
-  size_t cbytes;
-  cbytes = LZ4_decompress_fast(input, output, (int)maxout);
-  if (cbytes != compressed_length) {
+  int nbytes;
+  nbytes = LZ4_decompress_safe(input, output, (int)compressed_length, (int)maxout);
+
+  if (nbytes != maxout) {
     return 0;
   }
   return (int)maxout;
