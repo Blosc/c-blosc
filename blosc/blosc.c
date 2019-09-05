@@ -153,12 +153,14 @@ static int32_t g_splitmode = BLOSC_FORWARD_COMPAT_SPLIT;
 
 /* global variable to change threading backend from Blosc-managed to caller-managed */
 static blosc_threads_callback threads_callback = 0;
+static void *threads_callback_data = 0;
 
 /* non-threadsafe function should be called before any other Blosc function in
    order to change how threads are managed */
-void blosc_set_threads_callback(blosc_threads_callback callback)
+void blosc_set_threads_callback(blosc_threads_callback callback, void *callback_data)
 {
   threads_callback = callback;
+  threads_callback_data = callback_data;
 }
 
 /* Wrapped function to adjust the number of threads used by blosc */
@@ -911,7 +913,8 @@ static int parallel_blosc(struct blosc_context* context)
   context->thread_nblock = -1;
 
   if (threads_callback) {
-    threads_callback(t_blosc_do_job, context->numthreads, sizeof(void*), (void*) context->thread_contexts);
+    threads_callback(threads_callback_data, t_blosc_do_job,
+                     context->numthreads, sizeof(void*), (void*) context->thread_contexts);
   }
   else {
     /* Synchronization point for all threads (wait for initialization) */
