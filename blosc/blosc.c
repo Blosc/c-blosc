@@ -1917,6 +1917,8 @@ static void t_blosc_do_job(void *ctxt)
 static void *t_blosc(void *ctxt)
 {
   struct thread_context* context = (struct thread_context*)ctxt;
+  int rc;
+  (void)rc;  // just to avoid 'unused-variable' warning
 
   while(1)
   {
