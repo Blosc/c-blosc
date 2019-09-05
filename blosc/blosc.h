@@ -343,6 +343,22 @@ BLOSC_EXPORT int blosc_getitem(const void *src, int start, int nitems, void *des
 BLOSC_EXPORT int blosc_getitem_unsafe(const void* src, int start, int nitems,
                                       void* dest);
 
+
+/**
+  Pointer to a callback function that executes `dojob(jobdata + i*jobdata_elsize)` for `i = 0 to numjobs-1`,
+  possibly in parallel threads (but not returning until all `dojob` calls have returned.   This allows the
+  caller to provide a custom threading backend as an alternative to the default Blosc-managed threads.
+ */
+typedef void (*blosc_threads_callback)(void (*dojob)(void *), int numjobs, size_t jobdata_elsize, void *jobdata);
+
+/**
+  Set the threading backend for parallel compression/decompression to use `callback` to execute work
+  instead of using the Blosc-managed threads.   This function is *not* thread-safe and should be called
+  before any other Blosc function: it affects not only the global context but also the thread-safe
+  compress_ctx and decompress_ctx functions.  Passing `NULL` uses the default Blosc threading backend.
+ */
+BLOSC_EXPORT void blosc_set_threads_callback(blosc_threads_callback callback);
+
 /**
   Returns the current number of threads that are used for
   compression/decompression.
