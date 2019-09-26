@@ -438,18 +438,6 @@ static int lz4_wrap_decompress(const void* input, int compressed_length,
   return LZ4_decompress_safe(input, output, compressed_length, maxout);
 }
 
-static int lz4_wrap_decompress_unsafe(const void* input, int  compressed_length,
-                                      void* output, int maxout)
-{
-  int nbytes;
-  nbytes = LZ4_decompress_safe(input, output, (int)compressed_length, (int)maxout);
-
-  if (nbytes != maxout) {
-    return 0;
-  }
-  return (int)maxout;
-}
-
 #endif /* HAVE_LZ4 */
 
 #if defined(HAVE_SNAPPY)
@@ -553,8 +541,7 @@ static int initialize_decompress_func(struct blosc_context* context,
     if (compversion != BLOSC_LZ4_VERSION_FORMAT) {
       return -9;
     }
-    context->decompress_func =
-        unsafe ? &lz4_wrap_decompress_unsafe : &lz4_wrap_decompress;
+    context->decompress_func = &lz4_wrap_decompress;
     return 0;
   }
 #endif /*  HAVE_LZ4 */
