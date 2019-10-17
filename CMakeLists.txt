@@ -71,7 +71,7 @@
 #    DEV: static includes blosc.a and blosc.h
 
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.1) # Threads::Threads target available from 3.1
 if (NOT CMAKE_VERSION VERSION_LESS 3.3)
     cmake_policy(SET CMP0063 NEW)
 endif()
@@ -124,55 +124,37 @@ option(PREFER_EXTERNAL_ZSTD
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+set(PRIVATE_LIBS "")
+set(PUBLIC_LIBS  "")
+set(PUBLIC_PACKAGES "" CACHE INTERNAL "")
+macro(use_package _pkg _tgt)
+    string(TOUPPER ${_pkg} _PKG)
+    if(NOT DEACTIVATE_${_PKG})
+        if(PREFER_EXTERNAL_${_PKG})
+            find_package(${_pkg})
+            if (NOT ${_pkg}_FOUND )
+                message(STATUS "No ${_pkg} found.  Using internal sources.")
+            endif()
+        else()
+            message(STATUS "Using ${_pkg} internal sources.")
+        endif(PREFER_EXTERNAL_${_PKG})
+        # HAVE_${_pkg} will be set to true because even if the library is
+        # not found, we will use the included sources for it
+        set(HAVE_${_PKG} TRUE)
+        if (${_pkg}_FOUND)
+            list(APPEND PUBLIC_LIBS ${_pkg}::${_tgt})
+            set(PUBLIC_PACKAGES "${PUBLIC_PACKAGES};${_pkg}" CACHE INTERNAL "")
+        else()
+            list(APPEND PRIVATE_LIBS ${_pkg}::${_tgt})
+        endif()
+    endif(NOT DEACTIVATE_${_PKG})
+endmacro()
 
-if(NOT DEACTIVATE_LZ4)
-    if(PREFER_EXTERNAL_LZ4)
-        find_package(LZ4)
-    else()
-        message(STATUS "Using LZ4 internal sources.")
-    endif(PREFER_EXTERNAL_LZ4)
-    # HAVE_LZ4 will be set to true because even if the library is
-    # not found, we will use the included sources for it
-    set(HAVE_LZ4 TRUE)
-endif(NOT DEACTIVATE_LZ4)
-
-if(NOT DEACTIVATE_SNAPPY)
-    if(PREFER_EXTERNAL_SNAPPY)
-        find_package(Snappy)
-    else()
-        message(STATUS "Using Snappy internal sources.")
-    endif(PREFER_EXTERNAL_SNAPPY)
-    # HAVE_SNAPPY will be set to true because even if the library is not found,
-    # we will use the included sources for it
-    set(HAVE_SNAPPY TRUE)
-endif(NOT DEACTIVATE_SNAPPY)
-
-if(NOT DEACTIVATE_ZLIB)
-    # import the ZLIB_ROOT environment variable to help finding the zlib library
-    if(PREFER_EXTERNAL_ZLIB)
-        set(ZLIB_ROOT $ENV{ZLIB_ROOT})
-        find_package(ZLIB)
-        if (NOT ZLIB_FOUND )
-            message(STATUS "No zlib found.  Using internal sources.")
-        endif (NOT ZLIB_FOUND )
-    else()
-        message(STATUS "Using zlib internal sources.")
-    endif(PREFER_EXTERNAL_ZLIB)
-    # HAVE_ZLIB will be set to true because even if the library is not found,
-    # we will use the included sources for it
-    set(HAVE_ZLIB TRUE)
-endif(NOT DEACTIVATE_ZLIB)
-
-if (NOT DEACTIVATE_ZSTD)
-    if (PREFER_EXTERNAL_ZSTD)
-        find_package(Zstd)
-    else ()
-        message(STATUS "Using ZSTD internal sources.")
-    endif (PREFER_EXTERNAL_ZSTD)
-    # HAVE_ZSTD will be set to true because even if the library is
-    # not found, we will use the included sources for it
-    set(HAVE_ZSTD TRUE)
-endif (NOT DEACTIVATE_ZSTD)
+set(ZLIB_ROOT $ENV{ZLIB_ROOT})
+use_package(ZLIB ZLIB)
+use_package(LZ4 LZ4)
+use_package(Snappy snappy)
+use_package(Zstd Zstd)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
@@ -316,6 +298,7 @@ endif()
 
 
 # subdirectories
+add_subdirectory(internal-complibs)
 add_subdirectory(blosc)
 
 if(BUILD_TESTS)
@@ -339,9 +322,40 @@ if (BLOSC_INSTALL)
             DESTINATION lib/pkgconfig COMPONENT DEV)
 
     configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfig.cmake"
+        @ONLY)
+
+    configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
         IMMEDIATE @ONLY)
+
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfigVersion.cmake"     
+        VERSION ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH}
+        COMPATIBILITY AnyNewerVersion
+    )
+
+    export(EXPORT BloscTargets 
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscTargets.cmake" 
+       NAMESPACE Blosc::)
+
+    install(EXPORT BloscTargets 
+            FILE BloscTargets.cmake
+            NAMESPACE Blosc::
+            DESTINATION lib/cmake/Blosc
+            EXPORT_LINK_INTERFACE_LIBRARIES)
+
+    install(FILES 
+                "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfig.cmake"
+                "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfigVersion.cmake"
+                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLZ4.cmake"
+                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindZstd.cmake"
+                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSnappy.cmake"
+            DESTINATION lib/cmake/Blosc COMPONENT DEV)
+
     add_custom_target(uninstall
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()

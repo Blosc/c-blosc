@@ -1,52 +1,11 @@
 # a simple way to detect that we are using CMAKE
 add_definitions(-DUSING_CMAKE)
 
-set(INTERNAL_LIBS ${PROJECT_SOURCE_DIR}/internal-complibs)
-
 # Hide symbols by default unless they're specifically exported.
 # This makes it easier to keep the set of exported symbols the
 # same across all compilers/platforms.
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
-# includes
-set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
-if(NOT DEACTIVATE_LZ4)
-    if (LZ4_FOUND)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${LZ4_INCLUDE_DIR})
-    else(LZ4_FOUND)
-        set(LZ4_LOCAL_DIR ${INTERNAL_LIBS}/lz4-1.9.1)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${LZ4_LOCAL_DIR})
-    endif(LZ4_FOUND)
-endif(NOT DEACTIVATE_LZ4)
-
-if(NOT DEACTIVATE_SNAPPY)
-    if (SNAPPY_FOUND)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${SNAPPY_INCLUDE_DIR})
-    else(SNAPPY_FOUND)
-        set(SNAPPY_LOCAL_DIR ${INTERNAL_LIBS}/snappy-1.1.1)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${SNAPPY_LOCAL_DIR})
-    endif(SNAPPY_FOUND)
-endif(NOT DEACTIVATE_SNAPPY)
-
-if(NOT DEACTIVATE_ZLIB)
-    if (ZLIB_FOUND)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIR})
-    else(ZLIB_FOUND)
-        set(ZLIB_LOCAL_DIR ${INTERNAL_LIBS}/zlib-1.2.8)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${ZLIB_LOCAL_DIR})
-    endif(ZLIB_FOUND)
-endif(NOT DEACTIVATE_ZLIB)
-
-if (NOT DEACTIVATE_ZSTD)
-    if (ZSTD_FOUND)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${ZSTD_INCLUDE_DIR})
-    else (ZSTD_FOUND)
-        set(ZSTD_LOCAL_DIR ${INTERNAL_LIBS}/zstd-1.4.1)
-        set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${ZSTD_LOCAL_DIR} ${ZSTD_LOCAL_DIR}/common)
-    endif (ZSTD_FOUND)
-endif (NOT DEACTIVATE_ZSTD)
-
-include_directories(${BLOSC_INCLUDE_DIRS})
 
 # library sources
 set(SOURCES blosc.c blosclz.c fastcopy.c shuffle-generic.c bitshuffle-generic.c
@@ -73,52 +32,14 @@ if(WIN32)
         message(STATUS "using the internal pthread library for win32 systems.")
         set(SOURCES ${SOURCES} win32/pthread.c)
     else(NOT Threads_FOUND)
-        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+        list(APPEND PUBLIC_LIBS Threads::Threads)
+        set(PUBLIC_PACKAGES "${PUBLIC_PACKAGES};Threads" CACHE INTERNAL "")
     endif(NOT Threads_FOUND)
 else(WIN32)
     find_package(Threads REQUIRED)
-    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    list(APPEND PUBLIC_LIBS Threads::Threads)
+    set(PUBLIC_PACKAGES "${PUBLIC_PACKAGES};Threads" CACHE INTERNAL "")
 endif(WIN32)
-
-if(NOT DEACTIVATE_LZ4)
-    if(LZ4_FOUND)
-        set(LIBS ${LIBS} ${LZ4_LIBRARY})
-    else(LZ4_FOUND)
-        file(GLOB LZ4_FILES ${LZ4_LOCAL_DIR}/*.c)
-        set(SOURCES ${SOURCES} ${LZ4_FILES})
-    endif(LZ4_FOUND)
-endif(NOT DEACTIVATE_LZ4)
-
-if(NOT DEACTIVATE_SNAPPY)
-    if(SNAPPY_FOUND)
-        set(LIBS ${LIBS} ${SNAPPY_LIBRARY})
-    else(SNAPPY_FOUND)
-        file(GLOB SNAPPY_FILES ${SNAPPY_LOCAL_DIR}/*.cc)
-        set(SOURCES ${SOURCES} ${SNAPPY_FILES})
-    endif(SNAPPY_FOUND)
-endif(NOT DEACTIVATE_SNAPPY)
-
-if(NOT DEACTIVATE_ZLIB)
-    if(ZLIB_FOUND)
-        set(LIBS ${LIBS} ${ZLIB_LIBRARY})
-    else(ZLIB_FOUND)
-        file(GLOB ZLIB_FILES ${ZLIB_LOCAL_DIR}/*.c)
-        set(SOURCES ${SOURCES} ${ZLIB_FILES})
-    endif(ZLIB_FOUND)
-endif(NOT DEACTIVATE_ZLIB)
-
-if (NOT DEACTIVATE_ZSTD)
-    if (ZSTD_FOUND)
-        set(LIBS ${LIBS} ${ZSTD_LIBRARY})
-    else (ZSTD_FOUND)
-      file(GLOB ZSTD_FILES
-        ${ZSTD_LOCAL_DIR}/common/*.c
-        ${ZSTD_LOCAL_DIR}/compress/*.c
-        ${ZSTD_LOCAL_DIR}/decompress/*.c)
-        set(SOURCES ${SOURCES} ${ZSTD_FILES})
-    endif (ZSTD_FOUND)
-endif (NOT DEACTIVATE_ZSTD)
-
 
 # targets
 if (BUILD_SHARED)
@@ -191,14 +112,18 @@ if (BUILD_TESTS)
     endif()
 endif()
 
+add_library(blosc INTERFACE)
+
 if (BUILD_SHARED)
-    target_link_libraries(blosc_shared ${LIBS})
-    target_include_directories(blosc_shared PUBLIC ${BLOSC_INCLUDE_DIRS})
+    target_link_libraries(blosc_shared PUBLIC ${PUBLIC_LIBS})
+    target_link_libraries(blosc_shared PRIVATE ${PRIVATE_LIBS})
+    target_include_directories(blosc_shared PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+    target_link_libraries(blosc INTERFACE blosc_shared)
 endif()
 
 if (BUILD_TESTS)
-    target_link_libraries(blosc_shared_testing ${LIBS})
-    target_include_directories(blosc_shared_testing PUBLIC ${BLOSC_INCLUDE_DIRS})
+    target_link_libraries(blosc_shared_testing ${PUBLIC_LIBS} ${PRIVATE_LIBS})
+    target_include_directories(blosc_shared_testing PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 if(BUILD_STATIC)
@@ -207,17 +132,31 @@ if(BUILD_STATIC)
     if (MSVC)
         set_target_properties(blosc_static PROPERTIES PREFIX lib)
     endif()
-    target_link_libraries(blosc_static ${LIBS})
-    target_include_directories(blosc_static PUBLIC ${BLOSC_INCLUDE_DIRS})
+    target_link_libraries(blosc_static PUBLIC ${PUBLIC_LIBS})
+    target_link_libraries(blosc_static PRIVATE ${PRIVATE_LIBS})
+    target_include_directories(blosc_static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+    if (NOT BUILD_SHARED)
+        target_link_libraries(blosc INTERFACE blosc_static)
+    endif()
 endif(BUILD_STATIC)
+
 
 # install
 if(BLOSC_INSTALL)
     install(FILES blosc.h blosc-export.h DESTINATION include COMPONENT DEV)
+    set(_inst_libs "blosc")
     if(BUILD_SHARED)
-        install(TARGETS blosc_shared LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT LIB)
+        list(APPEND _inst_libs blosc_shared)
     endif(BUILD_SHARED)
     if(BUILD_STATIC)
-        install(TARGETS blosc_static LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT DEV)
+        list(APPEND _inst_libs blosc_static)
     endif(BUILD_STATIC)
+
+    install(TARGETS ${_inst_libs} 
+            EXPORT BloscTargets 
+            LIBRARY DESTINATION ${lib_dir} 
+            ARCHIVE DESTINATION ${lib_dir} 
+            RUNTIME DESTINATION bin 
+            COMPONENT DEV
+            INCLUDES DESTINATION include)
 endif(BLOSC_INSTALL)

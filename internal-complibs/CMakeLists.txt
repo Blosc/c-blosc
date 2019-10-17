@@ -1,0 +1,30 @@
+macro(add_lib_target pkg tgt incdir files)
+    string(TOUPPER ${pkg} TGT)
+    if(NOT DEACTIVATE_${TGT} AND NOT ${pkg}_FOUND)
+        add_library(${tgt} INTERFACE)
+        target_include_directories(${tgt} INTERFACE $<BUILD_INTERFACE:${incdir}>)
+        target_sources(${tgt} INTERFACE "$<BUILD_INTERFACE:${files}>")
+        add_library(${pkg}::${tgt} ALIAS ${tgt})
+
+        # This creates dummy (empty) interface targets in the exported config.
+        install(TARGETS ${tgt} EXPORT BloscTargets INCLUDES DESTINATION include)
+    endif()
+    unset(TGT)
+endmacro()
+
+set(ZLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/zlib-1.2.8)
+file(GLOB ZLIB_FILES ${ZLIB_DIR}/*.c)
+add_lib_target(ZLIB ZLIB ${ZLIB_DIR} "${ZLIB_FILES}")
+
+set(SNAPPY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/snappy-1.1.1)
+file(GLOB SNAPPY_FILES ${SNAPPY_DIR}/*.cc)
+add_lib_target(Snappy snappy ${SNAPPY_DIR} "${SNAPPY_FILES}")
+
+set(LZ4_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lz4-1.9.1)
+file(GLOB LZ4_FILES ${LZ4_DIR}/*.c)
+add_lib_target(LZ4 LZ4 ${LZ4_DIR} "${LZ4_FILES}")
+
+set(ZSTD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/zstd-1.4.1)
+file(GLOB ZSTD_FILES ${ZSTD_DIR}/common/*.c ${ZSTD_DIR}/compress/*.c ${ZSTD_DIR}/decompress/*.c)
+add_lib_target(Zstd Zstd ${ZSTD_DIR} "${ZSTD_FILES}")
+target_include_directories(Zstd INTERFACE $<BUILD_INTERFACE:${ZSTD_DIR}/common>)
