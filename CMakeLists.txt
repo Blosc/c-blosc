@@ -124,9 +124,7 @@ option(PREFER_EXTERNAL_ZSTD
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-set(PRIVATE_LIBS "")
-set(PUBLIC_LIBS  "")
-set(PUBLIC_PACKAGES "" CACHE INTERNAL "")
+set(LIBS "")
 macro(use_package _pkg _tgt)
     string(TOUPPER ${_pkg} _PKG)
     if(NOT DEACTIVATE_${_PKG})
@@ -141,12 +139,7 @@ macro(use_package _pkg _tgt)
         # HAVE_${_pkg} will be set to true because even if the library is
         # not found, we will use the included sources for it
         set(HAVE_${_PKG} TRUE)
-        if (${_pkg}_FOUND)
-            list(APPEND PUBLIC_LIBS ${_pkg}::${_tgt})
-            set(PUBLIC_PACKAGES "${PUBLIC_PACKAGES};${_pkg}" CACHE INTERNAL "")
-        else()
-            list(APPEND PRIVATE_LIBS ${_pkg}::${_tgt})
-        endif()
+        list(APPEND LIBS ${_pkg}::${_tgt})
     endif(NOT DEACTIVATE_${_PKG})
 endmacro()
 
@@ -311,7 +304,6 @@ if(BUILD_BENCHMARKS)
     add_subdirectory(bench)
 endif(BUILD_BENCHMARKS)
 
-
 # uninstall target
 if (BLOSC_INSTALL)
     configure_file(
@@ -351,9 +343,6 @@ if (BLOSC_INSTALL)
     install(FILES 
                 "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfig.cmake"
                 "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfigVersion.cmake"
-                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLZ4.cmake"
-                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindZstd.cmake"
-                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSnappy.cmake"
             DESTINATION lib/cmake/Blosc COMPONENT DEV)
 
     add_custom_target(uninstall
