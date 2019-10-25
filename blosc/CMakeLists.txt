@@ -119,7 +119,7 @@ if (BUILD_SHARED)
 endif()
 
 if (BUILD_TESTS)
-    target_link_libraries(blosc_shared_testing ${LIBS})
+    target_link_libraries(blosc_shared_testing PRIVATE ${LIBS})
     target_include_directories(blosc_shared_testing PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
