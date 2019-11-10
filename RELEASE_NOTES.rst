@@ -10,7 +10,7 @@
 Changes from 1.17.0 to 1.17.1
 =============================
 
-- None yet.
+- Zstd codec updated to 1.4.4.
 
 
 Changes from 1.16.3 to 1.17.0
