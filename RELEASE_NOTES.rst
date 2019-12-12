@@ -2,15 +2,13 @@
  Release notes for C-Blosc
 ===========================
 
-:Author: Francesc Alted
-:Contact: francesc@blosc.org
-:URL: http://www.blosc.org
-
 
 Changes from 1.17.0 to 1.17.1
 =============================
 
 - Zstd codec updated to 1.4.4.
+
+- LZ4 codec updated to 1.9.2.
 
 
 Changes from 1.16.3 to 1.17.0
