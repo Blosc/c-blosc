@@ -398,20 +398,28 @@ blosc_internal_unshuffle(const size_t bytesoftype, const size_t blocksize,
     hardware-accelerated routine at run-time. */
 int
 blosc_internal_bitshuffle(const size_t bytesoftype, const size_t blocksize,
-                          const uint8_t* const _src, const uint8_t* _dest,
+                          const uint8_t* _src, const uint8_t* _dest,
                           const uint8_t* _tmp) {
-  int size = blocksize / bytesoftype;
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
+  size_t size = blocksize / bytesoftype;
+  /* bitshuffle only supports a number of elements that is a multiple of 8. */
+  size -= size % 8;
+  int res = (host_implementation.bitshuffle)((void *) _src, (void *) _dest,
+                                             size, bytesoftype, (void *) _tmp);
+  if (res < 0) {
+    // Some error in bitshuffle (should not happen)
+    printf(stderr, "the impossible happened: the bitshuffle filter failed!");
+    return res;
+  }
 
-  if ((size % 8) == 0)
-    /* The number of elems is a multiple of 8 which is supported by
-       bitshuffle. */
-    return (int)(host_implementation.bitshuffle)((void*)_src, (void*)_dest,
-                                                 blocksize / bytesoftype,
-                                                 bytesoftype, (void*)_tmp);
-  else
-    memcpy((void*)_dest, (void*)_src, blocksize);
+  // Copy the remainder
+  // printf("blocksize, size, bytesoftype: %d, %d, %d\n", blocksize, size, bytesoftype);
+  size_t remainder = blocksize - size * bytesoftype;
+  printf("remainder (compr): %d\n", remainder);
+  memcpy((void *)(_dest + size * bytesoftype),
+          (void *)(_src + size * bytesoftype), remainder);
+
   return size;
 }
 
@@ -419,19 +427,25 @@ blosc_internal_bitshuffle(const size_t bytesoftype, const size_t blocksize,
     hardware-accelerated routine at run-time. */
 int
 blosc_internal_bitunshuffle(const size_t bytesoftype, const size_t blocksize,
-                            const uint8_t* const _src, const uint8_t* _dest,
+                            const uint8_t* _src, const uint8_t* _dest,
                             const uint8_t* _tmp) {
-  int size = blocksize / bytesoftype;
   /* Initialize the shuffle implementation if necessary. */
   init_shuffle_implementation();
+  size_t size = blocksize / bytesoftype;
+  /* bitshuffle only supports a number of bytes that is a multiple of 8. */
+  size -= size % 8;
+  int res = (host_implementation.bitunshuffle)((void *) _src, (void *) _dest,
+                                               size, bytesoftype, (void *) _tmp);
+  if (res < 0) {
+    printf(stderr, "the impossible happened: the bitunshuffle filter failed!");
+    return res;
+  }
 
-  if ((size % 8) == 0)
-    /* The number of elems is a multiple of 8 which is supported by
-       bitshuffle. */
-    return (int)(host_implementation.bitunshuffle)((void*)_src, (void*)_dest,
-                                                   blocksize / bytesoftype,
-                                                   bytesoftype, (void*)_tmp);
-  else
-    memcpy((void*)_dest, (void*)_src, blocksize);
+  // Copy the remainder
+  size_t remainder = blocksize - size * bytesoftype;
+  // printf("remainder: %d\n", remainder);
+  memcpy((void *)(_dest + size * bytesoftype),
+          (void *)(_src + size * bytesoftype), remainder);
+
   return size;
 }
