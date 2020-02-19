@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Decompression succesful!\n");
-    dsize -= dsize % 8;
+    dsize -= dsize % 8;  // do not check unaligned data (blosc-1.17.1-bitshuffle8-nomemcpy.cdata)
     exit_code = memcmp(data, data_dest, dsize) ? EXIT_FAILURE : EXIT_SUCCESS;
 
     if (exit_code == EXIT_SUCCESS) {
