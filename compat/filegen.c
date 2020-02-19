@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   FILE *f;
 
   /* Register the filter with the library */
-  printf("Blosc version info: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
+  printf("Blosc version info: %s\n", blosc_get_version_string());
 
   /* Initialize the Blosc compressor */
   blosc_init();
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Decompression succesful!\n");
-    dsize -= dsize / 8;
+    dsize -= dsize % 8;
     exit_code = memcmp(data, data_dest, dsize) ? EXIT_FAILURE : EXIT_SUCCESS;
 
     if (exit_code == EXIT_SUCCESS) {
@@ -111,6 +111,12 @@ int main(int argc, char *argv[]) {
     }
     else {
       printf("Decompressed data differs from original!\n");
+      for (int i = 0; i < dsize; i++) {
+        if (((uint8_t*)data)[i] != ((uint8_t*)data_dest)[i]) {
+          printf("values start to differ in pos: %d\n", i);
+          break;
+        }
+      }
     }
   }
 

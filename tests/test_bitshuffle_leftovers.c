@@ -13,16 +13,8 @@
 
 #include "test_common.h"
 
-static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void *data_dest) {
-  /* Initialize data */
-  for (int i = 0; i < size / sizeof(int32_t); i++) {
-    ((uint32_t*)data)[i] = i;
-  }
-  /* leftovers */
-  for (int i = size / sizeof(int32_t); i < size; i++) {
-    ((uint8_t*)data)[i] = i;
-  }
 
+static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void *data_dest) {
   /* Compress with bitshuffle active  */
   int isize = size;
   int osize = size + BLOSC_MIN_HEADER_LENGTH;
@@ -61,15 +53,6 @@ static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void
 }
 
 static int test_roundtrip_bitshuffle4(int size, void *data, void *data_out, void *data_dest) {
-  /* Initialize data */
-  for (int i = 0; i < size / sizeof(int32_t); i++) {
-    ((uint32_t*)data)[i] = i;
-  }
-  /* leftovers */
-  for (int i = size / sizeof(int32_t); i < size; i++) {
-    ((uint8_t*)data)[i] = i;
-  }
-
   /* Compress with bitshuffle active  */
   int isize = size;
   int osize = size + BLOSC_MIN_HEADER_LENGTH;
@@ -117,6 +100,15 @@ int main() {
   int32_t *data_out = malloc(size + BLOSC_MIN_HEADER_LENGTH);
   int32_t *data_dest = malloc(size);
   int result;
+
+  /* Initialize data */
+  for (int i = 0; i < size / sizeof(int32_t); i++) {
+    ((uint32_t*)data)[i] = i;
+  }
+  /* leftovers */
+  for (int i = size / sizeof(int32_t) * sizeof(int32_t); i < size; i++) {
+    ((uint8_t*)data)[i] = i;
+  }
 
   blosc_init();
   blosc_set_nthreads(1);
