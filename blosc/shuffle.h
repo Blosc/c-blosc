@@ -58,7 +58,7 @@ blosc_internal_unshuffle(const size_t bytesoftype, const size_t blocksize,
 BLOSC_NO_EXPORT int
 blosc_internal_bitunshuffle(const size_t bytesoftype, const size_t blocksize,
                             const uint8_t* const _src, const uint8_t* _dest,
-                            const uint8_t* _tmp);
+                            const uint8_t* _tmp, const uint8_t format_version);
 
 #ifdef __cplusplus
 }

@@ -796,7 +796,8 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
     blosc_internal_unshuffle(typesize, blocksize, tmp, dest);
   }
   else if (dobitshuffle) {
-    bscount = blosc_internal_bitunshuffle(typesize, blocksize, tmp, dest, tmp2);
+    uint8_t format_version = base_src[0];
+    bscount = blosc_internal_bitunshuffle(typesize, blocksize, tmp, dest, tmp2, format_version);
     if (bscount < 0)
       return bscount;
   }
@@ -1448,10 +1449,6 @@ static int blosc_run_decompression_with_context(struct blosc_context* context,
     return -1;
   }
 
-  if (version != BLOSC_VERSION_FORMAT) {
-    /* Version from future */
-    return -1;
-  }
   if (*context->header_flags & 0x08) {
     /* compressor flags from the future */
     return -1;
@@ -1604,9 +1601,6 @@ static int blosc_getitem_impl(const void* src, int start, int nitems,
   nbytes = sw32_(_src + 4);                 /* buffer size */
   blocksize = sw32_(_src + 8);              /* block size */
   compressedsize = sw32_(_src + 12); /* compressed buffer size */
-
-  if (version != BLOSC_VERSION_FORMAT)
-    return -9;
 
   if (blocksize <= 0 || blocksize > nbytes || blocksize > BLOSC_MAX_BLOCKSIZE ||
       typesize <= 0 || typesize > BLOSC_MAX_TYPESIZE) {
@@ -2129,11 +2123,6 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   uint8_t *_src = (uint8_t *)(cbuffer);    /* current pos for source buffer */
   uint8_t version = _src[0];               /* version of header */
 
-  if (version != BLOSC_VERSION_FORMAT) {
-    *nbytes = *blocksize = *cbytes = 0;
-    return;
-  }
-
   /* Read the interesting values */
   *nbytes = (size_t)sw32_(_src + 4);       /* uncompressed buffer size */
   *blocksize = (size_t)sw32_(_src + 8);    /* block size */
@@ -2156,11 +2145,6 @@ void blosc_cbuffer_metainfo(const void *cbuffer, size_t *typesize,
   uint8_t *_src = (uint8_t *)(cbuffer);  /* current pos for source buffer */
 
   uint8_t version = _src[0];               /* version of header */
-
-  if (version != BLOSC_VERSION_FORMAT) {
-    *flags = *typesize = 0;
-    return;
-  }
 
   /* Read the interesting values */
   *flags = (int)_src[2] & 7;             /* first three flags */
