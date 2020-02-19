@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
   int csize;
   long fsize;
   int i;
+  int exit_code = 0;
 
   FILE *f;
 
@@ -51,16 +52,17 @@ int main(int argc, char *argv[]) {
 
   /* Initialize the Blosc compressor */
   blosc_init();
+  blosc_set_nthreads(1);
 
   /* Use the argv[2] compressor. The supported ones are "blosclz",
   "lz4", "lz4hc", "snappy", "zlib" and "zstd"*/
   blosc_set_compressor(argv[2]);
 
-  if (strcmp(argv[1], "compress") == 0) {
+  for (i = 0; i < SIZE; i++) {
+    data[i] = i;
+  }
 
-    for (i = 0; i < SIZE; i++) {
-      data[i] = i;
-    }
+  if (strcmp(argv[1], "compress") == 0) {
 
     /* Compress with clevel=9 and shuffle active  */
     csize = blosc_compress(9, 1, sizeof(int32_t), isize, data, data_out, osize);
@@ -101,10 +103,19 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Decompression succesful!\n");
+
+    exit_code = memcmp(data, data_dest, dsize / sizeof(int32_t)) ? EXIT_FAILURE : EXIT_SUCCESS;
+
+    if (exit_code == EXIT_SUCCESS) {
+      printf("Succesful roundtrip!\n");
+    }
+    else {
+      printf("Decompressed data differs from original!\n");
+    }
   }
 
   /* After using it, destroy the Blosc environment */
   blosc_destroy();
 
-  return 0;
+  return exit_code;
 }

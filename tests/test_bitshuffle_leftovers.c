@@ -35,11 +35,11 @@ static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void
     printf("Compression error.  Error code: %d\n", csize);
     return csize;
   }
+  printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
 
-//  printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
-//  FILE *fout = fopen("test_bitshuffle_leftovers.data", "w");
-//  fwrite(data_out, csize, 1, fout);
-//  fclose(fout);
+  FILE *fout = fopen("test-bitshuffle8-nomemcpy.cdata", "w");
+  fwrite(data_out, csize, 1, fout);
+  fclose(fout);
 
   /* Decompress  */
   int dsize = blosc_decompress(data_out, data_dest, isize);
@@ -55,7 +55,7 @@ static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void
   if (exit_code == EXIT_SUCCESS)
     printf("Succesful roundtrip!\n");
   else
-    printf("Decompressed data differs from original!");
+    printf("Decompressed data differs from original!\n");
 
   return exit_code;
 }
@@ -82,11 +82,11 @@ static int test_roundtrip_bitshuffle4(int size, void *data, void *data_out, void
     printf("Compression error.  Error code: %d\n", csize);
     return csize;
   }
+  printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
 
-//  printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
-//  FILE *fout = fopen("test_bitshuffle_leftovers.data", "w");
-//  fwrite(data_out, csize, 1, fout);
-//  fclose(fout);
+  FILE *fout = fopen("test-bitshuffle4-memcpy.cdata", "w");
+  fwrite(data_out, csize, 1, fout);
+  fclose(fout);
 
   /* Decompress  */
   int dsize = blosc_decompress(data_out, data_dest, isize);
@@ -102,7 +102,7 @@ static int test_roundtrip_bitshuffle4(int size, void *data, void *data_out, void
   if (exit_code == EXIT_SUCCESS)
     printf("Succesful roundtrip!\n");
   else
-    printf("Decompressed data differs from original!");
+    printf("Decompressed data differs from original!\n");
 
   return exit_code;
 }
