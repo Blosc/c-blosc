@@ -36,7 +36,7 @@ int main() {
   /* Compress with bitshuffle active  */
   int isize = size;
   int osize = size + BLOSC_MIN_HEADER_LENGTH;
-  int csize = blosc_compress(9, BLOSC_NOSHUFFLE, sizeof(int64_t), isize, data, data_out, osize);
+  int csize = blosc_compress(9, BLOSC_BITSHUFFLE, 8, isize, data, data_out, osize);
   if (csize == 0) {
     printf("Buffer is uncompressible.  Giving up.\n");
     return 1;
@@ -47,7 +47,7 @@ int main() {
   }
 
   printf("Compression: %d -> %d (%.1fx)\n", isize, csize, (1.*isize) / csize);
-  FILE *fout = fopen("/tmp/blosc_corrupt_compressed.data", "w");
+  FILE *fout = fopen("test_bitshuffle_leftovers.data", "w");
   fwrite(data_out, csize, 1, fout);
   fclose(fout);
 
