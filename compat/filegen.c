@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Decompression succesful!\n");
-
-    exit_code = memcmp(data, data_dest, dsize / sizeof(int32_t)) ? EXIT_FAILURE : EXIT_SUCCESS;
+    dsize -= dsize / 8;
+    exit_code = memcmp(data, data_dest, dsize) ? EXIT_FAILURE : EXIT_SUCCESS;
 
     if (exit_code == EXIT_SUCCESS) {
       printf("Succesful roundtrip!\n");
