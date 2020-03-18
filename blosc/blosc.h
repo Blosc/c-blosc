@@ -369,7 +369,7 @@ BLOSC_EXPORT const char* blosc_get_compressor(void);
 
 /**
   Select the compressor to be used.  The supported ones are "blosclz",
-  "lz4", "lz4hc", "snappy", "zlib" and "ztsd".  If this function is not
+  "lz4", "lz4hc", "snappy", "zlib" and "zstd".  If this function is not
   called, then "blosclz" will be used by default.
 
   In case the compressor is not recognized, or there is not support
