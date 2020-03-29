@@ -3,7 +3,7 @@
 ===========================
 
 
-Changes from 1.17.1 to 1.18.0
+Changes from 1.17.1 to 1.18.1
 =============================
 
 - Fixed the copy of the leftovers of a chunk when its size is not a
