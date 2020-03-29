@@ -1,13 +1,15 @@
 ===============================================================
- Announcing C-Blosc 1.17.1
+ Announcing C-Blosc 1.17.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-A maintenance release where LZ4 and Zstd internal codecs have been updated
-to latest versions.
+A maintenance release where the copy of the leftovers of a chunk when
+its size is not a multiple of typesize.  Although this is a very unusual
+situation, it can certainly happen (e.g.
+https://github.com/Blosc/python-blosc/issues/220).
 
 For more info, please see the release notes in:
 
