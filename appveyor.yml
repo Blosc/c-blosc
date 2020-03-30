@@ -1,44 +1,24 @@
-build: false
+version: 1.0.{build}
 
+image:
+  - Visual Studio 2019
+  - Visual Studio 2017
+  - Visual Studio 2015
+  - Visual Studio 2013
 
-environment:
-    PYTHON: "C:\\Python38-x64"
-    PYTHON_VERSION: "3.8.0"
-    PYTHON_ARCH: "64"
+configuration:
+  - Debug
+  - Release
 
-    CONAN_USERNAME: "francescalted"
-    CONAN_LOGIN_USERNAME: "francescalted"
-    CONAN_CHANNEL: "stable"
-    CONAN_UPLOAD: "https://api.bintray.com/conan/blosc/Conan"
+before_build:
+  - cmd: cmake -H. -B./build
 
+build_script:
+  - cmd: cmake --build ./build
 
-    matrix:
-        - MINGW_CONFIGURATIONS: "4.9@x86_64@seh@posix, 5@x86_64@seh@posix, 6@x86_64@seh@posix, 7@x86_64@seh@posix"
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-          CONAN_VISUAL_VERSIONS: 12
-          CONAN_RUN_TESTS: "1"
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-          CONAN_VISUAL_VERSIONS: 14
-          CONAN_RUN_TESTS: "1"
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-          CONAN_VISUAL_VERSIONS: 15
-          CONAN_RUN_TESTS: "1"
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-          CONAN_VISUAL_VERSIONS: 16
-          CONAN_RUN_TESTS: "1"
+build:
+  verbosity: normal
 
-install:
-  - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
-
-  # Check that we have the expected version and architecture for Python
-  - python --version
-  - python -c "import struct; print(struct.calcsize('P') * 8)"
-
-  # Upgrade to the latest version of pip to avoid it displaying warnings
-  # about it being out of date.
-  - python -m pip install --upgrade pip
-  - pip.exe install conan --upgrade
-  - pip.exe install conan_package_tools==0.19.3
-
-test_script:
-  - python build.py
+after_build:
+  - cd ./build
+  - cmd: ctest ./build
