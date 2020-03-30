@@ -11,7 +11,7 @@ configuration:
   - Debug
   - Release
 
-before_build:
+install:
   - cmd: echo "Configuring CMAKE"
   - cmd: cmake -H. -B./build
   - cmd: echo "Building"
