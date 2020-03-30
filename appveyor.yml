@@ -30,8 +30,16 @@ environment:
 install:
   # - set PATH=%PATH%;%PYTHON%/Scripts/
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Check that we have the expected version and architecture for Python
+  - python --version
+  - python -c \"import struct; print(struct.calcsize('P') * 8)\"
+
+  # Upgrade to the latest version of pip to avoid it displaying warnings
+  # about it being out of date.
+  - python -m pip install --upgrade pip
   - pip.exe install conan --upgrade
-  - pip.exe install conan_package_tools
+  - pip.exe install conan_package_tools==0.19.3
 
 test_script:
   - python build.py
