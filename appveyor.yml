@@ -11,14 +11,17 @@ configuration:
   - Release
 
 before_build:
+  - cmd: echo "Configuring CMAKE"
   - cmd: cmake -H. -B./build
 
 build_script:
-  - cmd: cmake --build ./build
+  - cmd: echo "Building"
+  - cmd: cd build
+  - cmd: cmake --build .
 
 build:
   verbosity: normal
 
 test_script:
-  - cmd: cd ./build
+  - cmd: echo "Testing"
   - cmd: ctest -C Debug -VV
