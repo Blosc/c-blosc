@@ -13,8 +13,6 @@ configuration:
 before_build:
   - cmd: echo "Configuring CMAKE"
   - cmd: cmake -H. -B./build
-
-build_script:
   - cmd: echo "Building"
   - cmd: cd build
   - cmd: cmake --build .
