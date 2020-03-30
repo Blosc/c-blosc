@@ -19,6 +19,6 @@ build_script:
 build:
   verbosity: normal
 
-after_build:
-  - cd ./build
-  - cmd: ctest ./build
+test_script:
+  - cmd: cd ./build
+  - cmd: ctest -C Debug -VV
