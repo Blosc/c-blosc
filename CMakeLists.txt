@@ -255,8 +255,8 @@ if(DEACTIVATE_SSE2)
     set(COMPILER_SUPPORT_SSE2 FALSE)
 endif()
 
-# disable AVX2 if specified
-if(DEACTIVATE_AVX2)
+# disable AVX2 if specified or if SSE is deactivated
+if(DEACTIVATE_AVX2 OR DEACTIVATE_SSE2)
     set(COMPILER_SUPPORT_AVX2 FALSE)
 endif()
 
