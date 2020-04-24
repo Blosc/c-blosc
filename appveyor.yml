@@ -2,9 +2,11 @@ version: 1.0.{build}
 build: false
 
 image:
-  - Visual Studio 2019
-  - Visual Studio 2017
-  - Visual Studio 2015
+  # For some reason, it takes ages to do a build with an image
+  # so, let's keep the oldest supported one
+  #- Visual Studio 2019
+  #- Visual Studio 2017
+  #- Visual Studio 2015
   - Visual Studio 2013
 
 configuration:
