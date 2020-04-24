@@ -8,6 +8,7 @@
 **********************************************************************/
 
 #include "shuffle.h"
+#include "blosc-common.h"
 #include "shuffle-generic.h"
 #include "bitshuffle-generic.h"
 #include "blosc-comp-features.h"
@@ -173,6 +174,8 @@ blosc_internal_cpuidex(int32_t cpuInfo[4], int32_t function_id, int32_t subfunct
 
 #define _XCR_XFEATURE_ENABLED_MASK 0
 
+#if !(defined(_IMMINTRIN_H_INCLUDED) && (BLOSC_GCC_VERSION >= 900))
+
 /* Reads the content of an extended control register.
    https://software.intel.com/en-us/articles/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family
 */
@@ -192,7 +195,8 @@ blosc_internal_xgetbv(uint32_t xcr) {
   return ((uint64_t)edx << 32) | eax;
 }
 
-#endif /* defined(_MSC_FULL_VER) */
+#endif  // !(defined(_IMMINTRIN_H_INCLUDED) && (BLOSC_GCC_VERSION >= 900))
+#endif  /* defined(_MSC_FULL_VER) */
 
 #ifndef _XCR_XFEATURE_ENABLED_MASK
 #define _XCR_XFEATURE_ENABLED_MASK 0x0
