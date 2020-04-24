@@ -75,7 +75,7 @@ cmake_minimum_required(VERSION 2.8.12)
 if (NOT CMAKE_VERSION VERSION_LESS 3.3)
     cmake_policy(SET CMP0063 NEW)
 endif()
-project(blosc)
+project(blosc C)
 
 # parse the full version numbers from blosc.h
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/blosc/blosc.h _blosc_h_contents)
@@ -141,6 +141,8 @@ if(NOT DEACTIVATE_SNAPPY)
         find_package(Snappy)
     else()
         message(STATUS "Using Snappy internal sources.")
+        # Enable C++ compiler for snappy internal sources
+        enable_language(CXX)
     endif(PREFER_EXTERNAL_SNAPPY)
     # HAVE_SNAPPY will be set to true because even if the library is not found,
     # we will use the included sources for it
