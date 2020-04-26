@@ -5,7 +5,7 @@
 
 | Gitter | Actions | NumFOCUS |
 |--------|---------|----------|
-| [![Gitter](https://badges.gitter.im/Blosc/c-blosc.svg)](https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | [![Build Status](https://github.com/Blosc/c-blosc/.github/workflows/cmake.yml/badge.svg)](https://github.com/Blosc/c-blosc/actions) | [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org) |
+| [![Gitter](https://badges.gitter.im/Blosc/c-blosc.svg)](https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | [![Build Status](https://github.com/Blosc/c-blosc/actions)](https://github.com/Blosc/c-blosc/.github/workflows/cmake.yml/badge.svg) | [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org) |
 
 
 ## What is it?
