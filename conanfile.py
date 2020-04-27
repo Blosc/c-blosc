@@ -19,7 +19,7 @@ class CbloscConan(ConanFile):
 
     def build(self):
         os.mkdir("build")
-        tools.replace_in_file("CMakeLists.txt", "project(blosc)", '''project(blosc)
+        tools.replace_in_file("CMakeLists.txt", "project(blosc C)", '''project(blosc C)
             include(${CMAKE_BINARY_DIR}/../conanbuildinfo.cmake)
             conan_basic_setup(NO_OUTPUT_DIRS)''')
         cmake = CMake(self)
