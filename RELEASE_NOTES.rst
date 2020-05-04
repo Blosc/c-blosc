@@ -2,10 +2,11 @@
  Release notes for C-Blosc
 ===========================
 
-Changes from 1.17.1 to 1.18.1
+Changes from 1.18.1 to 1.18.2
 =============================
 
-#XXX version-specific blurb XXX#
+- Conan packaging has been deprecated (from now on, we should try
+  to focus on supporting wheels only).
 
 
 Changes from 1.17.1 to 1.18.1
