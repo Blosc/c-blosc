@@ -17,7 +17,7 @@
 #       do not attempt to build with AVX2 instructions
 #   DEACTIVATE_LZ4: default OFF
 #       do not include support for the LZ4 library
-#   DEACTIVATE_SNAPPY: default OFF
+#   DEACTIVATE_SNAPPY: default ON
 #       do not include support for the Snappy library
 #   DEACTIVATE_ZLIB: default OFF
 #       do not include support for the Zlib library
@@ -27,9 +27,6 @@
 #       do not check for symbols in shared or static libraries
 #   PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
-#       sources
-#   PREFER_EXTERNAL_SNAPPY: default OFF
-#       when found, use the installed Snappy libs instead of included
 #       sources
 #   PREFER_EXTERNAL_ZLIB: default OFF
 #       when found, use the installed zlib libs instead of included
@@ -106,7 +103,7 @@ option(DEACTIVATE_AVX2
 option(DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
 option(DEACTIVATE_SNAPPY
-    "Do not include support for the Snappy library." OFF)
+    "Do not include support for the Snappy library." ON)
 option(DEACTIVATE_ZLIB
     "Do not include support for the Zlib library." OFF)
 option(DEACTIVATE_ZSTD
@@ -115,8 +112,6 @@ option(DEACTIVATE_SYMBOLS_CHECK
         "Do not check for symbols in shared or static libraries." ON)
 option(PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
-option(PREFER_EXTERNAL_SNAPPY
-    "Find and use external Snappy library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZLIB
     "Find and use external Zlib library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZSTD
@@ -137,16 +132,13 @@ if(NOT DEACTIVATE_LZ4)
 endif(NOT DEACTIVATE_LZ4)
 
 if(NOT DEACTIVATE_SNAPPY)
-    if(PREFER_EXTERNAL_SNAPPY)
-        find_package(Snappy)
+    find_package(Snappy)
+    if(SNAPPY_FOUND)
+        message(STATUS "Activating support for SNAPPY.")
+        set(HAVE_SNAPPY TRUE)
     else()
-        message(STATUS "Using Snappy internal sources.")
-        # Enable C++ compiler for snappy internal sources
-        enable_language(CXX)
-    endif(PREFER_EXTERNAL_SNAPPY)
-    # HAVE_SNAPPY will be set to true because even if the library is not found,
-    # we will use the included sources for it
-    set(HAVE_SNAPPY TRUE)
+        message(STATUS "SNAPPY *not* found.  De-activating support for it.")
+    endif()
 endif(NOT DEACTIVATE_SNAPPY)
 
 if(NOT DEACTIVATE_ZLIB)
