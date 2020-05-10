@@ -215,6 +215,10 @@ BLOSC_EXPORT void blosc_destroy(void);
   This will call blosc_set_splitmode() with the different supported values.
   See blosc_set_splitmode() docstrings for more info on each mode.
 
+  BLOSC_WARN=(INTEGER): This will print some warning message on stderr
+  showing more info in situations where data inputs cannot be compressed.
+  The values can range from 1 (less verbose) to 10 (full verbose).  0 is
+  the same as if the BLOSC_WARN envvar was not defined.
   */
 BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
 				size_t nbytes, const void *src, void *dest,

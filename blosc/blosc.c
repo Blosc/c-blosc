@@ -1070,6 +1070,8 @@ static int initialize_context_compression(struct blosc_context* context,
                           int32_t blocksize,
                           int32_t numthreads)
 {
+  char *envvar;
+  int warnlvl;
   /* Set parameters */
   context->compress = 1;
   context->src = (const uint8_t*)src;
@@ -1083,19 +1085,29 @@ static int initialize_context_compression(struct blosc_context* context,
   context->end_threads = 0;
   context->clevel = clevel;
 
+  envvar = getenv("BLOSC_WARN");
+  if (envvar != NULL) {
+    warnlvl = strtol(envvar, NULL, 10);
+  }
+
   /* Check buffer size limits */
   if (sourcesize > BLOSC_MAX_BUFFERSIZE) {
-    fprintf(stderr, "Input buffer size cannot exceed %d bytes\n",
-            BLOSC_MAX_BUFFERSIZE);
-    return -1;
+    if (warnlvl > 0) {
+      fprintf(stderr, "Input buffer size cannot exceed %d bytes\n",
+              BLOSC_MAX_BUFFERSIZE);
+    }
+    return 0;
   }
   if (destsize < BLOSC_MAX_OVERHEAD) {
+    if (warnlvl > 0) {
+      fprintf(stderr, "Output buffer size should be larger than %d bytes\n",
+              BLOSC_MAX_OVERHEAD);
+    }
     return 0;
   }
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
-    /* If clevel not in 0..9, print an error */
     fprintf(stderr, "`clevel` parameter must be between 0 and 9!\n");
     return -10;
   }
@@ -1271,10 +1283,10 @@ int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
 					 nbytes, src, dest, destsize,
 					 blosc_compname_to_compcode(compressor),
 					 blocksize, numinternalthreads);
-  if (error < 0) { return error; }
+  if (error <= 0) { return error; }
 
   error = write_compression_header(&context, clevel, doshuffle);
-  if (error < 0) { return error; }
+  if (error <= 0) { return error; }
 
   result = blosc_compress_context(&context);
 
@@ -1393,10 +1405,10 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
                                            typesize, nbytes, src, dest, destsize,
                                            g_compressor, g_force_blocksize,
                                            g_threads);
-    if (result < 0) { break; }
+    if (result <= 0) { break; }
 
     result = write_compression_header(g_global_context, clevel, doshuffle);
-    if (result < 0) { break; }
+    if (result <= 0) { break; }
 
     result = blosc_compress_context(g_global_context);
   } while (0);
