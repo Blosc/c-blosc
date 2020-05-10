@@ -19,7 +19,6 @@ jobs:
           Ubuntu Clang No AVX2,
           Ubuntu Clang No AVX2 No SSE2,
           Ubuntu Clang No LZ4,
-          Ubuntu Clang No SNAPPY,
           Ubuntu Clang No ZLIB,
           Ubuntu Clang No ZSTD,
           Windows MSVC Win32,
@@ -50,7 +49,7 @@ jobs:
             os: ubuntu-latest
             compiler: gcc
             packages: libsnappy-dev
-            cmake-args: -DPREFER_EXTERNAL_SNAPPY=ON
+            cmake-args: -DDEACTIVATE_SNAPPY=OFF
 
           - name: Ubuntu GCC External ZLIB
             os: ubuntu-latest
@@ -87,11 +86,6 @@ jobs:
             os: ubuntu-latest
             compiler: clang
             cmake-args: -DDEACTIVATE_LZ4=ON
-
-          - name: Ubuntu Clang No SNAPPY
-            os: ubuntu-latest
-            compiler: clang
-            cmake-args: -DDEACTIVATE_SNAPPY=ON
 
           - name: Ubuntu Clang No ZLIB
             os: ubuntu-latest
