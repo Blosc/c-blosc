@@ -1070,8 +1070,8 @@ static int initialize_context_compression(struct blosc_context* context,
                           int32_t blocksize,
                           int32_t numthreads)
 {
-  char *envvar;
-  int warnlvl;
+  char *envvar = NULL;
+  int warnlvl = 0;
   /* Set parameters */
   context->compress = 1;
   context->src = (const uint8_t*)src;
