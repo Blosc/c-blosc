@@ -378,10 +378,10 @@ int main(int argc, char *argv[]) {
   int extreme_suite = 0;
   int debug_suite = 0;
   int nthreads = 4;                     /* The number of threads */
-  int size = 2*MB;                      /* Buffer size */
+  int size = 4 * MB;                    /* Buffer size */
   int elsize = 8;                       /* Datatype size */
   int rshift = 19;                      /* Significant bits */
-  int workingset = 256*MB;              /* The maximum allocated memory */
+  int workingset = 256 * MB;            /* The maximum allocated memory */
   int nthreads_, size_, elsize_, rshift_, i;
   int unsafe = 1;
   FILE * output_file = stdout;
