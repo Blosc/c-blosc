@@ -15,6 +15,8 @@ Changes from 1.18.1 to 1.19.0
 - Conan packaging has been deprecated (from now on, we should try
   to focus on supporting wheels only).
 
+- zstd codec updated to 1.4.5.
+
 
 Changes from 1.17.1 to 1.18.1
 =============================
