@@ -645,6 +645,13 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
           len += code;
         } while (code == 255);
       }
+      else {
+#ifdef BLOSCLZ_SAFE
+        if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + 1 >= ip_limit)) {
+          return 0;
+        }
+#endif
+      }
       code = *ip++;
       ref -= code;
 
