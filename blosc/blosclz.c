@@ -617,7 +617,6 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
   const uint8_t* ip_limit = ip + length;
   uint8_t* op = (uint8_t*)output;
   uint32_t ctrl;
-  int32_t loop = 1;
 #ifdef BLOSCLZ_SAFE
   uint8_t* op_limit = op + maxout;
   if (BLOSCLZ_UNEXPECT_CONDITIONAL(length == 0)) {
@@ -626,7 +625,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
 #endif
   ctrl = (*ip++) & 31U;
 
-  do {
+  while (1) {
     uint8_t* ref = op;
     int32_t len = ctrl >> 5U;
     int32_t ofs = (ctrl & 31U) << 8U;
@@ -645,13 +644,6 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
           code = *ip++;
           len += code;
         } while (code == 255);
-      }
-      else {
-#ifdef BLOSCLZ_SAFE
-        if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip >= ip_limit)) {
-          return 0;
-        }
-#endif
       }
       code = *ip++;
       ref -= code;
@@ -683,7 +675,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       if (BLOSCLZ_EXPECT_CONDITIONAL(ip < ip_limit))
         ctrl = *ip++;
       else
-        loop = 0;
+        break;
 
       if (ref == op) {
         /* optimized copy for a run */
@@ -727,11 +719,10 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       // in performance.
       op = fastcopy(op, ip, (unsigned) ctrl); ip += ctrl;
 
-      loop = (int32_t)(ip < ip_limit);
-      if (BLOSCLZ_EXPECT_CONDITIONAL(loop))
-        ctrl = *ip++;
+      if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip >= ip_limit)) break;
+      ctrl = *ip++;
     }
-  } while (loop);
+  }
 
   return (int)(op - (uint8_t*)output);
 }
