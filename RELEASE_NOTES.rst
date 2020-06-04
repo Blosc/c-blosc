@@ -2,8 +2,15 @@
  Release notes for C-Blosc
 ===========================
 
-Changes from 1.18.1 to 1.18.2
+Changes from 1.18.1 to 1.19.0
 =============================
+
+- blosclz codec updated to 2.1.0.  Expect better compression ratios and
+  performance in a wider variety of scenarios.
+
+- `blosc_decompress_unsafe()`, `blosc_decompress_ctx_unsafe()` and
+  `blosc_getitem_unsafe()` have been removed because they are dangerous
+  and after latest improvements, they should not be used in production.
 
 - Conan packaging has been deprecated (from now on, we should try
   to focus on supporting wheels only).
