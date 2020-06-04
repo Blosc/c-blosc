@@ -635,17 +635,35 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       uint8_t code;
       len--;
       ref -= ofs;
-      if (len == 7 - 1)
+      if (len == 7 - 1) {
         do {
+#ifdef BLOSCLZ_SAFE
+          if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + 1 >= ip_limit)) {
+            return 0;
+          }
+#endif
           code = *ip++;
           len += code;
         } while (code == 255);
+      }
+      else {
+#ifdef BLOSCLZ_SAFE
+        if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip >= ip_limit)) {
+          return 0;
+        }
+#endif
+      }
       code = *ip++;
       ref -= code;
 
       /* match from 16-bit distance */
       if (BLOSCLZ_UNEXPECT_CONDITIONAL(code == 255)) {
         if (BLOSCLZ_EXPECT_CONDITIONAL(ofs == (31U << 8U))) {
+#ifdef BLOSCLZ_SAFE
+          if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip + 1 >= ip_limit)) {
+            return 0;
+          }
+#endif
           ofs = (*ip++) << 8U;
           ofs += *ip++;
           ref = op - ofs - MAX_DISTANCE;
