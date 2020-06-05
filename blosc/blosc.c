@@ -877,7 +877,9 @@ static int parallel_blosc(struct blosc_context* context)
   (void)rc;  // just to avoid 'unused-variable' warning
 
   /* Check whether we need to restart threads */
-  blosc_set_nthreads_(context);
+  if (blosc_set_nthreads_(context) < 0) {
+    return -1;
+  }
 
   /* Set sentinels */
   context->thread_giveup_code = 1;
@@ -1976,7 +1978,9 @@ int blosc_set_nthreads_(struct blosc_context* context)
   /* Launch a new pool of threads */
   if (context->numthreads > 1 && context->numthreads != context->threads_started) {
     blosc_release_threadpool(context);
-    init_threads(context);
+    if (init_threads(context) < 0) {
+      return -1;
+    }
   }
 
   /* We have now started the threads */
