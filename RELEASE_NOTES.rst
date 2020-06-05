@@ -15,6 +15,11 @@ Changes from 1.18.1 to 1.19.0
   Also, a new OSS-Fuzz workflow has been added for increased detection
   of possible vulnerabilities.  Thanks to Nathan Moinvaziri.
 
+- For small buffers that cannot be compressed (typically < 128 bytes),
+  `blosc_compress()` returns now a 0 (cannot compress) instead of a negative
+  number (internal error).  See https://github.com/Blosc/c-blosc/pull/294.
+  Thanks to @kalvdans for providing the initial patch.
+
 - blosclz codec updated to 2.1.0.  Expect better compression ratios and
   performance in a wider variety of scenarios.
 
