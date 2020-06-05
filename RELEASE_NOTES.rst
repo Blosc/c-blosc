@@ -5,6 +5,16 @@
 Changes from 1.18.1 to 1.19.0
 =============================
 
+- The length of automatic blocksizes for fast codecs (lz4, blosclz) has
+  been incremented quite a bit (up to 256 KB) for better compression ratios.
+  The performance in modern CPUs (with at least 256 KB in L2 cache) should
+  be better too (for older CPUs the performance should stay roughly the same).
+
+- Continuous integration has been migrated to GitHub actions and much
+  more scenarios are tested (specially linking with external codecs).
+  Also, a new OSS-Fuzz workflow has been added for increased detection
+  of possible vulnerabilities.  Thanks to Nathan Moinvaziri.
+
 - blosclz codec updated to 2.1.0.  Expect better compression ratios and
   performance in a wider variety of scenarios.
 

@@ -1,15 +1,19 @@
 ===============================================================
- Announcing C-Blosc 1.18.1
+ Announcing C-Blosc 1.19.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-A maintenance release where the copy of the leftovers of a chunk when
-its size is not a multiple of typesize.  Although this is a very unusual
-situation, it can certainly happen (e.g.
-https://github.com/Blosc/python-blosc/issues/220).
+The algorithm for choosing the blocksize automatically in fast codecs
+(lz4 and blosclz) has been refined to provide better compression ratios
+and better performance on modern CPUs (L2 cache sizes >= 256KB), while
+staying reasonably fast on less powerful CPUs.
+
+Also, new versions for blosclz (2.1.0) and zstd (1.4.5) codecs have
+been integrated.  Expect better compression ratios and performance with
+these new versions too.
 
 For more info, please see the release notes in:
 
