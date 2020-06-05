@@ -45,7 +45,7 @@ version::
   $ cd ../compat
   $ export LD_LIBRARY_PATH=../build/blosc
   $ gcc -o filegen filegen.c -L$LD_LIBRARY_PATH -lblosc -I../blosc
-  $ ./filegen compress lz4 blosc-lz4-1.y.z.cdata
+  $ ./filegen compress lz4 blosc-1.y.z-lz4.cdata
 
 In order to make sure that we are not breaking forward compatibility,
 link and run the `compat/filegen` utility against different versions of
