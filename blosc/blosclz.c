@@ -702,11 +702,12 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         return 0;
       }
 
-      // memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
+      memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
       // On GCC-6, fastcopy this is still faster than plain memcpy
       // However, using recent CLANG/LLVM 9.0, there is almost no difference
       // in performance.
-      op = fastcopy(op, ip, (unsigned) ctrl); ip += ctrl;
+      // And starting on CLANG/LLVM 10 and GCC 9, memcpy is generally faster.
+      // op = fastcopy(op, ip, (unsigned) ctrl); ip += ctrl;
 
       if (BLOSCLZ_UNEXPECT_CONDITIONAL(ip >= ip_limit)) break;
       ctrl = *ip++;
