@@ -215,7 +215,7 @@ if __name__ == '__main__':
         mean = np.mean(values["memcpyr"])
         message = "memcpy (read from memory)"
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
-    text(4.0, mean+400, message)
+    text(4.0, mean+.4, message)
     plots.append(plot_)
     show_plot(plots, yaxis, legends, gtitle,
               xmax=int(options.xmax) if options.xmax else None,
