@@ -5,7 +5,8 @@
 Changes from 1.19.0 to 1.19.1
 =============================
 
-#XXX version-specific blurb XXX#
+- pthread_create() errors are now handled and propagated back to the user.
+  See https://github.com/Blosc/c-blosc/pull/299.
 
 
 Changes from 1.18.1 to 1.19.0
