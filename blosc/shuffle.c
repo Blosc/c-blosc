@@ -195,6 +195,10 @@ blosc_internal_xgetbv(uint32_t xcr) {
   return ((uint64_t)edx << 32) | eax;
 }
 
+#else
+
+#define blosc_internal_xgetbv _xgetbv
+
 #endif  // !(defined(_IMMINTRIN_H_INCLUDED) && (BLOSC_GCC_VERSION >= 900))
 #endif  /* defined(_MSC_FULL_VER) */
 
