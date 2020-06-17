@@ -93,9 +93,9 @@ option(BUILD_STATIC
 option(BUILD_SHARED
     "Build a shared library version of the blosc library." ON)
 option(BUILD_TESTS
-    "Build test programs form the blosc compression library" ON)
+    "Build test programs from the blosc compression library" ON)
 option(BUILD_BENCHMARKS
-    "Build benchmark programs form the blosc compression library" ON)
+    "Build benchmark programs from the blosc compression library" ON)
 option(DEACTIVATE_SSE2
     "Do not attempt to build with SSE2 instructions" OFF)
 option(DEACTIVATE_AVX2
