@@ -9,6 +9,8 @@
 #       build the shared library version of the Blosc library
 #   BUILD_TESTS: default ON
 #       build test programs and generates the "test" target
+#   BUILD_FUZZERS: default ON
+#       build fuzz test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
 #   DEACTIVATE_SSE2: default OFF
@@ -94,6 +96,8 @@ option(BUILD_SHARED
     "Build a shared library version of the blosc library." ON)
 option(BUILD_TESTS
     "Build test programs from the blosc compression library" ON)
+option(BUILD_FUZZERS
+    "Build fuzzer programs from the blosc compression library" ON)
 option(BUILD_BENCHMARKS
     "Build benchmark programs from the blosc compression library" ON)
 option(DEACTIVATE_SSE2
@@ -317,6 +321,11 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
     add_subdirectory(compat)
 endif(BUILD_TESTS)
+
+if(BUILD_FUZZERS)
+    enable_testing()
+    add_subdirectory(tests/fuzz)
+endif(BUILD_FUZZERS)
 
 if(BUILD_BENCHMARKS)
     add_subdirectory(bench)
