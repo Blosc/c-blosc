@@ -97,9 +97,9 @@ option(BUILD_TESTS
 option(BUILD_BENCHMARKS
     "Build benchmark programs form the blosc compression library" ON)
 option(DEACTIVATE_SSE2
-        "Do not attempt to build with SSE2 instructions" OFF)
+    "Do not attempt to build with SSE2 instructions" OFF)
 option(DEACTIVATE_AVX2
-        "Do not attempt to build with AVX2 instructions" OFF)
+    "Do not attempt to build with AVX2 instructions" OFF)
 option(DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
 option(DEACTIVATE_SNAPPY
@@ -107,9 +107,9 @@ option(DEACTIVATE_SNAPPY
 option(DEACTIVATE_ZLIB
     "Do not include support for the Zlib library." OFF)
 option(DEACTIVATE_ZSTD
-        "Do not include support for the Zstd library." OFF)
+    "Do not include support for the Zstd library." OFF)
 option(DEACTIVATE_SYMBOLS_CHECK
-        "Do not check for symbols in shared or static libraries." ON)
+    "Do not check for symbols in shared or static libraries." ON)
 option(PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
 option(PREFER_EXTERNAL_ZLIB
