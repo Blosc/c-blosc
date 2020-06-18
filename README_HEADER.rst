@@ -5,7 +5,7 @@ Blosc (as of Version 1.0.0) has the following 16 byte header that stores
 information about the compressed buffer::
 
     |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
-      ^   ^   ^   ^ |     nbytes    |   blocksize   |    ctbytes    |
+      ^   ^   ^   ^ |     nbytes    |   blocksize   |    cbytes     |
       |   |   |   |
       |   |   |   +--typesize
       |   |   +------flags
@@ -61,5 +61,5 @@ All entries are little endian.
     (``uint32``) Uncompressed size of the buffer (this header is not included).
 :blocksize:
     (``uint32``) Size of internal blocks.
-:ctbytes:
+:cbytes:
     (``uint32``) Compressed size of the buffer (including this header).
