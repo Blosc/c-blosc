@@ -58,8 +58,8 @@ All entries are little endian.
 :typesize:
     (``uint8``) Number of bytes for the atomic type.
 :nbytes:
-    (``uint32``) Uncompressed size of the buffer.
+    (``uint32``) Uncompressed size of the buffer (this header is not included).
 :blocksize:
     (``uint32``) Size of internal blocks.
 :ctbytes:
-    (``uint32``) Compressed size of the buffer.
+    (``uint32``) Compressed size of the buffer (including this header).
