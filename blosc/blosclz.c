@@ -82,7 +82,6 @@
   }                                                      \
 }
 
-#define IP_BOUNDARY 2
 #define BYTES_IN_CYCLE 512
 
 #if defined(__AVX2__)
@@ -329,7 +328,7 @@ int blosclz_compress(const int clevel, const void* input, int length,
   uint8_t* ibase = (uint8_t*)input;
   uint8_t* ip = ibase;
   uint8_t* icycle = ibase;
-  uint8_t* ip_bound = ibase + length - IP_BOUNDARY;
+  uint8_t* ip_bound = ibase + length - 1;
   uint8_t* ip_limit = ibase + length - 12;
   uint8_t* op = (uint8_t*)output;
   uint8_t* ocycle = op;
@@ -452,11 +451,11 @@ int blosclz_compress(const int clevel, const void* input, int length,
     }
     else {
 #if defined(__AVX2__)
-      ip = get_match_32(ip, ip_bound + IP_BOUNDARY, ref);
+      ip = get_match_32(ip, ip_bound, ref);
 #elif defined(__SSE2__)
-      ip = get_match_16(ip, ip_bound + IP_BOUNDARY, ref);
+      ip = get_match_16(ip, ip_bound, ref);
 #else
-      ip = get_match(ip, ip_bound + IP_BOUNDARY, ref);
+      ip = get_match(ip, ip_bound, ref);
 #endif
     }
 
@@ -523,7 +522,6 @@ int blosclz_compress(const int clevel, const void* input, int length,
   }
 
   /* left-over as literal copy */
-  ip_bound++;
   while (BLOSCLZ_UNEXPECT_CONDITIONAL(ip <= ip_bound)) {
     if (BLOSCLZ_UNEXPECT_CONDITIONAL(op + 2 > op_limit)) goto out;
     *op++ = *ip++;
