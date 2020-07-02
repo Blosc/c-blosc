@@ -1,5 +1,16 @@
-Blosc Header Format
-===================
+Blosc Chunk Format
+==================
+
+The chunk is composed by a header and a blocks / splits section::
+
+    +---------+--------+---------+
+    |  header | blocks / splits  |
+    +---------+--------+---------+
+
+These are described below.
+
+The header section
+------------------
 
 Blosc (as of Version 1.0.0) has the following 16 byte header that stores
 information about the compressed buffer::
@@ -12,7 +23,7 @@ information about the compressed buffer::
       |   +----------versionlz
       +--------------version
 
-Datatypes of the Header Entries
+Datatypes of the header entries
 -------------------------------
 
 All entries are little endian.
@@ -63,3 +74,24 @@ All entries are little endian.
     (``uint32``) Size of internal blocks.
 :cbytes:
     (``uint32``) Compressed size of the buffer (including this header).
+
+The blocks / splits section
+---------------------------
+
+After the header, there come the blocks / splits section.  Blocks are equal-sized parts of the chunk, except for the last block that can be shorter or equal than the rest.
+
+At the beginning of the blocks section, there come a list of `int32_t bstarts` to indicate where the different encoded blocks starts (counting from the end of this `bstarts` section)::
+
+    +=========+=========+========+=========+
+    | bstart0 | bstart1 |   ...  | bstartN |
+    +=========+=========+========+=========+
+
+Finally, it comes the actual list of compressed blocks / splits data streams.  It turns out that a block may optionally (see bit 4 in `flags` above) be further split in so-called splits which are the actual data streams that are transmitted to codecs for compression.  If a block is not split, then the split is equivalent to a whole block.  Before each split in the list, there is the compressed size of it, expressed as an `int32_t`::
+
+    +========+========+========+========+========+========+========+
+    | csize0 | split0 | csize1 | split1 |   ...  | csizeN | splitN |
+    +========+========+========+========+========+========+========+
+
+
+*Note*: all the integers are stored in little endian.
+
