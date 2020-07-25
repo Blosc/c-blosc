@@ -2,6 +2,23 @@
  Release notes for C-Blosc
 ===========================
 
+Changes from 1.19.1 to 1.20.0
+=============================
+
+* More saftey checks have been implemented so that potential flaws
+  discovered by new fuzzers in OSS-Fuzzer are fixed now.  Thanks to
+  Nathan Moinvaziri (@nmoinvaz).
+
+* BloscLZ updated to 2.3.0.  Expect a important performance boost, and
+  specially better compression ratios.
+
+* Fixed the `_xgetbv()` collision. Thanks to Michał Górny (@mgorny).
+
+* The chunk format has been fully described so that 3rd party software
+  may come with a different implementation, but still compatible with
+  C-Blosc chunks.
+
+
 Changes from 1.19.0 to 1.19.1
 =============================
 
