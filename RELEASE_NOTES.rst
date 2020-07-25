@@ -10,7 +10,8 @@ Changes from 1.19.1 to 1.20.0
   Nathan Moinvaziri (@nmoinvaz).
 
 * BloscLZ updated to 2.3.0.  Expect a important performance boost, and
-  specially better compression ratios.
+  specially better compression ratios.  For details, see our new blog
+  post: https://blosc.org/posts/beast-release/
 
 * Fixed the `_xgetbv()` collision. Thanks to Michał Górny (@mgorny).
 

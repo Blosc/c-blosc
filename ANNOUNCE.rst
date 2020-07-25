@@ -12,7 +12,8 @@ Also, the `_xgetbv()` collision has been fixed (@mgorny).
 
 Last but not least, the chunk format has been fully described so
 that 3rd party software may come with a different implementation,
-but still compatible with C-Blosc chunks.
+but still compatible with C-Blosc chunks For details, see our new
+blog post: https://blosc.org/posts/beast-release/.
 
 Also, new versions for blosclz (2.3.0) codec has been backported from
 C-Blosc2.  Expect better compression ratios and performance.
