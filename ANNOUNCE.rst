@@ -6,17 +6,17 @@
 What is new?
 ============
 
-More saftey checks have been implemented so that potential flaws
+More safety checks have been implemented so that potential flaws
 discovered by new fuzzers in OSS-Fuzzer are fixed (@nmoinvaz).
 Also, the `_xgetbv()` collision has been fixed (@mgorny).
 
+Also, a new version of blosclz (2.3.0) codec has been backported from
+C-Blosc2.  Expect better compression ratios for faster codecs.  For
+details, see our new blog post: https://blosc.org/posts/beast-release/
+
 Last but not least, the chunk format has been fully described so
 that 3rd party software may come with a different implementation,
-but still compatible with C-Blosc chunks For details, see our new
-blog post: https://blosc.org/posts/beast-release/.
-
-Also, new versions for blosclz (2.3.0) codec has been backported from
-C-Blosc2.  Expect better compression ratios and performance.
+but still compatible with C-Blosc chunks.
 
 For more info, please see the release notes in:
 

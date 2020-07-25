@@ -9,9 +9,9 @@ Changes from 1.19.1 to 1.20.0
   discovered by new fuzzers in OSS-Fuzzer are fixed now.  Thanks to
   Nathan Moinvaziri (@nmoinvaz).
 
-* BloscLZ updated to 2.3.0.  Expect a important performance boost, and
-  specially better compression ratios.  For details, see our new blog
-  post: https://blosc.org/posts/beast-release/
+* BloscLZ updated to 2.3.0. Expect better compression ratios for faster
+  codecs.  For details, see our new blog post:
+  https://blosc.org/posts/beast-release/
 
 * Fixed the `_xgetbv()` collision. Thanks to Michał Górny (@mgorny).
 
