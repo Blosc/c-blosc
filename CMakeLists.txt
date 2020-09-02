@@ -93,13 +93,13 @@ message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 option(BUILD_STATIC
     "Build a static version of the blosc library." ON)
 option(BUILD_SHARED
-    "Build a shared library version of the blosc library." ON)
+    "Build a shared library version of the blosc library." OFF)
 option(BUILD_TESTS
-    "Build test programs from the blosc compression library" ON)
+    "Build test programs from the blosc compression library" OFF)
 option(BUILD_FUZZERS
     "Build fuzzer programs from the blosc compression library" ${BUILD_STATIC})
 option(BUILD_BENCHMARKS
-    "Build benchmark programs from the blosc compression library" ON)
+    "Build benchmark programs from the blosc compression library" OFF)
 option(DEACTIVATE_SSE2
     "Do not attempt to build with SSE2 instructions" OFF)
 option(DEACTIVATE_AVX2
