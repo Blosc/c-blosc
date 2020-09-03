@@ -21,7 +21,7 @@ foreach(source ${SOURCES})
     endif()
 
     # Disable targets that use lz4 compressor when lz4 is deactivated
-    if((target STREQUAL test_compressor) OR (target STREQUAL test_bitshuffle_leftovers) AND DEACTIVATE_LZ4)
+    if((target STREQUAL test_compressor) OR (target STREQUAL test_bitshuffle_leftovers) AND CBLOSC_DEACTIVATE_LZ4)
         message("Skipping ${target} on non-LZ4 builds")
         continue()
     endif()
@@ -106,17 +106,17 @@ foreach(source ${SOURCES})
     endif()
 endforeach(source)
 
-if(NOT DEACTIVATE_SYMBOLS_CHECK)
+if(NOT CBLOSC_DEACTIVATE_SYMBOLS_CHECK)
     if (NOT WIN32)
         # Verify that no unexpected symbols are exported.
-        if (BUILD_SHARED)
+        if (CBLOSC_BUILD_SHARED)
             add_test(
                 NAME     blosc_test_shared_symbols
                 COMMAND  python
                          "${CMAKE_CURRENT_SOURCE_DIR}/check_symbols.py"
                          "$<TARGET_FILE:blosc_shared>")
         endif()
-        if (BUILD_STATIC)
+        if (CBLOSC_BUILD_STATIC)
             add_test(
                 NAME     blosc_test_static_symbols
                 COMMAND  python
@@ -124,4 +124,4 @@ if(NOT DEACTIVATE_SYMBOLS_CHECK)
                          "$<TARGET_FILE:blosc_static>")
         endif()
     endif()
-endif(NOT DEACTIVATE_SYMBOLS_CHECK)
+endif(NOT CBLOSC_DEACTIVATE_SYMBOLS_CHECK)

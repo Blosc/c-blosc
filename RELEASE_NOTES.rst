@@ -180,7 +180,7 @@ Changes from 1.14.4 to 1.15.0
 Changes from 1.14.3 to 1.14.4
 =============================
 
-- Added a new `DEACTIVATE_SSE2` option for cmake that is useful for disabling
+- Added a new `CBLOSC_DEACTIVATE_SSE2` option for cmake that is useful for disabling
   SSE2 when doing cross-compilation (see #236).
 
 - New check for detecting output buffers smaller than BLOSC_MAX_OVERHEAD.
@@ -382,7 +382,7 @@ Changes from 1.11.3 to 1.12.0
   accessible but not the includes (typical in Windows boxes).  Also,
   the Zstd codec runs much faster when compiled internally.  The
   previous behaviour can be restored by activating the cmake options
-  PREFER_EXTERNAL_SNAPPY, PREFER_EXTERNAL_ZLIB and PREFER_EXTERNAL_ZSTD.
+  PREFER_EXTERNAL_SNAPPY, CBLOSC_PREFER_EXTERNAL_ZLIB and CBLOSC_PREFER_EXTERNAL_ZSTD.
 
 - Zstd internal sources have been updated to 1.3.0.
 
@@ -500,7 +500,7 @@ Changes from 1.9.0 to 1.9.1
   advantage (10% ~ 20%) when C-Blosc is used as a replacement of
   memcpy() (which should not be the most common scenario out there).
 
-- Added a new DEACTIVATE_AVX2 cmake option to explicitly disable AVX2
+- Added a new CBLOSC_DEACTIVATE_AVX2 cmake option to explicitly disable AVX2
   at build-time.  Thanks to James Bird.
 
 - The ``make -jN`` for parallel compilation should work now.  Thanks
@@ -618,10 +618,10 @@ Changes from 1.6.1 to 1.7.0
 * LZ4 codec updated to 1.7.0 (r130).
 
 * PREFER_EXTERNAL_COMPLIBS cmake option has been removed and replaced
-  by the more fine grained PREFER_EXTERNAL_LZ4, PREFER_EXTERNAL_SNAPPY
-  and PREFER_EXTERNAL_ZLIB.  In order to allow the use of the new API
-  introduced in LZ4 1.7.0, PREFER_EXTERNAL_LZ4 has been set to OFF by
-  default, whereas PREFER_EXTERNAL_SNAPPY and PREFER_EXTERNAL_ZLIB
+  by the more fine grained CBLOSC_PREFER_EXTERNAL_LZ4, PREFER_EXTERNAL_SNAPPY
+  and CBLOSC_PREFER_EXTERNAL_ZLIB.  In order to allow the use of the new API
+  introduced in LZ4 1.7.0, CBLOSC_PREFER_EXTERNAL_LZ4 has been set to OFF by
+  default, whereas PREFER_EXTERNAL_SNAPPY and CBLOSC_PREFER_EXTERNAL_ZLIB
   continues to be ON.
 
 * Implemented SSE2 shuffle support for buffers containing a number of

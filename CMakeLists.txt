@@ -3,64 +3,64 @@
 #
 # Available options:
 #
-#   BUILD_STATIC: default ON
+#   CBLOSC_BUILD_STATIC: default ON
 #       build the static version of the Blosc library
-#   BUILD_SHARED: default ON
+#   CBLOSC_BUILD_SHARED: default ON
 #       build the shared library version of the Blosc library
-#   BUILD_TESTS: default ON
+#   CBLOSC_BUILD_TESTS: default ON
 #       build test programs and generates the "test" target
-#   BUILD_FUZZERS: default ON
+#   CBLOSC_BUILD_FUZZERS: default ON
 #       build fuzz test programs and generates the "test" target
-#   BUILD_BENCHMARKS: default ON
+#   CBLOSC_BUILD_BENCHMARKS: default ON
 #       build the benchmark program
-#   DEACTIVATE_SSE2: default OFF
+#   CBLOSC_DEACTIVATE_SSE2: default OFF
 #       do not attempt to build with SSE2 instructions
-#   DEACTIVATE_AVX2: default OFF
+#   CBLOSC_DEACTIVATE_AVX2: default OFF
 #       do not attempt to build with AVX2 instructions
-#   DEACTIVATE_LZ4: default OFF
+#   CBLOSC_DEACTIVATE_LZ4: default OFF
 #       do not include support for the LZ4 library
-#   DEACTIVATE_SNAPPY: default ON
+#   CBLOSC_DEACTIVATE_SNAPPY: default ON
 #       do not include support for the Snappy library
-#   DEACTIVATE_ZLIB: default OFF
+#   CBLOSC_DEACTIVATE_ZLIB: default OFF
 #       do not include support for the Zlib library
-#   DEACTIVATE_ZSTD: default OFF
+#   CBLOSC_DEACTIVATE_ZSTD: default OFF
 #       do not include support for the Zstd library
-#   DEACTIVATE_SYMBOLS_CHECK: default ON
+#   CBLOSC_DEACTIVATE_SYMBOLS_CHECK: default ON
 #       do not check for symbols in shared or static libraries
-#   PREFER_EXTERNAL_LZ4: default OFF
+#   CBLOSC_PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
 #       sources
-#   PREFER_EXTERNAL_ZLIB: default OFF
+#   CBLOSC_PREFER_EXTERNAL_ZLIB: default OFF
 #       when found, use the installed zlib libs instead of included
 #       sources
-#   PREFER_EXTERNAL_ZSTD: default OFF
+#   CBLOSC_PREFER_EXTERNAL_ZSTD: default OFF
 #       when found, use the installed zstd libs instead of included
 #       sources
-#   TEST_INCLUDE_BENCH_SHUFFLE_1: default ON
+#   CBLOSC_TEST_INCLUDE_BENCH_SHUFFLE_1: default ON
 #       add a test that runs the benchmark program passing "shuffle" with 1
 #       thread as second parameter
-#   TEST_INCLUDE_BENCH_SHUFFLE_N: default ON
+#   CBLOSC_TEST_INCLUDE_BENCH_SHUFFLE_N: default ON
 #       add a test that runs the benchmark program passing "shuffle" with all
 #       threads as second parameter
-#   TEST_INCLUDE_BENCH_BITSHUFFLE_1: default ON
+#   CBLOSC_TEST_INCLUDE_BENCH_BITSHUFFLE_1: default ON
 #       add a test that runs the benchmark program passing "bitshuffle" with 1
 #       thread as second parameter
-#   TEST_INCLUDE_BENCH_BITSHUFFLE_N: default ON
+#   CBLOSC_TEST_INCLUDE_BENCH_BITSHUFFLE_N: default ON
 #       add a test that runs the benchmark program passing "bitshuffle" with
 #       all threads as second parameter
-#   TEST_INCLUDE_BENCH_SUITE: default OFF
+#   CBLOSC_TEST_INCLUDE_BENCH_SUITE: default OFF
 #       add a test that runs the benchmark program passing "suite"
 #       as first parameter
-#   TEST_INCLUDE_BENCH_SUITE_PARALLEL: default OFF
+#   CBLOSC_TEST_INCLUDE_BENCH_SUITE_PARALLEL: default OFF
 #       add a test that runs the benchmark program passing "parallel"
 #       as first parameter
-#   TEST_INCLUDE_BENCH_HARDSUITE: default OFF
+#   CBLOSC_TEST_INCLUDE_BENCH_HARDSUITE: default OFF
 #       add a test that runs the benchmark program passing "hardsuite"
 #       as first parameter
-#   TEST_INCLUDE_BENCH_EXTREMESUITE: default OFF
+#   CBLOSC_TEST_INCLUDE_BENCH_EXTREMESUITE: default OFF
 #       add a test that runs the benchmark program passing "extremesuite"
 #       as first parameter
-#   TEST_INCLUDE_BENCH_DEBUGSUITE: default OFF
+#   CBLOSC_TEST_INCLUDE_BENCH_DEBUGSUITE: default OFF
 #       add a test that runs the benchmark program passing "debugsuite"
 #       as first parameter
 #
@@ -90,52 +90,52 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+
 message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 
 # options
-option(BUILD_STATIC
+option(CBLOSC_BUILD_STATIC
     "Build a static version of the blosc library." ON)
-option(BUILD_SHARED
-    "Build a shared library version of the blosc library." OFF)
-option(BUILD_TESTS
-    "Build test programs from the blosc compression library" OFF)
-option(BUILD_FUZZERS
-    "Build fuzzer programs from the blosc compression library" ${BUILD_STATIC})
-option(BUILD_BENCHMARKS
-    "Build benchmark programs from the blosc compression library" OFF)
-option(DEACTIVATE_SSE2
+option(CBLOSC_BUILD_SHARED
+    "Build a shared library version of the blosc library." ON)
+option(CBLOSC_BUILD_TESTS
+    "Build test programs from the blosc compression library" ON)
+option(CBLOSC_BUILD_FUZZERS
+    "Build fuzzer programs from the blosc compression library" ${CBLOSC_BUILD_STATIC})
+option(CBLOSC_BUILD_BENCHMARKS
+    "Build benchmark programs from the blosc compression library" ON)
+option(CBLOSC_DEACTIVATE_SSE2
     "Do not attempt to build with SSE2 instructions" OFF)
-option(DEACTIVATE_AVX2
+option(CBLOSC_DEACTIVATE_AVX2
     "Do not attempt to build with AVX2 instructions" OFF)
-option(DEACTIVATE_LZ4
+option(CBLOSC_DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
-option(DEACTIVATE_SNAPPY
+option(CBLOSC_DEACTIVATE_SNAPPY
     "Do not include support for the Snappy library." ON)
-option(DEACTIVATE_ZLIB
+option(CBLOSC_DEACTIVATE_ZLIB
     "Do not include support for the Zlib library." OFF)
-option(DEACTIVATE_ZSTD
+option(CBLOSC_DEACTIVATE_ZSTD
     "Do not include support for the Zstd library." OFF)
-option(DEACTIVATE_SYMBOLS_CHECK
+option(CBLOSC_DEACTIVATE_SYMBOLS_CHECK
     "Do not check for symbols in shared or static libraries." ON)
-option(PREFER_EXTERNAL_LZ4
+option(CBLOSC_PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
-option(PREFER_EXTERNAL_ZLIB
+option(CBLOSC_PREFER_EXTERNAL_ZLIB
     "Find and use external Zlib library instead of included sources." OFF)
-option(PREFER_EXTERNAL_ZSTD
+option(CBLOSC_PREFER_EXTERNAL_ZSTD
     "Find and use external Zstd library instead of included sources." OFF)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 
-if(NOT DEACTIVATE_LZ4)
-    if(PREFER_EXTERNAL_LZ4)
+if(NOT CBLOSC_DEACTIVATE_LZ4)
+    if(CBLOSC_PREFER_EXTERNAL_LZ4)
         find_package(LZ4)
     else()
         message(STATUS "Using LZ4 internal sources.")
-    endif(PREFER_EXTERNAL_LZ4)
+    endif(CBLOSC_PREFER_EXTERNAL_LZ4)
     # HAVE_LZ4 will be set to true because even if the library is
     # not found, we will use the included sources for it
     set(HAVE_LZ4 TRUE)
-endif(NOT DEACTIVATE_LZ4)
+endif(NOT CBLOSC_DEACTIVATE_LZ4)
 
-if(NOT DEACTIVATE_SNAPPY)
+if(NOT CBLOSC_DEACTIVATE_SNAPPY)
     find_package(Snappy)
     if(SNAPPY_FOUND)
         message(STATUS "Activating support for SNAPPY.")
@@ -143,11 +143,11 @@ if(NOT DEACTIVATE_SNAPPY)
     else()
         message(STATUS "SNAPPY *not* found.  De-activating support for it.")
     endif()
-endif(NOT DEACTIVATE_SNAPPY)
+endif(NOT CBLOSC_DEACTIVATE_SNAPPY)
 
-if(NOT DEACTIVATE_ZLIB)
+if(NOT CBLOSC_DEACTIVATE_ZLIB)
     # import the ZLIB_ROOT environment variable to help finding the zlib library
-    if(PREFER_EXTERNAL_ZLIB)
+    if(CBLOSC_PREFER_EXTERNAL_ZLIB)
         set(ZLIB_ROOT $ENV{ZLIB_ROOT})
         find_package(ZLIB)
         if (NOT ZLIB_FOUND )
@@ -155,22 +155,22 @@ if(NOT DEACTIVATE_ZLIB)
         endif (NOT ZLIB_FOUND )
     else()
         message(STATUS "Using zlib internal sources.")
-    endif(PREFER_EXTERNAL_ZLIB)
+    endif(CBLOSC_PREFER_EXTERNAL_ZLIB)
     # HAVE_ZLIB will be set to true because even if the library is not found,
     # we will use the included sources for it
     set(HAVE_ZLIB TRUE)
-endif(NOT DEACTIVATE_ZLIB)
+endif(NOT CBLOSC_DEACTIVATE_ZLIB)
 
-if (NOT DEACTIVATE_ZSTD)
-    if (PREFER_EXTERNAL_ZSTD)
+if (NOT CBLOSC_DEACTIVATE_ZSTD)
+    if (CBLOSC_PREFER_EXTERNAL_ZSTD)
         find_package(Zstd)
     else ()
         message(STATUS "Using ZSTD internal sources.")
-    endif (PREFER_EXTERNAL_ZSTD)
+    endif (CBLOSC_PREFER_EXTERNAL_ZSTD)
     # HAVE_ZSTD will be set to true because even if the library is
     # not found, we will use the included sources for it
     set(HAVE_ZSTD TRUE)
-endif (NOT DEACTIVATE_ZSTD)
+endif (NOT CBLOSC_DEACTIVATE_ZSTD)
 
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
@@ -249,12 +249,12 @@ else()
 endif()
 
 # disable SSE2 if specified (useful for cross-compiling, see #236)
-if(DEACTIVATE_SSE2)
+if(CBLOSC_DEACTIVATE_SSE2)
     set(COMPILER_SUPPORT_SSE2 FALSE)
 endif()
 
 # disable AVX2 if specified or if SSE is deactivated
-if(DEACTIVATE_AVX2 OR DEACTIVATE_SSE2)
+if(CBLOSC_DEACTIVATE_AVX2 OR CBLOSC_DEACTIVATE_SSE2)
     set(COMPILER_SUPPORT_AVX2 FALSE)
 endif()
 
@@ -316,23 +316,23 @@ endif()
 # subdirectories
 add_subdirectory(blosc)
 
-if(BUILD_TESTS)
+if(CBLOSC_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
     add_subdirectory(compat)
-endif(BUILD_TESTS)
+endif(CBLOSC_BUILD_TESTS)
 
-if(BUILD_FUZZERS)
-    if(NOT BUILD_STATIC)
-        message(FATAL_ERROR "BUILD_FUZZERS requires BUILD_STATIC to be enabled.")
+if(CBLOSC_BUILD_FUZZERS)
+    if(NOT CBLOSC_BUILD_STATIC)
+        message(FATAL_ERROR "CBLOSC_BUILD_FUZZERS requires CBLOSC_BUILD_STATIC to be enabled.")
     endif()
     enable_testing()
     add_subdirectory(tests/fuzz)
-endif(BUILD_FUZZERS)
+endif(CBLOSC_BUILD_FUZZERS)
 
-if(BUILD_BENCHMARKS)
+if(CBLOSC_BUILD_BENCHMARKS)
     add_subdirectory(bench)
-endif(BUILD_BENCHMARKS)
+endif(CBLOSC_BUILD_BENCHMARKS)
 
 
 # uninstall target
