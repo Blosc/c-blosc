@@ -1,22 +1,14 @@
 ===============================================================
- Announcing C-Blosc 1.20.0
+ Announcing C-Blosc 1.20.1
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-More safety checks have been implemented so that potential flaws
-discovered by new fuzzers in OSS-Fuzzer are fixed (@nmoinvaz).
-Also, the `_xgetbv()` collision has been fixed (@mgorny).
-
-Also, a new version of blosclz (2.3.0) codec has been backported from
-C-Blosc2.  Expect better compression ratios for faster codecs.  For
-details, see our new blog post: https://blosc.org/posts/beast-release/
-
-Last but not least, the chunk format has been fully described so
-that 3rd party software may come with a different implementation,
-but still compatible with C-Blosc chunks.
+This is a maintenance release.  Vendored zlib 1.2.8 is now compatible
+with Python 3.8 in recent Mac OSX.  For details, see:
+https://github.com/Blosc/python-blosc/issues/229
 
 For more info, please see the release notes in:
 
