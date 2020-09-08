@@ -5,6 +5,12 @@
 Changes from 1.20.0 to 1.20.1
 =============================
 
+#XXX version-specific blurb XXX#
+
+
+Changes from 1.20.0 to 1.20.1
+=============================
+
 * Added `<unistd.h>` in vendored zlib 1.2.8 for compatibility with Python 3.8
   in recent Mac OSX.  For details, see:
   https://github.com/Blosc/python-blosc/issues/229
