@@ -1,14 +1,17 @@
 ===============================================================
- Announcing C-Blosc 1.20.1
+ Announcing C-Blosc 1.21.0
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Vendored zlib 1.2.8 is now compatible
-with Python 3.8 in recent Mac OSX.  For details, see:
-https://github.com/Blosc/python-blosc/issues/229
+This is a maintenance release.  Vendored lz4 and zstd codecs have been
+updated to 1.9.3 and 1.4.8 respectively.
+
+Also, this should be the first release that is officially providing
+binary libraries via the Python wheels in its sibling project python-blosc.
+Thanks to Jeff Hammerbacher for his generous donation to make this happen.
 
 For more info, please see the release notes in:
 

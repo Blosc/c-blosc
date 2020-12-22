@@ -10,7 +10,8 @@ Changes from 1.20.1 to 1.21.0
 * Updated lz4 codec to 1.9.3.
 
 * New instructions on how to use the libraries in python-blosc wheels
-  so as to compile C-Blosc applications.
+  so as to compile C-Blosc applications.  See:
+  https://github.com/Blosc/c-blosc/blob/master/COMPILING_WITH_WHEELS.rst
 
 
 Changes from 1.20.0 to 1.20.1
@@ -19,6 +20,7 @@ Changes from 1.20.0 to 1.20.1
 * Added `<unistd.h>` in vendored zlib 1.2.8 for compatibility with Python 3.8
   in recent Mac OSX.  For details, see:
   https://github.com/Blosc/python-blosc/issues/229
+
 
 Changes from 1.19.1 to 1.20.0
 =============================
