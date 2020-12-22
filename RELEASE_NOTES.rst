@@ -2,10 +2,15 @@
  Release notes for C-Blosc
 ===========================
 
-Changes from 1.20.0 to 1.20.1
+Changes from 1.20.1 to 1.21.0
 =============================
 
-#XXX version-specific blurb XXX#
+* Updated zstd codec to 1.4.8.
+
+* Updated lz4 codec to 1.9.3.
+
+* New instructions on how to use the libraries in python-blosc wheels
+  so as to compile C-Blosc applications.
 
 
 Changes from 1.20.0 to 1.20.1
