@@ -65,7 +65,8 @@ set(SOURCES ${SOURCES} shuffle.c)
 set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
 
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE) # pre 3.1
+set(THREADS_PREFER_PTHREAD_FLAG TRUE) # CMake 3.1+
 if(WIN32)
     # try to use the system library
     find_package(Threads)
