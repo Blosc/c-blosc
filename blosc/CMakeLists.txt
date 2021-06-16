@@ -74,11 +74,19 @@ if(WIN32)
         message(STATUS "using the internal pthread library for win32 systems.")
         set(SOURCES ${SOURCES} win32/pthread.c)
     else(NOT Threads_FOUND)
-        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+        if(CMAKE_VERSION VERSION_LESS 3.1)
+            set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+        else()
+            set(LIBS ${LIBS} Threads::Threads)
+        endif()
     endif(NOT Threads_FOUND)
 else(WIN32)
     find_package(Threads REQUIRED)
-    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    if(CMAKE_VERSION VERSION_LESS 3.1)
+        set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    else()
+        set(LIBS ${LIBS} Threads::Threads)
+    endif()
 endif(WIN32)
 
 if(NOT DEACTIVATE_LZ4)
@@ -187,13 +195,6 @@ if (BUILD_TESTS)
     set_property(
         TARGET blosc_shared_testing
         APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_TESTING)
-    # TEMP : CMake doesn't automatically add -lpthread here like it does
-    # for the blosc_shared target. Force it for now.
-    if(UNIX)
-        set_property(
-            TARGET blosc_shared_testing
-            APPEND PROPERTY LINK_FLAGS "-lpthread")
-    endif()
 endif()
 
 if (BUILD_SHARED)
