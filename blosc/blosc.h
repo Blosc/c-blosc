@@ -228,7 +228,7 @@ BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
   Returns the maximal size of the compressed representation of input data
   that is "cursize" bytes in length.
 
-  Returns 0 on failure.
+  Returns 0 and prints an error to stderr on failure.
   */
 BLOSC_EXPORT size_t blosc_compression_bound(size_t cursize);
 
