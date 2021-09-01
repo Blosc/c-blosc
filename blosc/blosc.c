@@ -1462,7 +1462,7 @@ size_t blosc_compression_bound(size_t cursize)
     }
     fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
     fprintf(stderr, "compression support.  Please use one having it.");
-    return -5;    /* signals no compression support */
+    return 0;    /* failure */
     break;
   }
   }
