@@ -1422,10 +1422,9 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   return result;
 }
 
-/* The public api for buffer size */
-size_t blosc_compression_bound(size_t cursize)
+size_t blosc_compression_bound_helper(size_t cursize, int compressor)
 {
-  switch (g_compressor)
+  switch (compressor)
   {
   case BLOSC_BLOSCLZ:
     // from doc : The output buffer must be at least 5% larger than the input buffer
@@ -1456,7 +1455,7 @@ size_t blosc_compression_bound(size_t cursize)
   default:
   {
     const char *compname;
-    compname = clibcode_to_clibname(g_compressor);
+    compname = clibcode_to_clibname(compressor);
     if (compname == NULL) {
         compname = "(null)";
     }
@@ -1466,6 +1465,18 @@ size_t blosc_compression_bound(size_t cursize)
     break;
   }
   }
+}
+
+size_t blosc_compression_bound_context(size_t cursize, struct blosc_context* context)
+{
+  return blosc_compression_bound_helper(cursize, context->compcode);
+}
+
+
+/* The public api for buffer size */
+size_t blosc_compression_bound(size_t cursize)
+{
+  return blosc_compression_bound_helper(cursize, g_compressor);
 }
 
 static int blosc_run_decompression_with_context(struct blosc_context* context,
