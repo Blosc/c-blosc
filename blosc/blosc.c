@@ -1424,32 +1424,38 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
 static size_t blosc_compression_bound_helper(size_t cursize, int compressor)
 {
+  size_t res = 0;
   switch (compressor)
   {
   case BLOSC_BLOSCLZ:
     // from doc : The output buffer must be at least 5% larger than the input buffer
     // and can not be smaller than 66 bytes.
-    return max(66, (size_t)ceil(1.05 * cursize));
+    res = max(66, (size_t)ceil(1.05 * cursize));
+    break;
 
 #if defined(HAVE_LZ4)
   case BLOSC_LZ4:
   case BLOSC_LZ4HC:
-    return (size_t)LZ4_compressBound((int)cursize);
+    res = (size_t)LZ4_compressBound((int)cursize);
+    break;
 #endif /* HAVE_LZ4 */
 
 #if defined(HAVE_SNAPPY)
   case BLOSC_SNAPPY:
-    return snappy_max_compressed_length(cursize);
+    res = snappy_max_compressed_length(cursize);
+    break;
 #endif /* HAVE_SNAPPY */
 
 #if defined(HAVE_ZLIB)
   case BLOSC_ZLIB:
-    return (size_t)compressBound((uLong)cursize);
+    res = (size_t)compressBound((uLong)cursize);
+    break;
 #endif /* HAVE_ZLIB */
 
 #if defined(HAVE_ZSTD)
   case BLOSC_ZSTD:
-    return ZSTD_compressBound(cursize);
+    res = ZSTD_compressBound(cursize);
+    break;
 #endif /* HAVE_ZSTD */
 
   default:
@@ -1465,6 +1471,7 @@ static size_t blosc_compression_bound_helper(size_t cursize, int compressor)
     break;
   }
   }
+  return res + BLOSC_MAX_OVERHEAD;
 }
 
 size_t blosc_compression_bound_context(size_t cursize, struct blosc_context* context)
