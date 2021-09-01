@@ -1422,7 +1422,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   return result;
 }
 
-size_t blosc_compression_bound_helper(size_t cursize, int compressor)
+static size_t blosc_compression_bound_helper(size_t cursize, int compressor)
 {
   switch (compressor)
   {
