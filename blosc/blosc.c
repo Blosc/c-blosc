@@ -1422,6 +1422,52 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   return result;
 }
 
+/* The public api for buffer size */
+size_t blosc_compression_bound(size_t cursize)
+{
+  switch (g_compressor)
+  {
+  case BLOSC_BLOSCLZ:
+    // from doc : The output buffer must be at least 5% larger than the input buffer
+    // and can not be smaller than 66 bytes.
+    return max(66, (size_t)ceil(1.05 * cursize));
+
+#if defined(HAVE_LZ4)
+  case BLOSC_LZ4:
+  case BLOSC_LZ4HC:
+    return (size_t)LZ4_compressBound((int)cursize);
+#endif /* HAVE_LZ4 */
+
+#if defined(HAVE_SNAPPY)
+  case BLOSC_SNAPPY:
+    return snappy_max_compressed_length(cursize);
+#endif /* HAVE_SNAPPY */
+
+#if defined(HAVE_ZLIB)
+  case BLOSC_ZLIB:
+    return (size_t)compressBound((uLong)cursize);
+#endif /* HAVE_ZLIB */
+
+#if defined(HAVE_ZSTD)
+  case BLOSC_ZSTD:
+    return ZSTD_compressBound(cursize);
+#endif /* HAVE_ZSTD */
+
+  default:
+  {
+    const char *compname;
+    compname = clibcode_to_clibname(g_compressor);
+    if (compname == NULL) {
+        compname = "(null)";
+    }
+    fprintf(stderr, "Blosc has not been compiled with '%s' ", compname);
+    fprintf(stderr, "compression support.  Please use one having it.");
+    return -5;    /* signals no compression support */
+    break;
+  }
+  }
+}
+
 static int blosc_run_decompression_with_context(struct blosc_context* context,
                                                 const void* src,
                                                 void* dest,
