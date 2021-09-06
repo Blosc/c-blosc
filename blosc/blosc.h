@@ -25,7 +25,7 @@ extern "C" {
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
 #define BLOSC_VERSION_DATE     "$Date:: 2020-12-22 #$"    /* date version */
 
-#define BLOSCLZ_VERSION_STRING "2.3.0"   /* the internal compressor version */
+#define BLOSCLZ_VERSION_STRING "2.5.0"   /* the internal compressor version */
 
 /* The *_FORMAT symbols should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
