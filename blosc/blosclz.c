@@ -213,7 +213,7 @@ static uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t
 #endif
 
 
-static uint8_t* get_run_or_match(uint8_t* ip, uint8_t* ip_bound, const uint8_t* ref, bool run) {
+static uint8_t* get_run_or_match(uint8_t* ip, const uint8_t* ip_bound, const uint8_t* ref, bool run) {
   if (BLOSCLZ_UNLIKELY(run)) {
 #if defined(__AVX2__)
     // Extensive experiments on AMD Ryzen3 say that regular get_run is faster
@@ -459,12 +459,9 @@ int blosclz_compress(const int clevel, const void* input, int length,
   uint8_t hashlog = hashlog_[clevel];
 
   uint8_t* ip = ibase;
-  uint8_t* ip_bound = ibase + length - 1;
-  uint8_t* ip_limit = ibase + length - 12;
+  const uint8_t* ip_bound = ibase + length - 1;
+  const uint8_t* ip_limit = ibase + length - 12;
   uint8_t* op = (uint8_t*)output;
-  uint32_t seq;
-  uint8_t copy;
-  uint32_t hval;
 
   /* input and output buffer cannot be less than 16 and 66 bytes or we can get into trouble */
   if (length < 16 || maxout < 66) {
@@ -476,7 +473,7 @@ int blosclz_compress(const int clevel, const void* input, int length,
   memset(htab, 0, (1U << hashlog) * sizeof(uint32_t));
 
   /* we start with literal copy */
-  copy = 4;
+  uint8_t copy = 4;
   *op++ = MAX_COPY - 1;
   *op++ = *ip++;
   *op++ = *ip++;
@@ -491,7 +488,8 @@ int blosclz_compress(const int clevel, const void* input, int length,
     uint8_t* anchor = ip;    /* comparison starting-point */
 
     /* find potential match */
-    seq = BLOSCLZ_READU32(ip);
+    uint32_t seq = BLOSCLZ_READU32(ip);
+    uint32_t hval;
     HASH_FUNCTION(hval, seq, hashlog)
     ref = ibase + htab[hval];
 
