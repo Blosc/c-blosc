@@ -462,6 +462,7 @@ int blosclz_compress(const int clevel, const void* input, int length,
   const uint8_t* ip_bound = ibase + length - 1;
   const uint8_t* ip_limit = ibase + length - 12;
   uint8_t* op = (uint8_t*)output;
+  const uint8_t* op_limit = op + maxout;
 
   /* input and output buffer cannot be less than 16 and 66 bytes or we can get into trouble */
   if (length < 16 || maxout < 66) {
@@ -481,7 +482,6 @@ int blosclz_compress(const int clevel, const void* input, int length,
   *op++ = *ip++;
 
   /* main loop */
-  const uint8_t* op_limit = op + maxout;
   while (BLOSCLZ_LIKELY(ip < ip_limit)) {
     const uint8_t* ref;
     unsigned distance;
