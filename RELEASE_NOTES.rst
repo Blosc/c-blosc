@@ -5,8 +5,10 @@
 Changes from 1.21.0 to 1.21.1
 =============================
 
-#XXX version-specific blurb XXX#
 
+* BloscLZ updated to 2.5.1
+* Zlib updated to 1.2.11
+* Zstd updated to 1.5.0
 
 Changes from 1.20.1 to 1.21.0
 =============================
