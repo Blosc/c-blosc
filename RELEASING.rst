@@ -10,6 +10,10 @@ Releasing Blosc
 Preliminaries
 -------------
 
+- Switch to master branch::
+
+    $ git switch master
+
 - Make sure that ``RELEASE_NOTES.rst`` and ``ANNOUNCE.rst`` are up to
   date with the latest news in the release.
 
@@ -74,7 +78,6 @@ Tagging
 
 - Create a tag ``X.Y.Z`` from ``master``::
 
-    $ git switch master
     $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
 - Push the previous commits and tag to the github repo::
