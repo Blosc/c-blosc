@@ -24,8 +24,8 @@
     $ ./noinit
     Blosc version info: 1.8.2.dev ($Date:: 2016-04-08 #$)
     Compression: 4000000 -> 158788 (25.2x)
-    Decompression succesful!
-    Succesful roundtrip!
+    Decompression successful!
+    Successful roundtrip!
 
 */
 
@@ -73,7 +73,7 @@ int main(){
     return dsize;
   }
 
-  printf("Decompression succesful!\n");
+  printf("Decompression successful!\n");
 
   for(i=0;i<SIZE;i++){
     if(data[i] != data_dest[i]) {
@@ -82,6 +82,6 @@ int main(){
     }
   }
 
-  printf("Succesful roundtrip!\n");
+  printf("Successful roundtrip!\n");
   return 0;
 }

@@ -178,7 +178,7 @@ BLOSC_EXPORT void blosc_destroy(void);
   ---------------------
 
   blosc_compress() honors different environment variables to control
-  internal parameters without the need of doing that programatically.
+  internal parameters without the need of doing that programmatically.
   Here are the ones supported:
 
   BLOSC_CLEVEL=(INTEGER): This will overwrite the `clevel` parameter
@@ -268,7 +268,7 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
   ---------------------
 
   blosc_decompress() honors different environment variables to control
-  internal parameters without the need of doing that programatically.
+  internal parameters without the need of doing that programmatically.
   Here are the ones supported:
 
   BLOSC_NTHREADS=(INTEGER): This will call

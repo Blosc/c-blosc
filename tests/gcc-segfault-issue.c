@@ -54,7 +54,7 @@ int main(){
   printf("Blosc version info: %s (%s)\n",
 	 BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
 
-  /* Initialize the gobal Blosc context */
+  /* Initialize the global Blosc context */
   blosc_init();
 
   /* Use multithreading */

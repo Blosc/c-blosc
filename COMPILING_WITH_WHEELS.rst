@@ -44,7 +44,7 @@ Compiling C files with Blosc wheels on Windows
     Installing collected packages: blosc
     Successfully installed blosc-1.10.0
 
-- Make the compiler available. Its typical installation location uses to be `C:\\Program files (x86)\\Microsoft Visual Studio`, so change your current directory there. Then, to set up the build architecture environment you can open a command prompt window in the `VC\\Auxiliary\\Build` subdirectory and execute `vcvarsall.bat x64` if your achitecture is 64 bits or `vcvarsall.bat x86` if it is 32 bits.
+- Make the compiler available. Its typical installation location uses to be `C:\\Program files (x86)\\Microsoft Visual Studio`, so change your current directory there. Then, to set up the build architecture environment you can open a command prompt window in the `VC\\Auxiliary\\Build` subdirectory and execute `vcvarsall.bat x64` if your architecture is 64 bits or `vcvarsall.bat x86` if it is 32 bits.
 
 - You will need to know the path where the Blosc wheel has installed its files.  For this we will use the `dir /s` command (but you can use your preferred location method):
 
@@ -102,8 +102,8 @@ Compiling C files with Blosc wheels on Windows
     > simple
     Blosc version info: 1.20.1 ($Date:: 2020-09-08 #$)
     Compression: 4000000 -> 37816 (105.8x)
-    Decompression succesful!
-    Succesful roundtrip!
+    Decompression successful!
+    Successful roundtrip!
 
 - Rejoice!
 
@@ -157,13 +157,13 @@ Compiling C files with Blosc wheels on Linux
     Using 4 threads (previously using 1)
     Using blosclz compressor
     Compression: 4000000 -> 37816 (105.8x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using lz4 compressor
     Compression: 4000000 -> 37938 (105.4x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using lz4hc compressor
     Compression: 4000000 -> 27165 (147.2x)
-    Succesful roundtrip!
+    Successful roundtrip!
 
 - Rejoice!
 
@@ -222,12 +222,12 @@ Compiling C files with Blosc wheels on MacOS
     Using 4 threads (previously using 1)
     Using blosclz compressor
     Compression: 4000000 -> 37816 (105.8x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using lz4 compressor
     Compression: 4000000 -> 37938 (105.4x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using lz4hc compressor
     Compression: 4000000 -> 27165 (147.2x)
-    Succesful roundtrip!
+    Successful roundtrip!
 
 - Rejoice!
