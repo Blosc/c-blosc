@@ -43,12 +43,12 @@ static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void
     return dsize;
   }
 
-  printf("Decompression succesful!\n");
+  printf("Decompression successful!\n");
 
   exit_code = memcmp(data, data_dest, size) ? EXIT_FAILURE : EXIT_SUCCESS;
 
   if (exit_code == EXIT_SUCCESS)
-    printf("Succesful roundtrip!\n");
+    printf("Successful roundtrip!\n");
   else
     printf("Decompressed data differs from original!\n");
 
@@ -84,11 +84,11 @@ static int test_roundtrip_bitshuffle4(int size, void *data, void *data_out, void
     return dsize;
   }
 
-  printf("Decompression succesful!\n");
+  printf("Decompression successful!\n");
 
   exit_code = memcmp(data, data_dest, size) ? EXIT_FAILURE : EXIT_SUCCESS;
   if (exit_code == EXIT_SUCCESS)
-    printf("Succesful roundtrip!\n");
+    printf("Successful roundtrip!\n");
   else
     printf("Decompressed data differs from original!\n");
 

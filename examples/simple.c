@@ -22,8 +22,8 @@
     $ ./simple
     Blosc version info: 1.4.2.dev ($Date:: 2014-07-08 #$)
     Compression: 4000000 -> 158494 (25.2x)
-    Decompression succesful!
-    Succesful roundtrip!
+    Decompression successful!
+    Successful roundtrip!
 
 */
 
@@ -71,7 +71,7 @@ int main(){
     return dsize;
   }
 
-  printf("Decompression succesful!\n");
+  printf("Decompression successful!\n");
 
   /* After using it, destroy the Blosc environment */
   blosc_destroy();
@@ -83,6 +83,6 @@ int main(){
     }
   }
 
-  printf("Succesful roundtrip!\n");
+  printf("Successful roundtrip!\n");
   return 0;
 }

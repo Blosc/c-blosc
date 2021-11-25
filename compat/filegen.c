@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
       return dsize;
     }
 
-    printf("Decompression succesful!\n");
+    printf("Decompression successful!\n");
   }
 
   /* After using it, destroy the Blosc environment */

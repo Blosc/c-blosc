@@ -22,22 +22,22 @@
     Using 4 threads (previously using 1)
     Using blosclz compressor
     Compression: 4000000 -> 158788 (25.2x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using lz4 compressor
     Compression: 4000000 -> 235419 (17.0x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using lz4hc compressor
     Compression: 4000000 -> 38314 (104.4x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using snappy compressor
     Compression: 4000000 -> 311617 (12.8x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using zlib compressor
     Compression: 4000000 -> 22103 (181.0x)
-    Succesful roundtrip!
+    Successful roundtrip!
     Using zstd compressor
     Compression: 4000000 -> 11813 (338.6x)
-    Succesful roundtrip!
+    Successful roundtrip!
 
 */
 
@@ -110,7 +110,7 @@ int main(){
       }
     }
 
-    printf("Succesful roundtrip!\n");
+    printf("Successful roundtrip!\n");
   }
 
   return 0;
