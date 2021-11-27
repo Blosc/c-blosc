@@ -28,7 +28,7 @@ Other important contributions:
 * @littlezhou implemented the AVX2 version of shuffle routines.
 
 * Julian Taylor contributed a way to detect AVX2 in runtime and
-  calling the appropriate routines only if the undelying hardware
+  calling the appropriate routines only if the underlying hardware
   supports it.
 
 * Kiyo Masui for relicensing his bitshuffle project for allowing the

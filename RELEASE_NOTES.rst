@@ -201,7 +201,7 @@ Changes from 1.14.4 to 1.15.0
   compatibility with quite old gcc compilers.  See PR #243.  Thanks to
   Andreas Martin.
 
-- Empty buffers can be compressed again (this was unadvertedly prevented while
+- Empty buffers can be compressed again (this was inadvertently prevented while
   fixing #234).  See #247.  Thanks to Valentin Haenel.
 
 - LZ4 internal codec upgraded to 1.8.3 (from 1.8.1.2).
