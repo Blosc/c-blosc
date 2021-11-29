@@ -1,6 +1,6 @@
 Here there go some random thoughts for Blosc 2.0:
 
-* Try to find a classification for the return codes and standarize
+* Try to find a classification for the return codes and standardize
   them.  Use constants in blosc.h for naming them.
 
 * blosc_init() should return a structure that should serve as a
