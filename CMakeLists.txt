@@ -122,7 +122,7 @@ option(PREFER_EXTERNAL_ZSTD
     "Find and use external Zstd library instead of included sources." OFF)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-
+include(GNUInstallDirs)
 
 if(NOT DEACTIVATE_LZ4)
     if(PREFER_EXTERNAL_LZ4)
@@ -342,7 +342,7 @@ if (BLOSC_INSTALL)
         "${CMAKE_CURRENT_BINARY_DIR}/blosc.pc"
         @ONLY)
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/blosc.pc"
-            DESTINATION lib/pkgconfig COMPONENT DEV)
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT DEV)
 
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
