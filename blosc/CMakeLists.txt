@@ -60,8 +60,6 @@ if(COMPILER_SUPPORT_AVX2)
 endif(COMPILER_SUPPORT_AVX2)
 set(SOURCES ${SOURCES} shuffle.c)
 
-# library install directory
-set(lib_dir lib${LIB_SUFFIX})
 set(version_string ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH})
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE) # pre 3.1
@@ -218,11 +216,15 @@ endif(BUILD_STATIC)
 
 # install
 if(BLOSC_INSTALL)
-    install(FILES blosc.h blosc-export.h DESTINATION include COMPONENT DEV)
+    install(FILES blosc.h blosc-export.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT DEV)
     if(BUILD_SHARED)
-        install(TARGETS blosc_shared LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT LIB)
+        install(TARGETS blosc_shared
+                LIBRARY COMPONENT LIB
+                ARCHIVE COMPONENT DEV
+                RUNTIME COMPONENT LIB)
     endif(BUILD_SHARED)
     if(BUILD_STATIC)
-        install(TARGETS blosc_static LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT DEV)
+        install(TARGETS blosc_static COMPONENT DEV)
     endif(BUILD_STATIC)
 endif(BLOSC_INSTALL)
