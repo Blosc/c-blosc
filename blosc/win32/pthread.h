@@ -31,6 +31,18 @@
 #ifndef PTHREAD_H
 #define PTHREAD_H
 
+#define pthread_cond_t blosc_internal_pthread_cond_t
+
+#define pthread_cond_init blosc_internal_pthread_cond_init
+#define pthread_cond_destroy blosc_internal_pthread_cond_destroy
+#define pthread_cond_wait blosc_internal_pthread_cond_wait
+#define pthread_cond_signal blosc_internal_pthread_cond_signal
+#define pthread_cond_broadcast blosc_internal_pthread_cond_broadcast
+
+#define pthread_t blosc_internal_pthread_t
+#define pthread_create blosc_internal_pthread_create
+#define pthread_once_t blosc_internal_pthread_once_t
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
