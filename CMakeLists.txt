@@ -14,7 +14,7 @@
 #   BUILD_BENCHMARKS: default ON
 #       build the benchmark program
 #   HIDE_SYMBOLS: default ON
-#       hide the symols that aren't specifically exported
+#       hide the symbols that aren't specifically exported
 #   DEACTIVATE_SSE2: default OFF
 #       do not attempt to build with SSE2 instructions
 #   DEACTIVATE_AVX2: default OFF
