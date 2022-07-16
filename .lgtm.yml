@@ -1,0 +1,12 @@
+---
+# This file contains configuration for the LGTM.com static code analysis tool.
+# The c-blosc GitHub repository is continuously scanned by the LGTM.com
+# tool for security and/or code vulnerabilities. You can find the alerts here:
+# https://lgtm.com/projects/g/Blosc/c-blosc/
+
+path_classifiers:
+  test:
+    - tests
+  generated:
+    # suppress alerts in vendored files
+    - internal-complibs
