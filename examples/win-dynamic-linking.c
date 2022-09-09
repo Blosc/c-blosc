@@ -93,7 +93,7 @@ int main(){
   /* Compress with clevel=3, shuffle active, 16-bytes data size, blosclz and 2 threads */
   csize = blosc_compress_ctx(3, 1, 16, isize, data, data_out, osize, "blosclz", 0, 2);
   if (csize == 0) {
-    printf("Buffer is uncompressible.  Giving up.\n");
+    printf("Buffer is incompressible.  Giving up.\n");
     return 1;
   }
   else if (csize < 0) {

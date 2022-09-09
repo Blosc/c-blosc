@@ -24,7 +24,7 @@ static int test_roundtrip_bitshuffle8(int size, void *data, void *data_out, void
   FILE *fout = fopen("test-bitshuffle8-nomemcpy.cdata", "w");
 
   if (csize == 0) {
-    printf("Buffer is uncompressible.  Giving up.\n");
+    printf("Buffer is incompressible.  Giving up.\n");
     return 1;
   }
   else if (csize < 0) {
@@ -65,7 +65,7 @@ static int test_roundtrip_bitshuffle4(int size, void *data, void *data_out, void
   FILE *fout = fopen("test-bitshuffle4-memcpy.cdata", "w");
 
   if (csize == 0) {
-    printf("Buffer is uncompressible.  Giving up.\n");
+    printf("Buffer is incompressible.  Giving up.\n");
     return 1;
   }
   else if (csize < 0) {
