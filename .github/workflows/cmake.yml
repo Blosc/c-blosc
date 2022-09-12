@@ -121,7 +121,7 @@ jobs:
             compiler: gcc
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
 
     - name: Install packages (Ubuntu)
       if: runner.os == 'Linux' && matrix.packages
