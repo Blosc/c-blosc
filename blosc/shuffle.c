@@ -35,18 +35,26 @@ typedef unsigned char bool;
 #define HAVE_CPU_FEAT_INTRIN
 #endif
 
+#if defined(SHUFFLE_AVX2_ENABLED) && defined(__AVX2__)
+#define SHUFFLE_USE_AVX2
+#endif
+
+#if defined(SHUFFLE_SSE2_ENABLED) && defined(__SSE2__)
+#define SHUFFLE_USE_SSE2
+#endif
+
 /*  Include hardware-accelerated shuffle/unshuffle routines based on
     the target architecture. Note that a target architecture may support
     more than one type of acceleration!*/
-#if defined(SHUFFLE_AVX2_ENABLED)
+#if defined(SHUFFLE_USE_AVX2)
   #include "shuffle-avx2.h"
   #include "bitshuffle-avx2.h"
-#endif  /* defined(SHUFFLE_AVX2_ENABLED) */
+#endif  /* defined(SHUFFLE_USE_AVX2) */
 
-#if defined(SHUFFLE_SSE2_ENABLED)
+#if defined(SHUFFLE_USE_SSE2)
   #include "shuffle-sse2.h"
   #include "bitshuffle-sse2.h"
-#endif  /* defined(SHUFFLE_SSE2_ENABLED) */
+#endif  /* defined(SHUFFLE_USE_SSE2) */
 
 
 /*  Define function pointer types for shuffle/unshuffle routines. */
@@ -77,7 +85,7 @@ typedef enum {
 
 /*  Detect hardware and set function pointers to the best shuffle/unshuffle
     implementations supported by the host processor. */
-#if defined(SHUFFLE_AVX2_ENABLED) || defined(SHUFFLE_SSE2_ENABLED)    /* Intel/i686 */
+#if defined(SHUFFLE_USE_AVX2) || defined(SHUFFLE_USE_SSE2)   /* Intel/i686 */
 
 /*  Disabled the __builtin_cpu_supports() call, as it has issues with
     new versions of gcc (like 5.3.1 in forthcoming ubuntu/xenial:
@@ -316,7 +324,7 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
   blosc_cpu_features cpu_features = blosc_get_cpu_features();
   shuffle_implementation_t impl_generic;
 
-#if defined(SHUFFLE_AVX2_ENABLED)
+#if defined(SHUFFLE_USE_AVX2)
   if (cpu_features & BLOSC_HAVE_AVX2) {
     shuffle_implementation_t impl_avx2;
     impl_avx2.name = "avx2";
@@ -326,9 +334,9 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
     impl_avx2.bitunshuffle = (bitunshuffle_func)blosc_internal_bshuf_untrans_bit_elem_avx2;
     return impl_avx2;
   }
-#endif  /* defined(SHUFFLE_AVX2_ENABLED) */
+#endif  /* defined(SHUFFLE_USE_AVX2) */
 
-#if defined(SHUFFLE_SSE2_ENABLED)
+#if defined(SHUFFLE_USE_SSE2)
   if (cpu_features & BLOSC_HAVE_SSE2) {
     shuffle_implementation_t impl_sse2;
     impl_sse2.name = "sse2";
@@ -338,7 +346,7 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
     impl_sse2.bitunshuffle = (bitunshuffle_func)blosc_internal_bshuf_untrans_bit_elem_sse2;
     return impl_sse2;
   }
-#endif  /* defined(SHUFFLE_SSE2_ENABLED) */
+#endif  /* defined(SHUFFLE_USE_SSE2) */
 
   /*  Processor doesn't support any of the hardware-accelerated implementations,
       so use the generic implementation. */
