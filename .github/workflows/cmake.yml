@@ -23,7 +23,6 @@ jobs:
           Ubuntu Clang No ZSTD,
           Windows MSVC Win32,
           Windows MSVC Win64,
-          Windows GCC,
           macOS Clang,
           macOS GCC
         ]
@@ -106,11 +105,6 @@ jobs:
             os: windows-latest
             compiler: cl
             cmake-args: -A x64
-
-          - name: Windows GCC
-            os: windows-latest
-            compiler: gcc
-            cmake-args: -G Ninja
 
           - name: macOS Clang
             os: macOS-latest
