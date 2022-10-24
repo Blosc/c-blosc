@@ -10,9 +10,7 @@
 #include "shuffle-sse2.h"
 
 /* Make sure SSE2 is available for the compilation target and compiler. */
-#if !defined(__SSE2__)
-  #error SSE2 is not supported by the target architecture/platform and/or this compiler.
-#endif
+#if defined(__SSE2__)
 
 #include <emmintrin.h>
 
@@ -624,3 +622,5 @@ blosc_internal_unshuffle_sse2(const size_t bytesoftype, const size_t blocksize,
     unshuffle_generic_inline(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
   }
 }
+
+#endif /* !defined(__SSE2__) */

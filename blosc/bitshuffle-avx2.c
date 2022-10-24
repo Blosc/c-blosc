@@ -18,9 +18,7 @@
 
 
 /* Make sure AVX2 is available for the compilation target and compiler. */
-#if !defined(__AVX2__)
-  #error AVX2 is not supported by the target architecture/platform and/or this compiler.
-#endif
+#if defined(__AVX2__)
 
 #include <immintrin.h>
 
@@ -243,3 +241,5 @@ int64_t blosc_internal_bshuf_untrans_bit_elem_avx2(void* in, void* out, const si
 
     return count;
 }
+
+#endif /* !defined(__AVX2__) */
