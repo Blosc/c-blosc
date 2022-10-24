@@ -10,9 +10,7 @@
 #include "shuffle-avx2.h"
 
 /* Make sure AVX2 is available for the compilation target and compiler. */
-#if !defined(__AVX2__)
-  #warning AVX2 is not supported by the target architecture/platform and/or this compiler.
-#else
+#if defined(__AVX2__)
 
 #include <immintrin.h>
 
