@@ -40,7 +40,7 @@ if (NOT DEACTIVATE_ZSTD)
     if (ZSTD_FOUND)
         set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${ZSTD_INCLUDE_DIR})
     else (ZSTD_FOUND)
-        set(ZSTD_LOCAL_DIR ${INTERNAL_LIBS}/zstd-1.5.0)
+        set(ZSTD_LOCAL_DIR ${INTERNAL_LIBS}/zstd-1.5.2)
         set(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_DIRS} ${ZSTD_LOCAL_DIR} ${ZSTD_LOCAL_DIR}/common)
     endif (ZSTD_FOUND)
 endif (NOT DEACTIVATE_ZSTD)
@@ -120,10 +120,21 @@ if (NOT DEACTIVATE_ZSTD)
     if (ZSTD_FOUND)
         set(LIBS ${LIBS} ${ZSTD_LIBRARY})
     else (ZSTD_FOUND)
-      file(GLOB ZSTD_FILES
-        ${ZSTD_LOCAL_DIR}/common/*.c
-        ${ZSTD_LOCAL_DIR}/compress/*.c
-        ${ZSTD_LOCAL_DIR}/decompress/*.c)
+        # Enable assembly code only when not using MSVC *and* x86 is there
+        if((NOT MSVC) AND COMPILER_SUPPORT_SSE2)   # if SSE2 is here, this is an x86 platform
+            message(STATUS "Adding support for assembly sources in ZSTD")
+            file(GLOB ZSTD_DECOMPRESS_FILES ${ZSTD_LOCAL_DIR}/decompress/*.S)
+        else()
+            message(STATUS "Disabling support for assembly sources in ZSTD")
+            add_compile_definitions("ZSTD_DISABLE_ASM")
+        endif()
+        file(GLOB ZSTD_DECOMPRESS_FILES ${ZSTD_DECOMPRESS_FILES}
+                ${ZSTD_LOCAL_DIR}/decompress/*.c)
+        file(GLOB ZSTD_COMMON_FILES ${ZSTD_LOCAL_DIR}/common/*.c)
+        file(GLOB ZSTD_COMPRESS_FILES ${ZSTD_LOCAL_DIR}/compress/*.c)
+        file(GLOB ZSTD_DICT_FILES ${ZSTD_LOCAL_DIR}/dictBuilder/*.c)
+        set(ZSTD_FILES ${ZSTD_COMMON_FILES} ${ZSTD_COMPRESS_FILES}
+            ${ZSTD_DECOMPRESS_FILES} ${ZSTD_DICT_FILES})
         set(SOURCES ${SOURCES} ${ZSTD_FILES})
         source_group("Zstd" FILES ${ZSTD_FILES})
     endif (ZSTD_FOUND)

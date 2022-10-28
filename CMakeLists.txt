@@ -76,7 +76,8 @@ cmake_minimum_required(VERSION 2.8.12)
 if (NOT CMAKE_VERSION VERSION_LESS 3.3)
     cmake_policy(SET CMP0063 NEW)
 endif()
-project(blosc C)
+# The project can have ASM (zstd 1.5.2 is starting to use it)
+project(blosc LANGUAGES C ASM)
 
 # parse the full version numbers from blosc.h
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/blosc/blosc.h _blosc_h_contents)
