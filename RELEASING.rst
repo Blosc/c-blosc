@@ -10,9 +10,9 @@ Releasing Blosc
 Preliminaries
 -------------
 
-- Switch to master branch::
+- Switch to main branch::
 
-    $ git switch master
+    $ git switch main
 
 - Make sure that ``RELEASE_NOTES.rst`` and ``ANNOUNCE.rst`` are up to
   date with the latest news in the release.

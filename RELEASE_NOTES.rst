@@ -5,7 +5,18 @@
 Changes from 1.21.1 to 1.21.2
 =============================
 
-#XXX version-specific blurb XXX#
+* Add support for SHUFFLE_AVX2_ENABLED and SHUFFLE_SSE2_ENABLED
+  even if AVX2 or SSE2 is not available.  See PR #347. Thanks to
+  Thomas VINCENT.
+
+* Upgrade internal-complib zstd from 1.5.0 to 1.5.2.  Thanks to
+  Mark Kittisopikul.
+
+* Many small code improvements, improved consistency and typo fixes.
+  Thanks to Dimitri Papadopoulos Orfanos.
+
+* New HIDE_SYMBOLS CMake option to control the symbols exposure.
+  Default is ON.  Thanks to Mariusz Zaborski.
 
 
 Changes from 1.21.0 to 1.21.1

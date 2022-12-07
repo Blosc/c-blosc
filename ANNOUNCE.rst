@@ -1,19 +1,18 @@
 ===============================================================
- Announcing C-Blosc 1.21.1
+ Announcing C-Blosc 1.21.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Fix pthread flag when linking on ppc64le.
-Vendored BloscLZ, Zlib and Zstd codecs have been updated to their latest
-versions too; this can bring important performance improvements, so if
-speed is a priority to you, an upgrade is recommended.
+This is a maintenance release.  Upgrade internal-complib zstd from
+1.5.0 to 1.5.2 and many small code improvements, improved consistency
+and typo fixes. An upgrade is recommended.
 
 For more info, please see the release notes in:
 
-https://github.com/Blosc/c-blosc/blob/master/RELEASE_NOTES.rst
+https://github.com/Blosc/c-blosc/blob/main/RELEASE_NOTES.rst
 
 
 What is it?
