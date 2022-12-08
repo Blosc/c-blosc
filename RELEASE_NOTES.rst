@@ -5,6 +5,12 @@
 Changes from 1.21.1 to 1.21.2
 =============================
 
+#XXX version-specific blurb XXX#
+
+
+Changes from 1.21.1 to 1.21.2
+=============================
+
 * Add support for SHUFFLE_AVX2_ENABLED and SHUFFLE_SSE2_ENABLED
   even if AVX2 or SSE2 is not available.  See PR #347. Thanks to
   Thomas VINCENT.
