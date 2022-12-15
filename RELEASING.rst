@@ -22,6 +22,7 @@ Preliminaries
 - Commit the changes::
 
     $ git commit -a -m"Getting ready for X.Y.Z release"
+    $ git push
 
 
 Testing
