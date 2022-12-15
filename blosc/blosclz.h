@@ -1,7 +1,9 @@
 /*********************************************************************
   Blosc - Blocked Shuffling and Compression Library
 
-  Author: Francesc Alted <francesc@blosc.org>
+  Copyright (C) 2021  The Blosc Developers <blosc@blosc.org>
+  https://blosc.org
+  License: BSD 3-Clause (see LICENSE.txt)
 
   See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
@@ -19,6 +21,8 @@
 #if defined (__cplusplus)
 extern "C" {
 #endif
+
+#define BLOSCLZ_VERSION_STRING "2.5.1"
 
 
 /**

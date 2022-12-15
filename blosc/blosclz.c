@@ -44,11 +44,11 @@
 #define MAX_FARDISTANCE (65535 + MAX_DISTANCE - 1)
 
 #ifdef BLOSC_STRICT_ALIGN
-#define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
+  #define BLOSCLZ_READU16(p) ((p)[0] | (p)[1]<<8)
   #define BLOSCLZ_READU32(p) ((p)[0] | (p)[1]<<8 | (p)[2]<<16 | (p)[3]<<24)
 #else
-#define BLOSCLZ_READU16(p) *((const uint16_t*)(p))
-#define BLOSCLZ_READU32(p) *((const uint32_t*)(p))
+  #define BLOSCLZ_READU16(p) *((const uint16_t*)(p))
+  #define BLOSCLZ_READU32(p) *((const uint32_t*)(p))
 #endif
 
 #define HASH_LOG (14U)
@@ -56,7 +56,7 @@
 
 // This is used in LZ4 and seems to work pretty well here too
 #define HASH_FUNCTION(v, s, h) {      \
-  v = (s * 2654435761U) >> (32U - h); \
+  (v) = ((s) * 2654435761U) >> (32U - (h)); \
 }
 
 
@@ -87,7 +87,7 @@ static uint8_t *get_run_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *
 #endif
 
 #if defined(__SSE2__)
-static uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   uint8_t x = ip[-1];
 
   while (ip < (ip_bound - sizeof(__m128i))) {
@@ -143,7 +143,7 @@ static uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref
 
 
 /* Return the byte that starts to differ */
-static uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+uint8_t *get_match(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
 #if !defined(BLOSC_STRICT_ALIGN)
   while (ip < (ip_bound - sizeof(int64_t))) {
     if (*(int64_t*)ref != *(int64_t*)ip) {
@@ -213,7 +213,7 @@ static uint8_t *get_match_32(uint8_t *ip, const uint8_t *ip_bound, const uint8_t
 #endif
 
 
-static uint8_t* get_run_or_match(uint8_t* ip, const uint8_t* ip_bound, const uint8_t* ref, bool run) {
+static uint8_t* get_run_or_match(uint8_t* ip, uint8_t* ip_bound, const uint8_t* ref, bool run) {
   if (BLOSCLZ_UNLIKELY(run)) {
 #if defined(__AVX2__)
     // Extensive experiments on AMD Ryzen3 say that regular get_run is faster
@@ -244,73 +244,73 @@ static uint8_t* get_run_or_match(uint8_t* ip, const uint8_t* ip_bound, const uin
 
 
 #define LITERAL(ip, op, op_limit, anchor, copy) {       \
-  if (BLOSCLZ_UNLIKELY(op + 2 > op_limit))              \
+  if (BLOSCLZ_UNLIKELY((op) + 2 > (op_limit)))          \
     goto out;                                           \
-  *op++ = *anchor++;                                    \
-  ip = anchor;                                          \
-  copy++;                                               \
-  if (BLOSCLZ_UNLIKELY(copy == MAX_COPY)) {             \
-    copy = 0;                                           \
-    *op++ = MAX_COPY-1;                                 \
+  *(op)++ = *(anchor)++;                                \
+  (ip) = (anchor);                                      \
+  (copy)++;                                             \
+  if (BLOSCLZ_UNLIKELY((copy) == MAX_COPY)) {           \
+    (copy) = 0;                                         \
+    *(op)++ = MAX_COPY-1;                               \
   }                                                     \
 }
 
 #define LITERAL2(ip, anchor, copy) {                    \
-  oc++; anchor++;                                       \
-  ip = anchor;                                          \
-  copy++;                                               \
-  if (BLOSCLZ_UNLIKELY(copy == MAX_COPY)) {             \
-    copy = 0;                                           \
+  oc++; (anchor)++;                                     \
+  (ip) = (anchor);                                      \
+  (copy)++;                                             \
+  if (BLOSCLZ_UNLIKELY((copy) == MAX_COPY)) {           \
+    (copy) = 0;                                         \
     oc++;                                               \
   }                                                     \
 }
 
-#define MATCH_SHORT(op, op_limit, len, distance) {      \
-  if (BLOSCLZ_UNLIKELY(op + 2 > op_limit))              \
-    goto out;                                           \
-  *op++ = (uint8_t)((len << 5U) + (distance >> 8U));    \
-  *op++ = (uint8_t)((distance & 255U));                 \
+#define MATCH_SHORT(op, op_limit, len, distance) {        \
+  if (BLOSCLZ_UNLIKELY((op) + 2 > (op_limit)))            \
+    goto out;                                             \
+  *(op)++ = (uint8_t)(((len) << 5U) + ((distance) >> 8U));\
+  *(op)++ = (uint8_t)(((distance) & 255U));               \
 }
 
 #define MATCH_LONG(op, op_limit, len, distance) {       \
-  if (BLOSCLZ_UNLIKELY(op + 1 > op_limit))              \
+  if (BLOSCLZ_UNLIKELY((op) + 1 > (op_limit)))          \
     goto out;                                           \
-  *op++ = (uint8_t)((7U << 5U) + (distance >> 8U));     \
-  for (len -= 7; len >= 255; len -= 255) {              \
-    if (BLOSCLZ_UNLIKELY(op + 1 > op_limit))            \
+  *(op)++ = (uint8_t)((7U << 5U) + ((distance) >> 8U)); \
+  for ((len) -= 7; (len) >= 255; (len) -= 255) {        \
+    if (BLOSCLZ_UNLIKELY((op) + 1 > (op_limit)))        \
       goto out;                                         \
-    *op++ = 255;                                        \
+    *(op)++ = 255;                                      \
   }                                                     \
-  if (BLOSCLZ_UNLIKELY(op + 2 > op_limit))              \
+  if (BLOSCLZ_UNLIKELY((op) + 2 > (op_limit)))          \
     goto out;                                           \
-  *op++ = (uint8_t)len;                                 \
-  *op++ = (uint8_t)((distance & 255U));                 \
+  *(op)++ = (uint8_t)(len);                             \
+  *(op)++ = (uint8_t)(((distance) & 255U));             \
 }
 
 #define MATCH_SHORT_FAR(op, op_limit, len, distance) {      \
-  if (BLOSCLZ_UNLIKELY(op + 4 > op_limit))                  \
+  if (BLOSCLZ_UNLIKELY((op) + 4 > (op_limit)))              \
     goto out;                                               \
-  *op++ = (uint8_t)((len << 5U) + 31);                      \
-  *op++ = 255;                                              \
-  *op++ = (uint8_t)(distance >> 8U);                        \
-  *op++ = (uint8_t)(distance & 255U);                       \
+  *(op)++ = (uint8_t)(((len) << 5U) + 31);                  \
+  *(op)++ = 255;                                            \
+  *(op)++ = (uint8_t)((distance) >> 8U);                    \
+  *(op)++ = (uint8_t)((distance) & 255U);                   \
 }
 
 #define MATCH_LONG_FAR(op, op_limit, len, distance) {       \
-  if (BLOSCLZ_UNLIKELY(op + 1 > op_limit))                  \
+  if (BLOSCLZ_UNLIKELY((op) + 1 > (op_limit)))              \
     goto out;                                               \
-  *op++ = (7U << 5U) + 31;                                  \
-  for (len -= 7; len >= 255; len -= 255) {                  \
-    if (BLOSCLZ_UNLIKELY(op + 1 > op_limit))                \
+  *(op)++ = (7U << 5U) + 31;                                \
+  for ((len) -= 7; (len) >= 255; (len) -= 255) {            \
+    if (BLOSCLZ_UNLIKELY((op) + 1 > (op_limit)))            \
       goto out;                                             \
-    *op++ = 255;                                            \
+    *(op)++ = 255;                                          \
   }                                                         \
-  if (BLOSCLZ_UNLIKELY(op + 4 > op_limit))                  \
+  if (BLOSCLZ_UNLIKELY((op) + 4 > (op_limit)))              \
     goto out;                                               \
-  *op++ = (uint8_t)len;                                     \
-  *op++ = 255;                                              \
-  *op++ = (uint8_t)(distance >> 8U);                        \
-  *op++ = (uint8_t)(distance & 255U);                       \
+  *(op)++ = (uint8_t)(len);                                 \
+  *(op)++ = 255;                                            \
+  *(op)++ = (uint8_t)((distance) >> 8U);                    \
+  *(op)++ = (uint8_t)((distance) & 255U);                   \
 }
 
 
@@ -377,7 +377,7 @@ static double get_cratio(uint8_t* ibase, int maxlen, int minlen, int ipshift) {
     ip = get_run_or_match(ip, ip_bound, ref, !distance);
 
     ip -= ipshift;
-    unsigned len = (int)(ip - anchor);
+    int len = (int)(ip - anchor);
     if (len < minlen) {
       LITERAL2(ip, anchor, copy)
       continue;
@@ -413,8 +413,7 @@ static double get_cratio(uint8_t* ibase, int maxlen, int minlen, int ipshift) {
     oc++;
   }
 
-  double ic;
-  ic = (double)(ip - ibase);
+  double ic = (double)(ip - ibase);
   return ic / (double)oc;
 }
 
@@ -432,7 +431,7 @@ int blosclz_compress(const int clevel, const void* input, int length,
   // discard probes with small compression ratios (too expensive)
   double cratio_[10] = {0, 2, 1.5, 1.2, 1.2, 1.2, 1.2, 1.15, 1.1, 1.0};
   if (cratio < cratio_[clevel]) {
-    goto out;
+      goto out;
   }
 
   /* When we go back in a match (shift), we obtain quite different compression properties.
@@ -453,16 +452,22 @@ int blosclz_compress(const int clevel, const void* input, int length,
     ipshift = 3;
     minlen = 3;
   }
+  else {
+    minlen = 4;
+  }
 
   uint8_t hashlog_[10] = {0, HASH_LOG - 2, HASH_LOG - 1, HASH_LOG, HASH_LOG,
                           HASH_LOG, HASH_LOG, HASH_LOG, HASH_LOG, HASH_LOG};
   uint8_t hashlog = hashlog_[clevel];
 
   uint8_t* ip = ibase;
-  const uint8_t* ip_bound = ibase + length - 1;
-  const uint8_t* ip_limit = ibase + length - 12;
+  uint8_t* ip_bound = ibase + length - 1;
+  uint8_t* ip_limit = ibase + length - 12;
   uint8_t* op = (uint8_t*)output;
   const uint8_t* op_limit = op + maxout;
+  uint32_t seq;
+  uint8_t copy;
+  uint32_t hval;
 
   /* input and output buffer cannot be less than 16 and 66 bytes or we can get into trouble */
   if (length < 16 || maxout < 66) {
@@ -474,7 +479,7 @@ int blosclz_compress(const int clevel, const void* input, int length,
   memset(htab, 0, (1U << hashlog) * sizeof(uint32_t));
 
   /* we start with literal copy */
-  uint8_t copy = 4;
+  copy = 4;
   *op++ = MAX_COPY - 1;
   *op++ = *ip++;
   *op++ = *ip++;
@@ -488,8 +493,7 @@ int blosclz_compress(const int clevel, const void* input, int length,
     uint8_t* anchor = ip;    /* comparison starting-point */
 
     /* find potential match */
-    uint32_t seq = BLOSCLZ_READU32(ip);
-    uint32_t hval;
+    seq = BLOSCLZ_READU32(ip);
     HASH_FUNCTION(hval, seq, hashlog)
     ref = ibase + htab[hval];
 
@@ -686,8 +690,8 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
   while (1) {
     if (ctrl >= 32) {
       // match
-      int32_t len = (ctrl >> 5U) - 1 ;
-      int32_t ofs = (ctrl & 31U) << 8U;
+      int32_t len = (int32_t)(ctrl >> 5U) - 1 ;
+      int32_t ofs = (int32_t)(ctrl & 31U) << 8U;
       uint8_t code;
       const uint8_t* ref = op - ofs;
 
@@ -753,7 +757,7 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
         }
         else {
 #endif
-        op = copy_match(op, ref, (unsigned) len);
+          op = copy_match(op, ref, (unsigned) len);
 #if defined(__AVX2__)
         }
 #endif

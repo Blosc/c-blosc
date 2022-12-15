@@ -7,6 +7,8 @@ Changes from 1.21.1 to 1.21.2
 
 * Internal LZ4 codec updated to 1.9.4.
 
+* Internal BloscLZ codec updated to 2.5.1.
+
 
 Changes from 1.21.1 to 1.21.2
 =============================
