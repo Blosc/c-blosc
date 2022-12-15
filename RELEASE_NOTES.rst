@@ -2,7 +2,7 @@
  Release notes for C-Blosc
 ===========================
 
-Changes from 1.21.1 to 1.21.2
+Changes from 1.21.2 to 1.21.3
 =============================
 
 * Internal LZ4 codec updated to 1.9.4.
