@@ -36,7 +36,7 @@ Create a new build/ directory, change into it and issue::
 
 To actually test Blosc the hard way, look at the end of:
 
-http://blosc.org/synthetic-benchmarks.html
+https://www.blosc.org/pages/synthetic-benchmarks/
 
 where instructions on how to intensively test (and benchmark) Blosc
 are given.

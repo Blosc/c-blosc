@@ -2195,7 +2195,7 @@ void blosc_set_splitmode(int mode)
  * trigger re-init of the global context.
  *
  * All pthread interfaces have undefined behavior in child handler in current
- * posix standards: http://pubs.opengroup.org/onlinepubs/9699919799/
+ * posix standards: https://pubs.opengroup.org/onlinepubs/9699919799/
  */
 void blosc_atfork_child(void) {
   if (!g_initlib) return;

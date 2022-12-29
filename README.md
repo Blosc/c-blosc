@@ -1,11 +1,11 @@
 # Blosc: A blocking, shuffling and lossless compression library
 | Author | Contact | URL |
 |--------|---------|-----|
-| Blosc Development Team | blosc@blosc.org | http://www.blosc.org | 
+| Blosc Development Team | blosc@blosc.org | https://www.blosc.org | 
 
 | Gitter | GH Actions | NumFOCUS | Code of Conduct |
 |--------|------------|----------|-----------------|
-| [![Gitter](https://badges.gitter.im/Blosc/c-blosc.svg)](https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | [![CI CMake](https://github.com/Blosc/c-blosc/workflows/CI%20CMake/badge.svg)](https://github.com/Blosc/c-blosc/actions?query=workflow%3A%22CI+CMake%22) | [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org) | [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md) |
+| [![Gitter](https://badges.gitter.im/Blosc/c-blosc.svg)](https://gitter.im/Blosc/c-blosc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | [![CI CMake](https://github.com/Blosc/c-blosc/workflows/CI%20CMake/badge.svg)](https://github.com/Blosc/c-blosc/actions?query=workflow%3A%22CI+CMake%22) | [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org) | [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md) |
 
 ## What is it?
 
@@ -16,7 +16,7 @@ a memcpy() OS call.  Blosc is the first compressor (that I'm aware of)
 that is meant not only to reduce the size of large datasets on-disk or
 in-memory, but also to accelerate memory-bound computations.
 
-It uses the [blocking technique](http://blosc.org/docs/StarvingCPUs-CISE-2010.pdf)
+It uses the [blocking technique](https://www.blosc.org/docs/StarvingCPUs-CISE-2010.pdf)
 so as to reduce activity in the memory bus as much as possible. In short, this
 technique works by dividing datasets in blocks that are small enough
 to fit in caches of modern processors and perform compression /
@@ -25,7 +25,7 @@ instructions (SSE2, AVX2) and multi-threading capabilities of CPUs, in
 order to accelerate the compression / decompression process to a
 maximum.
 
-See some [benchmarks](http://blosc.org/pages/synthetic-benchmarks/) about Blosc performance.
+See some [benchmarks](https://www.blosc.org/pages/synthetic-benchmarks/) about Blosc performance.
 
 Blosc is distributed using the BSD license, see LICENSES/BLOSC.txt for
 details.
@@ -40,10 +40,10 @@ it already comes with several compressor and filters, so it can
 actually work like a regular codec.
 
 Currently C-Blosc comes with support of BloscLZ, a compressor heavily
-based on FastLZ (http://fastlz.org/), LZ4 and LZ4HC
-(https://github.com/Cyan4973/lz4), Snappy
-(https://github.com/google/snappy), Zlib (http://www.zlib.net/) and
-Zstd (http://www.zstd.net).
+based on FastLZ (https://ariya.github.io/FastLZ/), LZ4 and LZ4HC
+(https://github.com/lz4/lz4), Snappy
+(https://github.com/google/snappy), Zlib (https://zlib.net/) and
+Zstandard (https://facebook.github.io/zstd/).
 
 C-Blosc also comes with highly optimized (they can use
 SSE2 or AVX2 instructions, if available) shuffle and bitshuffle filters
@@ -52,7 +52,7 @@ However, additional compressors or filters may be added in the future.
 
 Blosc is in charge of coordinating the different compressor and
 filters so that they can leverage the 
-[blocking technique](http://blosc.org/docs/StarvingCPUs-CISE-2010.pdf)
+[blocking technique](https://www.blosc.org/docs/StarvingCPUs-CISE-2010.pdf)
 as well as multi-threaded execution (if several cores are
 available) automatically. That makes that every codec and filter
 will work at very high speeds, even if it was not initially designed
@@ -88,7 +88,7 @@ directory (e.g. '/usr' or '/usr/local'):
 CMake allows to configure Blosc in many different ways, like preferring
 internal or external sources for compressors or enabling/disabling
 them.  Please note that configuration can also be performed using UI
-tools provided by [CMake](http://www.cmake.org) (ccmake or cmake-gui):
+tools provided by [CMake](https://cmake.org) (ccmake or cmake-gui):
 
 ```console
 
@@ -183,7 +183,7 @@ https://github.com/Blosc/hdf5-blosc
 There is an official mailing list for Blosc at:
 
 blosc@googlegroups.com
-http://groups.google.es/group/blosc
+https://groups.google.com/g/blosc
 
 ## Acknowledgments
 

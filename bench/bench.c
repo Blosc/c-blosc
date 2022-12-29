@@ -7,7 +7,7 @@
 
   For usage instructions of this benchmark, please see:
 
-    http://blosc.org/synthetic-benchmarks.html
+    https://www.blosc.org/pages/synthetic-benchmarks/
 
   I'm collecting speeds for different machines, so the output of your
   benchmarks and your processor specifications are welcome!

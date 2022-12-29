@@ -17,7 +17,7 @@ https://github.com/Blosc/c-blosc/blob/main/RELEASE_NOTES.rst
 What is it?
 ===========
 
-Blosc (http://www.blosc.org) is a high performance meta-compressor
+Blosc (https://www.blosc.org) is a high performance meta-compressor
 optimized for binary data.  It has been designed to transmit data to
 the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
@@ -45,7 +45,7 @@ Mailing list
 There is an official Blosc mailing list at:
 
 blosc@googlegroups.com
-http://groups.google.es/group/blosc
+https://groups.google.com/g/blosc
 
 
 Enjoy Data!
