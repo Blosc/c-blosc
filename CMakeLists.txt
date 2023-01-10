@@ -209,11 +209,7 @@ endif()
 # by this (the host) system, because we want to be able to support compiling
 # for newer hardware on older machines as well as cross-compilation.
 message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}")
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL i686 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL amd64 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|i686|x86_64|amd64|AMD64)")
     if(CMAKE_C_COMPILER_ID STREQUAL GNU)
         # We need C99 (GNU99 more exactly)
         SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
