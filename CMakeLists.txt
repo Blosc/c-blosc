@@ -76,8 +76,6 @@ cmake_minimum_required(VERSION 2.8.12)
 if(NOT CMAKE_VERSION VERSION_LESS 3.3)
     cmake_policy(SET CMP0063 NEW)
 endif()
-# The project can have ASM (zstd 1.5.2 is starting to use it)
-project(blosc LANGUAGES C ASM)
 
 # parse the full version numbers from blosc.h
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/blosc/blosc.h _blosc_h_contents)
@@ -91,6 +89,14 @@ string(REGEX REPLACE ".*#define[ \t]+BLOSC_VERSION_STRING[ \t]+\"([-0-9A-Za-z.]+
     "\\1" BLOSC_VERSION_STRING ${_blosc_h_contents})
 
 message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
+
+# The project can have ASM (zstd 1.5.2 is starting to use it)
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+    project(blosc LANGUAGES C ASM VERSION "${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH}")
+else()
+    project(blosc LANGUAGES C ASM)
+endif()
 
 # options
 option(BUILD_STATIC
@@ -209,11 +215,7 @@ endif()
 # by this (the host) system, because we want to be able to support compiling
 # for newer hardware on older machines as well as cross-compilation.
 message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}")
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL i686 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL amd64 OR
-    CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|i686|x86_64|amd64|AMD64)")
     if(CMAKE_C_COMPILER_ID STREQUAL GNU)
         # We need C99 (GNU99 more exactly)
         SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
