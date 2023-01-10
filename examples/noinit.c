@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2016  Francesc Alted
-    http://blosc.org
+    https://blosc.org
     License: MIT (see LICENSE.txt)
 
     Example program demonstrating that from 1.9.0 on, Blosc does not

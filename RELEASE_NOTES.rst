@@ -308,7 +308,7 @@ Changes from 1.13.7 to 1.14.0
   https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h#L209
 
   There is a dedicated blog entry about this at:
-  http://blosc.org/posts/new-forward-compat-policy/
+  https://www.blosc.org/posts/new-forward-compat-policy/
   More info in PR #216.
 
   Caveat Emptor: Note that Blosc versions from 1.11.0 to 1.14.0 *might*
@@ -428,7 +428,7 @@ Changes from 1.12.0 to 1.12.1
 - Backported BloscLZ parameters that were fine-tuned for C-Blosc2.
   You should expect better compression ratios and faster operation,
   specially on modern CPUs.  See:
-  http://blosc.org/posts/blosclz-tuning/
+  https://www.blosc.org/posts/blosclz-tuning/
 
 
 Changes from 1.11.3 to 1.12.0
@@ -522,7 +522,7 @@ Changes from 1.9.3 to 1.10.0
   Blosc.
 
   Although the Zstd format is considered stable
-  (http://fastcompression.blogspot.com.es/2016_07_03_archive.html), its API is
+  (https://fastcompression.blogspot.com/2016_07_03_archive.html), its API is
   maturing very fast, and despite passing the extreme test suite for C-Blosc,
   this codec should be considered in beta for C-Blosc usage purposes. Please
   test it and report back any possible issues you may get.
@@ -883,7 +883,7 @@ Changes from 1.3.5 to 1.3.6
 * Updated to LZ4 r118 due to a (highly unlikely) security hole.  For
   details see:
 
-  http://fastcompression.blogspot.fr/2014/06/debunking-lz4-20-years-old-bug-myth.html
+  http://blog.securitymouse.com/2014/06/raising-lazarus-20-year-old-bug-that.html
 
 
 Changes from 1.3.4 to 1.3.5
@@ -939,21 +939,21 @@ Changes from 1.2.4 to 1.3.0
 
 A nice handful of compressors have been added to Blosc:
 
-* LZ4 (http://code.google.com/p/lz4/): A very fast
+* LZ4 (https://github.com/lz4/lz4): A very fast
   compressor/decompressor.  Could be thought as a replacement of the
   original BloscLZ, but it can behave better is some scenarios.
 
-* LZ4HC (http://code.google.com/p/lz4/): This is a variation of LZ4
+* LZ4HC (https://github.com/lz4/lz4): This is a variation of LZ4
   that achieves much better compression ratio at the cost of being
   much slower for compressing.  Decompression speed is unaffected (and
   sometimes better than when using LZ4 itself!), so this is very good
   for read-only datasets.
 
-* Snappy (http://code.google.com/p/snappy/): A very fast
+* Snappy (https://github.com/google/snappy): A very fast
   compressor/decompressor.  Could be thought as a replacement of the
   original BloscLZ, but it can behave better is some scenarios.
 
-* Zlib (http://www.zlib.net/): This is a classic.  It achieves very
+* Zlib (https://zlib.net/): This is a classic.  It achieves very
   good compression ratios, at the cost of speed.  However,
   decompression speed is still pretty good, so it is a good candidate
   for read-only datasets.
@@ -999,7 +999,7 @@ Changes from 1.2.1 to 1.2.2
 - The `bench/bench.c` has been updated so that it can be compiled on
   Windows again.
 
-- The new web site has been set to: http://www.blosc.org
+- The new web site has been set to: https://www.blosc.org
 
 
 Changes from 1.2 to 1.2.1
@@ -1121,13 +1121,11 @@ Changes from 1.0 to 1.1
 - Fixed a problem with the computation of the blocksize in the Blosc
   filter for HDF5.
 
-- Fixed a problem with large datatypes.  See
-  http://www.pytables.org/trac/ticket/288 for more info.
+- Fixed a problem with large datatypes.
 
 - Now Blosc is able to work well even if you fork an existing process
   with a pool of threads.  Bug discovered when PyTables runs in
-  multiprocess environments.  See http://pytables.org/trac/ticket/295
-  for details.
+  multiprocess environments.
 
 - Added a new `blosc_getitem()` call to allow the retrieval of items in
   sizes smaller than the complete buffer.  That is useful for the carray

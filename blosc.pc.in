@@ -6,7 +6,7 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: blosc
 Description: A blocking, shuffling and lossless compression library
-URL: http://blosc.org/
+URL: https://blosc.org/
 Version: @BLOSC_VERSION_STRING@
 
 Requires:

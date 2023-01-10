@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2014  Francesc Alted
-    http://blosc.org
+    https://blosc.org
     License: MIT (see LICENSE.txt)
 
     Example program demonstrating use of the Blosc filter from C code.
