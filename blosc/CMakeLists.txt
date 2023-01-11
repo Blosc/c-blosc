@@ -162,9 +162,15 @@ if(COMPILER_SUPPORT_SSE2)
         # MSVC targets SSE2 by default on 64-bit configurations, but not 32-bit configurations.
         if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
             set_source_files_properties(shuffle-sse2.c bitshuffle-sse2.c PROPERTIES COMPILE_FLAGS "/arch:SSE2")
+            set_property(
+                    SOURCE shuffle.c
+                    APPEND PROPERTY COMPILE_OPTIONS "/arch:SSE2")
         endif (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     else (MSVC)
         set_source_files_properties(shuffle-sse2.c bitshuffle-sse2.c PROPERTIES COMPILE_FLAGS -msse2)
+        set_property(
+                SOURCE shuffle.c
+                APPEND PROPERTY COMPILE_OPTIONS -msse2)
     endif (MSVC)
 
     # Define a symbol for the shuffle-dispatch implementation
@@ -178,9 +184,15 @@ if(COMPILER_SUPPORT_AVX2)
     if (MSVC)
         set_source_files_properties(shuffle-avx2.c bitshuffle-avx2.c
                 PROPERTIES COMPILE_FLAGS "/arch:AVX2")
+        set_property(
+                SOURCE shuffle.c
+                APPEND PROPERTY COMPILE_OPTIONS "/arch:AVX2")
     else (MSVC)
         set_source_files_properties(shuffle-avx2.c bitshuffle-avx2.c
                 PROPERTIES COMPILE_FLAGS -mavx2)
+        set_property(
+                SOURCE shuffle.c
+                APPEND PROPERTY COMPILE_OPTIONS -mavx2)
     endif (MSVC)
 
     # Define a symbol for the shuffle-dispatch implementation
