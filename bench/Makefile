@@ -25,7 +25,7 @@ LDFLAGS += -DHAVE_SNAPPY -lsnappy
 LDFLAGS += -DHAVE_ZLIB -lz
 
 # Support for internal Zlib
-#ZLIB_DIR = ../internal-complibs/zlib-1.2.8
+#ZLIB_DIR = ../internal-complibs/zlib-1.2.13
 #CFLAGS += -DHAVE_ZLIB -I$(ZLIB_DIR)
 #SOURCES += $(wildcard $(ZLIB_DIR)/*.c)
 
