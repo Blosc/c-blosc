@@ -3,7 +3,7 @@
 
   Author: Francesc Alted <francesc@blosc.org>
 
-  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+  See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
 
 /* AVX2-accelerated shuffle/unshuffle routines. */

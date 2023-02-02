@@ -35,7 +35,7 @@ The github repository is over here:
 
 https://github.com/Blosc
 
-Blosc is distributed using the BSD license, see LICENSES/BLOSC.txt for
+Blosc is distributed using the BSD license, see LICENSE.txt for
 details.
 
 
