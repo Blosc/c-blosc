@@ -27,11 +27,11 @@ ZLIB_ROOT=/libs/zlib128
 LDFLAGS=-DHAVE_ZLIB -I$(ZLIB_ROOT)/include -lzdll -L$(ZLIB_ROOT)/lib
 
 # Support for the mingw zlib:
-#ZLIB_ROOT=/libs/libz-1.2.8
+#ZLIB_ROOT=/libs/libz-1.2.13
 #LDFLAGS=-DHAVE_ZLIB -I$(ZLIB_ROOT)/include -lz -L$(ZLIB_ROOT)/lib
 
 # Support for internal Zlib
-#ZLIB_DIR = ../internal-complibs/zlib-1.2.8
+#ZLIB_DIR = ../internal-complibs/zlib-1.2.13
 #CFLAGS += -DHAVE_ZLIB -I$(ZLIB_DIR)
 #SOURCES += $(wildcard $(ZLIB_DIR)/*.c)
 
