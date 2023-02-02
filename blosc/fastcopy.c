@@ -9,6 +9,7 @@
 
 /*********************************************************************
   The code in this file is heavily based on memcopy.h, from the
+
   zlib-ng compression library.  See LICENSES/ZLIB-NG.txt for details.
   See also: https://github.com/Dead2/zlib-ng/blob/develop/zlib.h
 
