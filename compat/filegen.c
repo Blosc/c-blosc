@@ -6,7 +6,7 @@
   Creation date: 2018-02-16
   Author: Elvis Stansvik, Francesc Alted <francesc@blosc.org>
 
-  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+  See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
 
 #include <stdio.h>

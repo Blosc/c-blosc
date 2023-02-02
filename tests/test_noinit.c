@@ -6,7 +6,7 @@
   Creation date: 2016-04-25
   Author: Francesc Alted <francesc@blosc.org>
 
-  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+  See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
 
 /* Test for using blosc without blosc_init() and blosc_destroy() */

@@ -29,4 +29,4 @@ clear and has sufficient instructions to be able to reproduce the issue.
 
 ## License
 By contributing to C-Blosc, you agree that your contributions will be licensed
-under both the [LICENSE](LICENSES/BLOSC.txt) file of the project.
+under both the [LICENSE](LICENSE.txt) file of the project.

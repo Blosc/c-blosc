@@ -6,7 +6,7 @@
   Creation date: 2018-10-34
   Author: Alex Ford <a.sewall.ford@gmail.com>
 
-  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+  See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
 
 #include <sys/types.h>

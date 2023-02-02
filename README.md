@@ -27,7 +27,7 @@ maximum.
 
 See some [benchmarks](https://www.blosc.org/pages/synthetic-benchmarks/) about Blosc performance.
 
-Blosc is distributed using the BSD license, see LICENSES/BLOSC.txt for
+Blosc is distributed using the BSD license, see LICENSE.txt for
 details.
 
 ## Meta-compression and other differences over existing compressors
