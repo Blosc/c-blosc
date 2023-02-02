@@ -939,17 +939,17 @@ Changes from 1.2.4 to 1.3.0
 
 A nice handful of compressors have been added to Blosc:
 
-* LZ4 (https://github.com/lz4/lz4): A very fast
+* LZ4 (http://www.lz4.org/: A very fast
   compressor/decompressor.  Could be thought as a replacement of the
   original BloscLZ, but it can behave better is some scenarios.
 
-* LZ4HC (https://github.com/lz4/lz4): This is a variation of LZ4
+* LZ4HC (http://www.lz4.org/): This is a variation of LZ4
   that achieves much better compression ratio at the cost of being
   much slower for compressing.  Decompression speed is unaffected (and
   sometimes better than when using LZ4 itself!), so this is very good
   for read-only datasets.
 
-* Snappy (https://github.com/google/snappy): A very fast
+* Snappy (http://google.github.io/snappy/): A very fast
   compressor/decompressor.  Could be thought as a replacement of the
   original BloscLZ, but it can behave better is some scenarios.
 
