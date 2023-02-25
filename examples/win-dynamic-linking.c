@@ -1,7 +1,7 @@
 /*
     Copyright (C) 2015  Francesc Alted
     https://blosc.org
-    License: MIT (see LICENSE.txt)
+    License: BSD 3-Clause (see LICENSE.txt)
 
     Example program demonstrating use of the Blosc filter using the Windows Run-Time Dynamic Linking technique:
     

@@ -1,7 +1,7 @@
 /*
     Copyright (C) 2016  Francesc Alted
     https://blosc.org
-    License: MIT (see LICENSE.txt)
+    License: BSD 3-Clause (see LICENSE.txt)
 
     Test program trying to replicate the python-blosc issue:
 
