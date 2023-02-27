@@ -1,7 +1,7 @@
 /*
     Copyright (C) 2016  Francesc Alted
     https://blosc.org
-    License: MIT (see LICENSE.txt)
+    License: BSD 3-Clause (see LICENSE.txt)
 
     Example program demonstrating that from 1.9.0 on, Blosc does not
     need to be initialized (although it is recommended).
