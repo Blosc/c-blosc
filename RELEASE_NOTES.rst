@@ -6,7 +6,7 @@
 Changes from 1.21.3 to 1.21.4
 =============================
 
-* Upgrade internal-complib zstd from 1.5.2 to 1.5.4.
+* Upgrade internal-complib zstd from 1.5.2 to 1.5.5.
 
 * Zlib updated to 1.2.13.
 
