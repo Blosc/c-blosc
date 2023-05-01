@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2014  Francesc Alted
+    Copyright (c) 2014  Francesc Alted
     https://blosc.org
     License: BSD 3-Clause (see LICENSE.txt)
 
