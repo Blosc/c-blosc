@@ -1,7 +1,5 @@
 """Checks the exported symbols."""
 
-from __future__ import print_function, unicode_literals
-
 import argparse
 import re
 import subprocess
