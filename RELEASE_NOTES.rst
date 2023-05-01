@@ -951,7 +951,7 @@ A nice handful of compressors have been added to Blosc:
   sometimes better than when using LZ4 itself!), so this is very good
   for read-only datasets.
 
-* Snappy (http://google.github.io/snappy/): A very fast
+* Snappy (https://google.github.io/snappy/): A very fast
   compressor/decompressor.  Could be thought as a replacement of the
   original BloscLZ, but it can behave better is some scenarios.
 
