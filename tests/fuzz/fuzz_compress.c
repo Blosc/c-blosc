@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  const char *compressors[] = { "blosclz", "lz4", "lz4hc", "snappy", "zlib", "zstd" };
+  const char *const compressors[] = { "blosclz", "lz4", "lz4hc", "snappy", "zlib", "zstd" };
   int level = 9, filter = BLOSC_BITSHUFFLE, cindex = 0, i = 0;
   size_t nbytes, cbytes, blocksize;
   void *output, *input;
