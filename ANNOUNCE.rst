@@ -1,13 +1,13 @@
 ===============================================================
- Announcing C-Blosc 1.21.3
+ Announcing C-Blosc 1.21.4
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Upgraded internal-complib lz4
-to 1.9.4 and blosclz to 2.5.1.
+This is a maintenance release.  Upgraded internal zstd from 1.5.2 to 1.5.5
+and Zlib to 1.2.13.
 
 For more info, please see the release notes in:
 
