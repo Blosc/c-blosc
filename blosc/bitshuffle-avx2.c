@@ -17,8 +17,21 @@
 #include "bitshuffle-avx2.h"
 
 
-/* Make sure AVX2 is available for the compilation target and compiler. */
-#if defined(__AVX2__)
+/* Define dummy functions if AVX2 is not available for the compilation target and compiler. */
+#if !defined(__AVX2__)
+#include <stdlib.h>
+
+int64_t blosc_internal_bshuf_trans_bit_elem_avx2(void* in, void* out, const size_t size,
+                                                 const size_t elem_size, void* tmp_buf) {
+    abort();
+}
+
+int64_t blosc_internal_bshuf_untrans_bit_elem_avx2(void* in, void* out, const size_t size,
+                                                   const size_t elem_size, void* tmp_buf) {
+    abort();
+}
+
+#else /* defined(__AVX2__) */
 
 #include <immintrin.h>
 
