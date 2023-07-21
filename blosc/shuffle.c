@@ -77,8 +77,10 @@ typedef enum {
 } blosc_cpu_features;
 
 /*  Detect hardware and set function pointers to the best shuffle/unshuffle
-    implementations supported by the host processor. */
-#if defined(SHUFFLE_AVX2_ENABLED) || defined(SHUFFLE_SSE2_ENABLED)   /* Intel/i686 */
+    implementations supported by the host processor for Intel/i686
+     */
+#if (defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)) \
+    && (defined(SHUFFLE_AVX2_ENABLED) || defined(SHUFFLE_SSE2_ENABLED))
 
 /*  Disabled the __builtin_cpu_supports() call, as it has issues with
     new versions of gcc (like 5.3.1 in forthcoming ubuntu/xenial:
