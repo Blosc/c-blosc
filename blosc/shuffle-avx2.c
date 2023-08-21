@@ -9,8 +9,23 @@
 #include "shuffle-generic.h"
 #include "shuffle-avx2.h"
 
-/* Make sure AVX2 is available for the compilation target and compiler. */
-#if defined(__AVX2__)
+/* Define dummy functions if AVX2 is not available for the compilation target and compiler. */
+#if !defined(__AVX2__)
+#include <stdlib.h>
+
+void
+blosc_internal_shuffle_avx2(const size_t bytesoftype, const size_t blocksize,
+                            const uint8_t* const _src, uint8_t* const _dest) {
+  abort();
+}
+
+void
+blosc_internal_unshuffle_avx2(const size_t bytesoftype, const size_t blocksize,
+                              const uint8_t* const _src, uint8_t* const _dest) {
+  abort();
+}
+
+#else /* defined(__AVX2__) */
 
 #include <immintrin.h>
 

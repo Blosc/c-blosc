@@ -9,8 +9,22 @@
 #include "shuffle-generic.h"
 #include "shuffle-sse2.h"
 
-/* Make sure SSE2 is available for the compilation target and compiler. */
-#if defined(__SSE2__)
+/* Define dummy functions if SSE2 is not available for the compilation target and compiler. */
+#if !defined(__SSE2__)
+
+void
+blosc_internal_shuffle_sse2(const size_t bytesoftype, const size_t blocksize,
+                            const uint8_t* const _src, uint8_t* const _dest) {
+  abort();
+}
+
+void
+blosc_internal_unshuffle_sse2(const size_t bytesoftype, const size_t blocksize,
+                              const uint8_t* const _src, uint8_t* const _dest) {
+  abort();
+}
+
+# else /* defined(__SSE2__) */
 
 #include <emmintrin.h>
 
