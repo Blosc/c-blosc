@@ -3,8 +3,15 @@
 ===========================
 
 
+Changes from 1.21.5 to 1.21.6
+=============================
+
+#XXX version-specific blurb XXX#
+
+
 Changes from 1.21.4 to 1.21.5
 =============================
+
 
 * Fix SSE2/AVX2 build issue.  Fixes #352. Thanks to Thomas VINCENT
   and Mark Kittisopikul.
