@@ -1,13 +1,13 @@
 ===============================================================
- Announcing C-Blosc 1.21.4
+ Announcing C-Blosc 1.21.5
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Upgraded internal zstd from 1.5.2 to 1.5.5
-and Zlib to 1.2.13.
+This is a maintenance release. Here, we have provided a fix for a SSE2/AVX2
+build issue. Thanks to Thomas VINCENT and Mark Kittisopikul.
 
 For more info, please see the release notes in:
 
