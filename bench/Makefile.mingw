@@ -31,7 +31,7 @@ LDFLAGS=-DHAVE_ZLIB -I$(ZLIB_ROOT)/include -lzdll -L$(ZLIB_ROOT)/lib
 #LDFLAGS=-DHAVE_ZLIB -I$(ZLIB_ROOT)/include -lz -L$(ZLIB_ROOT)/lib
 
 # Support for internal Zlib
-#ZLIB_DIR = ../internal-complibs/zlib-1.2.13
+#ZLIB_DIR = ../internal-complibs/zlib-1.3.1
 #CFLAGS += -DHAVE_ZLIB -I$(ZLIB_DIR)
 #SOURCES += $(wildcard $(ZLIB_DIR)/*.c)
 

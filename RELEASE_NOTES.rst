@@ -6,7 +6,7 @@
 Changes from 1.21.5 to 1.21.6
 =============================
 
-#XXX version-specific blurb XXX#
+* Zlib updated to 1.3.1
 
 
 Changes from 1.21.4 to 1.21.5
