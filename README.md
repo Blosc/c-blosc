@@ -1,7 +1,7 @@
 # Blosc: A blocking, shuffling and lossless compression library
 | Author | Contact | URL |
 |--------|---------|-----|
-| Blosc Development Team | blosc@blosc.org | https://www.blosc.org | 
+| The Blosc Development Team | blosc@blosc.org | https://www.blosc.org | 
 
 | Gitter | GH Actions | NumFOCUS | Code of Conduct |
 |--------|------------|----------|-----------------|
