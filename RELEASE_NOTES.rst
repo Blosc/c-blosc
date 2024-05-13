@@ -7,6 +7,7 @@ Changes from 1.21.5 to 1.21.6
 =============================
 
 * Zlib updated to 1.3.1
+* Zstd updated to 1.5.6
 
 
 Changes from 1.21.4 to 1.21.5
