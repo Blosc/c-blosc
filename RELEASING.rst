@@ -90,9 +90,8 @@ Tagging
 Announcing
 ----------
 
-- Send an announcement to the blosc, pytables-dev, bcolz and
-  comp.compression lists.  Use the ``ANNOUNCE.rst`` file as skeleton
-  (possibly as the definitive version).
+- Send an announcement to the blosc and pytables-dev.  Use the
+  ``ANNOUNCE.rst`` file as skeleton (possibly as the definitive version).
 
 
 Post-release actions
@@ -113,10 +112,3 @@ Post-release actions
 
 
 That's all folks!
-
-
-.. Local Variables:
-.. mode: rst
-.. coding: utf-8
-.. fill-column: 70
-.. End:
