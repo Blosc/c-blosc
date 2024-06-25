@@ -9,6 +9,10 @@
 
 ## What is it?
 
+**Note**: There is a more modern version of this package called C-Blosc2
+which supports many more features and is more actively maintained.  Visit it at:
+https://github.com/Blosc/c-blosc2
+
 Blosc is a high performance compressor optimized for binary data.
 It has been designed to transmit data to the processor cache faster
 than the traditional, non-compressed, direct memory fetch approach via
