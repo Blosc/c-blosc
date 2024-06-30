@@ -12,8 +12,7 @@
 
     or, if you don't have the blosc library installed yet:
 
-    $ gcc -O3 -msse2 noinit.c -I../blosc -o noinit -L../build/blosc
-    $ export LD_LIBRARY_PATH=../build/blosc
+    $ gcc -O3 -msse2 noinit.c ../blosc/*.c  -I../blosc -o noinit
 
     Using MSVC on Windows:
 
