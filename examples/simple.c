@@ -11,7 +11,7 @@
 
     or, if you don't have the blosc library installed:
 
-    $ gcc -O3 -msse2 simple.c -I../blosc -o simple -L../build/blosc
+    $ gcc -O3 -msse2 simple.c ../blosc/*.c  -I../blosc -o simple
 
     Using MSVC on Windows:
 
