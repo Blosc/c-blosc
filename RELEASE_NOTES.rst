@@ -962,11 +962,11 @@ Changes from 1.2.4 to 1.3.0
 
 A nice handful of compressors have been added to Blosc:
 
-* LZ4 (http://www.lz4.org/: A very fast
+* LZ4 (https://lz4.org/: A very fast
   compressor/decompressor.  Could be thought as a replacement of the
   original BloscLZ, but it can behave better is some scenarios.
 
-* LZ4HC (http://www.lz4.org/): This is a variation of LZ4
+* LZ4HC (https://lz4.org/): This is a variation of LZ4
   that achieves much better compression ratio at the cost of being
   much slower for compressing.  Decompression speed is unaffected (and
   sometimes better than when using LZ4 itself!), so this is very good
