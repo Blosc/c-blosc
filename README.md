@@ -45,7 +45,7 @@ actually work like a regular codec.
 
 Currently C-Blosc comes with support of BloscLZ, a compressor heavily
 based on FastLZ (https://ariya.github.io/FastLZ/), LZ4 and LZ4HC
-(http://www.lz4.org/), Snappy
+(https://lz4.org/), Snappy
 (https://google.github.io/snappy/), Zlib (https://zlib.net/) and
 Zstandard (https://facebook.github.io/zstd/).
 
