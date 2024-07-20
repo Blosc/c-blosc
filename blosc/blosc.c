@@ -732,7 +732,6 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
   int32_t nbytes;                /* number of decompressed bytes in split */
   const int32_t compressedsize = context->compressedsize;
   int32_t cbytes;                /* number of compressed bytes in split */
-  int32_t ctbytes = 0;           /* number of compressed bytes in block */
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp = dest;
   int32_t typesize = context->typesize;
@@ -769,7 +768,6 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
     if (cbytes < 0 || cbytes > context->compressedsize - src_offset) {
       return -1;
     }
-    ctbytes += (int32_t)sizeof(int32_t);
     src = base_src + src_offset;
     /* Uncompress */
     if (cbytes == neblock) {
@@ -784,7 +782,6 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
       }
     }
     src_offset += cbytes;
-    ctbytes += cbytes;
     _tmp += nbytes;
     ntbytes += nbytes;
   } /* Closes j < nsplits */
