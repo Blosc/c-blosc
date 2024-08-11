@@ -5,7 +5,7 @@
 Changes from 1.21.6 to 1.21.7
 =============================
 
-#XXX version-specific blurb XXX#
+* Internal LZ4 codec updated to 1.10.0.
 
 
 Changes from 1.21.5 to 1.21.6
