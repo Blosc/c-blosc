@@ -101,8 +101,8 @@ if(NOT DEACTIVATE_LZ4)
             # type of the LZ4 library
             set(LIBS
                 ${LIBS}
-                $<$<STREQUAL:$<TARGET_PROPERTY:Foo,TYPE>,SHARED_LIBRARY>:LZ4::lz4_shared>
-                $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:Foo,TYPE>,SHARED_LIBRARY>>:LZ4::lz4_static>
+                $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,SHARED_LIBRARY>:LZ4::lz4_shared>
+                $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TYPE>,SHARED_LIBRARY>>:LZ4::lz4_static>
             )
         elseif(SHARED_LIBS OR STATIC_LIBS)
             if(SHARED_LIBS)
