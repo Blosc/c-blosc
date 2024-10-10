@@ -88,7 +88,32 @@ endif(WIN32)
 
 if(NOT DEACTIVATE_LZ4)
     if(LZ4_FOUND)
-        set(LIBS ${LIBS} ${LZ4_LIBRARY})
+        # Check if LZ4 was detected from a conig
+        # module first
+        if(TARGET LZ4::lz4_shared)
+            set(SHARED_LIBS LZ4::lz4_shared)
+        endif()
+        if(TARGET LZ4::lz4_static)
+            set(STATIC_LIBS LZ4::lz4_static)
+        endif()
+        if(SHARED_LIBS AND STATIC_LIBS)
+            # Set a genex to match the appropriate library type respective to the
+            # type of the LZ4 library
+            set(LIBS
+                ${LIBS}
+                $<$<STREQUAL:$<TARGET_PROPERTY:Foo,TYPE>,SHARED_LIBRARY>:LZ4::lz4_shared>
+                $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:Foo,TYPE>,SHARED_LIBRARY>>:LZ4::lz4_static>
+            )
+        elseif(SHARED_LIBS OR STATIC_LIBS)
+            if(SHARED_LIBS)
+                set(LIBS ${LIBS} ${SHARED_LIBS})
+            else()
+                set(LIBS ${LIBS} ${STATIC_LIBS})
+            endif()
+        elseif(NOT SHARED_LIBS AND NOT STATIC_LIBS)
+            # Fallback to cblosc vendored find module
+            set(LIBS ${LIBS} ${LZ4_LIBRARY})
+        endif()
     else(LZ4_FOUND)
         file(GLOB LZ4_FILES ${LZ4_LOCAL_DIR}/*.c)
         set(SOURCES ${SOURCES} ${LZ4_FILES})
