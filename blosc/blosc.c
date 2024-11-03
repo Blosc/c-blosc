@@ -1069,10 +1069,9 @@ static int initialize_context_compression(struct blosc_context* context,
                           size_t destsize,
                           int32_t compressor,
                           int32_t blocksize,
-                          int32_t numthreads)
+                          int32_t numthreads,
+                          long warnlvl)
 {
-  char *envvar = NULL;
-  int warnlvl = 0;
   /* Set parameters */
   context->compress = 1;
   context->src = (const uint8_t*)src;
@@ -1085,11 +1084,6 @@ static int initialize_context_compression(struct blosc_context* context,
   context->numthreads = numthreads;
   context->end_threads = 0;
   context->clevel = clevel;
-
-  envvar = getenv("BLOSC_WARN");
-  if (envvar != NULL) {
-    warnlvl = strtol(envvar, NULL, 10);
-  }
 
   /* Check buffer size limits */
   if (sourcesize > BLOSC_MAX_BUFFERSIZE) {
@@ -1283,7 +1277,7 @@ int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
   error = initialize_context_compression(&context, clevel, doshuffle, typesize,
 					 nbytes, src, dest, destsize,
 					 blosc_compname_to_compcode(compressor),
-					 blocksize, numinternalthreads);
+					 blocksize, numinternalthreads, 0L);
   if (error <= 0) { return error; }
 
   error = write_compression_header(&context, clevel, doshuffle);
@@ -1402,10 +1396,15 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   pthread_mutex_lock(global_comp_mutex);
 
   do {
+    long warnlvl = 0L;
+    envvar = getenv("BLOSC_WARN");
+    if (envvar != NULL) {
+      warnlvl = strtol(envvar, NULL, 10);
+    }
     result = initialize_context_compression(g_global_context, clevel, doshuffle,
                                            typesize, nbytes, src, dest, destsize,
                                            g_compressor, g_force_blocksize,
-                                           g_threads);
+                                           g_threads, warnlvl);
     if (result <= 0) { break; }
 
     result = write_compression_header(g_global_context, clevel, doshuffle);
