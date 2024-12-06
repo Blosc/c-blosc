@@ -1063,7 +1063,7 @@ Changes from 1.1.5 to 1.2
 
 - Many typos were fixed and docs have been improved.  The script for
   generating nice plots for the included benchmarks has been improved
-  too.  Thanks to Valetin Haenel.
+  too.  Thanks to Valentin Haenel.
 
 
 Changes from 1.1.4 to 1.1.5
