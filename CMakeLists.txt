@@ -72,10 +72,8 @@
 #    DEV: static includes blosc.a and blosc.h
 
 
-cmake_minimum_required(VERSION 2.8.12)
-if(NOT CMAKE_VERSION VERSION_LESS 3.3)
-    cmake_policy(SET CMP0063 NEW)
-endif()
+# Recent versions of cmake dropped compatibility with < 3.5
+cmake_minimum_required(VERSION 3.5)
 
 # parse the full version numbers from blosc.h
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/blosc/blosc.h _blosc_h_contents)
