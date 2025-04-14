@@ -1072,20 +1072,7 @@ static int initialize_context_compression(struct blosc_context* context,
                           int32_t numthreads,
                           int warnlvl)
 {
-  /* Set parameters */
-  context->compress = 1;
-  context->src = (const uint8_t*)src;
-  context->dest = (uint8_t *)(dest);
-  context->num_output_bytes = 0;
-  context->destsize = (int32_t)destsize;
-  context->sourcesize = sourcesize;
-  context->typesize = typesize;
-  context->compcode = compressor;
-  context->numthreads = numthreads;
-  context->end_threads = 0;
-  context->clevel = clevel;
-
-  /* Check buffer size limits */
+  /* Check buffer size limits and clamp destsize */
   if (sourcesize > BLOSC_MAX_BUFFERSIZE) {
     if (warnlvl > 0) {
       fprintf(stderr, "Input buffer size cannot exceed %d bytes\n",
@@ -1100,27 +1087,48 @@ static int initialize_context_compression(struct blosc_context* context,
     }
     return 0;
   }
+  if (destsize - BLOSC_MAX_OVERHEAD > sourcesize) {
+    destsize = sourcesize + BLOSC_MAX_OVERHEAD;
+  }
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
-    fprintf(stderr, "`clevel` parameter must be between 0 and 9!\n");
+    if (warnlvl > 0) {
+      fprintf(stderr, "`clevel` parameter must be between 0 and 9!\n");
+    }
     return -10;
   }
 
   /* Shuffle */
   if (doshuffle != 0 && doshuffle != 1 && doshuffle != 2) {
-    fprintf(stderr, "`shuffle` parameter must be either 0, 1 or 2!\n");
+    if (warnlvl > 0) {
+      fprintf(stderr, "`shuffle` parameter must be either 0, 1 or 2!\n");
+    }
     return -10;
   }
 
   /* Check typesize limits */
-  if (context->typesize > BLOSC_MAX_TYPESIZE) {
+  if (typesize > BLOSC_MAX_TYPESIZE) {
     /* If typesize is too large, treat buffer as an 1-byte stream. */
-    context->typesize = 1;
+    typesize = 1;
   }
 
+  /* Set parameters */
+  context->compress = 1;
+  context->src = (const uint8_t*)src;
+  context->dest = (uint8_t *)(dest);
+  context->num_output_bytes = 0;
+  // previous checks ensure the following size_t to int32_t casts don't overflow
+  context->destsize = (int32_t)destsize;
+  context->sourcesize = (int32_t)sourcesize;
+  context->typesize = (int32_t)typesize;
+  context->compcode = compressor;
+  context->numthreads = numthreads;
+  context->end_threads = 0;
+  context->clevel = clevel;
+
   /* Get the blocksize */
-  context->blocksize = compute_blocksize(context, clevel, (int32_t)context->typesize, context->sourcesize, blocksize);
+  context->blocksize = compute_blocksize(context, clevel, context->typesize, context->sourcesize, blocksize);
 
   /* Compute number of blocks in buffer */
   context->nblocks = context->sourcesize / context->blocksize;
