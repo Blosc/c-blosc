@@ -1114,6 +1114,10 @@ static int initialize_context_compression(struct blosc_context* context,
   }
 
   /* Check typesize limits */
+  if (context->typesize <= 0) {
+    fprintf(stderr, "`typesize` parameter must be greater than 0!\n");
+    return -10;
+  }
   if (context->typesize > BLOSC_MAX_TYPESIZE) {
     /* If typesize is too large, treat buffer as an 1-byte stream. */
     context->typesize = 1;
