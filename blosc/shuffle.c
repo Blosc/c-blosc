@@ -20,16 +20,6 @@
 #include <pthread.h>
 #endif
 
-/* Visual Studio < 2013 does not have stdbool.h so here it is a replacement: */
-#if defined __STDC__ && defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
-/* have a C99 compiler */
-typedef _Bool bool;
-#else
-/* do not have a C99 compiler */
-typedef unsigned char bool;
-#endif
-
-
 #if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
     __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
 #define HAVE_CPU_FEAT_INTRIN
