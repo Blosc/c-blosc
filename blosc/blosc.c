@@ -59,7 +59,6 @@
 /* Include the win32/pthread.h library for all the Windows builds. See #224. */
 #if defined(_WIN32)
   #include "win32/pthread.h"
-  #include "win32/pthread.c"
 #else
   #include <pthread.h>
 #endif
