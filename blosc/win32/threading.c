@@ -28,13 +28,22 @@
  * no need for double-checking.
  */
 
-#include "pthread.h"
+#include "../threading.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <process.h>
 #include <errno.h>
 #include <limits.h>
+
+
+// The following typedefs are used to make this file as similar as possible to the original code,
+// replacing `blosc_pthread_{xyz}` structs with `pthread_{xyz}`, so that future bumps of this file
+// will be easier.
+// For function names we explicitly add the `blosc_` prefix, without any typedefs or macros, and
+// therefore we will have to update the code manually next time we bump this file's code.
+typedef blosc_pthread_t pthread_t;
+typedef blosc_pthread_cond_t pthread_cond_t;
 
 
 void die(const char *err, ...)
@@ -50,8 +59,8 @@ static unsigned __stdcall win32_start_routine(void *arg)
 	return 0;
 }
 
-int pthread_create(pthread_t *thread, const void *unused,
-		   void *(*start_routine)(void*), void *arg)
+int blosc_pthread_create(pthread_t *thread, const void *unused,
+		           void *(*start_routine)(void*), void *arg)
 {
 	thread->arg = arg;
 	thread->start_routine = start_routine;
@@ -64,22 +73,24 @@ int pthread_create(pthread_t *thread, const void *unused,
 		return 0;
 }
 
-int win32_pthread_join(pthread_t *thread, void **value_ptr)
+int blosc_pthread_join_impl(pthread_t *thread, void **value_ptr)
 {
 	DWORD result = WaitForSingleObject(thread->handle, INFINITE);
 	switch (result) {
 		case WAIT_OBJECT_0:
 			if (value_ptr)
 				*value_ptr = thread->arg;
+			// CloseHandle(thread->handle); // TODO: why is this line missing
 			return 0;
 		case WAIT_ABANDONED:
+			// CloseHandle(thread->handle); // TODO: why is this line missing
 			return EINVAL;
 		default:
 			return GetLastError();
 	}
 }
 
-int pthread_cond_init(pthread_cond_t *cond, const void *unused)
+int blosc_pthread_cond_init(pthread_cond_t *cond, const void *unused)
 {
 	cond->waiters = 0;
 	cond->was_broadcast = 0;
@@ -99,7 +110,7 @@ int pthread_cond_init(pthread_cond_t *cond, const void *unused)
 	return 0;
 }
 
-int pthread_cond_destroy(pthread_cond_t *cond)
+int blosc_pthread_cond_destroy(pthread_cond_t *cond)
 {
 	CloseHandle(cond->sema);
 	CloseHandle(cond->continue_broadcast);
@@ -107,7 +118,7 @@ int pthread_cond_destroy(pthread_cond_t *cond)
 	return 0;
 }
 
-int pthread_cond_wait(pthread_cond_t *cond, CRITICAL_SECTION *mutex)
+int blosc_pthread_cond_wait(pthread_cond_t *cond, CRITICAL_SECTION *mutex)
 {
 	int last_waiter;
 
@@ -161,11 +172,11 @@ int pthread_cond_wait(pthread_cond_t *cond, CRITICAL_SECTION *mutex)
 }
 
 /*
- * IMPORTANT: This implementation requires that pthread_cond_signal
+ * IMPORTANT: This implementation requires that blosc_pthread_cond_signal
  * is called while the mutex is held that is used in the corresponding
- * pthread_cond_wait calls!
+ * blosc_pthread_cond_wait calls!
  */
-int pthread_cond_signal(pthread_cond_t *cond)
+int blosc_pthread_cond_signal(pthread_cond_t *cond)
 {
 	int have_waiters;
 
@@ -184,11 +195,11 @@ int pthread_cond_signal(pthread_cond_t *cond)
 }
 
 /*
- * DOUBLY IMPORTANT: This implementation requires that pthread_cond_broadcast
+ * DOUBLY IMPORTANT: This implementation requires that blosc_pthread_cond_broadcast
  * is called while the mutex is held that is used in the corresponding
- * pthread_cond_wait calls!
+ * blosc_pthread_cond_wait calls!
  */
-int pthread_cond_broadcast(pthread_cond_t *cond)
+int blosc_pthread_cond_broadcast(pthread_cond_t *cond)
 {
 	EnterCriticalSection(&cond->waiters_lock);
 
@@ -213,6 +224,18 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
 		cond->was_broadcast = 0;
 	} else {
 		LeaveCriticalSection(&cond->waiters_lock);
+	}
+	return 0;
+}
+
+int blosc_pthread_once(blosc_pthread_once_t *once_control, void (*init_routine)(void))
+{
+	BOOL pending;
+	InitOnceBeginInitialize(once_control, /*dwFlags=*/0, /*fPending=*/&pending, NULL);
+	if (pending == TRUE)
+	{
+		init_routine();
+		InitOnceComplete(once_control, /*dwFlags=*/0, /*lpContext=*/NULL);
 	}
 	return 0;
 }

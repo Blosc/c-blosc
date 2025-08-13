@@ -14,11 +14,7 @@
 #include "blosc-comp-features.h"
 #include <stdio.h>
 
-#if defined(_WIN32)
-#include "win32/pthread.h"
-#else
-#include <pthread.h>
-#endif
+#include "threading.h"
 
 #if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
     __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
@@ -338,7 +334,7 @@ static shuffle_implementation_t get_shuffle_implementation(void) {
 
 
 /*  Flag indicating whether the implementation has been initialized. */
-static pthread_once_t implementation_initialized = PTHREAD_ONCE_INIT;
+static blosc_pthread_once_t implementation_initialized = PTHREAD_ONCE_INIT;
 
 /*  The dynamically-chosen shuffle/unshuffle implementation.
     This is only safe to use once `implementation_initialized` is set. */
@@ -359,7 +355,7 @@ __forceinline
 BLOSC_INLINE
 #endif
 void init_shuffle_implementation(void) {
-  pthread_once(&implementation_initialized, &set_host_implementation);
+  blosc_pthread_once(&implementation_initialized, &set_host_implementation);
 }
 
 /*  Shuffle a block by dynamically dispatching to the appropriate

@@ -28,8 +28,11 @@
  * no need for double-checking.
  */
 
-#ifndef PTHREAD_H
-#define PTHREAD_H
+
+#ifndef BLOSC_THREADING_H
+#define BLOSC_THREADING_H
+
+#ifdef _WIN32
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -40,12 +43,12 @@
 /*
  * Defines that adapt Windows API threads to pthreads API
  */
-#define pthread_mutex_t CRITICAL_SECTION
+#define blosc_pthread_mutex_t CRITICAL_SECTION
 
-#define pthread_mutex_init(a,b) InitializeCriticalSection((a))
-#define pthread_mutex_destroy(a) DeleteCriticalSection((a))
-#define pthread_mutex_lock EnterCriticalSection
-#define pthread_mutex_unlock LeaveCriticalSection
+#define blosc_pthread_mutex_init(a,b) InitializeCriticalSection((a))
+#define blosc_pthread_mutex_destroy(a) DeleteCriticalSection((a))
+#define blosc_pthread_mutex_lock EnterCriticalSection
+#define blosc_pthread_mutex_unlock LeaveCriticalSection
 
 /*
  * Implement simple condition variable for Windows threads, based on ACE
@@ -61,13 +64,13 @@ typedef struct {
 	CRITICAL_SECTION waiters_lock;
 	HANDLE sema;
 	HANDLE continue_broadcast;
-} pthread_cond_t;
+} blosc_pthread_cond_t;
 
-extern int pthread_cond_init(pthread_cond_t *cond, const void *unused);
-extern int pthread_cond_destroy(pthread_cond_t *cond);
-extern int pthread_cond_wait(pthread_cond_t *cond, CRITICAL_SECTION *mutex);
-extern int pthread_cond_signal(pthread_cond_t *cond);
-extern int pthread_cond_broadcast(pthread_cond_t *cond);
+int blosc_pthread_cond_init(blosc_pthread_cond_t *cond, const void *unused);
+int blosc_pthread_cond_destroy(blosc_pthread_cond_t *cond);
+int blosc_pthread_cond_wait(blosc_pthread_cond_t *cond, CRITICAL_SECTION *mutex);
+int blosc_pthread_cond_signal(blosc_pthread_cond_t *cond);
+int blosc_pthread_cond_broadcast(blosc_pthread_cond_t *cond);
 
 /*
  * Simple thread creation implementation using pthread API
@@ -76,37 +79,52 @@ typedef struct {
 	HANDLE handle;
 	void *(*start_routine)(void*);
 	void *arg;
-} pthread_t;
+} blosc_pthread_t;
 
-extern int pthread_create(pthread_t *thread, const void *unused,
+int blosc_pthread_create(blosc_pthread_t *thread, const void *unused,
 			  void *(*start_routine)(void*), void *arg);
 
 /*
  * To avoid the need of copying a struct, we use small macro wrapper to pass
  * pointer to win32_pthread_join instead.
  */
-#define pthread_join(a, b) win32_pthread_join(&(a), (b))
+#define blosc_pthread_join(a, b) blosc_pthread_join_impl(&(a), (b))
 
-extern int win32_pthread_join(pthread_t *thread, void **value_ptr);
+int blosc_pthread_join_impl(blosc_pthread_t *thread, void **value_ptr);
 
 /**
  * pthread_once implementation based on the MS Windows One-Time Initialization
  * (https://docs.microsoft.com/en-us/windows/desktop/Sync/one-time-initialization)
  * APIs.
  */
-typedef INIT_ONCE pthread_once_t;
+typedef INIT_ONCE blosc_pthread_once_t;
 #define PTHREAD_ONCE_INIT INIT_ONCE_STATIC_INIT
-#define pthread_once blosc_internal_pthread_once /* Avoid symbol conflicts */
-static int blosc_internal_pthread_once(pthread_once_t* once_control,
-																			 void (*init_routine)(void)) {
-  BOOL pending;
-  InitOnceBeginInitialize(once_control, /*dwFlags=*/0, /*fPending=*/&pending,
-                          NULL);
-  if (pending == TRUE) {
-    init_routine();
-    InitOnceComplete(once_control, /*dwFlags=*/0, /*lpContext=*/NULL);
-  }
-  return 0;
-}
+int blosc_pthread_once(blosc_pthread_once_t* once_control, void (*init_routine)(void));
 
-#endif /* PTHREAD_H */
+#else /* not _WIN32 */
+
+#include <pthread.h>
+
+#define blosc_pthread_mutex_t pthread_mutex_t
+#define blosc_pthread_mutex_init(a, b) pthread_mutex_init((a), (b))
+#define blosc_pthread_mutex_destroy(a) pthread_mutex_destroy((a))
+#define blosc_pthread_mutex_lock(a) pthread_mutex_lock((a))
+#define blosc_pthread_mutex_unlock(a) pthread_mutex_unlock((a))
+
+#define blosc_pthread_cond_t pthread_cond_t
+#define blosc_pthread_cond_init(a, b) pthread_cond_init((a), (b))
+#define blosc_pthread_cond_destroy(a) pthread_cond_destroy((a))
+#define blosc_pthread_cond_wait(a, b) pthread_cond_wait((a), (b))
+#define blosc_pthread_cond_signal(a) pthread_cond_signal((a))
+#define blosc_pthread_cond_broadcast(a) pthread_cond_broadcast((a))
+
+#define blosc_pthread_t pthread_t
+#define blosc_pthread_create(a, b, c, d) pthread_create((a), (b), (c), (d))
+#define blosc_pthread_join(a, b) pthread_join((a), (b))
+
+#define blosc_pthread_once_t pthread_once_t
+#define blosc_pthread_once(a, b) pthread_once((a), (b))
+
+#endif
+
+#endif /* BLOSC_THREADING_H */
