@@ -285,6 +285,12 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 }
 #endif
 
+#elif defined(__riscv)
+
+static blosc_cpu_features blosc_get_cpu_features(void) {
+  return BLOSC_HAVE_NOTHING;
+}
+
 #else   /* No hardware acceleration supported for the target architecture. */
   #if defined(_MSC_VER)
   #pragma message("Hardware-acceleration detection not implemented for the target architecture. Only the generic shuffle/unshuffle routines will be available.")
@@ -301,6 +307,7 @@ static blosc_cpu_features blosc_get_cpu_features(void) {
 static shuffle_implementation_t get_shuffle_implementation(void) {
   blosc_cpu_features cpu_features = blosc_get_cpu_features();
   shuffle_implementation_t impl_generic;
+  (void)cpu_features;
 
 #if defined(SHUFFLE_AVX2_ENABLED)
   if (cpu_features & BLOSC_HAVE_AVX2) {
