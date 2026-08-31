@@ -250,6 +250,10 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|i686|x86_64|amd64|AMD64)")
         # Unrecognized compiler. Emit a warning message to let the user know hardware-acceleration won't be available.
         message(WARNING "Unable to determine which ${CMAKE_SYSTEM_PROCESSOR} hardware features are supported by the C compiler (${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}).")
     endif()
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv")
+    set(COMPILER_SUPPORT_SSE2 FALSE)
+    set(COMPILER_SUPPORT_AVX2 FALSE)
+    message(STATUS "Recognized RISC-V target ${CMAKE_SYSTEM_PROCESSOR}; hardware-accelerated x86 shuffle implementations are disabled and generic routines will be used.")
 else()
     # If the target system processor isn't recognized, emit a warning message to alert the user
     # that hardware-acceleration support won't be available but allow configuration to proceed.
