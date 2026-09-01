@@ -88,7 +88,7 @@ endif(WIN32)
 
 if(NOT DEACTIVATE_LZ4)
     if(LZ4_FOUND)
-        set(LIBS ${LIBS} ${LZ4_LIBRARY})
+       set(LIBS ${LZ4_LIBRARIES}) 
     else(LZ4_FOUND)
         file(GLOB LZ4_FILES ${LZ4_LOCAL_DIR}/*.c)
         set(SOURCES ${SOURCES} ${LZ4_FILES})
