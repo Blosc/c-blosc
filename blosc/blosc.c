@@ -1255,6 +1255,13 @@ int blosc_compress_context(struct blosc_context* context)
       (context->sourcesize + BLOSC_MAX_OVERHEAD > context->destsize)) {
     return 0;   /* data cannot be copied without overrun destination */
   }
+  else if (!(*(context->header_flags) & BLOSC_MEMCPYED) &&
+           (context->num_output_bytes > context->destsize)) {
+    /* The header and the block pointers alone do not fit in `dest`.
+       serial_blosc()/t_blosc() write the bstarts array before any
+       per-block bound is checked, so bail out here instead. */
+    return 0;
+  }
 
   /* Do the actual compression */
   ntbytes = do_job(context);
