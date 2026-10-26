@@ -757,6 +757,10 @@ static int blosc_d(struct blosc_context* context, int32_t blocksize,
   }
 
   neblock = blocksize / nsplits;
+  /* The splits must cover the whole block, or part of tmp is left unwritten */
+  if (neblock * nsplits != blocksize) {
+    return -1;
+  }
   for (j = 0; j < nsplits; j++) {
     /* Validate src_offset */
     if (src_offset < 0 || src_offset > compressedsize - sizeof(int32_t)) {
