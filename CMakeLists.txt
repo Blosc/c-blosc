@@ -207,6 +207,11 @@ if(APPLE)
   set(CMAKE_MACOSX_RPATH TRUE)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL GNU)
+    # We need C99 (GNU99 more exactly)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+endif()
+
 # Based on the target system's processor and the compiler being used,
 # set build variables indicating which hardware features can be targeted
 # by the compiler. Note we DO NOT check which hardware features are supported
@@ -215,8 +220,6 @@ endif()
 message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}")
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|i686|x86_64|amd64|AMD64)")
     if(CMAKE_C_COMPILER_ID STREQUAL GNU)
-        # We need C99 (GNU99 more exactly)
-        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
         set(COMPILER_SUPPORT_SSE2 TRUE)
         if(CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
             set(COMPILER_SUPPORT_AVX2 TRUE)
