@@ -1586,7 +1586,7 @@ int blosc_getitem(const void* src, int start, int nitems, void* dest) {
   int32_t typesize, blocksize, nbytes, compressedsize;
   int32_t j, bsize, bsize2, leftoverblock;
   int32_t cbytes, startb, stopb;
-  int stop = start + nitems;
+  int64_t stop = (int64_t)start + nitems;
   uint8_t *tmp;
   uint8_t *tmp2;
   uint8_t *tmp3;
@@ -1645,13 +1645,13 @@ int blosc_getitem(const void* src, int start, int nitems, void* dest) {
   bstarts = _src;
   _src += sizeof(int32_t)*nblocks;
 
-  /* Check region boundaries */
-  if ((start < 0) || (start*typesize > nbytes)) {
+  /* Check region boundaries (64-bit math avoids int overflow) */
+  if ((start < 0) || ((int64_t)start * typesize > nbytes)) {
     fprintf(stderr, "`start` out of bounds");
     return -1;
   }
 
-  if ((stop < 0) || (stop*typesize > nbytes)) {
+  if ((nitems < 0) || (stop * typesize > nbytes)) {
     fprintf(stderr, "`start`+`nitems` out of bounds");
     return -1;
   }
@@ -1665,8 +1665,8 @@ int blosc_getitem(const void* src, int start, int nitems, void* dest) {
     }
 
     /* Compute start & stop for each block */
-    startb = start * typesize - j * blocksize;
-    stopb = stop * typesize - j * blocksize;
+    startb = (int32_t)((int64_t)start * typesize - (int64_t)j * blocksize);
+    stopb = (int32_t)(stop * typesize - (int64_t)j * blocksize);
     if ((startb >= (int)blocksize) || (stopb <= 0)) {
       continue;
     }
