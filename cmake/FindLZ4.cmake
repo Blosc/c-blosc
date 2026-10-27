@@ -1,4 +1,4 @@
-[==[
+#[==[
 Find LZ4
 Seaches system for both static and shared Lz4 binaries and headers
 If successful, sets LZ4 targets LZ4::lz4_shared and LZ4::lz4_static
@@ -47,7 +47,7 @@ find_package_handle_standard_args(
     REASON_FAILURE_MESSAGE "No LZ4 library found.  Using internal sources."
 )
 
-# Check if LZ4 was detected from a conig
+# Check if LZ4 was detected from a config
 # module first
 if(NOT TARGET LZ4::lz4_shared)
     add_library(LZ4::lz4_shared SHARED IMPORTED)
