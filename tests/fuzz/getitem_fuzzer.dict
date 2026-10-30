@@ -1,0 +1,22 @@
+# libFuzzer dictionary for getitem_fuzzer.
+# Tokens for the blosc frame header (16 bytes: version, compversion, flags,
+# typesize, nbytes, blocksize, cbytes) that gates every interesting path.
+"\x02"
+"blos"
+"\x02\x01"
+"\x02\x02"
+"\x02\x03"
+"\x02\x04"
+"\x02\x05"
+"\x01"
+"\x02"
+"\x04"
+"\x08"
+"\x10"
+"\xff\x00"
+"\x00\x01\x00\x00"
+"\x00\x04\x00\x00"
+"\x00\x10\x00\x00"
+"\xff\xff\xff\x7f"
+"\x00\x00\x10\x00"
+"\x00\x00\x04\x00"
