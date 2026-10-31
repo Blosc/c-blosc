@@ -2,6 +2,12 @@
  Release notes for C-Blosc
 ===========================
 
+Changes from 1.21.7 to 1.21.8
+=============================
+
+#XXX version-specific blurb XXX#
+
+
 Changes from 1.21.6 to 1.21.7
 =============================
 
