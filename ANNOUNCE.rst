@@ -1,14 +1,15 @@
 ===============================================================
- Announcing C-Blosc 1.21.6
+ Announcing C-Blosc 1.21.7
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release. Here, we are providing new versions of
-internal Zlib and Zstd compressors, which are now 1.3.1 and 1.5.6
-respectively.
+This is a maintenance release. Here, we are updating the internal LZ4
+compressor to 1.10.0, hardening buffer and header validation against
+malformed inputs, fixing compatibility with GCC 15 (C23) and CMake 4.x,
+and adding generic RISC-V build support.
 
 For more info, please see the release notes in:
 

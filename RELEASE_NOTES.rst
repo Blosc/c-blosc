@@ -5,7 +5,29 @@
 Changes from 1.21.6 to 1.21.7
 =============================
 
-* Internal LZ4 codec updated to 1.10.0.
+* Internal LZ4 codec updated to 1.10.0.  Thanks to Dimitri Papadopoulos.
+
+* Security and buffer-validation hardening:
+  * Fix out-of-bounds write in ``blosc_getitem`` for negative ``nitems`` (#406).
+  * Reject split blocks not covering ``blocksize`` in ``blosc_d`` (#407).
+  * Reject ``destsize`` too small for block pointers in ``blosc_compress_context`` (#408).
+  Thanks to Suraiya Sulthana.
+
+* Clamp ``destsize`` to avoid int32 overflow and move ``getenv("BLOSC_WARN")``
+  out of the multi-threaded decompression path (#387, #390).  Thanks to @nhz2.
+
+* Validate that ``typesize`` is greater than zero (#395).  Thanks to Barak Ugav.
+
+* Fix compilation with GCC 15 (C23) in internal Zlib (#392).  Thanks to Georg Semmler.
+
+* Add generic RISC-V build support (#403, thanks to @carlosqwqqwq) and enable
+  ``-std=gnu99`` for GCC across all architectures (#399, thanks to Levi Zim).
+
+* Update minimum CMake version to 3.10 for compatibility with CMake 4.x (#404).
+  Thanks to @mosfet80.
+
+* Various compiler warning fixes and documentation improvements (#380, #381, #382).
+  Thanks to @nhz2, Dimitri Papadopoulos, and Richard Barnes.
 
 
 Changes from 1.21.5 to 1.21.6
