@@ -52,7 +52,7 @@ int64_t blosc_internal_bshuf_trans_byte_elem_scal(const void* in, void* out, con
 int64_t blosc_internal_bshuf_trans_bit_byte_remainder(const void* in, void* out, const size_t size,
                                                       const size_t elem_size, const size_t start_byte) {
 
-    const uint64_t* in_b = (const uint64_t*) in;
+    const char* in_b = (const char*) in;
     uint8_t* out_b = (uint8_t*) out;
 
     uint64_t x, t;
@@ -70,7 +70,7 @@ int64_t blosc_internal_bshuf_trans_bit_byte_remainder(const void* in, void* out,
     CHECK_MULT_EIGHT(start_byte);
 
     for (ii = start_byte / 8; ii < nbyte_bitrow; ii ++) {
-        x = in_b[ii];
+        memcpy(&x, &in_b[ii * 8], sizeof(x));
         if (little_endian) {
             TRANS_BIT_8X8(x, t);
         } else {
@@ -187,7 +187,7 @@ int64_t blosc_internal_bshuf_shuffle_bit_eightelem_scal(const void* in, void* ou
 
     for (jj = 0; jj < 8 * elem_size; jj += 8) {
         for (ii = 0; ii + 8 * elem_size - 1 < nbyte; ii += 8 * elem_size) {
-            x = *((uint64_t*) &in_b[ii + jj]);
+            memcpy(&x, &in_b[ii + jj], sizeof(x));
             if (little_endian) {
                 TRANS_BIT_8X8(x, t);
             } else {
