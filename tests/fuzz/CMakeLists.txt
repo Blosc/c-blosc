@@ -23,6 +23,11 @@ endif()
 # sources
 file(GLOB SOURCES fuzz_*.c)
 
+# seed corpus generator (run at build time by OSS-Fuzz's build.sh)
+add_executable(gen_seeds gen_seeds.c)
+target_link_libraries(gen_seeds blosc_static)
+add_dependencies(gen_seeds blosc_static)
+
 # targets and tests
 foreach(source ${SOURCES})
     get_filename_component(target ${source} NAME_WE)
