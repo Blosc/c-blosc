@@ -813,7 +813,12 @@ static int serial_blosc(struct blosc_context* context)
   int32_t ntbytes = context->num_output_bytes;
 
   uint8_t *tmp = my_malloc(context->blocksize + ebsize);
-  uint8_t *tmp2 = tmp + context->blocksize;
+  uint8_t *tmp2;
+
+  if (tmp == NULL) {
+    return -1;
+  }
+  tmp2 = tmp + context->blocksize;
 
   for (j = 0; j < context->nblocks; j++) {
     if (context->compress && !(*(context->header_flags) & BLOSC_MEMCPYED)) {
@@ -1643,11 +1648,6 @@ int blosc_getitem(const void* src, int start, int nitems, void* dest) {
     }
   }
 
-  ebsize = blocksize + typesize * (int32_t)sizeof(int32_t);
-  tmp = my_malloc(blocksize + ebsize + blocksize);
-  tmp2 = tmp + blocksize;
-  tmp3 = tmp + blocksize + ebsize;
-
   _src += 16;
   bstarts = _src;
   _src += sizeof(int32_t)*nblocks;
@@ -1662,6 +1662,14 @@ int blosc_getitem(const void* src, int start, int nitems, void* dest) {
     fprintf(stderr, "`start`+`nitems` out of bounds");
     return -1;
   }
+
+  ebsize = blocksize + typesize * (int32_t)sizeof(int32_t);
+  tmp = my_malloc(blocksize + ebsize + blocksize);
+  if (tmp == NULL) {
+    return -1;
+  }
+  tmp2 = tmp + blocksize;
+  tmp3 = tmp + blocksize + ebsize;
 
   for (j = 0; j < nblocks; j++) {
     bsize = blocksize;
@@ -1767,8 +1775,17 @@ static void *t_blosc(void *ctxt)
     {
       my_free(context->tmp);
       context->tmp = my_malloc(blocksize + ebsize + blocksize);
-      context->tmp2 = context->tmp + blocksize;
-      context->tmp3 = context->tmp + blocksize + ebsize;
+      if (context->tmp == NULL) {
+        /* Force a new allocation next time and give up on this job */
+        context->tmpblocksize = 0;
+        pthread_mutex_lock(&context->parent_context->count_mutex);
+        context->parent_context->thread_giveup_code = -1;
+        pthread_mutex_unlock(&context->parent_context->count_mutex);
+      }
+      else {
+        context->tmp2 = context->tmp + blocksize;
+        context->tmp3 = context->tmp + blocksize + ebsize;
+      }
     }
 
     tmp = context->tmp;
@@ -1934,11 +1951,18 @@ static int init_threads(struct blosc_context* context)
 
     /* Create a thread context thread owns context (will destroy when finished) */
     thread_context = (struct thread_context*)my_malloc(sizeof(struct thread_context));
+    if (thread_context == NULL) {
+      return(-1);
+    }
     thread_context->parent_context = context;
     thread_context->tid = tid;
 
     ebsize = context->blocksize + context->typesize * (int32_t)sizeof(int32_t);
     thread_context->tmp = my_malloc(context->blocksize + ebsize + context->blocksize);
+    if (thread_context->tmp == NULL) {
+      my_free(thread_context);
+      return(-1);
+    }
     thread_context->tmp2 = thread_context->tmp + context->blocksize;
     thread_context->tmp3 = thread_context->tmp + context->blocksize + ebsize;
     thread_context->tmpblocksize = context->blocksize;
