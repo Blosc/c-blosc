@@ -33,7 +33,7 @@
    targeting the minimum architecture level supporting SSE2.
    Other compilers define this as expected and emit warnings
    when it is re-defined. */
-#if !defined(__SSE2__) && defined(_MSC_VER) && \
+#if !defined(__SSE2__) && defined(_MSC_VER) && !defined(_M_ARM64EC) && \
     (defined(_M_X64) || (defined(_M_IX86) && _M_IX86_FP >= 2))
   #define __SSE2__
 #endif
