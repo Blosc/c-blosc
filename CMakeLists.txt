@@ -218,7 +218,10 @@ endif()
 # by this (the host) system, because we want to be able to support compiling
 # for newer hardware on older machines as well as cross-compilation.
 message(STATUS "Building for system processor ${CMAKE_SYSTEM_PROCESSOR}")
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|i686|x86_64|amd64|AMD64)")
+if(MSVC_C_ARCHITECTURE_ID STREQUAL "ARM64EC")
+    set(COMPILER_SUPPORT_SSE2 FALSE)
+    set(COMPILER_SUPPORT_AVX2 FALSE)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|i686|x86_64|amd64|AMD64)")
     if(CMAKE_C_COMPILER_ID STREQUAL GNU)
         set(COMPILER_SUPPORT_SSE2 TRUE)
         if(CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
